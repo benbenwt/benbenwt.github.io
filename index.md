@@ -1,6 +1,8 @@
 # note目录
 
+[java](/java/java)
 
+[frame](/frame/frame)
 
 [javase](./java/javase.html)
 
