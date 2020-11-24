@@ -135,3 +135,45 @@ hsetnx myhash field1 hello
 ​
 
 ## Zset
+
+# 持久化RDB
+
+## 机制描述
+
+>隔一段时间保存数据快照snapshot到硬盘
+
+## 触发时机
+
+### 基于默认配置
+
+save 900 1
+
+若900秒内发生了一次修改，则保存。
+
+save 300 10
+
+save 60 10000
+
+### 手动保存
+
+save ，bgsave
+
+flushall 清空数据库，同时触发保存到硬盘。
+
+shutdown推出redis，触发保存。
+
+### 配置项
+
+save    禁用RDB机制
+
+dbfilename  文件名，如dump.rdb  设置RDB机制，数据存储文件的文件名。
+
+dir  redis工作目录，存放持久化文件的目录，指定为目录不是文件名。
+
+dump。rdb保存二进制数据，可以用来备份恢复。
+
+# 持久化AOF
+
+>保存数据操作命令，恢复时执行一遍命令。
+
+根据aof文件内容决定保存策略。
