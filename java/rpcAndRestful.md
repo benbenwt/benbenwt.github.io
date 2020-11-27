@@ -14,7 +14,7 @@
 
 
 
-<span id="1">java创建对象的方式有：new关键字，通过反射new instance方法，通过clone方法，通过反序列化手段</span>
+<span id="1">[1].java创建对象的方式有：new关键字，通过反射new instance方法，通过clone方法，通过反序列化手段</span>
 
 
 
