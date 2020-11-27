@@ -9,52 +9,87 @@
 
 <url>
   <loc>https://benbenwt.github.io/</loc>
-  <lastmod>2020-11-25T04:46:31+00:00</lastmod>
+  <lastmod>2020-11-27T03:31:07+00:00</lastmod>
   <priority>1.00</priority>
 </url>
 <url>
   <loc>https://benbenwt.github.io/java/java</loc>
-  <lastmod>2020-11-25T04:46:31+00:00</lastmod>
+  <lastmod>2020-11-27T03:31:07+00:00</lastmod>
   <priority>0.80</priority>
 </url>
 <url>
   <loc>https://benbenwt.github.io/frame/frame</loc>
-  <lastmod>2020-11-25T04:46:31+00:00</lastmod>
+  <lastmod>2020-11-27T03:31:07+00:00</lastmod>
   <priority>0.80</priority>
 </url>
 <url>
-  <loc>https://benbenwt.github.io/java/javase.html</loc>
-  <lastmod>2020-11-25T04:46:31+00:00</lastmod>
+  <loc>https://benbenwt.github.io/SubjectFoundation/sf</loc>
+  <lastmod>2020-11-27T03:31:07+00:00</lastmod>
   <priority>0.80</priority>
 </url>
 <url>
-  <loc>https://benbenwt.github.io/java/rpcAndRestful.html</loc>
-  <lastmod>2020-11-25T04:46:31+00:00</lastmod>
-  <priority>0.80</priority>
-</url>
-<url>
-  <loc>https://benbenwt.github.io/TI/program.html</loc>
-  <lastmod>2020-11-25T04:46:31+00:00</lastmod>
+  <loc>https://benbenwt.github.io/TI/TI</loc>
+  <lastmod>2020-11-27T03:31:07+00:00</lastmod>
   <priority>0.80</priority>
 </url>
 <url>
   <loc>https://benbenwt.github.io/java/javase</loc>
-  <lastmod>2020-11-25T04:46:31+00:00</lastmod>
+  <lastmod>2020-11-27T03:31:07+00:00</lastmod>
   <priority>0.64</priority>
 </url>
 <url>
   <loc>https://benbenwt.github.io/java/rpcAndRestful</loc>
-  <lastmod>2020-11-25T04:46:31+00:00</lastmod>
+  <lastmod>2020-11-27T03:31:07+00:00</lastmod>
   <priority>0.64</priority>
 </url>
 <url>
   <loc>https://benbenwt.github.io/frame/DistributedArchitecture</loc>
-  <lastmod>2020-11-25T04:46:31+00:00</lastmod>
+  <lastmod>2020-11-27T03:31:07+00:00</lastmod>
+  <priority>0.64</priority>
+</url>
+<url>
+  <loc>https://benbenwt.github.io/frame/kafka</loc>
+  <lastmod>2020-11-27T03:31:07+00:00</lastmod>
+  <priority>0.64</priority>
+</url>
+<url>
+  <loc>https://benbenwt.github.io/frame/redis</loc>
+  <lastmod>2020-11-27T03:31:07+00:00</lastmod>
   <priority>0.64</priority>
 </url>
 <url>
   <loc>https://benbenwt.github.io/frame/nginx</loc>
-  <lastmod>2020-11-25T04:46:31+00:00</lastmod>
+  <lastmod>2020-11-27T03:31:07+00:00</lastmod>
+  <priority>0.64</priority>
+</url>
+<url>
+  <loc>https://benbenwt.github.io/frame/docker</loc>
+  <lastmod>2020-11-27T03:31:07+00:00</lastmod>
+  <priority>0.64</priority>
+</url>
+<url>
+  <loc>https://benbenwt.github.io/SubjectFoundation/linux</loc>
+  <lastmod>2020-11-27T03:31:07+00:00</lastmod>
+  <priority>0.64</priority>
+</url>
+<url>
+  <loc>https://benbenwt.github.io/SubjectFoundation/network</loc>
+  <lastmod>2020-11-27T03:31:07+00:00</lastmod>
+  <priority>0.64</priority>
+</url>
+<url>
+  <loc>https://benbenwt.github.io/SubjectFoundation/os</loc>
+  <lastmod>2020-11-27T03:31:07+00:00</lastmod>
+  <priority>0.64</priority>
+</url>
+<url>
+  <loc>https://benbenwt.github.io/SubjectFoundation/ubuntu</loc>
+  <lastmod>2020-11-27T03:31:07+00:00</lastmod>
+  <priority>0.64</priority>
+</url>
+<url>
+  <loc>https://benbenwt.github.io/TI/program</loc>
+  <lastmod>2020-11-27T03:31:07+00:00</lastmod>
   <priority>0.64</priority>
 </url>
 
