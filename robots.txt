@@ -1,3 +1,5 @@
 User-agent: *
 Disallow: 
 Sitemap: https://benbenwt.github.io/sitemap.xml
+Sitemap: https://benbenwt.github.io/sitemap.txt
+Sitemap: https://benbenwt.github.io/sitemap.html

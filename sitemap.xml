@@ -1,97 +1,44 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset
-      xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
-      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-      xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9
-            http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd">
-<!-- created with Free Online Sitemap Generator www.xml-sitemaps.com -->
+    xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9
+       http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd"
+>
 
-
 <url>
-  <loc>https://benbenwt.github.io/</loc>
-  <lastmod>2020-11-27T03:50:20+00:00</lastmod>
-  <priority>1.00</priority>
-</url>
-<url>
-  <loc>https://benbenwt.github.io/java/java</loc>
-  <lastmod>2020-11-27T03:50:20+00:00</lastmod>
-  <priority>0.80</priority>
-</url>
-<url>
-  <loc>https://benbenwt.github.io/frame/frame</loc>
-  <lastmod>2020-11-27T03:50:20+00:00</lastmod>
-  <priority>0.80</priority>
-</url>
-<url>
-  <loc>https://benbenwt.github.io/SubjectFoundation/sf</loc>
-  <lastmod>2020-11-27T03:50:20+00:00</lastmod>
-  <priority>0.80</priority>
-</url>
-<url>
-  <loc>https://benbenwt.github.io/TI/TI</loc>
-  <lastmod>2020-11-27T03:50:20+00:00</lastmod>
-  <priority>0.80</priority>
-</url>
-<url>
-  <loc>https://benbenwt.github.io/java/javase</loc>
-  <lastmod>2020-11-27T03:50:20+00:00</lastmod>
-  <priority>0.64</priority>
-</url>
-<url>
-  <loc>https://benbenwt.github.io/java/rpcAndRestful</loc>
-  <lastmod>2020-11-27T03:50:20+00:00</lastmod>
-  <priority>0.64</priority>
-</url>
-<url>
-  <loc>https://benbenwt.github.io/frame/DistributedArchitecture</loc>
-  <lastmod>2020-11-27T03:50:20+00:00</lastmod>
-  <priority>0.64</priority>
-</url>
-<url>
-  <loc>https://benbenwt.github.io/frame/kafka</loc>
-  <lastmod>2020-11-27T03:50:20+00:00</lastmod>
-  <priority>0.64</priority>
-</url>
-<url>
-  <loc>https://benbenwt.github.io/frame/redis</loc>
-  <lastmod>2020-11-27T03:50:20+00:00</lastmod>
-  <priority>0.64</priority>
-</url>
-<url>
-  <loc>https://benbenwt.github.io/frame/nginx</loc>
-  <lastmod>2020-11-27T03:50:20+00:00</lastmod>
-  <priority>0.64</priority>
-</url>
-<url>
-  <loc>https://benbenwt.github.io/frame/springboot</loc>
-  <lastmod>2020-11-27T03:50:20+00:00</lastmod>
-  <priority>0.64</priority>
-</url>
-<url>
-  <loc>https://benbenwt.github.io/SubjectFoundation/linux</loc>
-  <lastmod>2020-11-27T03:50:20+00:00</lastmod>
-  <priority>0.64</priority>
-</url>
-<url>
-  <loc>https://benbenwt.github.io/SubjectFoundation/network</loc>
-  <lastmod>2020-11-27T03:50:20+00:00</lastmod>
-  <priority>0.64</priority>
-</url>
-<url>
-  <loc>https://benbenwt.github.io/SubjectFoundation/os</loc>
-  <lastmod>2020-11-27T03:50:20+00:00</lastmod>
-  <priority>0.64</priority>
-</url>
-<url>
-  <loc>https://benbenwt.github.io/SubjectFoundation/ubuntu</loc>
-  <lastmod>2020-11-27T03:50:20+00:00</lastmod>
-  <priority>0.64</priority>
-</url>
-<url>
-  <loc>https://benbenwt.github.io/TI/program</loc>
-  <lastmod>2020-11-27T03:50:20+00:00</lastmod>
-  <priority>0.64</priority>
+ <loc>https://benbenwt.github.io/frame/frame</loc>
+ <priority>0.3</priority>
+ <lastmod>2020-11-26</lastmod>
+ <changefreq>weekly</changefreq>
 </url>
 
+<url>
+ <loc>https://benbenwt.github.io/TI/TI</loc>
+ <priority>0.3</priority>
+ <lastmod>2020-11-26</lastmod>
+ <changefreq>weekly</changefreq>
+</url>
+
+<url>
+ <loc>https://benbenwt.github.io/</loc>
+ <priority>0.3</priority>
+ <lastmod>2020-11-26</lastmod>
+ <changefreq>weekly</changefreq>
+</url>
+
+<url>
+ <loc>https://benbenwt.github.io/SubjectFoundation/sf</loc>
+ <priority>0.3</priority>
+ <lastmod>2020-11-26</lastmod>
+ <changefreq>weekly</changefreq>
+</url>
+
+<url>
+ <loc>https://benbenwt.github.io/java/java</loc>
+ <priority>0.3</priority>
+ <lastmod>2020-11-26</lastmod>
+ <changefreq>weekly</changefreq>
+</url>
 
 </urlset>
