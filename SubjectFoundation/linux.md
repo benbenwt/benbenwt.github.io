@@ -295,13 +295,141 @@ find_task_by_pid：查找pid对应的进程描述符指针。
 
 ##### 进程的亲属关系
 
+进程具有父子关系，同一进程的子进程又有兄弟关系。
+
+进程0，1是由内核创建的，1是所有进程的祖先。
+
+进程描述符中包含描述亲属关系的域，其构成如下：
+
+p_opptr 祖先
+
+指向创建此进程的进程描述符，若父进程不存在，指向1进程。
+
+例如shell启动后台进程后推出，后台进程该域指向init。
+
+p_pptr  父进程
+
+当前父进程，一般与p_opptr相同，但有些情况不同。
+
+例如：当另一个进程发布ptrace系统调用请求监控p时。
+
+p_cptr  子进程
+
+指向年龄最小的子进程的描述符。
+
+p_ysptr  弟进程
+
+指向它父进程的下一个创建进程。
+
+p_osptr 兄进程
+
+指向它父进程的上一个创建进程。
+
 ##### 等待队列
+
+TASK_RUNNING组成运行队列
+
+TASK_STOPPED和TASK_ZOMBIE不用创建独立的链表。因为，可以通过父进程查找pid，或进程间的亲属关系检索子进程。
+
+TASK_INTERRUPTIBLE和TASK_UNINTERRUPTIBLE创建独立的链表。而且对于不同的等待事件，创建独立的链表，称为等待队列。
+
+等待队列对中断处理，进程同步及定时用处大。等待队列由循环链表实现，元素指向进程描述符。
+
+c语言定义如下：
+
+struct wait_queue{
+
+struct task_struct * task;
+
+struct wait_queue *next;
+
+}
+
+每一个等待队列由一个等待队列指针标识，指向第一个元素地址，或为空。
+
+
+
+intel指针的大小为4字节。
+
+init_waitqueue()函数初始化一个空的等待队列，它接受等待队列指针的地址q作为参数，然后把指针设为q-4.
+
+add_wait_queue(q,entry)函数把地址为entry的元素插入等待队列。
+
+
+
+等待队列关中断执行插入操作：
+
+if(*q!=NULL)
+
+ 		entry->next=*q;  指向队首元素
+
+else 
+
+​		entry->next=(struct wait_queue *)(q-1);  指向空指针
+
+*q=entry;    插入到队首
+
+
+
+remove_wait_queue移除由entry指向的元素，执行此操作必须关中断。
+
+next=entry->next;
+
+head=next;
+
+while((tmp=head->next)!=entry)
+
+​	head=tmp;
+
+head->next=next;
+
+此函数查找到循环链表中位于entry前一个的元素，让其next指向entry->next，删除entry。
+
+
+
+希望等待事件可以调用一下函数：
+
+sleep_on，设置为TASK_INTERRUPTIBLE,插入等待队列。调用调度恢复程序，当当前进程被唤醒，从等待队列中删除。
+
+interruptible_sleep_on，设为TASK_UNINTERRUPTIBLE
+
+sleep_on_timeout和interruptible_sleep_on_timeout,定时唤醒，使用schedule_timeout()实现。使用wake_up或wake_up_interruptible宏。
 
 ##### 进程的使用限制
 
+进程与一组使用限制相关联，决定进程能使用的系统资源数量。
+
+例举部分如下：
+
+RLIMIT_CPU,cpu使用最长时间
+
+RLIMIT_FSIZE，文件最大值
+
+RLIMIE_DATA,堆最大值
+
+RLIMIT_STACK，栈大小的最大值
+
+RLIMIT_CCRE，内存信息转储文件的大小
+
+RLIMIT_RSS，页框最大数
+
+RLIMIT_NPROC，拥有进程最大数
+
+RLIMIT_NOFILE，打开文件最大数
+
+RLIMIT_MEMLOCK，非交换内存最大尺寸
+
+RLIMIT_AS，进程地址空间最大尺寸
+
+使用限制存放在进程描述符的rlim域，通常大多数限制值为RLIMIT_INFINITY,无限制。
+
+
+
 ##### 进程切换
 
+主要内容：硬件上下文，硬件支持，linux代码，保存浮点寄存器
 
+每个进程都可以拥有自己的地址空间，但进程必须共享cpu寄存器。因此，恢复执行前，内核必须确认每个寄存器装入了挂起进程时的值。
 
 
 
