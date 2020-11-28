@@ -157,6 +157,10 @@ arch 架构
 ps aux|grep apt
 sudo kill -9 pid
 
+##### 截屏黑屏
+
+关闭virtualbox3D加速
+
 # vmware
 
 - win10 1903安装黑屏
