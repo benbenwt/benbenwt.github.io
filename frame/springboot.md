@@ -12,11 +12,7 @@
 >
 >5运行主启动类
 
-### 创建启动类
 
-@SpringbootApplication
-
-SpringApplication.run(mainApplication.class,args);
 
 ### 注解
 
@@ -50,6 +46,20 @@ SpringApplication.run(mainApplication.class,args);
 
 springboot默认会扫描与启动类同级的文件夹。
 
+##### SpringBootApplication  
+
+启动类
+
+[SpringApplication.run](http://springapplication.run/)(HelloWorldMainApp.class,args); 运行启动类
+
+##### @Component  
+
+##### 组件类
+
+##### @EnableAutoConfiguration 
+
+##### 自动配置，即导入元数据的所有命名包。只扫描主配置类所在包下面的组件。
+
 ### application配置文件
 
 >配置好启动类后，我们还需要为特定的服务设置配置文件
@@ -68,83 +78,150 @@ server:
 
 spring:
 
-​        application:
+​        application:	
 
-​				
+server
 
-##### server
+   .port，设定tomcat开放端口。
 
-.port，设定tomcat开放端口。
-
-.context-path，设定tomcat根路径。
-
-### problem
-
-##### spring intial失败
-
-输入start.aliyun.com
-
-# 
+   .context-path，设定tomcat根路径。
 
 
 
-- 相关概念
+### 版本问题
 
-  springboot将spring封装，实现自动配置等。
-  ​
+##### 查看spring-boot-parent预定义版本
 
-  - 微服务
-    一个应用应该是一组小型服务，这些服务通过http进行沟通。
-    与之对应的是单体应用，所有页面集中在一台主机上。
+点击spring-boot-parent依赖的版本号，进入其pom文件。
 
-  - springboot结构
+再点击文件中的spring-boot-dependencies依赖的版本号进入其pom。
 
-  - hello world探究
-
-    starter-parent的父级依赖管理所有依赖的版本。
-    starter-web导入web模块所需依赖。
-
-    - 依赖
-      starter-parent的父级依赖管理所有依赖的版本。
-      starter-web导入web模块所需依赖。
-
-    - 注解
-      SpringBootApplication  启动类
-      [SpringApplication.run](http://springapplication.run/)(HelloWorldMainApp.class,args); 运行启动类
-      @Component  组件类
-      @EnableAutoConfiguration 自动配置，即导入元数据的所有命名包。只扫描主配置类所在包下面的组件。
-
-      
+搜索所需依赖的关键字。
 
   ### Springboot集成Mybatis
 
-  
+  >1导入maven依赖，若有错误查看仓库，验证sha1值，若错误删除整个文件夹。删除pom中依赖再粘贴，重新下载。
+  >
+  >2配置yml文件，如下
+  >
+  >```yaml
+  >server:
+  >port: 8080
+  >
+  >spring:
+  >datasource:
+  >username: root
+  >password: root
+  >url: jdbc:mysql://localhost:3306/emp?useUnicode=true&characterEncoding=utf-8&useSSL=true&serverTimezone=UTC
+  >driver-class-name: com.mysql.jdbc.Driver
+  >
+  >mybatis:
+  >mapper-locations: classpath:mybatis/mapper/*Mapper.xml
+  >type-aliases-package: com.weitao.mybatis.entity
+  >
+  >#showSql
+  >logging:
+  >level:
+  >com:
+  > example:
+  >   mapper : debug
+  >```
+  >
+  >3编写三层，使用RestController,Service,Repository配置好ioc加载，注意再启动类上加上MapperScan,参数为mapper接口路径。编写entity类，和mapper对应的xml文件。xml如下：
+  >
+  >```java
+  ><?xml version="1.0" encoding="UTF-8"?>
+  ><!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+  ><mapper namespace="com.weitao.mybatis.mappers.EmpMapper">
+  >    <select id="selectAll"
+  >            resultType="com.weitao.mybatis.entity.Emp">
+  >        select emp_id,emp_name from emp
+  >    </select>
+  ></mapper>
+  >```
+  >
+  >4启动启动类并验证。
 
-  # 部署
+### springboot集成dbcp
 
-  ### 打包
+>yml配置文件如下：需要引入commons-io和commons-dbcp2的依赖。
+>
+>```
+>server:
+>  port: 8001
+>spring:
+>  application:
+>    name: provider-dept8001
+>  datasource:
+>    type: org.apache.commons.dbcp2.BasicDataSource
+>    username: root
+>    password: root
+>    url: jdbc:mysql://localhost:3306/cloud_db_one?useUnicode=true&characterEncoding=utf-8&useSSL=true&serverTimezone=UTC
+>    driver-class-name: com.mysql.jdbc.Driver
+>    dbcp2:
+>      min-idle: 10
+>      initial-size: 10
+>      max-total: 300
+>      max-wait-millis: 10000
+>      default-auto-commit: true
+>
+>mybatis:
+>  mapper-locations: classpath:mybatis/mapper/*Mapper.xml
+>  type-aliases-package: com.weitao.api.entity
+>
+>#showSql
+>logging:
+>  level:
+>    com:
+>      example:
+>        mapper: debug
+>```
+
+### Springboot的jsp技术
+
+配置yml文件如下：
+
+```
+spring:
+ mvc:
+  view:
+   prefix:/WEB-INF/
+   suffix:.jsp
+```
+
+同ssm一样，将controller结果解析至prefix目录下试图.jsp。
+
+jsp使用很少，一般使用如Thymelef等。
+
+### 测试
+
+使用@SpringBootTest注解标记类，使用Test标记测试方法即可。
+
+  ### 部署
+
+  ##### 打包
   导入spingboot-maven-plugin，随后点击mavenproject->Lifecycle->package生成jar包。
 
-  ### 启动
+##### 启动
   java  - jar 名称：执行程序。
 
-  ### 发生的的错误
+  ##### 发生的的错误
 
-  ##### maven编译版本和本地版本不同
+###### maven编译版本和本地版本不同
 
-  解决方法：
+解决方法：
   <properties>    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>    <maven.compiler.encoding>UTF-8</maven.compiler.encoding>    <java.version>11</java.version>    <maven.compiler.source>11</maven.compiler.source>    <[maven.compiler.target](http://maven.compiler.target/)>11</[maven.compiler.target](http://maven.compiler.target/)></properties>
-  ​
+​
 
-  ##### springboot的maven打包出错,运行后显示无主清单
+###### springboot的maven打包出错,java  -jar 运行后显示无主清单
 
-  解决方法：
+解决方法：
   <build>   
 
    <plugins>      
 
     <plugin>         
-
+    
      <groupId>org.springframework.boot</groupId>    
 
   ​        <artifactId>spring-boot-maven-plugin</artifactId>            <version>2.0.1.RELEASE</version>   
@@ -160,13 +237,27 @@ spring:
   ​       </goals>             
 
      </execution>         
-
+      
      </executions>     
-
+      
      </plugin>  
-
+      
     </plugins></build>
   ​
 
+### problem
 
+##### spring intial失败
+
+解决：输入start.aliyun.com
+
+##### Field injection is not recommended
+
+推荐使用set方法和构造方法注入，不要使用变量注入。
+
+https://blog.csdn.net/zhangjingao/article/details/81094529
+
+##### No serializer found for class com.weitao.api.entity
+
+序列化的类还需要添加get，set方法。
 
