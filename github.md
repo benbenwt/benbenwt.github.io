@@ -1,6 +1,6 @@
 # 搭建博客
 
-创建名为username.github.io的repository。进入setting，开启pages，选择主题下载它的压缩包，解压后上传放在repository中。[index.md](http://index.md/)为根网页,目录结构会被解析为路径，md文件会被解析为静态网页，也可以不写html后缀访问。
+创建名为username.github.io的repository。进入setting，开启pages，选择主题下载它的压缩包，解压后上传放在repository中。[index.md](http://index.md/)为根网页,目录结构会被解析为路径，md文件会被解析为静态网页，也可以不写html后缀访问。使用nginx反向代理国内访问。谷歌收录，使用site语法查询，若没有则进入search console操作。添加网址，添加站点地图，若失败，试试html等格式的sitemap。
 
 ## 基本语法
 
