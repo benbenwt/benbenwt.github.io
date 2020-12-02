@@ -60,6 +60,10 @@ springboot默认会扫描与启动类同级的文件夹。
 
 ##### 自动配置，即导入元数据的所有命名包。只扫描主配置类所在包下面的组件。
 
+@RequestBody
+
+使用此注解将json数据直接封装好。不使用任何注解，可以自动将form-data封装到对象中。
+
 ### application配置文件
 
 >配置好启动类后，我们还需要为特定的服务设置配置文件
@@ -148,33 +152,34 @@ server
 >
 >```
 >server:
->  port: 8001
+>port: 8001
+>
 >spring:
->  application:
->    name: provider-dept8001
->  datasource:
->    type: org.apache.commons.dbcp2.BasicDataSource
->    username: root
->    password: root
->    url: jdbc:mysql://localhost:3306/cloud_db_one?useUnicode=true&characterEncoding=utf-8&useSSL=true&serverTimezone=UTC
->    driver-class-name: com.mysql.jdbc.Driver
->    dbcp2:
->      min-idle: 10
->      initial-size: 10
->      max-total: 300
->      max-wait-millis: 10000
->      default-auto-commit: true
+>application:
+>name: provider-dept8001
+>datasource:
+>type: org.apache.commons.dbcp2.BasicDataSource
+>username: root
+>password: root
+>url: jdbc:mysql://localhost:3306/cloud_db_one?useUnicode=true&characterEncoding=utf-8&useSSL=true&serverTimezone=UTC
+>driver-class-name: com.mysql.jdbc.Driver
+>dbcp2:
+> min-idle: 10
+> initial-size: 10
+> max-total: 300
+> max-wait-millis: 10000
+> default-auto-commit: true
 >
 >mybatis:
->  mapper-locations: classpath:mybatis/mapper/*Mapper.xml
->  type-aliases-package: com.weitao.api.entity
+>mapper-locations: classpath:mybatis/mapper/*Mapper.xml
+>type-aliases-package: com.weitao.api.entity
 >
 >#showSql
 >logging:
->  level:
->    com:
->      example:
->        mapper: debug
+>level:
+>com:
+> example:
+>   mapper: debug
 >```
 
 ### Springboot的jsp技术
@@ -260,4 +265,10 @@ https://blog.csdn.net/zhangjingao/article/details/81094529
 ##### No serializer found for class com.weitao.api.entity
 
 序列化的类还需要添加get，set方法。
+
+##### 版本问题
+
+ctrl左键点击依赖，查看spring-boot-dependeccies或spriing-cloud-dependencies具体定义。
+
+
 

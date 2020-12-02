@@ -1,6 +1,6 @@
 [DistributedArchitecture](DistributedArchitecture)
 
-[kafaka](kafka)
+[kafka](kafka)
 
 [redis](redis)
 
@@ -13,4 +13,16 @@
 [mybatis](mybatis)
 
 [maven](maven)
+
+[Eureka](Eureka)
+
+[swagger](swagger)
+
+[springcloud](springcloud)
+
+[ribbon](ribbon)
+
+[mongodb](mongodb)
+
+
 

@@ -135,7 +135,29 @@ etc/ssh/sshd_config配置端口
 grep sshd /var/log/auth.log | less
 ​
 
+## bbr服务
+
+>bbr时谷歌推出的一种提高网络利用率的算法，改变了tcp传统的拥塞控制策略。
+
+ubuntu4.9以后内置bbr算法，uname -a查看内核版本。
+
+若过低，下载内核升级。然后修改sysct.conf,命令如下。
+
+```
+sudo bash -c 'echo "net.core.default_qdisc=fq" >> /etc/sysctl.conf'
+sudo bash -c 'echo "net.ipv4.tcp_congestion_control=bbr" >> /etc/sysctl.conf'
+```
+
+sysctl -p保存设置
+
+sysctl net.ipv4.tcp_available_congestion_control查看使用的算法。
+
+lsmod |grep bbr查看是否开启bbr.
+
+
+
 ### 查看日志
+
 who /var/log/wtmp
 tail/more    /var/log/secure
 
