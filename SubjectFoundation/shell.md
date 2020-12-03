@@ -96,9 +96,7 @@ echo $(array[0])
 
 expr 1+3
 
-expr 1\*3
-
-
+expr 1\*3   
 
 less,grater,than,equal
 
@@ -178,7 +176,11 @@ fi
 
 if [ "abc"="abd" ]
 
+
+
 ##### case
+
+
 
 case $ch in 
 
@@ -201,6 +203,8 @@ case $ch in
 ;;
 
 esac
+
+
 
 ##### for
 
@@ -234,9 +238,9 @@ do
 
 done
 
-echo $sum
+echo $sum        
 
-
+​        
 
 for(i=0;i<10;i++)
 
@@ -248,3 +252,158 @@ done
 
 
 
+##### while
+
+i=1
+
+while [i -le 10]
+
+do
+
+​		let i+=1
+
+​		i=$[$i+1]
+
+​		#((i++))
+
+done
+
+
+
+##### util
+
+i=1
+
+util [$i -gt 10]
+
+do
+
+​	echo $i
+
+​	let i+=1
+
+done
+
+##### break
+
+while :
+
+do
+
+​	read -p "input" $char
+
+​	case $char in
+
+​	[1,5]):
+
+​			echo "ok"
+
+​	;;
+
+​	1|2|3):
+
+​		echo "ok"
+
+​	;;
+
+​	*):
+
+​		echo "a"
+
+​	;;
+
+esac
+
+done
+
+
+
+##### continue
+
+i=1
+
+while [$i -le 10]
+
+do
+
+​	if [$()$i%3 ) -eq 0];then
+
+​		echo "a"
+
+​		((i++))
+
+​		continue
+
+​	fi
+
+echo "b"
+
+((i++))
+
+done
+
+##### 函数
+
+func1()
+
+{
+
+​		echo $1
+
+​		echo $2
+
+​		return "hello"
+
+}
+
+func1 123 abc
+
+$?返回值
+
+##### 逻辑运算
+
+if []&&[]
+
+[]||[]
+
+if [c1 -a c2]
+
+[c1 -o c2]
+
+##### /dev/null
+
+echo  /dev/null >1.txt
+
+清空1.txt
+
+##### printf
+
+printf"hello %s %d"  "world" 123
+
+##### set
+
+-n:结合命令p使用，打印内容。
+
+-i:将缓冲区内容插入文件，使其生效。
+
+p:打印
+
+a:增加
+
+d：删除
+
+c：替换整个内容
+
+s：替换特定内容
+
+sed -n '1p' 1.txt，打印第一行
+
+sed -n '1,3p' 1.txt,打印1至3行
+
+sed -n '$p' 1.txt，最后一行
+
+sed '1a xxx' 1.txt，在第一行添加
+
+sed '3c afafa' 1.txt,替换第3整行
+
+sed  '3,7s//jin/xxx/g ' 1.txt
