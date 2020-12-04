@@ -3,12 +3,21 @@
 下载后安装，建好log，db文件夹存储日志和数据库。
 使用--logpath=。。。设置路径。
 
+进入安装目录的bin目录，
+
+cmd执行mongod.exe，启动mongo服务。
+
+cmd执行mongo.exe，进入mongo环境。
+
 # mongodb增删改查
 
 use test
-db.test.insert({})
-db.test.find({})
-db.test.updateone(<filter>,<update>,<options>)
+db.inventory.insert({})
+db.inventory.find({})
+db.inventory.updateone(<filter>,<update>,<options>)
+
+db.集合名.find(),查看集合数据
+
 例如
 db.inventory.updateOne(
    { item: "paper" },
