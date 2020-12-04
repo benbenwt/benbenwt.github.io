@@ -10,3 +10,9 @@
 
 [shell](shell)
 
+[MASAM](MASAM)
+
+[assemblyLanguage](assemblyLanguage)
+
+[database](database)
+
