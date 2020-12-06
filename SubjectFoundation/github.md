@@ -63,6 +63,9 @@ git push -u origin main
 完整流程：
 git fetch origin dev（dev为远程仓库的分支名）
 git checkout -b dev(本地分支名称) origin/dev(远程分支名称)
+
+git checkout main,切换到本地main分支
+
 git pull origin dev(远程分支名称)
 
 ```
