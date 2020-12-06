@@ -115,6 +115,18 @@ docker    container/images  start/stop/rm/run/pause
 
   ### docker镜像
 
+  ### docker基础例子
+
+  >docker pull nginx
+>
+  >docker run -d --name nginx01 -p 3344:80  nginx
+>
+  >若使用80：80无法访问，可能被占用，请使用其他端口。
+>
+  >curl localhost:3344
+>
+  >若使用容器卷，挂载目录使用sudo才可修改。
+
   ### 容器数据卷
 
   >搭建服务环境后，在环境中部署应用。但是删除容器后，数据会丢失。所以将docker目录挂载到外部，实现保存。
@@ -123,21 +135,23 @@ docker    container/images  start/stop/rm/run/pause
 
   docker run -it -v 主机目录：容器内目录,挂载目录。
 
-  例如：docker ru n-it -v /home/ceshi:/home centos  /bin/bash
+  例如：docker run   -it -v /home/ceshi:/home centos  /bin/bash
 
   docker run -d -p  3310:3306  -v  /home/mysql/conf:/home/conf    mysql  /bin/bash
-
-  docker attach 容器id，进入运行的容器。
-
   
-
+  docker attach 容器id，进入运行的容器。
+  
+  
+  
   应用举例：
-
+  
   将nginx配置文件挂载出来，不用进入容器修改配置。
-
+  
   ### dockerFile
-
+  
   >构建生成镜像，镜像是一层一层的。
+>
+  >开发者开发完毕，使用docker封装好环境和服务，使用者使用命令拉取和运行，不用关心运行环境。
 
   dockerfile1例子：
 
@@ -153,9 +167,101 @@ docker    container/images  start/stop/rm/run/pause
 
   使用docker build -f dockerfile1 -t   weitao/centos .构建dockerfile文件。
 
-  
+  ##### 基本命令
+
+  FROM，基础镜像
+
+  MAINTAINER， 作者
+
+  RUN，构建需要命令
+
+  ADD，添加镜像，如tomcat压缩包
+
+  WORKDIR，工作路径
+
+  VOLUME，挂载目录
+
+  EXPOSE，保留端口配置
+
+  RUN
+
+  CMD,指定容器启动时的命令
+
+  ENTRYPOINT，会追加命令。
+
+  ONBUILD,当构建一个被继承DockerFile时，运行ONBUILD命令。
+
+  COPY,类似ADD，将我们的文件拷贝到镜像中。
+
+  ENV，环境变量。
 
   
+
+  ##### 构建镜像例子
+
+  FROM centos
+
+  MAINTAINER weitao
+
+  ENV MYPATH /use/local
+
+  WORKDIR $MYPATH
+
+  RUN yum -y  install vim
+
+  EXPOSE 80
+
+  CMD echo $MYPATH
+
+  CMD /bin/bash
+
+  
+
+  docker history 镜像id，查看构建步骤
+
+  ##### 构建tomcat镜像例子
+
+  FROM centos
+
+  MAINTAINER weitao
+
+  COPY readme.txt  /usr/local/readme.txt
+
+  ADD jdk  /usr/local
+
+  ADD apache   /usr/local
+
+  ENV MYPATH /usr/local
+
+  WORKDIR $MYPATH
+
+  ENV JAVA_HOME  /usr/local/jdk
+
+  ENV CLASSPATH $JAVA_HOME/lib/dt.jar:$JAVA_HOME/lib/tools.jar
+
+  ENV CATALINA_HOME /usr/local/apache-tomcat
+
+  ENV CATALINA_BASH  /usr/local/apache-tomcat
+
+  ENV PATH $PATH:$JVA_HOME/BIN:$CATALINE_HOME/LIB:$CATALINA_HOME/bin
+
+  
+
+  EXPOSE 8080
+
+  CMD /usr/local/apache-tomcat/bin/startup.sh && tail -F  /usr/local/apache/bin/logs/catalina.out
+
+  ##### 整合springboot，打包docker发布
+
+  FROM java:8
+
+  COPPY  *.jar  /app.jar
+
+  CMD ["--server.port=8080"]
+
+  EXPOSE 8080
+
+  ENTRYPOINT [“java","-jar","app.jar"]
 
   ### 数据卷容器
 

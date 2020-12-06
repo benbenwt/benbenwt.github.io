@@ -10,6 +10,12 @@ idea自带的maven在idea安装目录的plugins->maven3目录下
 
 powershell自带sha1工具，命令：certutil -hashfile 路径
 
+##### Dependencymanagement
+
+> 指定子级模块所用版本，子模块只需要写依赖，不用写版本号。
+>
+> 注意只是指定版本号，自己或子级使用仍然需要在dependencies中导入。
+
 ### 命令
 mvn -version
 

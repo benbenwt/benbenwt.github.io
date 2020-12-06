@@ -90,7 +90,7 @@ server
 
    .context-path，设定tomcat根路径。
 
-
+##### 
 
 ### 版本问题
 
@@ -269,6 +269,8 @@ https://blog.csdn.net/zhangjingao/article/details/81094529
 ##### 版本问题
 
 ctrl左键点击依赖，查看spring-boot-dependeccies或spriing-cloud-dependencies具体定义。
+
+##### server.port失效问题
 
 
 

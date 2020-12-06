@@ -22,7 +22,7 @@
 
 debug启动调试模式
 
-debug  1.exe,逐步调试。
+debug  1.exe,逐步调试。当使用此指令将程序载入内存，cx中存储程序的长度。 
 
 r，查看寄存器值
 
@@ -54,17 +54,21 @@ a 寄存器：偏移地址
 
 q,推出当前模式
 
+p，命令执行int 21.快速执行完多遍循环。
+
+p，执行完
+
 ##### link.exe
 
 >-link
 
-##### edit.ext
+##### edit.exe
 
 >edit
 
 masm.ext
 
->masm进入编译
+>masm,进入编译
 >
->masm>程序名称，执行exe
+>masm>程序名称，执行exe.
 
