@@ -45,6 +45,8 @@ git branch -M main  更改分支名字
 git remote add origin  git@github.com:benbenwt/test.git
 git push -u origin main
 
+ git push -u -f origin main，覆盖远程分支。
+
 ##### git add -A
 
 添加所有修改信息到暂存区
