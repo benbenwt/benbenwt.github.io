@@ -272,5 +272,15 @@ ctrl左键点击依赖，查看spring-boot-dependeccies或spriing-cloud-dependen
 
 ##### server.port失效问题
 
+添加子模块后，会让父级模块打包方式变为pom，所以无法让设置生效。
+
+可以在配置服务的地方设置override parameter，或改变打包方式,将pom.xml中的package改为jar，但是最好不要，因为他是作为父级模块。
+
+
+
+
+
+
+
 
 
