@@ -99,3 +99,55 @@ int main(int argc, char** argv) {
 
 打开编辑器的工具选项，进入编译器选项。勾选编译时加入以下命令和在连接器命令行加入以下命令。并在其内容中都添加-g3。
 
+临时：
+
+```
+#include <opencv2/opencv.hpp>
+#include <opencv2/core.hpp>
+#include <iostream>
+#include <stdio.h>
+#include <cstring>   
+#include<cv.h>
+#include<highgui.h>
+using namespace cv;
+
+void createDatabase(std::string path)
+{
+	Mat src, gray_src;
+	std::string temp = "";
+	for (int i = 1; i <= 20; i++)
+	{
+		temp = path+std::to_string(i)+".jpg";
+		std::cout<<temp<<std::endl;
+
+	    src = imread(temp);
+
+		if (src.empty())
+		{
+			printf("could not load image...\n");
+			return;
+		}
+		
+		cvtColor(src,gray_src,CV_BGR2GRAY);
+
+		namedWindow("gray_src", CV_WINDOW_AUTOSIZE);
+		imshow("gray_src", src);
+		waitKey(0);
+
+		int rows = gray_src.rows;
+		int cols = gray_src.cols;
+
+		std::cout << "rows and cols:" <<rows<<","<<cols<< std::endl;
+	}
+	
+}
+
+int main(int args, char ** argv)
+{
+	createDatabase("C:\\Users\\guo\\Desktop\\traindatabase\\");
+	return 0;
+}
+```
+
+
+
