@@ -16,3 +16,12 @@
 
 [database](database)
 
+[arch](arch)
+
+[bat](bat)
+
+[c](c)
+
+[github](github)
+
+[word](word)
