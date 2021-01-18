@@ -299,3 +299,25 @@
     3.一个1：n联系转换为一个关系模式
     4.一个1：1联系可以转换为一个独立的关系模式
     5.3个以上多元联系转换为一个关系模式​​
+
+
+
+### mysql例
+
+CREATE TABLE `category_tbl`
+
+(
+
+​    `category_id` INT UNSIGNED AUTO_INCREMENT,
+
+​    `category` VARCHAR(20) NOT NULL,
+
+​    `value`  INT NOT NULL,
+
+​    `percent` VARCHAR(20) NOT NULL,
+
+​    `time` DATE NOT NULL,
+
+​    PRIMARY KEY(`category_id`)
+
+)ENGINE=InnoDB DEFAULT CHARSET=utf8;

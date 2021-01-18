@@ -84,3 +84,65 @@ springboot默认封装，而我查询的功能只需要单纯的数据交互。
 ### 密码问题
 
 默认无密码，通过ip+port即可访问。
+
+
+
+### platform临时代码
+
+```
+package com.ti.platform_provider_stix8001.mapper;
+
+
+
+import static com.mongodb.client.model.Filters.*;
+import com.mongodb.client.MongoCollection;
+import com.mongodb.client.MongoCursor;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.hbase.HBaseConfiguration;
+import org.apache.hadoop.hbase.client.Admin;
+import org.apache.hadoop.hbase.client.Connection;
+import org.apache.hadoop.hbase.client.ConnectionFactory;
+import org.apache.hadoop.hbase.client.HBaseAdmin;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.stereotype.Repository;
+
+
+
+import org.bson.Document;
+
+import javax.sound.midi.Soundbank;
+import java.io.IOException;
+
+@Repository
+public class TestMapper {
+
+    @Autowired
+    private MongoTemplate mongoTemplate;
+
+
+    public void find1()
+    {
+        System.out.println(mongoTemplate);
+
+        MongoCollection<Document> collection=mongoTemplate.getCollection("inventory");
+        System.out.println(collection);
+        System.out.println(collection.find());
+        MongoCursor<Document> cursor=collection.find().iterator();
+        while(cursor.hasNext())
+        {
+            System.out.println(cursor.next());
+        }
+        Integer sum= Math.toIntExact(collection.countDocuments(eq("type", "bundle")));
+        System.out.println(sum);
+    }
+
+    public void testHbase() throws IOException {
+        Configuration configuration=HBaseConfiguration.create();
+        configuration.set("hbase.zookeeper.quorum", "hbaseserver");
+        configuration.set("hbase.zookeeper.property.clientPort", "2181");
+        Connection connection= ConnectionFactory.createConnection(configuration);
+        System.out.println(connection.toString());
+    }
+}
+```

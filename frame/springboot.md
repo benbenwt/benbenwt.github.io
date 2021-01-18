@@ -110,38 +110,69 @@ server
   >
   >```yaml
   >server:
-  >port: 8080
-  >
+  >  port: 8001
   >spring:
-  >datasource:
-  >username: root
-  >password: root
-  >url: jdbc:mysql://localhost:3306/emp?useUnicode=true&characterEncoding=utf-8&useSSL=true&serverTimezone=UTC
-  >driver-class-name: com.mysql.jdbc.Driver
-  >
+  >  application:
+  >    name: provider-dept8001
+  >  datasource:
+  >    type: org.apache.commons.dbcp2.BasicDataSource
+  >    username: root
+  >    password: root
+  >    url: jdbc:mysql://localhost:3306/cloud_db_one?useUnicode=true&characterEncoding=utf-8&useSSL=true&serverTimezone=UTC
+  >    driver-class-name: com.mysql.cj.jdbc.Driver
+  >    dbcp2:
+  >      min-idle: 10
+  >      initial-size: 10
+  >      max-total: 300
+  >      max-wait-millis: 10000
+  >      default-auto-commit: true
   >mybatis:
-  >mapper-locations: classpath:mybatis/mapper/*Mapper.xml
-  >type-aliases-package: com.weitao.mybatis.entity
+  >  mapper-locations: classpath:mybatis/mapper/*Mapper.xml
+  >  type-aliases-package: com.weitao.api.entity
   >
   >#showSql
   >logging:
-  >level:
-  >com:
-  > example:
-  >   mapper : debug
+  >  level:
+  >    com:
+  >      example:
+  >        mapper: debug
+  >
+  >eureka:
+  >  client:
+  >    service-url:
+  >      defaultZone: http://localhost:7000/eureka,http://localhost:7001/eureka,http://localhost:7002/eureka
+  >
   >```
   >
-  >3编写三层，使用RestController,Service,Repository配置好ioc加载，注意再启动类上加上MapperScan,参数为mapper接口路径。编写entity类，和mapper对应的xml文件。xml如下：
+  >3编写三层：编写entity类，mapper接口，mapper对应的xml文件。添加mapper注解，或在启动类上添加mapperscan指定mapper所在文件夹。mapper，mapper.xml如下：
+  >
+  >```
+  >@Mapper
+  >public interface DeptMapper {
+  >    Dept findById(Integer deptNo);
+  >    List<Dept> findAll();
+  >    boolean addDept(Dept dept);
+  >}
+  >```
   >
   >```java
   ><?xml version="1.0" encoding="UTF-8"?>
   ><!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-  ><mapper namespace="com.weitao.mybatis.mappers.EmpMapper">
-  >    <select id="selectAll"
-  >            resultType="com.weitao.mybatis.entity.Emp">
-  >        select emp_id,emp_name from emp
+  >
+  ><mapper namespace="com.weitao.provider.mapper.DeptMapper">
+  >    <select id="findById" resultType="Dept" parameterType="Integer">
+  >        select dept_no deptNo,dept_name deptName,db_source dbSource from dept where dept_no=#{deptNo}
   >    </select>
+  >
+  >    <select id="findAll" resultType="Dept">
+  >         select dept_no deptNo,dept_name deptName,db_source dbSource from dept
+  >    </select>
+  >
+  >    <insert id="addDept" parameterType="Dept">
+  >        INSERT INTO dept(dept_name,db_source) VALUES(#{deptName},DATABASE())
+  >    </insert>
   ></mapper>
+  >
   >```
   >
   >4启动启动类并验证。
@@ -221,34 +252,40 @@ jsp使用很少，一般使用如Thymelef等。
 ###### springboot的maven打包出错,java  -jar 运行后显示无主清单
 
 解决方法：
-  <build>   
+   
 
-   <plugins>      
-
-    <plugin>         
-    
-     <groupId>org.springframework.boot</groupId>    
-
-  ​        <artifactId>spring-boot-maven-plugin</artifactId>            <version>2.0.1.RELEASE</version>   
-
-  ​         <executions>              
-
-    <execution>            
-
-  ​        <goals>              
-
-  ​          <goal>repackage</goal>             
-
-  ​       </goals>             
-
-     </execution>         
-      
-     </executions>     
-      
-     </plugin>  
-      
-    </plugins></build>
-  ​
+```
+<build>
+    <plugins>
+        <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-compiler-plugin</artifactId>
+            <version>3.8.1</version>
+            <configuration>
+                <source>11</source>
+                <target>11</target>
+                <encoding>UTF-8</encoding>
+            </configuration>
+        </plugin>
+        <plugin>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-maven-plugin</artifactId>
+            <version>2.3.4.RELEASE</version>
+            <configuration>
+                <mainClass>com.weitao.parent.ParentApplication</mainClass>
+            </configuration>
+            <executions>
+                <execution>
+                    <id>repackage</id>
+                    <goals>
+                        <goal>repackage</goal>
+                    </goals>
+                </execution>
+            </executions>
+        </plugin>
+    </plugins>
+</build>
+```
 
 ### problem
 

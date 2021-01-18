@@ -230,6 +230,20 @@ Open Shortest Path First，开放最短路径优先，他是为了克服RIP的�
     为了不冲突ip，划分专门的段给专用网络使用。专用ip也称可重用ip。
     有时公司分布在各地，专用网络如何沟通？1购买专用线路。2借助互联网为载体。
 
+# 运输层
+
+## udp
+
+## tcp
+
+三次握手
+
+拥塞控制
+
+滑动窗口
+
+流量控制
+
 # http
 
 过程：连接，请求，回应，断开。
@@ -283,6 +297,8 @@ Content-Language
 Content-MD5
 Content-Range
 Content-Modified
+
+
 
 # 代理
 

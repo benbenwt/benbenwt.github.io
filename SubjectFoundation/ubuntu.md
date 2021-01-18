@@ -49,7 +49,9 @@ unzip
 cd-  跳回上次目录
 df -h 查看磁盘容量
 touch 1.txt创建文件
-​
+​ls-lrt 查看软连接
+
+ls -l   查看软连接
 
 ### 查找文件
 whereis 文件名   模糊查找
@@ -193,3 +195,4 @@ sudo kill -9 pid
 
 - 基本
   git clone git://远程Git库地址  filename
+
