@@ -9,3 +9,92 @@ Springcloud搭建
  
 
 Docker，使用dockerfile搭建服务环境环境，挂载目录上传html和jar包。
+
+### 数据库
+
+Springcloud搭建
+
+前端页面搭在nginx上，使用echart。Bootstrap。
+
+请求consumer，consumer会依据eureka名称请求对应的客户端。
+
+数据库用mysql，统计后的关系型数据放到mysql。 
+
+Docker，使用dockerfile搭建服务环境环境，挂载目录上传html和jar包。
+
+ 
+
+计算统计结果，展示统计信息后台，crudstix文件，nginx前端，数据库。
+
+category value  percent time 
+
+family value
+
+ 
+
+CREATE TABLE `category_tbl`
+
+(
+
+​    `category_id` INT UNSIGNED AUTO_INCREMENT,
+
+​    `category` VARCHAR(20) NOT NULL,
+
+​    `value`  INT NOT NULL,
+
+​    `percent` INT UNSIGNED NOT NULL,
+
+​    `time` DATE，//截至time日累积的数目。可得月周。
+
+​    PRIMARY KEY(`category_id`)
+
+)ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+柱状图当前统计=源数据截至当前日每个类数量，样本时间<当前时间。
+
+折线：源数据截至某日累积样本数，样本时间<n日,n=1……。每周和每月数据取该段时间最大日期即可。某日月周没有，即取前一周月日。新增即是相减。
+
+单个样本：该样本所处时间点。源数据，按某策略更新mysql统计数据即可。前端要展示，不存mysql里。
+
+CREATE TABLE `family_tbl`
+
+(
+
+​    `family_id` INT UNSIGNED AUTO_INCREMENT,
+
+​    `family` VARCHAR(20) NOT NULL,
+
+​    `value` INT NOT NULL,
+
+​    PRIMARY KEY(`family_id`)
+
+)ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+ 
+
+mysql事件删除过期数据。日统计信息。后端要提供单个样本具体信息，
+
+ 
+
+最新日期，每类一个：
+
+SELECT category_id categoryId,category,value,percent,time FROM `category_tbl` WHERE category_id IN(SELECT     SUBSTRING_INDEX(GROUP_CONCAT(category_id ORDER BY `time` DESC),',',1) FROM `category_tbl` GROUP BY category )
+
+由于此数据保证每天都存储，即每类的最新数据就是MAX(time)，所以不用concat。
+
+SELECT category_id categoryId,category,value,percent,time FROM `category_tbl` WHERE time=(SELECT MAX(time) FROM `category_tbl`)
+
+ 
+
+最新的前10天，占比最高的前两类。
+
+SELECT category_id categoryId,category,value,percent,time FROM category_tbl a WHERE a.time IN 
+
+(SELECT time FROM(SELECT DISTINCT b.time FROM `category_tbl` b ORDER BY b.time DESC LIMIT 10)AS times) AND a.category IN
+
+(SELECT * FROM (SELECT category FROM category_tbl GROUP BY category ORDER BY count(category) DESC LIMIT 2)AS category_list) ORDER BY category,time特殊情况，每天都记录了。
+
+最新的前10周
+
+前10个月。
+

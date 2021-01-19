@@ -14,9 +14,9 @@ windws下载好，点击即可启动。
 
 指定配置文件启动
 
-##### nginx -s reload 
+##### nginx -s reload /reopen/quit/stop
 
-重载配置
+重载配置/重开启/退出/停止
 
 ### nginx配置文件
 
@@ -69,9 +69,21 @@ location	/	{
          proxy_pass [https://benbenwt.github.io](https://benbenwt.github.io/);	  
 }	}  
 
+##### 匹配规则
+
+匹配多个，选择匹配的最长的。然后映射改变ip和端口。
+
+##### 用于跨域
+
+使用反向代理替换ip+端口。即使用同意端口反向代理想要访问的跨域ip+端口。
+
 
 # problem
 
 ## 更改设置，页面不变化
 清除浏览器缓存
+
+### nginx命令不起作用
+
+如使用关闭命令后，仍能访问。更改设置后，仍未变化。更改页面后，仍未变化。实际上是因为启动了多个nginx，导致跑了几十个nginx容器，之前的内容一直在这些容器中可以访问。
 

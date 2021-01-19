@@ -49,6 +49,30 @@
 
 注意echarts.js引入正确
 
+### 配置项属性
+
+https://echarts.apache.org/next/zh/option.html#series-pie.roseType
+
+title.text:标题内容
+
+color:指定各个块的颜色
+
+tooltip.trigger：item：只显示该点 axis:显示该列所有
+
+tootip.formatter:a,b,c,分别表示列名，数据名，数据值等。
+
+series.name：整个饼的名字
+
+​			.type:图的类型
+
+​			.center：图的中心
+
+​    		.roseType:南丁格尔图
+
+​			.data:数据
+
+​			labelline.length;视觉引导线长度。
+
 ### 基本语法
 
 >创建好div，使用js操作样式。
