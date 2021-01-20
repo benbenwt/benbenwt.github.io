@@ -235,15 +235,19 @@ jsp使用很少，一般使用如Thymelef等。
 
   ### 打包部署
 
-基本流程
+>https://blog.csdn.net/aiyowei1106/article/details/85273705
 
-可能的问题
+##### 基本流程
 
-见[可能的问题](#problem)
+1，将当前模块依赖的公共模块在project structure中引入。并将公共模块maven install到本地仓库，然后在当前模块pom中引入功能模块坐标。这样，在打包时会将公共模块加入jar内。
 
-##### 打包时的pom文件设置
+2，springboo打包时，应在pom内引入springboot-maven插件，设置主类名。若设置错误，会出现Exception in thread "main" java. lang.ClassNotFound Exception。
 
-所有模块都使用了maven，故都添加maven-compiler。但，只在使用springboot的子模块中添加springboot-maven插件。
+
+
+##### 打包时的pom文件设置如下
+
+下方为两个插件，所有模块都使用了maven管理，故都添加maven-compiler。但，只在使用springboot的子模块中添加springboot-maven插件。
 
 ```
 <build>
@@ -278,21 +282,30 @@ jsp使用很少，一般使用如Thymelef等。
 </build>
 ```
 
-  ##### 打包
-  导入spingboot-maven-plugin，随后点击mavenproject->Lifecycle->package生成jar包。
+
+
+##### 打包
+
+ 随后点击mavenproject->Lifecycle->package生成jar包。
+
+package：只打包
+
+install：打包发布到本地仓库
+
+deploy：打包发布到远程及本地
 
 ##### 启动
-  java  - jar 名称：执行程序。
+  java  - jar jar包名称。
 
-  ##### 发生的的错误
+  ### problem
 
-###### maven编译版本和本地版本不同
+##### maven编译版本和本地版本不同
 
 解决方法：
   <properties>    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>    <maven.compiler.encoding>UTF-8</maven.compiler.encoding>    <java.version>11</java.version>    <maven.compiler.source>11</maven.compiler.source>    <[maven.compiler.target](http://maven.compiler.target/)>11</[maven.compiler.target](http://maven.compiler.target/)></properties>
 ​
 
-###### springboot的maven打包出错,java  -jar 运行后显示无主清单
+##### springboot的maven打包出错,java  -jar 运行后显示无主清单
 
 解决方法：
 

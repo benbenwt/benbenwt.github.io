@@ -1,6 +1,6 @@
 # problem
 
-### eureka之间互相不注册
+##### eureka之间互相不注册
 
 域名即hostname不能相同，必须在hosts中设置不同域名指向127.0.0.1。
 
