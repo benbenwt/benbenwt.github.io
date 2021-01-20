@@ -82,19 +82,33 @@ SELECT category_id categoryId,category,value,percent,time FROM `category_tbl` WH
 
 由于此数据保证每天都存储，即每类的最新数据就是MAX(time)，所以不用concat。
 
-SELECT category_id categoryId,category,value,percent,time FROM `category_tbl` WHERE time=(SELECT MAX(time) FROM `category_tbl`)
-
- 
+SELECT category_id categoryId,category,value,percent,time FROM `category_tbl` WHERE time=(SE
 
 最新的前10天，占比最高的前两类。
+
+最新的前10天，占比最高的前两类。特殊情况，每天都记录了。
 
 SELECT category_id categoryId,category,value,percent,time FROM category_tbl a WHERE a.time IN 
 
 (SELECT time FROM(SELECT DISTINCT b.time FROM `category_tbl` b ORDER BY b.time DESC LIMIT 10)AS times) AND a.category IN
 
-(SELECT * FROM (SELECT category FROM category_tbl GROUP BY category ORDER BY count(category) DESC LIMIT 2)AS category_list) ORDER BY category,time特殊情况，每天都记录了。
+(SELECT * FROM (SELECT category FROM category_tbl GROUP BY category ORDER BY count(category) DESC LIMIT 2)AS category_list) ORDER BY category,time
 
 最新的前10周
 
-前10个月。
+最新的前10周，特殊情况，每天都记录了。
+
+ 
+
+特例前10个月。
+
+特例前10个月，特殊情况，每天都记录了。
+
+源数据，stix2文件。待统计数据：单个结构化的样本，包含发生时间等属性。统计数据：截至某日，共发生各种类多少次等。
+
+
+
+##### 版本
+
+java8,hadoop2.9.2,hbase2.2.x，hive
 
