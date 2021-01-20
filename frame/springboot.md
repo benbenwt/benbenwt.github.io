@@ -233,26 +233,17 @@ jsp使用很少，一般使用如Thymelef等。
 
 使用@SpringBootTest注解标记类，使用Test标记测试方法即可。
 
-  ### 部署
+  ### 打包部署
 
-  ##### 打包
-  导入spingboot-maven-plugin，随后点击mavenproject->Lifecycle->package生成jar包。
+基本流程
 
-##### 启动
-  java  - jar 名称：执行程序。
+可能的问题
 
-  ##### 发生的的错误
+见[可能的问题](#problem)
 
-###### maven编译版本和本地版本不同
+##### 打包时的pom文件设置
 
-解决方法：
-  <properties>    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>    <maven.compiler.encoding>UTF-8</maven.compiler.encoding>    <java.version>11</java.version>    <maven.compiler.source>11</maven.compiler.source>    <[maven.compiler.target](http://maven.compiler.target/)>11</[maven.compiler.target](http://maven.compiler.target/)></properties>
-​
-
-###### springboot的maven打包出错,java  -jar 运行后显示无主清单
-
-解决方法：
-   
+所有模块都使用了maven，故都添加maven-compiler。但，只在使用springboot的子模块中添加springboot-maven插件。
 
 ```
 <build>
@@ -287,7 +278,59 @@ jsp使用很少，一般使用如Thymelef等。
 </build>
 ```
 
-### problem
+  ##### 打包
+  导入spingboot-maven-plugin，随后点击mavenproject->Lifecycle->package生成jar包。
+
+##### 启动
+  java  - jar 名称：执行程序。
+
+  ##### 发生的的错误
+
+###### maven编译版本和本地版本不同
+
+解决方法：
+  <properties>    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>    <maven.compiler.encoding>UTF-8</maven.compiler.encoding>    <java.version>11</java.version>    <maven.compiler.source>11</maven.compiler.source>    <[maven.compiler.target](http://maven.compiler.target/)>11</[maven.compiler.target](http://maven.compiler.target/)></properties>
+​
+
+###### springboot的maven打包出错,java  -jar 运行后显示无主清单
+
+解决方法：
+
+
+```
+<build>
+    <plugins>
+        <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-compiler-plugin</artifactId>
+            <version>3.8.1</version>
+            <configuration>
+                <source>11</source>
+                <target>11</target>
+                <encoding>UTF-8</encoding>
+            </configuration>
+        </plugin>
+        <plugin>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-maven-plugin</artifactId>
+            <version>2.3.4.RELEASE</version>
+            <configuration>
+                <mainClass>com.weitao.parent.ParentApplication</mainClass>
+            </configuration>
+            <executions>
+                <execution>
+                    <id>repackage</id>
+                    <goals>
+                        <goal>repackage</goal>
+                    </goals>
+                </execution>
+            </executions>
+        </plugin>
+    </plugins>
+</build>
+```
+
+# <span id = "jump">problem</span>
 
 ##### spring intial失败
 
@@ -313,7 +356,15 @@ ctrl左键点击依赖，查看spring-boot-dependeccies或spriing-cloud-dependen
 
 可以在配置服务的地方设置override parameter，或改变打包方式,将pom.xml中的package改为jar，但是最好不要，因为他是作为父级模块。
 
+##### 打包后时提醒无某依赖的模块
 
+例如依赖api基础模块，则在project structure中添加moudles依赖。并把api模块maven install的本地仓库，在当前模块中使用pom引入api模块。
+
+##### 打包成功，运行时提醒无parentApplication
+
+原因：建立maven子模块时pom中没有自动写此插件的依赖，所以copy的父级，然后写的父级的主类名字，导致找不到主类。
+
+解决：在pom中引入springboot-maven插件，该插件可设置打包参数。在configuration->mainclass中设置主类的全限定类名。
 
 
 
