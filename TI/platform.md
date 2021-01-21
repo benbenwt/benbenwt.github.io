@@ -1,3 +1,23 @@
+### 数据
+
+lisa生成,各种格式ti。
+
+stix原始数据
+
+​	待统计数据,单个样本
+
+##### 				nginx前端个体样本数据及原始数据
+
+​				mysql统计数据
+
+##### 								spring统计模块
+
+​										nginx前端
+
+到网站或自己的库查询ti
+
+## 基本
+
 Springcloud搭建
 
 前端页面搭在nginx上，使用echart。Bootstrap。
