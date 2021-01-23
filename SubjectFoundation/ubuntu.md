@@ -96,6 +96,8 @@ ufw allow from ip to any port 端口号
 
 ## 修改ssh端口并开放
 
+https://medium.com/@antiless.dev/%E8%B6%85%E8%AF%A6%E7%BB%86-vultr-vps-%E6%90%AD%E5%BB%BA-ss-%E6%96%B0%E6%89%8B%E5%9B%BE%E6%96%87%E6%8C%87%E5%AF%BC%E6%95%99%E7%A8%8B-4d6b33e411b6
+
 查看是否安装过
 
 ufwsudo dpkg --get-selections | grep ufw
@@ -128,14 +130,57 @@ ufw enable
 检查设置规则
 sudo ufw status
 
+### vultr搭建
 
+vultr使用心得
+http://blog.51cto.com/13940125/2165848
+1服务器搭建
+购买服务器
+检测服务器（能否ping通？,一把都开启了22，port 22开启？） 
+摧毁服务器or进入第二步
+2x贝壳连接
+连接服务器(使用vultr提供的root，和密码)
+(yum install git -y)
+ss搭建
+   git clone   https://github.com/Flyzy2005/ 
+
+ss-fly
+   ss-fly/ss-fly.sh -i password 1024
+bbr加速
+    ss-fly/ss-fly.sh -bbr
+（firewall set）
+3酸酸连接
+切换为系统代理
+
+ssh使用用户名和密码登录，共享数据，登录主机。
+ssl为了数据加密和交流。
+问题多出在服务器搭建。
+https://medium.com/@antiless.dev/超详细-vultr-vps-搭建-ss-新手图文指导教程-4d6b33e411b6
+小站:![img](file:///C:\Users\guo\AppData\Roaming\Tencent\QQTempSys\`7_{~]GF$3{MOQ4V_}PH]YC.png)www.flyzy2005.com
 
 ## ssh服务ip限制
 etc/ssh/sshd_config配置端口
 在etc/hosts.allow  /etc/hosts.deny
 控制ip访问服务。
 grep sshd /var/log/auth.log | less
-​
+
+### 安装shadowsocks
+
+wget –no-check-certificate  https://raw.githubusercontent.com/teddysun/shadowsocks_install/master/shadowsocks.sh
+
+chmod +x shadowsocks.sh
+
+./shadowsocks.sh 2>&1 | tee shadowsocks.log
+
+### 使用端设置
+
+ip，端口，密码，加密方式。
+
+协议：origin，混淆：plain.
+
+#### 忘记密码设置等
+
+登录服务器，在/etc/shadowsocks.json或etc/shadowsocks/shadowsacks.json中有信息。
 
 ## bbr服务
 

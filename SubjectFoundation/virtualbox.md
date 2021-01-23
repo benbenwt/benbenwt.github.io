@@ -8,3 +8,7 @@
 
 在设置-设备中开启共享文件夹，还要使用此命令sudo` `usermod` `-a -G vboxsf 用户名才可。
 
+### 无法启动virtualbox client
+
+无法
+
