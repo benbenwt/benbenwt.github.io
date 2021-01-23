@@ -8,8 +8,8 @@
 
 [TI](/TI/TI)
 
-[web2](web2)
+[web2](/web2/web2)
 
-[web1](web1)
+[web1](/web1/web1)
 
 # blog目录
