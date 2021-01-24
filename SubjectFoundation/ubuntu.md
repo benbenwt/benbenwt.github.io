@@ -116,13 +116,17 @@ sudo ufw allow 5901
 sudo ufw allow 5902
 将22端口改为50022
 
-sudo   vi /etc/ssh/sshd_config   
+##### sudo   vi /etc/ssh/sshd_config   
 
-重启ssh服务
-service sshd restart   
+注意配置远程客户端修改sshd_config即可。找到port所在行取消注释，修改端口号即可。
 
-查看更改是否生效
-netstat -tlnp  
+##### 重启ssh服务
+
+##### service sshd restart   
+
+##### 查看更改是否生效
+
+##### netstat -tlnp  
 
 防火墙生效并开机启动
 ufw enable     
