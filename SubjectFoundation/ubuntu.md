@@ -42,7 +42,7 @@ VBoxManage modifyhd 0bd9c696-1735-48ce-81cf-04e9f64c2418 –resize 51200
 3进入virtualbox进入设置，存储，删除旧的磁盘，添加新磁盘。
 或将原虚拟机复制到新目录，控制，注册导入。
 
-## 文件
+## 文件/usr/lib/jvm/java-8-openjdk-amd64/jre/bin/java
 
 解压 tar -zxvf filename
 unzip

@@ -21,7 +21,7 @@ http://hbase.apache.org/book.html#quickstart
 
 转换成HBase数据库的表结构就如下所示
 
-|             | Info      | Score    |          |            |             |
+|             | Info      |          |          | Score      |             |
 | ----------- | --------- | -------- | -------- | ---------- | ----------- |
 | **Row_key** | Info:name | Info:age | Info:sex | Score:name | Score:score |
 |             |           |          |          |            |             |

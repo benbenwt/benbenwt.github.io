@@ -132,5 +132,5 @@ SELECT category_id categoryId,category,value,percent,time FROM category_tbl a WH
 
 ##### 版本
 
-java8,hadoop2.9.2,hbase2.2.x，hive
+java8,hadoop2.10.x,3.1.1+,3.2.x,hbase2.3.x，hive
 
