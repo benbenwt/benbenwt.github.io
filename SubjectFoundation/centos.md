@@ -4,6 +4,8 @@ pwd
 
 cat
 
+### 网络
+
 ##### 防火墙
 
 1、开放端口
@@ -18,7 +20,7 @@ cat
 
 2、查看防火墙所有开放的端口
 
-**firewall-cmd --zone=public --list-ports**
+**firewall-cmd - -zone=public - -list-ports**
 
  
 
@@ -68,6 +70,10 @@ cat
 
 **kill -9 6832**
 
+##### 配置网络
+
+
+
 ### 常用目录
 
 /etc/hosts
@@ -82,6 +88,10 @@ ssh默认在22，ftp默认在21,sftp，默认在22端口。修改ssh在etc/ssh/s
 
 ### problem
 
-当前用户不是root用户，修改etc文件。
+##### 当前用户不是root用户，修改etc文件。
 
 su root切换到root用户。chmod 777 /etc/sudoers开启修改权限，vim打开在其中，加上usr ALL=(ALL) ALL，为用户开启root。
+
+##### 配置好ip，gateway，掩码，dns后，连接校园网无法访问百度
+
+局域网内连通，连接校园网后无法访问百度。使用ip测试，可访问百度，dns有问题。更换dns，114改为1.2.4.8。
