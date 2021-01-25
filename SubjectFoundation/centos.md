@@ -80,11 +80,29 @@ cat
 
 /etc/sysconfig/network
 
-### 远程连接与ftp
+### ssh连接与ftp
 
-远程连接使用系统中已创建的用户名及密码，加上ip和端口实现访问。
+ssh连接和ftp使用系统中已创建的用户名及密码，加上ip和端口实现访问。
 
 ssh默认在22，ftp默认在21,sftp，默认在22端口。修改ssh在etc/ssh/ssh_config中修改。
+
+notepad配置好sftp插件，填写参数即可上传。
+
+### 服务器之间copy文件
+
+yum install ssh-clients安装scp命令
+
+scp /tm  @172.18.65.22:/root/将当前电脑tm拷贝到目标主机root目录下。随后输入密码即可。
+
+##### rsync
+
+rsync     -rvl  /tmp   root@hbae:/tmp
+
+##### xsync
+
+复制到所有节点相同目录下。
+
+
 
 ### problem
 

@@ -63,4 +63,4 @@ secwiki，freebuf，绿盟，
 virusshare，alienvulter
 
 ## stix2
-oasis
+oasis，virustotal

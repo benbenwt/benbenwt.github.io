@@ -1,3 +1,90 @@
+### 配置步骤
+
+java,hadoop 环境变量，env.sh.
+
+防火墙，hosts，hostname，ip
+
+ssh
+
+sudo systemctl stop firewalld.service关闭防火墙
+
+sudo systemctl disable firewalld.service取消自启
+
+### 常用配置文件
+
+##### 文件夹
+
+etc/hadoop:环境配置sh文件，各部件配置xml文件。
+
+sbin：启动，停止各部件控制sh文件。
+
+bin：执行mapreduce任务sh文件。
+
+share：基础配置等。
+
+##### core-site.xml
+
+配置hdfs的ip和端口
+
+hdfs的存储文件夹
+
+##### hdfs-site.xml
+
+配置hdfs的详细信息，例如hdfs的replication，namenode位置和datanode的位置。
+
+##### hadoop-env.sh,mapred-env.sh,yarn-env.sh
+
+环境配置，至少配置JAVA_HOME绝对路径。
+
+##### mapred-site.xml
+
+##### yarn-site.xml
+
+### 常用端口
+
+9870  用户查看hdfs节点信息，hdfs的http端口
+
+  8088  用户查看YARN的http端口，显示任务执行信息，查找错误等。
+
+| 端口  | 用途                                                         |
+| ----- | ------------------------------------------------------------ |
+| 9000  | fs.defaultFS，如：hdfs://172.25.40.171:9000                  |
+| 9001  | dfs.namenode.rpc-address，DataNode会连接这个端口             |
+| 50070 | dfs.namenode.http-address                                    |
+| 50470 | dfs.namenode.https-address                                   |
+| 50100 | dfs.namenode.backup.address                                  |
+| 50105 | dfs.namenode.backup.http-address                             |
+| 50090 | dfs.namenode.secondary.http-address，如：172.25.39.166:50090 |
+| 50091 | dfs.namenode.secondary.https-address，如：172.25.39.166:50091 |
+| 50020 | dfs.datanode.ipc.address                                     |
+| 50075 | dfs.datanode.http.address                                    |
+| 50475 | dfs.datanode.https.address                                   |
+| 50010 | dfs.datanode.address，DataNode的数据传输端口                 |
+| 8480  | dfs.journalnode.rpc-address                                  |
+| 8481  | dfs.journalnode.https-address                                |
+| 8032  | yarn.resourcemanager.address                                 |
+| 8090  | yarn.resourcemanager.webapp.https.address                    |
+| 8030  | yarn.resourcemanager.scheduler.address                       |
+| 8031  | yarn.resourcemanager.resource-tracker.address                |
+| 8033  | yarn.resourcemanager.admin.address                           |
+| 8042  | yarn.nodemanager.webapp.address                              |
+| 8040  | yarn.nodemanager.localizer.address                           |
+| 8188  | yarn.timeline-service.webapp.address                         |
+| 10020 | mapreduce.jobhistory.address                                 |
+| 19888 | mapreduce.jobhistory.webapp.address                          |
+| 2888  | ZooKeeper，如果是Leader，用来监听Follower的连接              |
+| 3888  | ZooKeeper，用于Leader选举                                    |
+| 2181  | ZooKeeper，用来监听客户端的连接                              |
+| 60010 | hbase.master.info.port，HMaster的http端口                    |
+| 60000 | hbase.master.port，HMaster的RPC端口                          |
+| 60030 | hbase.regionserver.info.port，HRegionServer的http端口        |
+| 60020 | hbase.regionserver.port，HRegionServer的RPC端口              |
+| 8080  | hbase.rest.port，HBase REST server的端口                     |
+| 10000 | hive.server2.thrift.port                                     |
+| 9083  | hive.metastore.uris                                          |
+|       |                                                              |
+|       |                                                              |
+
 ##### 安装
 
 下载hadoop到机器，解压缩后在/etc/profile配置java环境变量，hadoop需要使用java。随后，在profile中配置hadoop环境变量其多了一个参数，为export PATH=$PATH:$HADOOP_HOME/sbin。source /etc/profile载入配置检查正确性，终端运行hadoop检查是否成功。
@@ -75,3 +162,9 @@ YARN_NODEMANAGER_USER=root
 相应的core-site.xml应设置如下:fs.defaultFS的value为hdfs://hbase:9000。随后，使用sbin/stop-all.sh停止服务，使用sbin/start-all.sh开启即可。
 
 相关，查看hadoop官方configuration，其默认的设置ip的确为0。但使用其他教程修改了
+
+### problem
+
+##### outputfile already exists
+
+在本地用rm -rf这种方式错误，在hdfs系统中仍能查看到output文件存在。应使用hadoop指令删除相干文件。如下 bin/hdfs -rm -r -f  /user/root/output.
