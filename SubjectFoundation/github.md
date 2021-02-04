@@ -45,7 +45,9 @@ git branch -M main  更改分支名字
 git remote add origin  git@github.com:benbenwt/test.git
 git push -u origin main
 
- git push -u -f origin main，覆盖远程分支。
+ git push -u -f origin main，覆盖远程分支。u指定默认主机和分支，使得push和pull可以不带参数。
+
+ git push --set-upstream origin main，设定默认上传分支。
 
 ##### git add -A
 
@@ -88,7 +90,7 @@ git init
 git add [README.md](http://readme.md/)
 git commit -m "first commit"
 git branch -M main  更改分支名字
-git remote add origin  git@github.com:benbenwt/test.git
+git remote add origin  git@github.com:benbenwt/test.git，创建远程仓库test。
 git push -u origin main
 ​
 
@@ -97,3 +99,4 @@ git push -u origin main
 ## pull，push，fetch等操作卡住
 
 ​		使用GIT_TRACE=2  GIT_CURL_VERBOSE=2 git fetch查看耗时进程，再次执行卡住操作即可
+

@@ -21,6 +21,7 @@ D:
 git checkout main
 git add -A
 git commit -m "bat"
+git push
 :end
 pause>nul
 ```

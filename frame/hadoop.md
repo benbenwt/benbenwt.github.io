@@ -82,12 +82,10 @@ hdfs的存储文件夹
 | 8080  | hbase.rest.port，HBase REST server的端口                     |
 | 10000 | hive.server2.thrift.port                                     |
 | 9083  | hive.metastore.uris                                          |
-|       |                                                              |
-|       |                                                              |
 
 ##### 安装
 
-下载hadoop到机器，解压缩后在/etc/profile配置java环境变量，hadoop需要使用java。随后，在profile中配置hadoop环境变量其多了一个参数，为export PATH=$PATH:$HADOOP_HOME/sbin。source /etc/profile载入配置检查正确性，终端运行hadoop检查是否成功。
+下载hadoop到机器，解压缩后在/etc/profile配置java环境变量，hadoop需要使用java。随后，在profile中配置hadoop环境变量,其多了一个参数，为export PATH=$PATH:$HADOOP_HOME/sbin。source /etc/profile载入配置检查正确性，终端运行hadoop检查是否成功。
 
 ##### 单机运行
 
@@ -163,8 +161,6 @@ YARN_NODEMANAGER_USER=root
 
 相关，查看hadoop官方configuration，其默认的设置ip的确为0。但使用其他教程修改了
 
-### problem
-
 ##### outputfile already exists
 
-在本地用rm -rf这种方式错误，在hdfs系统中仍能查看到output文件存在。应使用hadoop指令删除相干文件。如下 bin/hdfs -rm -r -f  /user/root/output.
+在本地用rm -rf这种方式删除output文件夹是错误的，在hdfs系统中仍能查看到output文件存在。应使用hadoop指令删除相关文件。如下 bin/hdfs -rm -r -f  /user/root/output.

@@ -12,4 +12,6 @@
 
 [web1](/web1/web1)
 
+[other](other)
+
 # blog目录
