@@ -83,11 +83,11 @@ hdfs的存储文件夹
 | 10000 | hive.server2.thrift.port                                     |
 | 9083  | hive.metastore.uris                                          |
 
-##### 安装
+### 安装
 
 下载hadoop到机器，解压缩后在/etc/profile配置java环境变量，hadoop需要使用java。随后，在profile中配置hadoop环境变量,其多了一个参数，为export PATH=$PATH:$HADOOP_HOME/sbin。source /etc/profile载入配置检查正确性，终端运行hadoop检查是否成功。
 
-##### 单机运行
+### 单机运行
 
 https://hadoop.apache.org/docs/r3.1.4/hadoop-project-dist/hadoop-common/SingleCluster.html
 
@@ -97,7 +97,7 @@ https://hadoop.apache.org/docs/r3.1.4/hadoop-project-dist/hadoop-common/SingleCl
  bin/hadoop jar share/hadoop/mapreduce/hadoop-mapreduce-examples-3.1.4.jar grep input output 'dfs[a-z.]+'
 ```
 
-##### 伪分布式
+### 伪分布式
 
 ##### 创建无密码ssh
 
@@ -107,9 +107,47 @@ https://hadoop.apache.org/docs/r3.1.4/hadoop-project-dist/hadoop-common/SingleCl
   $ chmod 0600 ~/.ssh/authorized_keys
 ```
 
+### 完全分布式搭建
 
+>编写好分发脚本方便快速同步文件到其他机器
+>
+>编写好删除日志，data，tmp文件的脚本。当需要初始化时需要删除这些文件，然后格式化namenode再启动
 
-##### 基本部门
+##### 配置环境
+
+java环境变量,hadoop 环境变量，env.sh.
+
+防火墙，hosts，hostname，ip
+
+ssh使用公私钥不用密码
+
+##### 配置etc下的文件，env和xml，workers等。
+
+env引入环境变量。xml配置好namenode，datanode，存储位置等。
+
+配置workers，在其中加上集群机器的ip或域名，方便在一台机器上使用ssh调用启动其他机器。
+
+##### 格式化namenode并启动
+
+进入namenode所在的服务器，执行如下命令
+
+hdfs namenode -format
+
+sbin/start-dfs.sh
+
+会看到他按照配置文件，在三台不同机器启动了不同文件。
+
+访问namenode的ip的9870端口
+
+##### 启动yarn
+
+进入resourcemanager所在的服务器，执行sbin/start-yarn.sh
+
+访问resourcemanager的ip的8088端口
+
+##### 上传文件
+
+hdfs dfs -put filename
 
 1，平台。搭建平台，集群调优
 
@@ -119,7 +157,7 @@ https://hadoop.apache.org/docs/r3.1.4/hadoop-project-dist/hadoop-common/SingleCl
 
 4，开发。java开发
 
-##### 大数据之源
+### 大数据之源
 
 Google的GFS、MapReduce、BigTable
 
@@ -164,3 +202,17 @@ YARN_NODEMANAGER_USER=root
 ##### outputfile already exists
 
 在本地用rm -rf这种方式删除output文件夹是错误的，在hdfs系统中仍能查看到output文件存在。应使用hadoop指令删除相关文件。如下 bin/hdfs -rm -r -f  /user/root/output.
+
+##### 重启dfs
+
+停止进程，删除dfs的data。删除hadoop的logs和tmp。
+
+##### 无法访问9870
+
+1关闭selinux和防火墙
+
+2使用http访问，不支持https
+
+##### no such file
+
+ hadoop fs -mkdir -p /user/root/
