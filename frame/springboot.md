@@ -302,7 +302,7 @@ deploy：打包发布到远程及本地
 ##### maven编译版本和本地版本不同
 
 解决方法：
-  <properties>    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>    <maven.compiler.encoding>UTF-8</maven.compiler.encoding>    <java.version>11</java.version>    <maven.compiler.source>11</maven.compiler.source>    <[maven.compiler.target](http://maven.compiler.target/)>11</[maven.compiler.target](http://maven.compiler.target/)></properties>
+  <properties>    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>    <maven.compiler.encoding>UTF-8</maven.compiler.encoding>    <java.version>11</java.version>    <maven.compiler.source>11</maven.compiler.source>    <maven.compiler.target>11<maven.compiler.target></properties>
 ​
 
 ##### springboot的maven打包出错,java  -jar 运行后显示无主清单
