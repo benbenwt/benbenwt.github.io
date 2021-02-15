@@ -4,17 +4,17 @@ lisa生成,各种格式ti。
 
 stix原始数据
 
-​	待统计数据,单个样本
+	待统计数据,单个样本
 
 ##### 				          nginx前端个体样本数据及原始数据
 
 ##### 		  搜索页面
 
-​				mysql统计数据
+				mysql统计数据
 
 ##### 								                         spring统计模块
 
-​								nginx前端统计页面
+								nginx前端统计页面
 
 到网站或自己的库查询ti
 
@@ -58,17 +58,17 @@ CREATE TABLE `category_tbl`
 
 (
 
-​    `category_id` INT UNSIGNED AUTO_INCREMENT,
-
-​    `category` VARCHAR(20) NOT NULL,
-
-​    `value`  INT NOT NULL,
-
-​    `percent` INT UNSIGNED NOT NULL,
-
-​    `time` DATE，//截至time日累积的数目。可得月周。
-
-​    PRIMARY KEY(`category_id`)
+    `category_id` INT UNSIGNED AUTO_INCREMENT,
+    
+    `category` VARCHAR(20) NOT NULL,
+    
+    `value`  INT NOT NULL,
+    
+    `percent` INT UNSIGNED NOT NULL,
+    
+    `time` DATE，//截至time日累积的数目。可得月周。
+    
+    PRIMARY KEY(`category_id`)
 
 )ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
@@ -82,13 +82,13 @@ CREATE TABLE `family_tbl`
 
 (
 
-​    `family_id` INT UNSIGNED AUTO_INCREMENT,
-
-​    `family` VARCHAR(20) NOT NULL,
-
-​    `value` INT NOT NULL,
-
-​    PRIMARY KEY(`family_id`)
+    `family_id` INT UNSIGNED AUTO_INCREMENT,
+    
+    `family` VARCHAR(20) NOT NULL,
+    
+    `value` INT NOT NULL,
+    
+    PRIMARY KEY(`family_id`)
 
 )ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
@@ -134,3 +134,4 @@ SELECT category_id categoryId,category,value,percent,time FROM category_tbl a WH
 
 java8,hadoop2.10.x,3.1.1+,3.2.x,hbase2.3.x，hive
 
+java8,hadoop3.1.4,hive3.1.2,hbase2.3.3,mysql5.7.28,mysql-connector-5.1.37

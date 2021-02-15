@@ -44,7 +44,12 @@ VBoxManage modifyhd 0bd9c696-1735-48ce-81cf-04e9f64c2418 –resize 51200
 
 ## 文件/usr/lib/jvm/java-8-openjdk-amd64/jre/bin/java
 
-解压 tar -zxvf filename
+解压 :
+
+```
+tar -xzvf hive-x.y.z.tar.gz
+```
+
 unzip
 cd-  跳回上次目录
 df -h 查看磁盘容量
@@ -52,6 +57,22 @@ touch 1.txt创建文件
 ​ls-lrt 查看软连接
 
 ls -l   查看软连接
+
+##### 文件权限
+
+参考博客：https://blog.csdn.net/BjarneCpp/article/details/79912495
+
+一个文件可以由10位字符表示，0位是表示文件类型，123位表示user用户权限，456位表示用户组的权限，789位表示其他用户的权限。r表示读，w表示写，x表示写。-在0位表示普通文件，在其他位表示无此权限。d在0位表示文件夹类型。
+
+如下例子表示，该普通文件，用户可读可写可执行。用户组可读,可写。其他只可读。
+
+-rwxrw-r--
+
+chmod使用数字表示权限，1为读，2为写，3为执行。共三位表示用户，用户组，其他用户。最高权限为7，即三者之和。
+
+用法如下,将上边的10位例子写成chmod形式，如下：chmod   731  1.txt
+
+chown使用字母修改权限：chmod g+w 1.txt,为用户组添加1.txt的写权限。g表示用户组，u表示用户，
 
 ### 查找文件
 whereis 文件名   模糊查找

@@ -108,6 +108,8 @@ rsync     -rvl  /tmp   root@hbae:/tmp
 
 复制到所有节点相同目录下。
 
+### 文件
+
 
 
 ### problem
@@ -124,13 +126,13 @@ su root切换到root用户。chmod 777 /etc/sudoers开启修改权限，vim打�
 
 利用webconsole登陆进入后，使用su root可以切换到root目录下，也修改了密码。但是ssh仍无法连接。
 
-解决：在web登陆界面用root用户进入，再用ssh即可连接，奇怪。
-
-解决：上边的解决方案也不一定，我修改密码使用service sshd restart后又可以登陆了。
+解决：修改密码使用service sshd restart后又可以登陆了。但只能从内网机器登陆，其他不行，开vpn也没用。
 
 ##### ECDSA host key for ip has been changed
 
 在当前机器执行ssh-keygen -R 远程ip，刷新信息即可。
+
+例子：ssh-keygen -R 192.168.0.100
 
 ##### ssh秘钥公钥问题
 
@@ -145,3 +147,29 @@ su root切换到root用户。chmod 777 /etc/sudoers开启修改权限，vim打�
 ##### 关于slaves
 
 hadoop3以后，slaves更名为workers。
+
+##### 关闭多个ssh连接
+
+```
+查看当前所有连接
+w
+who
+查看自己登陆的用户
+whoami查看自己所用连接
+who am i
+杀死ssh连接
+pkill -kill -t pts/1
+```
+
+##### SSH连接时出现Host key verification failed
+
+/etc/ssh/ssh_config中改为StrictHostKeyChecking=no 
+
+##### sshd登录密码正确，提示permission denied
+
+vim /etc/ssh/ssh_config
+
+修改port，再改回去
+
+putty选择connection->ssh->rsa
+
