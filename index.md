@@ -12,6 +12,6 @@
 
 [web1](/web1/web1)
 
-[other](other)
+[基金](other)
 
 # blog目录
