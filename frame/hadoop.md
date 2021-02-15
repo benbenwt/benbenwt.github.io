@@ -556,7 +556,7 @@ mysql-connector-java-5.1.37
 
 mysql-5.7.28.el7.x86_64rmp-bundle.tar
 
-### 安装
+### 安装hive
 
 1下载apache-hive-3.1.2-bin.tar.gz并解压
 
@@ -570,13 +570,78 @@ rm -rf $HIVE_HOME/lib/guava-19.0.jar
 cp -r $HADOOP_HOME/share/hadoop/common/lib/guava-27.0-jre.jar  $HIVE_HOME/lib
 ```
 
-删除/root, $HIVE_HOME 及$HIVE_HOME/bin下的derby.log metastore_db
+2启动hadoop，hive要使用hdfs。
+
+创建metasotre
+
+```
+mysql -uroot -proot
+CREATE DATABASE metastore;
+```
+
+将mysql-connector-java-5.1.37拷贝到$HIVE_HOME/lib，并解压将jar包放在lib下的一级目录。
+
+修改配置文件，hive-site.xml
+
+```
+
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<?xml-stylesheet type="text/xsl" href="configuration.xsl"?>
+<configuration>
+<property>
+    <name>javax.jdo.option.ConnectionURL</name>
+    <value>jdbc:mysql://localhost/metastore?useSSL=false</value>
+</property>
+<property>
+    <name>javax.jdo.option.ConnectionDriverName</name>
+    <value>com.mysql.jdbc.Driver</value>
+</property>
+<property>
+    <name>javax.jdo.option.ConnectionUserName</name>
+    <value>root</value>
+</property>
+<property>
+    <name>javax.jdo.option.ConnectionPassword</name>
+    <value>root</value>
+</property>
+<property>
+<name>hive.metastore.schema.verification</name>
+<value>false</value>
+</property>
+<property>
+<name>hive.metastore.event.db.notification.api.auth</name>
+<value>false</value>
+</property>
+<property>
+<name>hive.metastore.warehouse.dir</name>
+<value>/user/hive/warehouse</value>
+</property>
+</configuration>
+
+```
+
+hive-env.sh配置hadoop_home和conf_dir
+
+```
+# Set HADOOP_HOME to point to a specific hadoop install directory
+HADOOP_HOME=/root/module/hadoop-3.1.4
+
+# Hive Configuration Directory can be controlled by:
+export HIVE_CONF_DIR=/root/module/apache-hive-3.1.2-bin/conf
+```
+
+3删除/root, $HIVE_HOME 及$HIVE_HOME/bin下的derby.log metastore_db
 
 初始化hive数据库
 
 ```
 $HIVE_HOME/bin/schematool -dbType mysql -initSchema
 $HIVE_HOME/bin/hive
+show databases;
+#测试
+CRATE DATABASE test_db;
+use test_db;
+CREATE TABLE test(id string);
 ```
 
 ### 相关操作
@@ -587,8 +652,6 @@ $HIVE_HOME/bin/hive
 rm -rf   /root/module/apache-hive-3.1.2-bin
 cp -r /root/software/apache-hive-3.1.2-bin /root/module
 ```
-
-
 
 # 其他
 
