@@ -356,6 +356,29 @@ hdfs dfs -put filename
 bin/hadoop jar share/hadoop/mapreduce/hadoop-mapreduce-examples-3.1.4.jar grep input output 'dfs[a-z.]+'
 ```
 
+##### 开启historyjob server
+
+yarn-site.xml：
+
+```
+<!--配置历史服务器-->
+<property>  
+<name>mapreduce.jobhistory.address</name>  
+ <value>hbase:10020</value>  
+</property>  
+<property>  
+<name>mapreduce.jobhistory.webapp.address</name>  
+<value>hbase:19888</value>  
+</property>
+```
+
+```
+cd  $HADOOP_HOME/sbin
+mr-jobhistory-daemon.sh start historyserver
+```
+
+
+
 # MapReduce开发环境搭建
 
 1官网下载hadoop3.1.4.tar.gz并解压缩
@@ -483,175 +506,216 @@ public class WordCountMapper extends Mapper<LongWritable, Text,Text, IntWritable
 }
 ```
 
-# HIVE服务器搭建
+# MapReduce更多功能
 
-### 安装mysql
+### NLineInputFormat
 
->安装mysql，重置密码。
+driver:
+
+```
+#5行为一个分片，共有  总行数/5个split分片。
+NLineInputFormat.setNumLinesPerSplit(job,5);
+job.setInputFormatClass(NLineInputFormat.class);
+```
+
+### 自定义InputFormat
+
+>一个文件作为一个分片
 >
->mysql版本和mysql-connector的java包版本，进入mysql官网下载：
+>控制map，让map一次读取整个文件，即多行。
 >
->mysql-connector-java-5.1.37
+>NullWritable用于填充空白，如不想要key，key就写NullWritable类型。对于部分无需reduce的程序，也可以不写reducer。但仍要设置OutputKeyClass,OutputValueClass，其值和MapOutputKeyClass,MapOutputValueClass一致。
 >
->mysql-5.7.28.el7.x86_64rmp-bundle.tar
+>要想控制单次map的输入就要重写NextKeyValue方法，修改Context中的key和value，这样在调用Context.NextKeyValue()时，才能控制是否执行map，并控制map读取的key和value。getCurrentKey()和getCurrentValue()返回，在重写的NextKeyValue中修改后的值。
+>
+>```
+>public void run(Mapper<KEYIN, VALUEIN, KEYOUT, VALUEOUT>.Context context) throws IOException, InterruptedException {
+>    this.setup(context);
+>
+>    try {
+>        while(context.nextKeyValue()) {
+>            this.map(context.getCurrentKey(), context.getCurrentValue(), context);
+>        }
+>    } finally {
+>        this.cleanup(context);
+>    }
+>
+>}
+>```
 
-安装新版mysql前，需将系统自带的mariadb-lib卸载
+WholeFileInputFormat
 
-```
-rpm -qa|grep mariadb           #查看是否安装了mariadb
-rpm -e --nodeps  software_name #卸载对应软件
-```
+```jAVA
+package com.weitao.mr.wordcount;
 
-安装mysql
+import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.io.BytesWritable;
+import org.apache.hadoop.io.Text;
+import org.apache.hadoop.mapreduce.InputSplit;
+import org.apache.hadoop.mapreduce.JobContext;
+import org.apache.hadoop.mapreduce.RecordReader;
+import org.apache.hadoop.mapreduce.TaskAttemptContext;
+import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 
-```
-mkdir mysql
-chmod 777 ./mysql
-#将bundle文件拷贝到mysql目录下
-rpm -ivh file-name#安装mysql模块
-安装顺序：common,libs,libs-compact,client,server
-```
+import java.io.IOException;
 
-初始化
+public class WholeFileInputFormat extends FileInputFormat<Text, Text> {
+    @Override
+    protected boolean isSplitable(JobContext context, Path filename) {
+        return false;
+    }
 
-```
-mysqld --initialize --user=mysql
-#重置密码
-vim /etc/my.cnf
-在[mysqld]后面任意一行添加“skip-grant-tables”用来跳过密码验证的过程
-mysql
-FLUSH PRIVILEGES;
-update mysql.user set authentication_string=password('root')   where user='root' and host='localhost';
-mysql -uroot -proot
-ALTER USER USER() IDENTIFIED BY 'root';
- update mysql.user set host='%' where user='root';
-```
-
-### 相关操作
-
-删除mysql设置及文件重新初始化
-
->主要删除/var/lib/mysql,/etc/my.cnf,/var/log/mysqld.log
-
-```
-cd /var/lib/mysql
-rm -rf ./*
-rm /etc/my.cnf
-rm -rf /var/log/mysqld.log
-mysqld --initialize --user=mysql
- #查看初始密码，或使用重置密码的方法。
-cat /var/log/mysqld.log
-chmod 777 /var/lib/mysql
-systemctl start mysqld
-mysql -uroot -ppassword
-```
-
- jgtW6NmSjO:(
-
-版本
-
- 21e.9LxZ4a4
-
-mysql-connector-java-5.1.37
-
-mysql-5.7.28.el7.x86_64rmp-bundle.tar
-
-### 安装hive
-
-1下载apache-hive-3.1.2-bin.tar.gz并解压
-
-配置环境变量
-
-删除冲突jar包，slf4j及guava
-
-```
-rm -rf $HIVE_HOME/lib/log4j-slf4j-impl-2.10.0.jar
-rm -rf $HIVE_HOME/lib/guava-19.0.jar
-cp -r $HADOOP_HOME/share/hadoop/common/lib/guava-27.0-jre.jar  $HIVE_HOME/lib
-```
-
-2启动hadoop，hive要使用hdfs。
-
-创建metasotre
-
-```
-mysql -uroot -proot
-CREATE DATABASE metastore;
-```
-
-将mysql-connector-java-5.1.37拷贝到$HIVE_HOME/lib，并解压将jar包放在lib下的一级目录。
-
-修改配置文件，hive-site.xml
+    @Override
+    public RecordReader<Text,Text> createRecordReader(InputSplit inputSplit, TaskAttemptContext taskAttemptContext) throws IOException, InterruptedException {
+        WholeRecordReader recordReader=new WholeRecordReader();
+        recordReader.initialize(inputSplit,taskAttemptContext);
+        return recordReader;
+    }
+}
 
 ```
 
-<?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<?xml-stylesheet type="text/xsl" href="configuration.xsl"?>
-<configuration>
-<property>
-    <name>javax.jdo.option.ConnectionURL</name>
-    <value>jdbc:mysql://localhost/metastore?useSSL=false</value>
-</property>
-<property>
-    <name>javax.jdo.option.ConnectionDriverName</name>
-    <value>com.mysql.jdbc.Driver</value>
-</property>
-<property>
-    <name>javax.jdo.option.ConnectionUserName</name>
-    <value>root</value>
-</property>
-<property>
-    <name>javax.jdo.option.ConnectionPassword</name>
-    <value>root</value>
-</property>
-<property>
-<name>hive.metastore.schema.verification</name>
-<value>false</value>
-</property>
-<property>
-<name>hive.metastore.event.db.notification.api.auth</name>
-<value>false</value>
-</property>
-<property>
-<name>hive.metastore.warehouse.dir</name>
-<value>/user/hive/warehouse</value>
-</property>
-</configuration>
+WholeRecordReader
 
+```java
+package com.weitao.mr.wordcount;
+
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FSDataInputStream;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.io.BytesWritable;
+import org.apache.hadoop.io.Text;
+import org.apache.hadoop.mapreduce.InputSplit;
+import org.apache.hadoop.mapreduce.RecordReader;
+import org.apache.hadoop.mapreduce.TaskAttemptContext;
+import org.apache.hadoop.mapreduce.lib.input.FileSplit;
+import sun.misc.IOUtils;
+
+import java.io.BufferedReader;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStreamReader;
+
+public class WholeRecordReader extends RecordReader<Text, Text> {
+    FileSplit split;
+    Configuration configuration;
+    Text k;
+    Text v;
+    boolean isProgress;
+    @Override
+    public void initialize(InputSplit inputSplit, TaskAttemptContext taskAttemptContext) throws IOException, InterruptedException {
+        this.split=(FileSplit)inputSplit;
+        System.out.println("name:"+this.split.getPath().getName());
+        this.configuration=taskAttemptContext.getConfiguration();
+        k=new Text();
+        v=new Text();
+        isProgress=true;
+    }
+
+    @Override
+    public boolean nextKeyValue() throws IOException, InterruptedException {
+        if(isProgress)
+        {
+        	/*根据path读取文件流，一次性将所有内容读出。并设置到context的K和v中。控制返回值，使得一个文件只读取一次*/
+            Path path=split.getPath();
+            String path_str=path.toString();
+            path_str = path_str.substring(6);
+            BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(new FileInputStream(path_str)));
+            StringBuffer json=new StringBuffer();
+            String tem="";
+            while(true){
+                tem = bufferedReader.readLine();
+                if (tem != null) {
+                    json.append(tem);
+                } else break;
+            }
+            v.set(json.toString());
+            k.set(path.toString());
+            isProgress=false;
+            return true;
+        }
+        return false;
+    }
+
+    @Override
+    public Text getCurrentKey() throws IOException, InterruptedException {
+
+        return k;
+    }
+
+    @Override
+    public Text getCurrentValue() throws IOException, InterruptedException {
+        return v;
+    }
+
+    @Override
+    public float getProgress() throws IOException, InterruptedException {
+        return 0;
+    }
+
+    @Override
+    public void close() throws IOException {
+
+    }
+}
 ```
 
-hive-env.sh配置hadoop_home和conf_dir
+driver
 
 ```
-# Set HADOOP_HOME to point to a specific hadoop install directory
-HADOOP_HOME=/root/module/hadoop-3.1.4
-
-# Hive Configuration Directory can be controlled by:
-export HIVE_CONF_DIR=/root/module/apache-hive-3.1.2-bin/conf
+job.setInputFormatClass(WholeFileInputFormat.class);
 ```
 
-3删除/root, $HIVE_HOME 及$HIVE_HOME/bin下的derby.log metastore_db
+### 自定义分区
 
-初始化hive数据库
+>控制结果按照条件输出到不同文件
 
-```
-$HIVE_HOME/bin/schematool -dbType mysql -initSchema
-$HIVE_HOME/bin/hive
-show databases;
-#测试
-CRATE DATABASE test_db;
-use test_db;
-CREATE TABLE test(id string);
-```
-
-### 相关操作
-
-删了重来
+driver
 
 ```
-rm -rf   /root/module/apache-hive-3.1.2-bin
-cp -r /root/software/apache-hive-3.1.2-bin /root/module
+#reduce的个数和partitioner的逻辑对应。
+job.setPartionerClass(SelfPartitioner);
+job.setNumReduceTask(2);
 ```
+
+PartionClass
+
+```
+package com.weitao.mr.wordcount;
+
+import org.apache.hadoop.io.Text;
+import org.apache.hadoop.mapreduce.Partitioner;
+
+public class SelfPartitioner extends Partitioner<Text, Text> {
+
+    @Override
+    public int getPartition(Text text, Text text2, int i) {
+        int partition;
+        if(true){
+            partition=0;
+        }else
+        {
+            partition=1;
+        }
+        return partition;
+    }
+}
+```
+
+
+
+# 基本操作
+
+### hdfs
+
+### mapreduce
+
+一个maptask对应一个分片。通过LineInputFormat，NLineInputFormat控制分片数量。
+
+通过重写InputFormat类，实现自己的类。重写RecordReader中的NextKeyValue控制map一次读取的行数。
+
+
 
 # 其他
 
@@ -809,64 +873,24 @@ YARN_NODEMANAGER_USER=root
 
 也可能：缺少hadoop.dll和winexe组件，下载winexe和hadoop.dll放到hadoop3.1.4的bin目录下。下载链接：https://github.com/ordinaryload/Hadoop-tools
 
-##### 执行bin/hive提示no hbase in......
+##### Retrying connect to server: 0.0.0.0/0.0.0.0:8032. Already tried 0 time(s); retry policy is...
 
-官网下载hbase2.3.3并解压
+在yarn-master执行mr无错误，其他机器有错误
 
-配置环境变量
-
-```
-#HBASE_HOME
-export HBASE_HOME=/root/module/hbase-2.3.3
-export PATH=$PATH:$HBASE_HOME/bin
+修改yanr-site.xml:
 
 ```
-
-##### Exception in thread "main" java.lang.NoSuchMethodError: com.google.common.base.Preconditions.checkArgument(ZLjava/lang/String;Ljava/lang/Object;)V
-
-hadoop/share/hadoop/common/lib与hive/lib下的guava冲突，删除低版本的，将高版本的复制到另一个目录。
-
-##### javax.jdo.JDODataStoreException: Error executing SQL query "select "DB_ID" from "DBS"".
-
-hive初始化表失败
-
-```
-$HIVE_HOME/bin/schematool -dbType <db type> -initSchema
-```
-
-##### ConnectionRefuesd
-
->java.lang.RuntimeException: Error applying authorization policy on hive configuration: java.net.ConnectException: Call From hbase/0.0.0.0 to hbase:9000 failed on connection exception: java.net.ConnectException: Connection refused; For more details see:  http://wiki.apache.org/hadoop/ConnectionRefused
-
-官方
-
-https://cwiki.apache.org/confluence/display/HADOOP2/ConnectionRefused
-
-将hosts中的0.0.0.0改为真实ip，不要写127.0.0.1。写服务器之前的通信ip。
-
-##### java.sql.SQLException: Failed to start database 'metastore_db' with class loader sun.misc.Launcher$AppClassLoader@3930015a, see the next exception for details.
-
- rm  -rf  metastore_db
-
-##### mysql Access denied
-
-密码复制的也说错，干脆设置为不需要密码。
-
-```
-vim /etc/my.cnf
-在[mysqld]后面任意一行添加“skip-grant-tables”用来跳过密码验证的过程
-mysql
-
+<property>
+    <name>yarn.resourcemanager.address</name>
+    <value>master:8032</value>
+  </property>
+  <property>
+    <name>yarn.resourcemanager.scheduler.address</name>
+    <value>master:8030</value>
+  </property>
+  <property>
+    <name>yarn.resourcemanager.resource-tracker.address</name>
+    <value>master:8031</value>
+  </property>
 ```
 
-##### MySQL5.7 启动报错:initialize specified but the data directory has files in it. Aborting.
-
-删除/var/lib/mysql
-
-##### timestamp错误
-
-修改/etc/my.cnf中explicit_defaults_for_timestamp=true
-
-##### You must reset your password using ALTER USER statement before executing this statement报错处理
-
-ALTER USER USER() IDENTIFIED BY 'root';

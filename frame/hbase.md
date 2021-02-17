@@ -6,9 +6,133 @@ http://hbase.apache.org/book.html#quickstart
 
 2快捷启动：运行bin/start-hbase.sh,访问http://localhost:16010
 
+##### 伪分布式
+
+hdfs-site.xml,core-site.xml
+
+```
+cp  hdfs-site.xml,core-site.xml   $HBASE_HOME/conf
+```
+
+hbase-env.sh
+
+```
+export JAVA_HOME=directory_name
+```
+
+hbase-site.xml
+
+```
+<property>
+  <name>hbase.cluster.distributed</name>
+  <value>true</value>
+</property>
+<property>
+  <name>hbase.rootdir</name>
+  <value>hdfs://hbase:9000/hbase</value>
+</property>
+```
+
+```
+#hbase自动在hdfs中创建hbase文件夹
+start-hbase.sh
+hadoop fs -ls /hbase
+hbase shell
+```
+
+
+
+##### 完全分布式
+
+>要求:hadoop3.1.4配置好
+>
+>ssh无密码连接配置好
+>
+>http://hbase.apache.org/book.html#quickstart_fully_distributed
+
+| Node Name | Master | ZooKeeper | RegionServer |
+| :-------- | :----- | :-------- | :----------- |
+| hbase     | yes    | yes       | no           |
+| hbase1    | backup | yes       | yes          |
+| hbase2    | no     | yes       | yes          |
+
+regionservers
+
+```
+hbase1
+hbase2
+```
+
+backup-master
+
+```
+hbase1
+```
+
+hbase-env.sh
+
+```
+export JAVA_HOME=directory
+```
+
+hbase-site.xml
+
+```
+
+<configuration>
+  <property>
+    <name>hbase.cluster.distributed</name>
+    <value>true</value>
+  </property>
+  <property>
+    <name>hbase.rootdir</name>
+    <value>hdfs://hbase:9000/hbase</value>
+  </property>
+<property>
+  <name>hbase.zookeeper.quorum</name>
+  <value>hbase,hbase1,hbase2</value>
+</property>
+<property>
+  <name>hbase.zookeeper.property.dataDir</name>
+  <value>/usr/local/zookeeper</value>
+</property>
+</configuration>
+
+```
+
+启动
+
+```
+start-hbase.sh
+jps
+```
+
+
+
 ### hbase shell
 
+>http://hbase.apache.org/book.html#quickstart
+
 ./bin/hbase shell启动shell
+
+基本操作
+
+```
+create 'test', 'cf'
+list 'test'
+describe 'test'
+put 'test', 'row1', 'cf:a', 'value1'
+scan 'test'
+get 'test', 'row1'
+disable 'test'
+drop 'test'
+```
+
+##### 常用端口
+
+16010 for the Master and
+
+ 16030 for the RegionServer.
 
 ### 与关系型数据库基本结构对比
 
