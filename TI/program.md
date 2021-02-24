@@ -1,5 +1,17 @@
 # 项目
 
+>sitx2:https://docs.oasis-open.org/cti/stix/v2.1/cs01/stix-v2.1-cs01.html#_s5l7katgbp09
+
+**malware_types** :list of malware type
+
+"malware_type" : ["adware","trojian"]
+
+##### last_seen:
+
+"last_seen": "2020-02-01"
+
+
+
 ## now 问题
 
 ### stix文件修改

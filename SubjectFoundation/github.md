@@ -64,6 +64,8 @@ git push -u origin main
 
 #### git拉取
 
+git config --list
+
 完整流程：
 git fetch origin dev（dev为远程仓库的分支名）
 git checkout -b dev(本地分支名称) origin/dev(远程分支名称)
@@ -79,19 +81,26 @@ git reset --hard origin/master  强行合并，本地的update覆盖掉。
 #### git fetch
 
 #### 连接github仓库及仓库
-ssh-keygen -t rsa -C "youname@example.com"
+ssh-keygen -t rsa -C "邮箱地址"
 进入网站添加key
  ssh -T git@github.com
 
-git config --global [user.name](http://user.name/)"mona lisa"
-git config --global [user.email](http://user.email/)
+git config --global [user.name](http://user.name/)   "mona lisa"
+git config --global [user.email](http://user.email/)  "邮箱地址"
+
+进入项目根路径
 
 git init
-git add [README.md](http://readme.md/)
+
+到网页创建test仓库
+
+git remote add test  git@github.com:benbenwt/test.git，创建远程仓库test。
+
+git add -A
 git commit -m "first commit"
 git branch -M main  更改分支名字
-git remote add origin  git@github.com:benbenwt/test.git，创建远程仓库test。
-git push -u origin main
+
+git push -u test  main
 ​
 
 # problem

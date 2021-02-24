@@ -1,3 +1,15 @@
+### sshd
+
+ssh-keygen -t rsa 
+
+ssh-copy-id -i /root/.ssh/id_rsa.pub  "-p2222 root@192.168.10.31"
+
+ssh -p 2222 root@192.168.10.31
+
+less secure
+
+cat /var/log/secure
+
 ### 常用命令
 
 pwd
@@ -7,6 +19,15 @@ cat
 ### 网络
 
 ##### 防火墙
+
+```
+# 查询端口是否开放
+firewall-cmd --query-port=8080/tcp
+# 开放80端口
+firewall-cmd --permanent --add-port=80/tcp
+# 移除端口
+firewall-cmd --permanent --remove-port=8080/tcp
+```
 
 1、开放端口
 
@@ -39,6 +60,10 @@ cat
  
 
 5、查看监听的端口
+
+```
+firewall-cmd --list-all 
+```
 
 **netstat -lnpt**
 

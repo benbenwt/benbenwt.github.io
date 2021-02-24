@@ -21,3 +21,6 @@ export JAVA_HOME 主目录
 export PATH=$PATH:$JAVA_HOME/bin
 
 source /etc/profile使其生效.
+
+##### 正则表达式
+

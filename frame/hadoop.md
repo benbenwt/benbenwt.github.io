@@ -894,3 +894,6 @@ YARN_NODEMANAGER_USER=root
   </property>
 ```
 
+##### 启动后无法访问web页面
+
+查看日志发现是由于只修改了一台的core-site.xml，没有同步。

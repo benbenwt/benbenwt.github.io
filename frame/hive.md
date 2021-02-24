@@ -170,6 +170,53 @@ CREATE TABLE test(id string);
 
 ### beeline2连接
 
+>https://cwiki.apache.org/confluence/display/Hive/GettingStarted#GettingStarted-RunningHiveServer2andBeeline.1
+
+jdbc端口:10000
+
+web端口:10002
+
+开启代理权限,hadoop的core-site.xml:
+
+```
+#xxx为服务器的登录的用户名
+<property>
+        <name>hadoop.proxyuser.xxx.hosts</name>
+        <value>*</value>
+    </property>
+    <property>
+        <name>hadoop.proxyuser.xxx.groups</name>
+        <value>*</value>
+    </property>
+```
+
+添加高可用，不然宝一个tez相关的警告，影响启动.
+
+```
+#hive-site.xml
+<property>
+    <name>hive.server2.active.passive.ha.enable</name>
+    <value>true</value>
+</property>
+</configuration>
+```
+
+```
+#开启hiveserver2服务
+nohup hiveserver2 1>/dev/null 2>/dev/null &
+#beeline连接
+beeline -u jdbc:hive2://localhost:10000/default -n root -w root
+#或这样连接
+beeline
+!connect jdbc:hive2://localhost:10000 root root
+#或这样测试beeline连接
+$HIVE_HOME/bin/beeline -u jdbc:hive2://
+#操作hive
+show databases;
+use test;
+show tables;
+```
+
 
 
 ### 相关操作
