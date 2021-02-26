@@ -134,3 +134,59 @@ html代码
 ##### 跳转失效
 
 直接执行的代码放在$(function(){})内。调用的代码放在函数体类，不要放在script首层。
+
+- 选择器
+
+  - $("*")   所有元素
+
+  - $("#id")  id选择器
+
+  - $(".class") class选择器
+
+  - $(".class1,. class2")  满足class1或class2
+
+  - $("p,h1,div")   元素选择器
+
+  - $("p:first")  第一个p标签
+
+  - 可用的筛选器first-child, last-child, nth-child(2),
+
+  - $("div ＞p") div的直接后代的所有p
+
+  - $("div  p")div 的所有后代p
+
+  - $("div  + p")div相邻的下一个p元素
+
+  - $("div  ~p")同级的所有p元素
+
+  - $("ul  li:eq(3)")  ul的第三个li
+
+  - :empty为空
+
+  - :not不
+
+- 
+
+- 方法
+
+  - html,css方法
+
+  - 遍历方法
+
+- jsp+ jstl+el
+
+  - 浏览器向服务器发送请求，控制器处理好数据存入域中，再转发至jsp页面。jsp通过jstl,el取出域中的值并控制逻辑。
+
+- ajax+jquery
+
+  - 浏览器向服务器发送请求，控制器处理好数据后，返回给页面。跳转到页面这一个统一的转发，因为没有数据操作，由页面自己请求。
+
+- 向服务器请求的方式
+
+  - 超链接
+
+  - ajax
+
+  - form
+
+  - location.href

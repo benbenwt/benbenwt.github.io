@@ -105,7 +105,12 @@ git push -u test  main
 
 # problem
 
-## pull，push，fetch等操作卡住
+##### pull，push，fetch等操作卡住
 
 ​		使用GIT_TRACE=2  GIT_CURL_VERBOSE=2 git fetch查看耗时进程，再次执行卡住操作即可
 
+##### 云端文件修改后和本地文件不可同步
+
+git push -u origin master -f，强制push，多人协作时不可取
+
+git reset --hard origin/master  强行合并，将本地的update覆盖掉。
