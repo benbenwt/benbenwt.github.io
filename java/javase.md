@@ -26,174 +26,277 @@
 - 14,static修饰的方法和变量，不属于任何实例对象，属于类，类创建时，就可访问，所以他们称为类方法，类成员。
 - 15，
 
-# String
+# 源码
 
-- String
+### java.util.String
 
-  - String()
-  public String(String original) {
-        this.value = original.value;
-        this.hash = original.hash;
-    }
-  
-- equals()
-    public boolean equals(Object anObject) {
-        if (this == anObject) {
-            return true;
-        }
-        if (anObject instanceof String) {
-            String anotherString = (String)anObject;
-            int n = value.length;
-            if (n == anotherString.value.length) {
-                char v1[] = value;
-              char v2[] = anotherString.value;
-                int i = 0;
-                while (n-- != 0) {
-                    if (v1[i] != v2[i])
-                        return false;
-                  i++;
-                }
-                return true;
-            }
-        }
-        return false;
-    }
-  
-- startWith()
-    public boolean startsWith(String prefix, int toffset) {
-        char ta[] = value;
-      int to = toffset;
-        char pa[] = prefix.value;
-        int po = 0;
-      int pc = prefix.value.length;
-        // Note: toffset might be near -1>>>1.
-        if ((toffset < 0) || (toffset > value.length - pc)) {
-          return false;
-        }
-        while (--pc >= 0) {
-            if (ta[to++] != pa[po++]) {
-              return false;
-            }
-        }
+```
+
+public String(String original) {
+    this.value = original.value;
+    this.hash = original.hash;
+}
+```
+
+```
+equals()
+public boolean equals(Object anObject) {
+    if (this == anObject) {
         return true;
     }
-  比较主串从toffset下标处匹配是否和prefix相等。
-  
-  - endWith()
-    可用startsWith实现，相当于从主串长度减去后缀串长度处的下标开始匹配。
-    public boolean endsWith(String suffix) {
-        return startsWith(suffix, value.length - suffix.value.length);
-  }
-  
-- hashcode()
-    public int hashCode() {
-      int h = hash;
-        if (h == 0 && value.length > 0) {
-            char val[] = value;
-            for (int i = 0; i < value.length; i++) {
-                h = 31 * h + val[i];
-          }
-            hash = h;
+    if (anObject instanceof String) {
+        String anotherString = (String)anObject;
+        int n = value.length;
+        if (n == anotherString.value.length) {
+            char v1[] = value;
+          char v2[] = anotherString.value;
+            int i = 0;
+            while (n-- != 0) {
+                if (v1[i] != v2[i])
+                    return false;
+              i++;
+            }
+            return true;
+        }
+    }
+    return false;
+}
+```
+
+比较主串从toffset下标处匹配是否和prefix相等。
+
+```
+
+startWith()
+public boolean startsWith(String prefix, int toffset) {
+    char ta[] = value;
+  int to = toffset;
+    char pa[] = prefix.value;
+    int po = 0;
+  int pc = prefix.value.length;
+    // Note: toffset might be near -1>>>1.
+    if ((toffset < 0) || (toffset > value.length - pc)) {
+      return false;
+    }
+    while (--pc >= 0) {
+        if (ta[to++] != pa[po++]) {
+          return false;
+        }
+    }
+    return true;
+}
+
+```
+
+```
+endWith()
+可用startsWith实现，相当于从主串长度减去后缀串长度处的下标开始匹配。
+public boolean endsWith(String suffix) {
+    return startsWith(suffix, value.length - suffix.value.length);
+}
+```
+
+```
+hashcode()
+public int hashCode() {
+  int h = hash;
+    if (h == 0 && value.length > 0) {
+        char val[] = value;
+        for (int i = 0; i < value.length; i++) {
+            h = 31 * h + val[i];
       }
-        return h;
+        hash = h;
   }
-  
-  - subString()
-    public String substring(int beginIndex, int endIndex) {
-        if (beginIndex < 0) {
-            throw new StringIndexOutOfBoundsException(beginIndex);
-        }
-        if (endIndex > value.length) {
-            throw new StringIndexOutOfBoundsException(endIndex);
-        }
-        int subLen = endIndex - beginIndex;
-        if (subLen < 0) {
-            throw new StringIndexOutOfBoundsException(subLen);
-        }
-        return ((beginIndex == 0) && (endIndex == value.length)) ? this
-                : new String(value, beginIndex, subLen);
+    return h;
+}
+```
+
+实际上是调用了构造函数，重新创建了一个String，将value赋予对应的值。
+
+```
+subString()
+public String substring(int beginIndex, int endIndex) {
+    if (beginIndex < 0) {
+        throw new StringIndexOutOfBoundsException(beginIndex);
     }
-    实际上是调用了构造函数，重新创建了一个String，将value赋予对应的值。​
-  
-  - toCharArray()
-    public char[] toCharArray() {
-        // Cannot use Arrays.copyOf because of class initialization order issues
-        char result[] = new char[value.length];
-        System.arraycopy(value, 0, result, 0, value.length);
-        return result;
+    if (endIndex > value.length) {
+        throw new StringIndexOutOfBoundsException(endIndex);
     }
-    将String.value复制到新的数组中，并返回。
-  
-  - System.arraycopy(value, 0, result, 0, value.length);
-    将数组value复制到result中
-  
-- Object
-
-  - 创建对象5种方式
-    1.new 2.用类的newinstance 3用constructor的newinstance 4clone 5反序列化
-
-  - 序列化
-    序列化指将java对象数据，通过某种方式转换成二进制流，可以存储和在网络上传输。
-    反序列化是从流或网络上读取二进制，再恢复成对象的过程。
-    ​为什么使用序列化
-    1分布式系统需要网络间传输，共享javabean对象。
-    2​服务器端对于不活跃的对象，将其序列化存储再磁盘。需要时再读出。
-    实现
-    需要序列化的​类必须继承Serializable接口
-    通过ObjectOutputStream。writeObject（）序列化，ObjectInputStream。readObject（）反序列化
-        ByteArrayOutputStream bos = new ByteArrayOutputStream();
-        ObjectOutputStream oos = new ObjectOutputStream(bos);
-        oos.writeObject(this);
-        // 反序列化
-        ByteArrayInputStream bis = new ByteArrayInputStream(bos.toByteArray());
-        ObjectInputStream ois = new ObjectInputStream(bis);
-
-  - 深拷贝与浅拷贝
-    基本类型存储再栈中
-    引用类型将引用放在栈，实际值存储再堆中，栈中的引用指向堆中存放的数据。
-    ​浅拷贝就是直接非静态的属性，即对于基础类型复制其值，而引用类型只复制引用，所以和原对象指向相同的值。
-    深拷贝则是无论引用还是基础，都复制独立的一份。
-    how：
-    对于每个引用类型，让其继承cloneable，并重写其clone方法。​
-
-  - equals()
-     public boolean equals(Object obj) {
-                   return (this == obj);
-                }
-    在java中==是比较两个引用对象的引用或比较基础类型的值。
-    此处即比较对象的地址。
-    我们自己如何改写equals：how
-    1自反性 2对称性 3传递性 4一致性 5对于任何非x，x.equals（null）值为null​
-    参考String类的equals
-    若​涉及到父类和子类则instanceof判断类型不合理。可根据情况使用getclass（），获得运行时类。
-    重写equals必须重写hashcode（）
-
-  - hashcode（）
-    java集合的实现借助哈希表，他可以快速使用equals函数，快速操作。
-    当集合添加元素时
-    ​1若其位置上无冲突，放置。
-    2若有冲突，则equals，如不同放置在链表上。
-    由此可以看出，放置在同一位置的可以是equals不等的元素。
-    ​
-    故equals同，hash同
-    不同，不同
-    ​
-    hash同，equals不一定
-    不同，不同​​
-
-    how：
-    避免冲突，为int，4字节，避免超出，借鉴String的hashcode。
-    由于map集合也使用hash进行比对，作为key的对象必须重写equals和hashcode。​​
-
-  - toString()
-    public String toString() {
-        return getClass().getName() + "@" + Integer.toHexString(hashCode());
+    int subLen = endIndex - beginIndex;
+    if (subLen < 0) {
+        throw new StringIndexOutOfBoundsException(subLen);
     }
+    return ((beginIndex == 0) && (endIndex == value.length)) ? this
+            : new String(value, beginIndex, subLen);
+}
+```
 
-  -  clone()
-    返回当前对象的副本，是深拷贝，互不影响。
-    调用对象的clone方法，必须让类实现Cloneable接口，覆写clone方法。
-    ​
+将String.value复制到新的数组中，并返回。
+
+System.arraycopy(value, 0, result, 0, value.length);
+将数组value复制到result中
+
+```
+toCharArray()
+public char[] toCharArray() {
+    // Cannot use Arrays.copyOf because of class initialization order issues
+    char result[] = new char[value.length];
+    System.arraycopy(value, 0, result, 0, value.length);
+    return result;
+}
+```
+
+# String
+
+### 正则表达式
+
+##### 常用函数
+
+mathes,replaceAll,replaceFirst(),split().
+java还提供了Pattern类表示正则表达式对象，提供了丰富的API进行各种操作。
+
+##### 元字符
+
+.:匹配除换行符以外任意字符
+\s:匹配任意的空白符（空格，指标，换行）
+\w:匹配字母和数字或下划线或汉字
+\d:匹、配数字
+\b：匹配单词的开始或结束
+^：匹配字符串的开始
+$：匹配字符串的结束
+
+##### 字符转义
+
+元字符等有特殊含义，若要使用，用\转义。
+如：.    \.   
+\*   \*
+
+##### 限定符
+
+*：重复零次或更多次
++：重复一次或更多次
+？：重复零次或一次
+{n}：重复n次
+{n，}：重复n次和更多次
+{n，m}：重复n，m次​​
+
+##### 字符类(对元字符扩展)
+
+[0-9],[a-z0-9A-Z]
+
+##### 分枝条件（对限定符扩展）
+
+|
+
+##### 分组（元字符和限定符连接）
+
+（）进行分组
+
+##### 反义（对元字符扩展）
+
+字母改大写表反义
+如\W \S \D \B
+
+##### 后向引用
+
+分组后编号默认从1开始，也可以自定义名字
+\b(\w+)\b\s+\1\b
+\b(?<Word>\w+)\b\s+\k<Word>\b
+
+##### 零宽断言
+
+(?<=exp1)exp2 匹配exp2前面是exp1的位置
+exp2(?=exp1) 匹配exp2后面是exp1的位置
+(?<!exp1)exp2   匹配exp2前面不是是exp1的位置
+exp2(?!exp1)​    匹配exp2后面不是exp1的位置
+
+##### 负向零宽断言
+
+##### 注释
+
+##### 贪婪与懒惰
+
+当使用*,+,.等时，尽可能匹配多的，称为贪婪。
+在限定符后边加？可转换为懒惰模式。
+如:*?,.?,+?​,{n,m}?
+
+##### 处理选项
+
+##### 平衡组/递归匹配
+
+other
+
+### Object
+
+### 创建对象5种方式
+
+1.new 2.用类的newinstance 3用constructor的newinstance 4clone 5反序列化
+
+### 序列化
+
+序列化指将java对象数据，通过某种方式转换成二进制流，可以存储和在网络上传输。
+反序列化是从流或网络上读取二进制，再恢复成对象的过程。
+​为什么使用序列化
+1分布式系统需要网络间传输，共享javabean对象。
+2​服务器端对于不活跃的对象，将其序列化存储再磁盘。需要时再读出。
+实现
+需要序列化的​类必须继承Serializable接口
+通过ObjectOutputStream。writeObject（）序列化，ObjectInputStream。readObject（）反序列化
+    ByteArrayOutputStream bos = new ByteArrayOutputStream();
+    ObjectOutputStream oos = new ObjectOutputStream(bos);
+    oos.writeObject(this);
+    // 反序列化
+    ByteArrayInputStream bis = new ByteArrayInputStream(bos.toByteArray());
+    ObjectInputStream ois = new ObjectInputStream(bis);
+
+### 深拷贝与浅拷贝
+
+基本类型存储再栈中
+引用类型将引用放在栈，实际值存储再堆中，栈中的引用指向堆中存放的数据。
+​浅拷贝就是直接非静态的属性，即对于基础类型复制其值，而引用类型只复制引用，所以和原对象指向相同的值。
+深拷贝则是无论引用还是基础，都复制独立的一份。
+how：
+对于每个引用类型，让其继承cloneable，并重写其clone方法。​
+
+equals()
+public boolean equals(Object obj) {
+              return (this == obj);
+           }
+在java中==是比较两个引用对象的引用或比较基础类型的值。
+此处即比较对象的地址。
+我们自己如何改写equals：how
+1自反性 2对称性 3传递性 4一致性 5对于任何非x，x.equals（null）值为null​
+参考String类的equals
+若​涉及到父类和子类则instanceof判断类型不合理。可根据情况使用getclass（），获得运行时类。
+重写equals必须重写hashcode（）
+
+### hashcode（）
+
+java集合的实现借助哈希表，他可以快速使用equals函数，快速操作。
+当集合添加元素时
+​1若其位置上无冲突，放置。
+2若有冲突，则equals，如不同放置在链表上。
+由此可以看出，放置在同一位置的可以是equals不等的元素。
+​
+故equals同，hash同
+不同，不同
+​
+hash同，equals不一定
+不同，不同​​
+
+how：
+避免冲突，为int，4字节，避免超出，借鉴String的hashcode。
+由于map集合也使用hash进行比对，作为key的对象必须重写equals和hashcode。​​
+
+- toString()
+  public String toString() {
+      return getClass().getName() + "@" + Integer.toHexString(hashCode());
+  }
+
+-  clone()
+  返回当前对象的副本，是深拷贝，互不影响。
+  调用对象的clone方法，必须让类实现Cloneable接口，覆写clone方法。
+  ​
 
 - 关键字
 
@@ -211,251 +314,191 @@
      Subject proxyInstance = (Subject) Proxy.newProxyInstance(subjectProxy.getClass().getClassLoader(), subject.getClass().getInterfaces(), subjectProxy);
     （代理类类加载器，被代理类接口，代理类对象）
 
-- 正则表达式
+  
 
-  经常会有查找符合某些复杂规则的字符串的需要。
-
-  - 常用函数
-    mathes,replaceAll,replaceFirst(),split().
-    java还提供了Pattern类表示正则表达式对象，提供了丰富的API进行各种操作。
-    ​
-
-  - 元字符
-    .:匹配除换行符以外任意字符
-    \s:匹配任意的空白符（空格，指标，换行）
-    \w:匹配字母和数字或下划线或汉字
-    \d:匹、配数字
-    \b：匹配单词的开始或结束
-    ^：匹配字符串的开始
-    $：匹配字符串的结束
-    ​
-
-  - 字符转义
-    元字符等有特殊含义，若要使用，用\转义。
-    如：.    \.   
-    \*   \*
-
-  - 限定符
-    *：重复零次或更多次
-    +：重复一次或更多次
-    ？：重复零次或一次
-    {n}：重复n次
-    {n，}：重复n次和更多次
-    {n，m}：重复n，m次​​
-
-  - 字符类(对元字符扩展)
-    [0-9],[a-z0-9A-Z]
-
-  - 分枝条件（对限定符扩展）
-    |
-
-  - 分组（元字符和限定符连接）
-    （）进行分组
-
-  - 反义（对元字符扩展）
-    字母改大写表反义
-    如\W \S \D \B
-
-  - 后向引用
-    分组后编号默认从1开始，也可以自定义名字
-    \b(\w+)\b\s+\1\b
-    \b(?<Word>\w+)\b\s+\k<Word>\b
-
-  - 零宽断言
-    (?<=exp1)exp2 匹配exp2前面是exp1的位置
-    exp2(?=exp1) 匹配exp2后面是exp1的位置
-    (?<!exp1)exp2   匹配exp2前面不是是exp1的位置
-    exp2(?!exp1)​    匹配exp2后面不是exp1的位置
-
-  - 负向零宽断言
-
-  - 注释
-
-  - 贪婪与懒惰
-    当使用*,+,.等时，尽可能匹配多的，称为贪婪。
-    在限定符后边加？可转换为懒惰模式。
-    如:*?,.?,+?​,{n,m}?
-
-  - 处理选项
-
-  - 平衡组/递归匹配
-
-  - other
+# String
 
 # GC
 
-- 原理
+### 为什么要gc
 
-  - 为什么要gc
+当一个对象不可达，或一个对象没有任何引用指向它，他就没有必要存在，此时就可以被gc回收。
 
-    - 当一个对象不可达，或一个对象没有任何引用指向它，他就没有必要存在，此时就可以被gc回收。
+### jvm区域
 
-    - jvm区域
+##### java stack
 
-      - java stack
-        每个jvm线程都有自己私有的java虚拟栈，这个栈和线程同时创建，他的生命周期和线程相同。每个java方法被执行时创建一个栈帧用于存储变量表，操作数，动态链接，方法出口等信息。每个方法被调用直至执行完成对应着再java stack中入栈和出战的过程。
+每个jvm线程都有自己私有的java虚拟栈，这个栈和线程同时创建，他的生命周期和线程相同。每个java方法被执行时创建一个栈帧用于存储变量表，操作数，动态链接，方法出口等信息。每个方法被调用直至执行完成对应着再java stack中入栈和出战的过程。
 
-      - native method stack
-        与虚拟机栈的作用相似，虚拟机栈执行java方法，而本地方法栈为虚拟机使用到的本地方法服务。本地方法：由其他语言编写，和处理器相关的机器代码。本地方法保存在动态链接库中，即dll中。
+##### native method stack
 
-      - heap
-        所有线程共享的一块区域，用来存储对象实例和数组值。new的对象。
+与虚拟机栈的作用相似，虚拟机栈执行java方法，而本地方法栈为虚拟机使用到的本地方法服务。本地方法：由其他语言编写，和处理器相关的机器代码。本地方法保存在动态链接库中，即dll中。
 
-      - PC regiter
-        程序计数器保存当前线程执行到哪行（指令地址），以便线程之间切换。每个线程都有自己的PC，以便完成不同线程切换。
+##### heap
 
-      - method area
+所有线程共享的一块区域，用来存储对象实例和数组值。new的对象。
 
-        方法区是线程共享区域，用于存储每个类的结构信息。例如成员变量和方法数据，构造函数和普通函数字节码内容，还包括一些类，实例，接口初始化时用到的特殊方法。当开发人员在程序中通过class对象的getName，isInstance获取消息时，这些数据都来自方法区。在一定条件下也会被gc，这块区域对应Permanent generation持久代。
+##### PC regiter
 
-        - 运行时常量池，其空间从方法区分配，存储类中常量，方法，域引用信息。
+程序计数器保存当前线程执行到哪行（指令地址），以便线程之间切换。每个线程都有自己的PC，以便完成不同线程切换。
 
-  - 触发gc的情况
+##### method area
 
-    非线程对象不被指向或超出作用域
-    线程对象线程未启动或停止
+方法区是线程共享区域，用于存储每个类的结构信息。例如成员变量和方法数据，构造函数和普通函数字节码内容，还包括一些类，实例，接口初始化时用到的特殊方法。当开发人员在程序中通过class对象的getName，isInstance获取消息时，这些数据都来自方法区。在一定条件下也会被gc，这块区域对应Permanent generation持久代。
 
-    - 改变对象引用，置为null或指向其他对象。
+##### 运行时常量池，其空间从方法区分配，存储类中常量，方法，域引用信息。
+
+##### 触发gc的情况
+
+非线程对象不被指向或超出作用域
+线程对象线程未启动或停止
+
+##### 改变对象引用，置为null或指向其他对象。
+
+Object x=new Object();//object1 
+   Object y=new Object();//object2 
+   x=y;//object1 变为垃圾 
+   x=y=null;//object2 变为垃圾
+
+##### 超出作用域
+
+if(i==0){ 
       Object x=new Object();//object1 
-         Object y=new Object();//object2 
-         x=y;//object1 变为垃圾 
-         x=y=null;//object2 变为垃圾
+   }//括号结束后object1将无法被引用，变为垃圾 
 
-    - 超出作用域
-      if(i==0){ 
-            Object x=new Object();//object1 
-         }//括号结束后object1将无法被引用，变为垃圾 
+##### 类嵌套导致未完全释放
 
-    - 类嵌套导致未完全释放
-      class A{ 
-            A a; 
-         } 
-         A x= new A();//分配一个空间 
-         x.a= new A();//又分配了一个空间 
-         x=null;//将会产生两个垃圾 
+class A{ 
+      A a; 
+   } 
+   A x= new A();//分配一个空间 
+   x.a= new A();//又分配了一个空间 
+   x=null;//将会产生两个垃圾 
 
-    - 线程中的垃圾
-      class A implements Runnable{   
-           void run(){ 
-             //.... 
-           } 
-         } 
-         //main 
-         A x=new A();//object1 
-         x.start(); 
-         x=null;//等线程执行完后object1才被认定为垃圾 
-         这样看，确实在代码执行过程中会产生很多垃圾，不过不用担心，java可以有效地处理他们。
+##### 线程中的垃圾
 
-  - Java垃圾回收机制算法
+class A implements Runnable{   
+     void run(){ 
+       //.... 
+     } 
+   } 
+   //main 
+   A x=new A();//object1 
+   x.start(); 
+   x=null;//等线程执行完后object1才被认定为垃圾 
+   这样看，确实在代码执行过程中会产生很多垃圾，不过不用担心，java可以有效地处理他们。
 
-    - 标记-清除算法
-      标记：标记出所有要回收的对象
-      清除：回收被标记对象
-      缺点：效率低，这两个操作效率都不高
-      ​​空间问题，形成大量不连续碎片空间。当以后需要分配较大的对象时，无法找到足够大的连续空间，触发gc。
+##### Java垃圾回收机制算法
 
-    - 复制算法
-      内存分为相等的两块，需要回收时，把存活的对象拷贝到另一半，清除当前的整个块，以保证空间连续性。
-      缺点：代价高。
-      现在一般分为三块，Eden和两块较小的Survivor。当回收时，将存活对象放到另一个Survivor中，清除当前Survivor和Eden.
+ 1.标记-清除算法
+标记：标记出所有要回收的对象
+清除：回收被标记对象
+缺点：效率低，这两个操作效率都不高
+​​空间问题，形成大量不连续碎片空间。当以后需要分配较大的对象时，无法找到足够大的连续空间，触发gc。
 
-    - 标记-整理算法
-      标记：标记所有要回收的对象。
-      整理:将存活对象向一段移动，然后直接清理到边界以外的内存空间
+2.复制算法
+内存分为相等的两块，需要回收时，把存活的对象拷贝到另一半，清除当前的整个块，以保证空间连续性。
+缺点：代价高。
+现在一般分为三块，Eden和两块较小的Survivor。当回收时，将存活对象放到另一个Survivor中，清除当前Survivor和Eden.
 
-    - 分代收集算法
-      分代：新生代，老生代
-      新生代：存活少，使用复制算法。
-      老生代：存活多，使用标记清除或标记整理算法。​
+3.标记-整理算法
+标记：标记所有要回收的对象。
+整理:将存活对象向一段移动，然后直接清理到边界以外的内存空间
 
-- 源码解析
+4.分代收集算法
+分代：新生代，老生代
+新生代：存活少，使用复制算法。
+老生代：存活多，使用标记清除或标记整理算法。​
 
 # DB
 
-- JDBC
+### JDBC
 
-  - JDBC操作数据库步骤
-    1注册驱动
-    2创建连接
-    3创建语句
-    4处理结果​
+##### JDBC操作数据库步骤
 
-  - Blob和Clob
-    Blob是指二进制大对象，Clob指大字符对象，jdbc两者都支持。
-        public static void main(String[] args) {
-            Connection con = null;
+1注册驱动
+2创建连接
+3创建语句
+4处理结果​
+
+##### Blob和Clob
+
+Blob是指二进制大对象，Clob指大字符对象，jdbc两者都支持。
+    public static void main(String[] args) {
+        Connection con = null;
+        try {
+            // 1. 加载驱动（Java6以上版本可以省略）
+            Class.forName("com.mysql.jdbc.Driver");
+            // 2. 建立连接
+            con = DriverManager.getConnection("jdbc:[mysql://localhost:3306/test](http://mysql://localhost:3306/test)", "root", "123456");
+            // 3. 创建语句对象
+            PreparedStatement ps = con.prepareStatement("insert into tb_user values (default, ?, ?)");
+            ps.setString(1, "骆昊");              // 将SQL语句中第一个占位符换成字符串
+            try (InputStream in = new FileInputStream("test.jpg")) {    // Java 7的TWR
+                ps.setBinaryStream(2, in);      // 将SQL语句中第二个占位符换成二进制流
+                // 4. 发出SQL语句获得受影响行数
+                System.out.println(ps.executeUpdate() == 1 ? "插入成功" : "插入失败");
+            } catch(IOException e) {
+                System.out.println("读取照片失败!");
+            }
+        } catch (ClassNotFoundException | SQLException e) {     // Java 7的多异常捕获
+            e.printStackTrace();
+        } finally { // 释放外部资源的代码都应当放在finally中保证其能够得到执行
             try {
-                // 1. 加载驱动（Java6以上版本可以省略）
-                Class.forName("com.mysql.jdbc.Driver");
-                // 2. 建立连接
-                con = DriverManager.getConnection("jdbc:[mysql://localhost:3306/test](http://mysql://localhost:3306/test)", "root", "123456");
-                // 3. 创建语句对象
-                PreparedStatement ps = con.prepareStatement("insert into tb_user values (default, ?, ?)");
-                ps.setString(1, "骆昊");              // 将SQL语句中第一个占位符换成字符串
-                try (InputStream in = new FileInputStream("test.jpg")) {    // Java 7的TWR
-                    ps.setBinaryStream(2, in);      // 将SQL语句中第二个占位符换成二进制流
-                    // 4. 发出SQL语句获得受影响行数
-                    System.out.println(ps.executeUpdate() == 1 ? "插入成功" : "插入失败");
-                } catch(IOException e) {
-                    System.out.println("读取照片失败!");
+                if(con != null && !con.isClosed()) {
+                    con.close();    // 5. 释放数据库连接
+                    con = null;     // 指示垃圾回收器可以回收该对象
                 }
-            } catch (ClassNotFoundException | SQLException e) {     // Java 7的多异常捕获
+            } catch (SQLException e) {
                 e.printStackTrace();
-            } finally { // 释放外部资源的代码都应当放在finally中保证其能够得到执行
-                try {
-                    if(con != null && !con.isClosed()) {
-                        con.close();    // 5. 释放数据库连接
-                        con = null;     // 指示垃圾回收器可以回收该对象
-                    }
-                } catch (SQLException e) {
-                    e.printStackTrace();
-                }
             }
         }
+    }
 
-  - 读和更新性能
-    使用结果集对象的setFetchSize（）控制抓取记录数，提高读取性能。
-    ​使用PreparedStatement语句构建批处理，提高更新性能。
+##### 读和更新性能
 
-  - PreparedStatement和Statement
-    ps：1预编译，减少sql的编译错误，提高sql安全避免sql注射攻击。
-    2避免拼接，使用参数。
-    3批处理性能高。​
+使用结果集对象的setFetchSize（）控制抓取记录数，提高读取性能。
+​使用PreparedStatement语句构建批处理，提高更新性能。
 
-- 事务处理
+- PreparedStatement和Statement
+  ps：1预编译，减少sql的编译错误，提高sql安全避免sql注射攻击。
+  2避免拼接，使用参数。
+  3批处理性能高。​
 
-  
+### 事务处理
 
-  Connection提供了事务处理的方法，通过调用setAutoCommit(false)可以手动提交事务。当事务完成后用commit（）显式提交。
 
-  - 四特性
-    原子性：事务要么做完，要么不做。若某一步操作异常，通过回滚到达事务开始或保存点。
-    一致性：数据库只能从一种一致的状态转移到另一种一致的状态。不能操作一半。
-    隔离性：事务与事务之间独立，事务隔离级别：
-    1READ_UNCOMMITTED
-    2READ_COMMITTED
-    3REPEATABLE​_READ
-    4SERIALIZABLE
-    持久性：事务提交后，对数据库中数据的改变是永久性的。
 
-  - 三大数据问题
+Connection提供了事务处理的方法，通过调用setAutoCommit(false)可以手动提交事务。当事务完成后用commit（）显式提交。
 
-    - 脏读
-      事务a读取了b未提交的数据，并做了其他操作。
+- 四特性
+  原子性：事务要么做完，要么不做。若某一步操作异常，通过回滚到达事务开始或保存点。
+  一致性：数据库只能从一种一致的状态转移到另一种一致的状态。不能操作一半。
+  隔离性：事务与事务之间独立，事务隔离级别：
+  1READ_UNCOMMITTED
+  2READ_COMMITTED
+  3REPEATABLE​_READ
+  4SERIALIZABLE
+  持久性：事务提交后，对数据库中数据的改变是永久性的。
 
-    - 不可重复读
-      a读取b已提交的更改数据，两次不一样。隔离后不可修改。
+- 三大数据问题
 
-    - 幻读
-      a读取b提交的新增数据。隔离后不可插入数据。
+  - 脏读
+    事务a读取了b未提交的数据，并做了其他操作。
 
-  - 两类数据更新问题
+  - 不可重复读
+    a读取b已提交的更改数据，两次不一样。隔离后不可修改。
 
-    - 第一类
-      a撤销，导致覆盖b的提交数据。
+  - 幻读
+    a读取b提交的新增数据。隔离后不可插入数据。
 
-    - 第二类
-      a提交的数据覆盖b提交的数据。
+- 两类数据更新问题
+
+  - 第一类
+    a撤销，导致覆盖b的提交数据。
+
+  - 第二类
+    a提交的数据覆盖b提交的数据。
 
 - DAO
 
