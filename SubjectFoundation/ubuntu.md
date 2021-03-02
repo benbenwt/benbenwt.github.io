@@ -1,11 +1,39 @@
 # ubuntu系统
 
+### 系统
+
+uname -a
+
+cat  /etc/issue ，适用所有
+
+cat /proc/version，使用所有
+
+cat /etc/redhat-release，只适用于RedHat，SUSE，Debian等发行版本
+
+lsb_release -a 所有发行版本
+
 ## 增加磁盘
 
 ### 基本命令
 
+sudo apt-get update刷新仓库的索引
+
 分区，格式化，挂载
 ​fdisk  -l  查看分区  n,p,w
+
+**管理分区**
+
+**删除分区**
+
+```
+fdisk /dev/sda1
+m
+d
+w
+```
+
+
+
 mkfs  -t ext4  /dev/sdb1
 mkdir /home/yoki/sdb1
 mount  /dev/sdb1  /home/yoki/sdb1
@@ -84,6 +112,8 @@ cat文件名
 ## 网络及进程
 
 netstat -tlnp 查看服务端口号
+
+ss -ntl
 
 service nginx reload 重新加载配置
 ps -ef | grep redis

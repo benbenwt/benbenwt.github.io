@@ -28,3 +28,9 @@ mvn -version
 ##### 依赖一直有波浪线
 
 解决：把其删掉再粘上，等重新导入。
+
+全部删除，点击Invalidate caches/restart,然后一个一个的添加依赖。
+
+##### 已删除依赖还在右侧栏
+
+点击File->Invalidate caches/restart

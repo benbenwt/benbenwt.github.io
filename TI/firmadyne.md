@@ -2,6 +2,168 @@
 
 ### firmadyne
 
+>firmadyne基本目录结构
+>
+>/binaries,存储kernel等
+>
+>/scripts,存储自动化的脚本
+>
+>./firmadyne,存储基本的变量和创建qemu指令的函数
+>
+>/images,生成的镜像
+>
+>/scratch/number,存储生成的一键运行脚本和image.raw。
+
+**到web页面查看用户名密码**
+
+```
+admin,password
+```
+
+**dropbear**
+
+安装
+
+```
+下载
+tar xzf dropbear
+cd dropbear
+cat INSTALL
+./configure --prefix=/usr/local/dropbear/ --sysconfdir=/etc/dropbear/
+make PROGRAMS="dropbear dbclient dropbearkey dropbearconvert scp"
+sudo make PROGRAMS="dropbear dbclient dropbearkey dropbearconvert scp" install   
+```
+
+开启服务端
+
+```
+dropbear -E -p 222
+```
+
+
+
+连接服务端
+
+```
+sudo apt-get update -y
+sudo apt-get install dropbear -y
+sudo apt-get install libc6,zlib1g,openssh-client,runit,udev,xauth
+```
+
+```
+dbclient admin@192.168.0.100
+password
+
+/etc/init.d/dropbear restart
+```
+
+**dropbear的scp**
+
+```
+cd $dropbear_home
+./scp test.txt admin@router:/home
+password
+```
+
+run.sh
+
+```
+#!/bin/bash
+#忽略不存在变量
+set -u
+
+ARCHEND=mipseb
+IID=6
+#加载配置文件
+if [ -e ./firmadyne.config ]; then
+    source ./firmadyne.config
+elif [ -e ../firmadyne.config ]; then
+    source ../firmadyne.config
+elif [ -e ../../firmadyne.config ]; then
+    source ../../firmadyne.config
+else
+    echo "Error: Could not find 'firmadyne.config'!"
+    exit 1
+fi
+#脚本函数都在firmadyne.config中
+#get_fs获取image.raw
+IMAGE=`get_fs ${IID}`
+#根据ARCHEND到binaries中找对应架构内核，对应关系为，armel:zImage.armel,mipseb:vmlinux.mipseb,mipsel:vmlinux.mipsel
+KERNEL=`get_kernel ${ARCHEND}`
+#生成对应qemu指令,对应关系：armel:qemu-system.arm,mipseb:qemu-system-mips,mipsel:qemu-system-mipsel
+QEMU=`get_qemu ${ARCHEND}`
+#生成qemu使用的开发板类型
+QEMU_MACHINE=`get_qemu_machine ${ARCHEND}`
+#生成qemu虚拟机的根文件系统路径，对应为，armel:/dve/vda1,mipseb:/dev/sda1,mipsel:/dev/sda1
+QEMU_ROOTFS=`get_qemu_disk ${ARCHEND}`
+#获取scratch子级目录
+WORK_DIR=`get_scratch ${IID}`
+
+
+TAPDEV_0=tap${IID}_0
+HOSTNETDEV_0=${TAPDEV_0}
+echo "Creating TAP device ${TAPDEV_0}..."
+#创建tun/tap设备，指定设备名称和拥有者
+sudo tunctl -t ${TAPDEV_0} -u ${USER}
+
+
+echo "Bringing up TAP device..."
+#启动tun/tap设备
+sudo ip link set ${HOSTNETDEV_0} up
+#为tun/tap设备增加地址
+sudo ip addr add 192.168.0.99/24 dev ${HOSTNETDEV_0}
+
+echo "Adding route to 192.168.0.100..."
+#增加新路由
+sudo ip route add 192.168.0.100 via 192.168.0.100 dev ${HOSTNETDEV_0}
+
+#杀死当前shell进程
+function cleanup {
+  pkill -P $$
+
+echo "Deleting route..."
+删除tun/tap设备所有路由信息
+sudo ip route flush dev ${HOSTNETDEV_0}
+
+echo "Bringing down TAP device..."
+#关闭tum/tap设备
+sudo ip link set ${TAPDEV_0} down
+
+
+echo "Deleting TAP device ${TAPDEV_0}..."
+#删除设备
+sudo tunctl -d ${TAPDEV_0}
+
+}
+#收到EXIT信号后，执行cleanup
+trap cleanup EXIT
+
+echo "Starting firmware emulation... use Ctrl-a + x to exit"
+sleep 1s
+#-m,指定内存空间，-M 指定开发板，-kernel 指定内核镜像，-nographic 不使用图形化
+${QEMU} -m 256 -M ${QEMU_MACHINE} -kernel ${KERNEL} \
+    -drive if=ide,format=raw,file=${IMAGE} -append "root=${QEMU_ROOTFS} console=ttyS0 nandsim.parts=64,64,64,64,64,64,64,64,64,64 rdinit=/firmadyne/preInit.sh rw debug ignore_loglevel print-fatal-signals=1 user_debug=31 firmadyne.syscall=0" \
+    -nographic \
+    -netdev tap,id=net0,ifname=${TAPDEV_0},script=no -device e1000,netdev=net0 -netdev socket,id=net1,listen=:2001 -device e1000,netdev=net1 -netdev socket,id=net2,listen=:2002 -device e1000,netdev=net2 -netdev socket,id=net3,listen=:2003 -device e1000,netdev=net3 | tee ${WORK_DIR}/qemu.final.serial.log
+
+```
+
+### systemtap
+
+>systemtap：https://blog.csdn.net/yunlianglinfeng/article/details/40536843
+>
+>qemu-image：https://www.cnblogs.com/pengdonglin137/p/5023342.html 
+
+```
+开发板，kernel，image，rootfs
+编译内核，带工具的文件系统
+Target system consists of self-built Linux kernel and prepared filesystem with analysis tools. In orderto cross-compile images, buildroot8project was used.Buildroot is a common tool that helps to develop Linuxfor embedded systems.
+编译内核使得可以追踪，-g标志
+If we want to usefull functionality of SystemTap, it is needed to compilekernel with multiple flags to enable tracing and debugsymbols.  Moreover, everything has to be compiledwith -g flag.
+```
+
+
+
 ##### problem
 
 

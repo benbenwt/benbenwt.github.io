@@ -94,6 +94,22 @@ echo $(array[0])
 
 ### 各种运算
 
+**文件表达式**
+
+-e filename 如果 filename存在，则为真
+-d filename 如果 filename为目录，则为真 
+-f filename 如果 filename为常规文件，则为真
+-L filename 如果 filename为符号链接，则为真
+-r filename 如果 filename可读，则为真 
+-w filename 如果 filename可写，则为真 
+-x filename 如果 filename可执行，则为真
+-s filename 如果文件长度不为0，则为真
+-h filename 如果文件是软链接，则为真
+filename1 -nt filename2 如果 filename1比 filename2新，则为真。
+filename1 -ot filename2 如果 filename1比 filename2旧，则为真。
+
+**数值**
+
 expr 1+3
 
 expr 1\*3   
@@ -381,6 +397,14 @@ echo  /dev/null >1.txt
 printf"hello %s %d"  "world" 123
 
 ##### set
+
+>执行脚本时，实际上打开了一个新的shell。set用来指定新shell中的环境参数。
+>
+>set -u,若遇到不存在变量，默认忽略它。
+>
+>set -x,输出结果前输出命令。
+>
+>set -e,发生错误就终止执行
 
 -n:结合命令p使用，打印内容。
 

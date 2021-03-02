@@ -18,6 +18,31 @@ cat
 
 ### 网络
 
+##### 网卡
+
+brctl命令
+
+### 参数说明和示例
+
+| 参数                      | 说明                   | 示例                  |
+| ------------------------- | ---------------------- | --------------------- |
+| `addbr <bridge>`          | 创建网桥               | brctl addbr br10      |
+| `delbr <bridge>`          | 删除网桥               | brctl delbr br10      |
+| `addif <bridge> <device>` | 将网卡接口接入网桥     | brctl addif br10 eth0 |
+| `delif <bridge> <device>` | 删除网桥接入的网卡接口 | brctl delif br10 eth0 |
+| `show <bridge>`           | 查询网桥信息           | brctl show br10       |
+| `stp <bridge> {on|off}`   | 启用禁用 STP           | brctl stp br10 off/on |
+| `showstp <bridge>`        | 查看网桥 STP 信息      | brctl showstp br10    |
+| `setfd <bridge> <time>`   | 设置网桥延迟           | brctl setfd br10 10   |
+| `showmacs <bridge>`       | 查看 mac 信息          | brctl showmacs br10   |
+
+
+
+作者：河码匠
+链接：https://www.jianshu.com/p/665382d70ab1
+来源：简书
+著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。
+
 ##### 防火墙
 
 ```
