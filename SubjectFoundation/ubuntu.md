@@ -145,7 +145,20 @@ ufw deny ip
 
 ufw allow from ip to any port 端口号
 
-## 修改ssh端口并开放
+## 修改sshd端口并开放
+
+>sshd为服务器端程序
+>
+>ssh为客户端程序
+
+修改ssh客户端默认连接端口
+
+```
+vim /etc/ssh/sshd_config
+将port改为希望默认请求的ssh端口
+```
+
+
 
 https://medium.com/@antiless.dev/%E8%B6%85%E8%AF%A6%E7%BB%86-vultr-vps-%E6%90%AD%E5%BB%BA-ss-%E6%96%B0%E6%89%8B%E5%9B%BE%E6%96%87%E6%8C%87%E5%AF%BC%E6%95%99%E7%A8%8B-4d6b33e411b6
 

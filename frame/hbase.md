@@ -1,5 +1,11 @@
 # 安装
 
+>修改hbase默认ssh端口
+>
+>hbase-env.sh
+>
+>export HBASE_SSH_OPTS="-p 52544"
+
 http://hbase.apache.org/book.html#quickstart
 
 1下载安装包解压，在conf/hbase-env.sh中设置jdk路径

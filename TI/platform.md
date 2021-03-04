@@ -1,3 +1,38 @@
+服务器密码:240711.wt
+
+hive和hbase表：
+
+单个信息，用来检索，统计；md5,SHA256,sha1,size,architecture,language,endianess,type,              		sampletime,ip,url,cveid,location,identity,      hdfs				
+
+其他:进程，字符，注册表，filepath
+
+,identity,,
+
+hbase
+
+```
+ #malware
+ list_namespace
+ list_namespace_tables 'platform'
+ create_namespace 'platform'
+create 'platform:sample','baseinfo','moreinfo','store'
+```
+
+```
+#cve    id,
+
+```
+
+
+
+hive
+
+```
+create table sample(md5 string,SHA256 string,sha1 string,size string,architecture string,endianess string,type string,sampletime string,ip string,url string,cveid string,location string,identity string,hdfs string);
+```
+
+
+
 ### 数据
 
 lisa生成,各种格式ti。

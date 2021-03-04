@@ -171,6 +171,8 @@ CREATE TABLE test(id string);
 ### beeline2连接
 
 >https://cwiki.apache.org/confluence/display/Hive/GettingStarted#GettingStarted-RunningHiveServer2andBeeline.1
+>
+>user:root,password:root
 
 jdbc端口:10000
 
@@ -190,7 +192,7 @@ web端口:10002
     </property>
 ```
 
-添加高可用，不然宝一个tez相关的警告，影响启动.
+添加高可用，不然报一个tez相关的警告，影响启动.
 
 ```
 #hive-site.xml

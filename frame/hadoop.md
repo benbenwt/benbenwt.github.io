@@ -825,6 +825,33 @@ public class SelfPartitioner extends Partitioner<Text, Text> {
 
 ### mapreduce
 
+合并多个文件
+
+```
+CombineTextInputFormat.setMaxInputSplitSize(job,20971520);
+job.setInputFormatClass(CombineTextInputFormat.class);
+```
+
+读取多行，使用自定义或NLine，不能两全。
+
+希望多个文件公用mapper，一个文件一次map取完（NLine可能？）。
+
+key为从文件头处的偏移量
+
+文件数目，文件读写数目，mapper数目，分片尺寸，map数目
+
+默认格式：文件数=文件读写数目=分片数目=mapper数目  map数目=行数
+
+WhomeFileInputFormat：文件数=文件读写数目=分片数目=mapper数目   map数目等于=控制行数
+
+setMaxInputSplitSize:文件数=读写数  mapper数目= 分片数=根据分片尺寸，按照规则所得    map数目=行数
+
+设置最大分片尺寸，控制mapper数量。
+
+使用默认inputformat,mapper执行多少次，map执行次数等于行数
+
+setup，cleanup每个mapper只执行一次。
+
 一个maptask对应一个分片。通过LineInputFormat，NLineInputFormat控制分片数量。
 
 通过重写InputFormat类，实现自己的类。重写RecordReader中的NextKeyValue控制map一次读取的行数。
@@ -1011,3 +1038,12 @@ YARN_NODEMANAGER_USER=root
 ##### 启动后无法访问web页面
 
 查看日志发现是由于只修改了一台的core-site.xml，没有同步。
+
+##### 修改hadoop默认ssh端口
+
+hadoop-env.sh
+
+```
+export HADOOP_SSH_OPTS="-p 52542"
+```
+
