@@ -1,3 +1,31 @@
+```
+<!--        <dependency>-->
+<!--            <groupId>org.apache.hadoop</groupId>-->
+<!--            <artifactId>hadoop-hdfs</artifactId>-->
+<!--            <version>3.1.4</version>-->
+<!--        </dependency>-->
+<!--        <dependency>-->
+<!--            <groupId>org.apache.hadoop</groupId>-->
+<!--            <artifactId>hadoop-mapreduce-client-core</artifactId>-->
+<!--            <version>3.1.4</version>-->
+<!--        </dependency>-->
+<!--        <dependency>-->
+<!--            <groupId>org.apache.hadoop</groupId>-->
+<!--            <artifactId>hadoop-mapreduce-client-jobclient</artifactId>-->
+<!--            <version>3.1.4</version>-->
+<!--            <scope>provided</scope>-->
+<!--        </dependency>-->
+<!--        <dependency>-->
+<!--            <groupId>org.apache.hadoop</groupId>-->
+<!--            <artifactId>hadoop-mapreduce-client-common</artifactId>-->
+<!--            <version>3.1.4</version>-->
+<!--        </dependency>-->
+```
+
+type添加
+
+connector,三元组，jar主方法
+
 服务器密码:240711.wt
 
 hive和hbase表：
@@ -6,7 +34,7 @@ hive和hbase表：
 
 其他:进程，字符，注册表，filepath
 
-,identity,,
+identity
 
 hbase
 
@@ -20,7 +48,8 @@ create 'platform:sample','baseinfo','moreinfo','store'
 
 ```
 #cve    id,
-
+disable 'tablename'
+drop 'tablename'
 ```
 
 
@@ -28,7 +57,7 @@ create 'platform:sample','baseinfo','moreinfo','store'
 hive
 
 ```
-create table sample(md5 string,SHA256 string,sha1 string,size string,architecture string,endianess string,type string,sampletime string,ip string,url string,cveid string,location string,identity string,hdfs string);
+create table sample(md5 string,SHA256 string,sha1 string,size string,architecture string,languages string,endianess string,type string,sampletime string,ip string,url string,cveid string,location string,identity string,hdfs string);
 ```
 
 
@@ -69,6 +98,29 @@ Docker，使用dockerfile搭建服务环境环境，挂载目录上传html和jar
 
 ### 数据库
 
+category
+
+```
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.ti.platform_provider_statistic8001.mapper.CategoryMapper">
+
+    <select id="getCategoryInfoNow" resultType="Category">
+        SELECT category_id categoryId,category,value,percent,time FROM `category_tbl` WHERE  time=(SELECT MAX(time) FROM `category_tbl`)
+    </select>
+
+    <select id="getCategoryInfoByDay" resultType="Category">
+SELECT category_id categoryId,category,value,percent,time FROM category_tbl a WHERE a.time IN
+(SELECT time FROM(SELECT DISTINCT b.time FROM  `category_tbl` b ORDER BY b.time DESC LIMIT 10)AS times) AND a.category IN
+(SELECT * FROM (SELECT category FROM category_tbl  GROUP BY category  ORDER BY  count(category) DESC LIMIT 2)AS category_list) ORDER BY category,time
+    </select>
+
+</mapper>
+```
+
+
+
 Springcloud搭建
 
 前端页面搭在nginx上，使用echart。Bootstrap。
@@ -87,25 +139,17 @@ category value  percent time
 
 family value
 
- 
-
+ ```
 CREATE TABLE `category_tbl`
-
 (
-
     `category_id` INT UNSIGNED AUTO_INCREMENT,
-    
     `category` VARCHAR(20) NOT NULL,
-    
     `value`  INT NOT NULL,
-    
     `percent` INT UNSIGNED NOT NULL,
-    
     `time` DATE，//截至time日累积的数目。可得月周。
-    
     PRIMARY KEY(`category_id`)
-
 )ENGINE=InnoDB DEFAULT CHARSET=utf8;
+ ```
 
 柱状图当前统计=源数据截至当前日每个类数量，样本时间<当前时间。
 
@@ -113,43 +157,53 @@ CREATE TABLE `category_tbl`
 
 单个样本：该样本所处时间点。源数据，按某策略更新mysql统计数据即可。前端要展示，不存mysql里。
 
+```
 CREATE TABLE `family_tbl`
-
 (
-
     `family_id` INT UNSIGNED AUTO_INCREMENT,
-    
     `family` VARCHAR(20) NOT NULL,
-    
     `value` INT NOT NULL,
-    
     PRIMARY KEY(`family_id`)
-
 )ENGINE=InnoDB DEFAULT CHARSET=utf8;
+```
 
  
 
 mysql事件删除过期数据。日统计信息。后端要提供单个样本具体信息，
 
- 
+最新日期，每类数量：
 
-最新日期，每类一个：
-
+```
 SELECT category_id categoryId,category,value,percent,time FROM `category_tbl` WHERE category_id IN(SELECT     SUBSTRING_INDEX(GROUP_CONCAT(category_id ORDER BY `time` DESC),',',1) FROM `category_tbl` GROUP BY category )
+```
+
+时间
+
+```
+SELECT category_id categoryId,category,value,percent,time FROM category_tbl a WHERE a.time IN
+(SELECT time FROM(SELECT DISTINCT b.time FROM  `category_tbl` b ORDER BY b.time DESC LIMIT 10)AS times) AND a.category IN
+(SELECT * FROM (SELECT category FROM category_tbl  GROUP BY category  ORDER BY  count(category) DESC LIMIT 2)AS category_list) ORDER BY category,time
+```
 
 由于此数据保证每天都存储，即每类的最新数据就是MAX(time)，所以不用concat。
 
-SELECT category_id categoryId,category,value,percent,time FROM `category_tbl` WHERE time=(SE
+```
+SELECT category_id categoryId,category,value,percent,time FROM `category_tbl` WHERE  time=(SELECT MAX(time) FROM `category_tbl`)
+```
 
 最新的前10天，占比最高的前两类。
 
 最新的前10天，占比最高的前两类。特殊情况，每天都记录了。
 
+```
 SELECT category_id categoryId,category,value,percent,time FROM category_tbl a WHERE a.time IN 
-
 (SELECT time FROM(SELECT DISTINCT b.time FROM `category_tbl` b ORDER BY b.time DESC LIMIT 10)AS times) AND a.category IN
-
 (SELECT * FROM (SELECT category FROM category_tbl GROUP BY category ORDER BY count(category) DESC LIMIT 2)AS category_list) ORDER BY category,time
+```
+
+
+
+
 
 最新的前10周
 

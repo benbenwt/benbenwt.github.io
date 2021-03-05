@@ -241,7 +241,7 @@ jsp使用很少，一般使用如Thymelef等。
 
 1，将当前模块依赖的公共模块在project structure中引入。并将公共模块maven install到本地仓库，然后在当前模块pom中引入功能模块坐标。这样，在打包时会将公共模块加入jar内。
 
-2，springboo打包时，应在pom内引入springboot-maven插件，设置主类名。若设置错误，会出现Exception in thread "main" java. lang.ClassNotFound Exception。
+2，springboo项目打包时，应在pom内引入springboot-maven插件，设置主类名。若设置错误，会出现Exception in thread "main" java. lang.ClassNotFound Exception。
 
 
 

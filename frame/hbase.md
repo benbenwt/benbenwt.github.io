@@ -344,6 +344,7 @@ scan 'test'
 get 'test', 'row1'
 disable 'test'
 drop 'test'
+
 ```
 
 # 常用端口
@@ -377,3 +378,12 @@ drop 'test'
 通过行key，列族：列确定一个单一元素
 
 [org.apache.hadoop.hbase.client.RpcRetryingCallerImpl] - Call exception, tries=6, retries=16, started=14301 ms ago, cancelled=false, msg=Call to hbase2/172.18.65.188:16020 failed on connection exception: org.apache.hbase.thirdparty.io.netty.channel.AbstractChannel$AnnotatedConnectException: Connection refused: no further information: hbase2/172.18.65.188:16020, details=row 'test' on table 'hbase:meta' at region=hbase:meta,,1.1588230740, hostname=hbase2,16020,1613512234805, seqNum=-1, see https://s.apache.org/timeout
+
+### problem
+
+##### org.apache.hbase.thirdparty.io.netty.channel.AbstractChannel$AnnotatedConnectException
+
+```
+hadoop dfsamin -safemode leave
+```
+

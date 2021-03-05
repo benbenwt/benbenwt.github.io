@@ -2,11 +2,17 @@
 
 ##### 表
 
+```
  drop table if exists test;
-
 create table test(id int);
+insert into test(id) values(1);
+truncate table sample;
+#hive java api:https://cwiki.apache.org/confluence/display/Hive/HiveServer2+Clients
+```
 
-insert into test values(1);
+
+
+
 
 # HIVE服务器搭建
 
@@ -210,7 +216,7 @@ nohup hiveserver2 1>/dev/null 2>/dev/null &
 beeline -u jdbc:hive2://localhost:10000/default -n root -w root
 #或这样连接
 beeline
-!connect jdbc:hive2://localhost:10000 root root
+!connect jdbc:hive2://hbase:10000/platform root root
 #或这样测试beeline连接
 $HIVE_HOME/bin/beeline -u jdbc:hive2://
 #操作hive
