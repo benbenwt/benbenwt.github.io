@@ -1,3 +1,9 @@
+等待执行完成再执行下一个
+
+https://www.cnblogs.com/zhaolizhe/p/6923501.html
+
+使用&,wait或&&
+
 # 概览
 
 1自动化批量系统初始化程序（update，软件安装，时区设置，安全策略）

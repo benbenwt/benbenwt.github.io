@@ -823,6 +823,16 @@ public class SelfPartitioner extends Partitioner<Text, Text> {
 
 ### hdfs
 
+```
+
+hdfs dfs -put filename  hdsf_path
+hdfs dfs -mkdir directoryname
+hdfs dfs -rm -r directoryname
+hdfs dfs -ls 
+```
+
+
+
 ### mapreduce
 
 合并多个文件

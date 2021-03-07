@@ -42,6 +42,10 @@ get 超链接,location.href
 
 post 表单
 
+```
+ var new_percent=new Number(percent).toFixed(2);
+```
+
 
 
 ### problem
