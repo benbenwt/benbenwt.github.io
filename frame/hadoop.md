@@ -1,3 +1,5 @@
+
+
 # hadoop服务器搭建
 
 >软件及系统版本：hadoop3.1.4,centos7.2，idea2019.3.3，maven为idea的bundle版本。
@@ -201,6 +203,8 @@ hostname改为对应域名:
 vim /etc/sysconfig/network
 修改为ip对应的hostname，我的190对应为
 hbase
+#也可使用此命令
+hostname -b hbase2
 ```
 
 ssh配置使用公私钥不用密码：
@@ -1057,3 +1061,19 @@ hadoop-env.sh
 export HADOOP_SSH_OPTS="-p 52542"
 ```
 
+##### problem
+
+     chmod g-w /home/your_user # 或　chmod 0755 /home/your_user
+     chmod 700 /home/your_user/.ssh
+     
+     chmod 600 /home/your_user/.ssh/authorized_keys
+
+ 然后重启ssh服务，就可以免密码登陆了。原因在于ssh服务会检查文件权限码，如777这种，会被认为不安全。
+
+##### 克隆后删除旧网卡
+
+/etc/sysconfig/network-scripts/ifcfg-exxx，
+
+ip addr查看网卡
+
+单节点配置文件

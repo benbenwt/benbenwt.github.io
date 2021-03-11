@@ -1,3 +1,9 @@
+ windows计算hash
+
+```
+Get-FileHash  .\kibana-7.11.1-linux-x86_64.tar.gz -Algorithm sha512|Format-List
+```
+
 等待执行完成再执行下一个
 
 https://www.cnblogs.com/zhaolizhe/p/6923501.html

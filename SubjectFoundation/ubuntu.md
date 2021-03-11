@@ -1,4 +1,17 @@
-# ubuntu系统
+linux计算hash
+
+```
+md5sum
+sha1sum       
+sha256sum     
+sha512sum    
+shasum        
+sha224sum     
+sha384sum
+shasum -a 512 -c 
+```
+
+# ubuntu
 
 ### 系统
 
@@ -130,7 +143,7 @@ ls -l   查看软连接
 
 -rwxrw-r--
 
-chmod使用数字表示权限，1为读，2为写，3为执行。共三位表示用户，用户组，其他用户。最高权限为7，即三者之和。
+chmod使用数字表示权限，1为执行，2为写，4为读。共三位表示用户，用户组，其他用户。最高权限为7，即三者之和。
 
 用法如下,将上边的10位例子写成chmod形式，如下：chmod   731  1.txt
 

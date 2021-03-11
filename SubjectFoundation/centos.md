@@ -43,11 +43,19 @@ brctl命令
 来源：简书
 著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。
 
+### iptables
+
+
+
 ##### 防火墙
+
+>添加规则后使用reload，重启没用。firewall-cmd --reload
+
+
 
 ```
 # 查询端口是否开放
-firewall-cmd --query-port=8080/tcp
+firewall-cmd --query-port=3306/tcp
 # 开放80端口
 firewall-cmd --permanent --add-port=80/tcp
 # 移除端口
@@ -90,9 +98,9 @@ firewall-cmd --permanent --remove-port=8080/tcp
 firewall-cmd --list-all 
 ```
 
-**netstat -lnpt**
+##### netstat -lnpt
 
-![img](https://img2018.cnblogs.com/blog/1336432/201903/1336432-20190302110949754-1765820036.png)
+
 
 *PS:centos7默认没有 netstat 命令，需要安装 net-tools 工具，yum install -y net-tools*
 
@@ -223,3 +231,19 @@ vim /etc/ssh/ssh_config
 
 putty选择connection->ssh->rsa
 
+ssh-copy-id无效
+
+     chmod g-w /home/your_user # 或　chmod 0755 /home/your_user
+     chmod 700 /home/your_user/.ssh
+     
+     chmod 600 /home/your_user/.ssh/authorized_keys
+
+ 然后重启ssh服务，就可以免密码登陆了。原因在于ssh服务会检查文件权限码，如777这种，会被认为不安全。
+
+##### 克隆后删除旧网卡
+
+/etc/sysconfig/network-scripts/ifcfg-exxx，
+
+ip addr查看网卡
+
+单节点配置文件

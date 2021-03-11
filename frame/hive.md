@@ -24,13 +24,13 @@ truncate table sample;
 >
 >mysql-connector-java-5.1.37
 >
->mysql-5.7.28.el7.x86_64rmp-bundle.tar
+>mysql-5.7.28.el7.x86_64rpm-bundle.tar
 
 安装新版mysql前，需将系统自带的mariadb-lib卸载
 
 ```
 rpm -qa|grep mariadb           #查看是否安装了mariadb
-rpm -e --nodeps  software_name #卸载对应软件
+rpm -e --nodeps  software_name #卸载对应软件,e:erase
 ```
 
 安装mysql
@@ -50,12 +50,13 @@ mysqld --initialize --user=mysql
 #重置密码
 vim /etc/my.cnf
 在[mysqld]后面任意一行添加“skip-grant-tables”用来跳过密码验证的过程
+service mysqld start 
 mysql
 FLUSH PRIVILEGES;
-update mysql.user set authentication_string=password('root')   where user='root' and host='localhost';
+update mysql.user set authentication_string=password('root'),host='%'   where user='root';
+service mysql restart
 mysql -uroot -proot
-ALTER USER USER() IDENTIFIED BY 'root';
- update mysql.user set host='%' where user='root';
+ALTER USER USER() IDENTIFIED BY 'root';#重置密码
 ```
 
 ### 相关操作

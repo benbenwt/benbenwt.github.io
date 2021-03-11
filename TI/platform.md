@@ -192,7 +192,7 @@ CREATE TABLE `category_tbl`
     `category_id` INT UNSIGNED AUTO_INCREMENT,
     `category` VARCHAR(20) NOT NULL,
     `value`  INT NOT NULL,
-    `time` DATE，//截至time日累积的数目。可得月周。
+    `time`  DATE,
     PRIMARY KEY(`category_id`)
 )ENGINE=InnoDB DEFAULT CHARSET=utf8;
  ```
@@ -213,7 +213,17 @@ CREATE TABLE `family_tbl`
 )ENGINE=InnoDB DEFAULT CHARSET=utf8;
 ```
 
- 
+ ```
+CREATE TABLE `architecture`
+(
+    `arch_id` INT UNSIGNED AUTO_INCREMENT,
+    `architecture` VARCHAR(20) NOT NULL,
+    `value` INT NOT NULL,
+    PRIMARY KEY(`arch_id`)
+)ENGINE=InnoDB DEFAULT CHARSET=utf8;
+ ```
+
+
 
 mysql事件删除过期数据。日统计信息。后端要提供单个样本具体信息，
 
