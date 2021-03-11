@@ -3,7 +3,7 @@ location
 前端点击切换的
 ```
 
-
+写一个pageHelper类
 
 发现应使用如下方法创建输入流，而不是用path.tostring().通过查看TextInputFormat的源码，发现它使用此方法创建输入流。hdfs使用的FSDataInputStream是一个继承自java.io.InputFormat的类，但不是直接继承的，中间还有几个父类。
 

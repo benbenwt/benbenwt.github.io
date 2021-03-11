@@ -194,3 +194,12 @@ html代码
   - form
 
   - location.href
+
+##### problem
+
+bootstrap失效
+
+```
+清空cookie
+```
+
