@@ -1,3 +1,16 @@
+find
+
+```
+find -size -2kb
+向下取整
+find ./ -name '.py' -exec rm -rf {} ;
+find ./ -name "*" -type f -size 0c | xargs -n 1 rm -f
+```
+
+
+
+
+
 linux计算hash
 
 ```

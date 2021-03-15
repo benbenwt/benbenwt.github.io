@@ -1,3 +1,7 @@
+自定义分组group by规则
+
+docker-compose up --scale worker=10
+
 ```
 location
 前端点击切换的
@@ -18,39 +22,30 @@ Path path=split.getPath();
 
 ```
 hadoop jar mapreduce_start-1.0-SNAPSHOT.jar com.ti.mr.getSingleInfo.wordcount.WordCountDriver input output
+hadoop jar mapreduce_start-1.0-SNAPSHOT.jar com.ti.mr.getSingleInfo.getInfo.JsonDriver input output
 ```
+
+
+
+
+
+
+
+##### 备忘
 
 新的stix加入，添加。
 
-```
-<!--        <dependency>-->
-<!--            <groupId>org.apache.hadoop</groupId>-->
-<!--            <artifactId>hadoop-hdfs</artifactId>-->
-<!--            <version>3.1.4</version>-->
-<!--        </dependency>-->
-<!--        <dependency>-->
-<!--            <groupId>org.apache.hadoop</groupId>-->
-<!--            <artifactId>hadoop-mapreduce-client-core</artifactId>-->
-<!--            <version>3.1.4</version>-->
-<!--        </dependency>-->
-<!--        <dependency>-->
-<!--            <groupId>org.apache.hadoop</groupId>-->
-<!--            <artifactId>hadoop-mapreduce-client-jobclient</artifactId>-->
-<!--            <version>3.1.4</version>-->
-<!--            <scope>provided</scope>-->
-<!--        </dependency>-->
-<!--        <dependency>-->
-<!--            <groupId>org.apache.hadoop</groupId>-->
-<!--            <artifactId>hadoop-mapreduce-client-common</artifactId>-->
-<!--            <version>3.1.4</version>-->
-<!--        </dependency>-->
-```
+type添加
 
-github不上传某些文件
+category,value,time三元组
+
+服务器密码:240711.wt
 
 
 
-hivesql
+##### hive
+
+连接
 
 ```
 #java api不要写分号结尾
@@ -67,23 +62,15 @@ hivesql
 
 
 
-多个sql不可以公用statement
-
-type添加
-
-connector,三元组，jar主方法
-
-服务器密码:240711.wt
-
-hive和hbase表：
+##### hive和hbase表：
 
 单个信息，用来检索，统计；md5,SHA256,sha1,size,architecture,language,endianess,type,              		sampletime,ip,url,cveid,location,identity,      hdfs				
 
-其他:进程，字符，注册表，filepath
+其他:进程，字符，注册表，filepath，identity
 
-identity
 
-hbase
+
+创建hbase表
 
 ```
  #malware
@@ -101,7 +88,7 @@ drop 'tablename'
 
 
 
-hive
+创建hive表
 
 ```
 create table sample(md5 string,SHA256 string,sha1 string,size string,architecture string,languages string,endianess string,type string,sampletime string,ip string,url string,cveid string,location string,identity string,hdfs string);
@@ -195,6 +182,14 @@ CREATE TABLE `category_tbl`
     `time`  DATE,
     PRIMARY KEY(`category_id`)
 )ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+#统计cve漏洞,恶意软件数量
+select category,sum(tmp.value) value from  
+(select CASE WHEN `category` IN('fish','door') THEN 'other'
+WHEN `category` IN ('vulnerabilities') THEN 'vulnerabilities'
+ELSE `category` END AS `category`,sum(value) value from category_tbl  group by  `category`) tmp group by tmp.category
+ 
+
  ```
 
 柱状图当前统计=源数据截至当前日每个类数量，样本时间<当前时间。
@@ -213,6 +208,8 @@ CREATE TABLE `family_tbl`
 )ENGINE=InnoDB DEFAULT CHARSET=utf8;
 ```
 
+architecture
+
  ```
 CREATE TABLE `architecture`
 (
@@ -222,6 +219,20 @@ CREATE TABLE `architecture`
     PRIMARY KEY(`arch_id`)
 )ENGINE=InnoDB DEFAULT CHARSET=utf8;
  ```
+
+location
+
+```
+CRAETE TABLE `location`
+(
+	`location_id` INT UNSIGNED AUTO_INCREMENT,
+	 `location` VARCHAR(20) NOT NULL,
+	 `value` INT NOT NULL,
+	 PRIMARY KEY(`location_id`)
+)ENGINE=InnoDB DEFAULT CHARSET=utf8
+
+select location_id locationId,location,value  from location
+```
 
 
 
@@ -242,7 +253,7 @@ SELECT category_id categoryId,category,value,time FROM `category_tbl` WHERE  tim
 2
 
 ```
-最新的前10天，占比最高的前两类。
+最新的近10天，占比最高的前两类。
 ```
 
 ```

@@ -197,9 +197,18 @@ html代码
 
 ##### problem
 
-bootstrap失效
+##### bootstrap失效
 
 ```
 清空cookie
 ```
 
+##### jquery对象
+
+对象创建；var person={} ;person="benben";其内容为{name:"benbne"}，取法为person.name
+
+和map相区别
+
+##### ajax异步问题
+
+使用异步时，可能在静态页面之前调用了succss回调函数，使得函数失效。使用同步即可。

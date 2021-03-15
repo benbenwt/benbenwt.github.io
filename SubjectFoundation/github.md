@@ -113,3 +113,14 @@ git push -u origin master -f，强制push，多人协作时不可取
 git reset --hard origin/master  强行合并，将本地的update覆盖掉。
 ```
 
+##### github不上传某些文件
+
+```
+touch .gitignore
+#添加
+target/
+test/
+```
+
+
+

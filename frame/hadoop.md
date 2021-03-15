@@ -597,7 +597,6 @@ pom.xml
             <version>3.1.2</version>
         </dependency>
     </dependencies>
-
     <repositories>
         <repository>
             <id>aliyun</id> <!-- id可以随便取，只要不重名即可 -->
@@ -1077,3 +1076,37 @@ export HADOOP_SSH_OPTS="-p 52542"
 ip addr查看网卡
 
 单节点配置文件
+
+#####  is running 626469376B beyond the 'VIRTUAL' memory limit. Current usage: 208.7 MB of 1 GB physical memory used; 2.7 GB of 2.1 GB virtual memory used. Killing container.
+
+mapreduce
+
+```
+For our example cluster, we have the minimum RAM for a Container (yarn.scheduler.minimum-allocation-mb) = 2 GB. We’ll thus assign 4 GB for Map task Containers, and 8 GB for Reduce tasks Containers.
+
+In mapred-site.xml:
+
+mapreduce.map.memory.mb: 4096
+
+mapreduce.reduce.memory.mb: 8192
+
+Each Container will run JVMs for the Map and Reduce tasks. The JVM heap size should be set to lower than the Map and Reduce memory defined above, so that they are within the bounds of the Container memory allocated by YARN.
+
+In mapred-site.xml:
+
+mapreduce.map.java.opts: -Xmx3072m
+
+mapreduce.reduce.java.opts: -Xmx6144m
+
+The above settings configure the upper limit of the physical RAM that Map and Reduce tasks will use.
+
+```
+
+
+
+spark解决
+
+```
+yarn.nodemanager.resource.memory-mb 
+```
+

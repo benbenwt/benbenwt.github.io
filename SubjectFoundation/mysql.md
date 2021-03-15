@@ -1,3 +1,7 @@
+### problem
+
+多个sql不可以公用statement
+
 ### 数据表
 
 ##### 创建数据库
@@ -116,3 +120,4 @@ PRIMARY KEY(`dept_no`)
 
     - extra
       using filesort :索引排序不可用using temporary:临时表using join buffer:多表连接未使用索引using where：使用了where过滤查找结果using index:索引覆盖了
+

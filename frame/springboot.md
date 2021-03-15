@@ -379,7 +379,9 @@ ctrl左键点击依赖，查看spring-boot-dependeccies或spriing-cloud-dependen
 
 解决：在pom中引入springboot-maven插件，该插件可设置打包参数。在configuration->mainclass中设置主类的全限定类名。
 
+##### 无法注入mapper
 
+使用Repository加mapper注解，或使用Component注入
 
 
 
