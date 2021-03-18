@@ -1,34 +1,365 @@
-# 待整理
 
-- 1,基本数据类型：char boolean float double  byte short  int long
-- 位数                       16     32      32       64      8       16    32   64
-- 默认值         ‘\u0000'  false    0.0f    0.0d     0        0     0      0
-- 2,面向对象特征：1封装：把描述对象的属性和行为封装进类，用变量和方法表示 2抽象：把生活中的对象抽象为类，数据抽象，过程抽象。
-- 3继承：子类继承父类的属性和行为，也可以扩展行为重写方法。  4多态：程序中定义的引用变量所指向的具体类型在编程时不确定，运行时才确定。
-- 3,包装类型：为了使基本类型也具有对象的特征，就有了包装类型。  自动装箱：通过构造将基本转为类，底层为调用封装类的valueOf()  自动拆箱：自动将
-- 封装类型转为基本类型 ，底层为：intValue()      1声明方式不同：包装类使用new关键字在堆中分配存储空间    2包装类型存储在堆，基本类型存储在栈
-- 3默认值 int为0 Integer为null
-- 4，==和equals区别： ==比较两个引用是否指向同一对象，即内存地址。 equals：比较某些特征，比如String重写的比较内容。
-- 5,String,StringBuffer和StringBuilder  都是常用字符串类，String使用private final char value[]，不可变。StringBuffer和StringBuilder都继承AbstractStringBuilder,使用可变数组。
-- StringBuffer线程安全，效率低 StringBuilder线程不安全，效率高。
-- 6,进程和线程：1并发执行的程序在执行过程中计算机分配资源的单位，线程包含在进程中，一个进程可以有多个线程。是进程内部的调度单位。
-- 7,集合 Collection下有List(有序，允许重复)和Set（无序，不重复）.  set根据equals和hashcode判断，一个对象要存入set，必须重写equals和hashcode。
-- Map下有HashMap,线程不同步,TreeMap，线程同步。
-- 8，ArrayList基于动态数组，LinkedList基于链表。随机访问set，get时ArrayList优于LinkedList，LinkedList只能移动
-- 指针。但插入和删除链表更快。
-- 9,ConcurrentModificationExceptin 由于使用iterator访问，但是使用list.remove(),应使用iterator.remove()来删除。
-- 10，HashMap,HashTable都实现了Map接口，存储key-value数据。不同点：1HashMap的key和value可以为null。
-- 2HashMap线程不安全3迭代器不同
-- 11，如何保证线程安全又效率高。currentHashMap替代HashTable
-- 12，拷贝文件的工具类使用的是字节流
-- 13，线程的创建，1继承thread类，作为线程对象存在。重写run（），start（），sleep（），wait（）。
-- 实现Runnable接口，重写run方法。
-- 14,static修饰的方法和变量，不属于任何实例对象，属于类，类创建时，就可访问，所以他们称为类方法，类成员。
-- 15，
 
-# 源码
+# util
 
-### java.util.String
+>Collection为顶级的接口，List接口继承自Collection，AbstractCollection实现自Collection。
+
+### Collection
+
+##### Collection接口
+
+>Collection接口提供了增删改查的抽象方法
+
+collection接口定义了如下：
+
+返回元素个数
+
+```
+int size()
+```
+
+集合是否为空
+
+```
+boolean isEmpty();
+```
+
+是否包含此object
+
+```
+boolean contains(Object o);
+```
+
+返回对应泛型的迭代元素
+
+```
+Iterator<E> iterator();
+```
+
+以数组形式返回元素
+
+```
+Object[] toArray();
+```
+
+添加元素
+
+```
+boolean add(E e);
+```
+
+移除对应object
+
+```
+boolean remove(Object o);
+```
+
+将collection合并到此对象
+
+```
+boolean addAll(Collection<? extends E> c);
+```
+
+删除所有在collection参数中元素
+
+```
+ boolean removeAll(Collection<?> c);
+```
+
+只保持在参数collection中的元素
+
+```
+boolean retainAll(Collection<?> c);
+```
+
+清除所有元素
+
+```
+void clear();
+```
+
+是否相等
+
+```
+boolean equals(Object o);
+```
+
+hash值
+
+```
+int hashCode();
+```
+
+AbstractCollection
+
+##### List接口
+
+>相比于Collection接口，List接口增添了关于index的操作。
+
+List相较于Collection特有的：
+
+获得在index处的元素
+
+```
+E get(int index);
+```
+
+替换在index处的元素
+
+```
+E set(int index, E element);
+```
+
+在index处添加元素
+
+```
+void add(int index, E element);
+```
+
+在index处插入collection
+
+```
+boolean addAll(int index, Collection<? extends E> c);
+```
+
+该object在list中的第一个匹配下标
+
+```
+int indexOf(Object o);
+```
+
+最后一个匹配下标
+
+```
+int lastIndexOf(Object o);
+```
+
+返回list迭代器
+
+```
+ListIterator<E> listIterator();
+```
+
+返回从index之后的元素的迭代器
+
+```
+ListIterator<E> listIterator(int index);
+```
+
+子List
+
+```
+List<E> subList(int fromIndex, int toIndex);
+```
+
+##### AbstractCollection
+
+>AbstractCollection实现了collection的很多方法
+
+其实现的方法如下:
+
+是否为空
+
+```
+public boolean isEmpty() {
+    return size() == 0;
+}
+```
+
+是否包含此object。使用iterator遍历collection，查看是否包含object。
+
+```
+public boolean contains(Object o) {
+    Iterator<E> it = iterator();
+    if (o==null) {
+        while (it.hasNext())
+            if (it.next()==null)
+                return true;
+    } else {
+        while (it.hasNext())
+            if (o.equals(it.next()))
+                return true;
+    }
+    return false;
+}
+```
+
+数组形式返回collection。size()为collection的元素个数，应该等于元素个数。为什么会有fewer和more的情况。
+
+若比预期的少，Arrays.copyOf(r, i)返回一个包含相同值的新数组。若比预期的多，创建新数组并返回。
+
+```
+public Object[] toArray() {
+    // Estimate size of array; be prepared to see more or fewer elements
+    Object[] r = new Object[size()];
+    Iterator<E> it = iterator();
+    for (int i = 0; i < r.length; i++) {
+        if (! it.hasNext()) // fewer elements than expected
+            return Arrays.copyOf(r, i);
+        r[i] = it.next();
+    }
+    return it.hasNext() ? finishToArray(r, it) : r;
+}
+```
+
+创建扩容的数据，将剩余数据装载进新数组并返回
+
+```
+private static <T> T[] finishToArray(T[] r, Iterator<?> it) {
+    int i = r.length;
+    while (it.hasNext()) {
+        int cap = r.length;
+        if (i == cap) {
+            int newCap = cap + (cap >> 1) + 1;
+            // overflow-conscious code
+            if (newCap - MAX_ARRAY_SIZE > 0)
+                newCap = hugeCapacity(cap + 1);
+            r = Arrays.copyOf(r, newCap);//创建新数组
+        }
+        r[i++] = (T)it.next();//迭代将剩余元素装入新数组
+    }
+    // trim if overallocated
+    return (i == r.length) ? r : Arrays.copyOf(r, i);
+}
+```
+
+若小于0说明溢出了，抛出异常。若大于数组最大size返回int最大值，否则返回数组最大值。数组最大size比integer最大size小8。由于数组元数据占用一部分空间，故少了8。元数据包括class：描述对象类型的类i信息指针，flag:描述此对象的散列码及形状，lock：是否同步，size：大小。
+
+```
+private static int hugeCapacity(int minCapacity) {
+    if (minCapacity < 0) // overflow
+        throw new OutOfMemoryError
+            ("Required array size too large");
+    return (minCapacity > MAX_ARRAY_SIZE) ?
+        Integer.MAX_VALUE :
+        MAX_ARRAY_SIZE;
+}
+```
+
+AbstractCollection没有实现add方法，其实现了remove,removeAll,containAll,addAll,retainAll,clear，toString等方法。
+
+##### AbstractList
+
+>AbstractList实现了List接口，继承了AbstractCollection类。但是，它没有实现List接口中的add,remove,set,get等关于index的操作。其实现了List中的Indexof,LastIndexOf,Sublist，addAll，equals等方法。自己创建了rangeCheckForAdd,removeRange,outofBoundMsg方法等。
+
+31 * i == (i << 5）- i,31是奇素数，且可用移位和减法代替。
+
+```
+public int hashCode() {
+    int hashCode = 1;
+    for (E e : this)
+        hashCode = 31*hashCode + (e==null ? 0 : e.hashCode());
+    return hashCode;
+}
+```
+
+##### ArrayList
+
+>ArrayList继承AbstractList接口，serialize,cloned,randomAccess接口
+
+构造函数：
+
+指定初始容量，若使用无参构造方法，创建为DEFAULT_EMPTY_ELEMENT.
+
+```
+public ArrayList(int initialCapacity) {
+    if (initialCapacity > 0) {
+        this.elementData = new Object[initialCapacity];
+    } else if (initialCapacity == 0) {
+        this.elementData = EMPTY_ELEMENTDATA;
+    } else {
+        throw new IllegalArgumentException("Illegal Capacity: "+
+                                           initialCapacity);
+    }
+}
+```
+
+ArrayList添加的方法有如下：
+
+将容量缩小到现有元素大小
+
+```
+public void trimToSize() {
+    modCount++;
+    if (size < elementData.length) {
+        elementData = (size == 0)
+          ? EMPTY_ELEMENTDATA
+          : Arrays.copyOf(elementData, size);
+    }
+}
+```
+
+确保容量安全函数,通过calculate函数计算newcapacity，并更新minicapacity。若数组length不满足minicapacity则使用grow函数进行扩容。
+
+```
+private void ensureCapacityInternal(int minCapacity) {
+    ensureExplicitCapacity(calculateCapacity(elementData, minCapacity));
+}
+
+```
+
+```
+private void ensureExplicitCapacity(int minCapacity) {
+    modCount++;
+
+    // overflow-conscious code
+    if (minCapacity - elementData.length > 0)
+        grow(minCapacity);
+}
+```
+
+```
+private static int calculateCapacity(Object[] elementData, int minCapacity) {
+    if (elementData == DEFAULTCAPACITY_EMPTY_ELEMENTDATA) {
+        return Math.max(DEFAULT_CAPACITY, minCapacity);
+    }
+    return minCapacity;
+}
+```
+
+```
+private void grow(int minCapacity) {
+    // overflow-conscious code
+    int oldCapacity = elementData.length;
+    int newCapacity = oldCapacity + (oldCapacity >> 1);
+    if (newCapacity - minCapacity < 0)
+        newCapacity = minCapacity;
+    if (newCapacity - MAX_ARRAY_SIZE > 0)
+        newCapacity = hugeCapacity(minCapacity);
+    // minCapacity is usually close to size, so this is a win:
+    elementData = Arrays.copyOf(elementData, newCapacity);
+}
+```
+
+hugeCapacity用来获取一个极大数，其值为Integer.MAX_VALUE或MAX_ARRAY_SIZE=Integer.MAX_VALUE-8
+
+其必须实现AbstractList接口的所有方法，增删改查如下：
+
+add，检查下标，检查容量，移动数组位置，添加元素。
+
+remove，检查下标，移动数组位置，将空位置null方便gc。
+
+set,get流程较少，使用rangeCheck检查下标后，即可取值。
+
+### Map
+
+>由上而下为Map接口，abstractMap和HashTable，HashMap。
+
+##### 关于红黑树
+
+
+
+##### Map接口
+
+map中的内部接口Entry。静态内部类只可调用类成员，非静态内部类可以调用所有。但是由于内部接口无法实例化，故只能调用类成员，内部接口默认是静态接口，无需指定static关键字。
+
+##### AbstractMap
+
+>AbstractMap实现了Map接口的
+
+HashMap
+
+### String
 
 ```
 
@@ -146,7 +477,7 @@ public char[] toCharArray() {
 }
 ```
 
-# String
+
 
 ### 正则表达式
 
@@ -316,7 +647,7 @@ how：
 
   
 
-# String
+
 
 # GC
 
@@ -896,3 +1227,32 @@ Connection提供了事务处理的方法，通过调用setAutoCommit(false)可�
     1：破环请求和保持条件：请求失败后，释放已有资源。
     2:破坏不可抢占，代价大。
     3：破环循环，规定顺序，避免相互等待。​
+
+# 待整理
+
+- 1,基本数据类型：char boolean float double  byte short  int long
+- 位数                       16     32      32       64      8       16    32   64
+- 默认值         ‘\u0000'  false    0.0f    0.0d     0        0     0      0
+- 2,面向对象特征：1封装：把描述对象的属性和行为封装进类，用变量和方法表示 2抽象：把生活中的对象抽象为类，数据抽象，过程抽象。
+- 3继承：子类继承父类的属性和行为，也可以扩展行为重写方法。  4多态：程序中定义的引用变量所指向的具体类型在编程时不确定，运行时才确定。
+- 3,包装类型：为了使基本类型也具有对象的特征，就有了包装类型。  自动装箱：通过构造将基本转为类，底层为调用封装类的valueOf()  自动拆箱：自动将
+- 封装类型转为基本类型 ，底层为：intValue()      1声明方式不同：包装类使用new关键字在堆中分配存储空间    2包装类型存储在堆，基本类型存储在栈
+- 3默认值 int为0 Integer为null
+- 4，==和equals区别： ==比较两个引用是否指向同一对象，即内存地址。 equals：比较某些特征，比如String重写的比较内容。
+- 5,String,StringBuffer和StringBuilder  都是常用字符串类，String使用private final char value[]，不可变。StringBuffer和StringBuilder都继承AbstractStringBuilder,使用可变数组。
+- StringBuffer线程安全，效率低 StringBuilder线程不安全，效率高。
+- 6,进程和线程：1并发执行的程序在执行过程中计算机分配资源的单位，线程包含在进程中，一个进程可以有多个线程。是进程内部的调度单位。
+- 7,集合 Collection下有List(有序，允许重复)和Set（无序，不重复）.  set根据equals和hashcode判断，一个对象要存入set，必须重写equals和hashcode。
+- Map下有HashMap,线程不同步,TreeMap，线程同步。
+- 8，ArrayList基于动态数组，LinkedList基于链表。随机访问set，get时ArrayList优于LinkedList，LinkedList只能移动
+- 指针。但插入和删除链表更快。
+- 9,ConcurrentModificationExceptin 由于使用iterator访问，但是使用list.remove(),应使用iterator.remove()来删除。
+- 10，HashMap,HashTable都实现了Map接口，存储key-value数据。不同点：1HashMap的key和value可以为null。
+- 2HashMap线程不安全3迭代器不同
+- 11，如何保证线程安全又效率高。currentHashMap替代HashTable
+- 12，拷贝文件的工具类使用的是字节流
+- 13，线程的创建，1继承thread类，作为线程对象存在。重写run（），start（），sleep（），wait（）。
+- 实现Runnable接口，重写run方法。
+- 14,static修饰的方法和变量，不属于任何实例对象，属于类，类创建时，就可访问，所以他们称为类方法，类成员。
+- 15，
+

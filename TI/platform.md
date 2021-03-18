@@ -1,3 +1,9 @@
+sample提交-lisa-lisa-stix2-hdfs,es
+
+按日期，t+1天再处理t天的数据。
+
+type多个分多条，location多个分多条
+
 自定义分组group by规则
 
 docker-compose up --scale worker=10
