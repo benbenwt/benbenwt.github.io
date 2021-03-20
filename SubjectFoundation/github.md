@@ -18,6 +18,14 @@
 >
 >实际提交改动通过push将head区域中的文件推送到远程仓库。
 
+### 添加代理
+
+```
+git config --globalproxy http.proxy  'socks5://127.0.0.1:1080'
+```
+
+
+
 ### 初始化及配置
 
 ```
@@ -122,5 +130,8 @@ target/
 test/
 ```
 
+##### The TLS connection was non-properly terminated
 
+需要重新编译git
 
+https://blog.csdn.net/RedKeyer/article/details/96119320
