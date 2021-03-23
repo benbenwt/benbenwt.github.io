@@ -1,6 +1,10 @@
 # AttifyOS
 
-### firmadyne
+## firmadyne
+
+user:root  password:root
+
+user: iot  password:attify
 
 >firmadyne基本目录结构
 >
@@ -13,6 +17,48 @@
 >/images,生成的镜像
 >
 >/scratch/number,存储生成的一键运行脚本和image.raw。
+
+```
+cd /home/iot/tools/firmware-analysis-toolkit
+./reset.py
+cd  firmadyne/scratch/
+rm -rf *
+cd  ../images/
+sudo ./fat.py DIR-645_FIRMWARE_1.03.ZIP  --qemu 2.5.0
+sudo ./fat.py DIR-850L_REVA_FIRMWARE_1.14.B07_WW.ZIP
+#非初次启动
+./firmadyne/scratch/1/run.sh
+#645,850验证
+curl -d "SERVICES=DEVICE.ACCOUNT&attack=ture%0aAUTHORIZED_GROUP=1" "http://192.168.0.1/getcfg.php"
+ifconfig 
+sudo /home/iot/tools/firmware-analysis-toolkit/firmadyne/scripts/inferNetwork.sh '2' 'mipseb'
+
+
+sudo tunctl -d name
+ifconfig eth0 192.168.1.56 netmask 255.255.255.0 broadcast 192.168.1.255
+ip addr add 192.  dev wlan
+ip addr shwo wlan
+ip addr del 192. dev wlan
+ip route show
+ip route get 192
+ip route add default via 192
+ip route -n
+
+#设置到达10网段经过网关
+ip route add 10.0.0/24 via 193.233.7.65
+#经过10网段，经过此设备
+ip route chg 10.0.0/24 dev dummy
+
+df -h
+fdisk -l
+fdisk  /dev/sda
+```
+
+```
+As of now, the ARM firmadyne kernel doesn't work with the latest version of Qemu (2.11.1) available on the Ubuntu 18.04 official repository. However, Qemu (2.5.0) on Ubuntu 16.04 does work. Alternatively you can also use the bundled Qemu (2.5.0) provided with firmadyne as shown in example 2.
+```
+
+
 
 **到web页面查看用户名密码**
 
@@ -127,7 +173,7 @@ sudo ip route flush dev ${HOSTNETDEV_0}
 
 echo "Bringing down TAP device..."
 #关闭tum/tap设备
-sudo ip link set ${TAPDEV_0} down
+sudo ip  set ${TAPDEV_0} down
 
 
 echo "Deleting TAP device ${TAPDEV_0}..."
@@ -147,6 +193,18 @@ ${QEMU} -m 256 -M ${QEMU_MACHINE} -kernel ${KERNEL} \
     -netdev tap,id=net0,ifname=${TAPDEV_0},script=no -device e1000,netdev=net0 -netdev socket,id=net1,listen=:2001 -device e1000,netdev=net1 -netdev socket,id=net2,listen=:2002 -device e1000,netdev=net2 -netdev socket,id=net3,listen=:2003 -device e1000,netdev=net3 | tee ${WORK_DIR}/qemu.final.serial.log
 
 ```
+
+### problem
+
+##### qemu-system-mipsel: -netdev tap,id=net0,ifname=tap1_0,script=no: Duplicate ID 'net0' for netdev
+
+```
+vim firmadyne/scratch/1/run.sh
+修改重复的net0
+./run.sh
+```
+
+
 
 ### systemtap
 

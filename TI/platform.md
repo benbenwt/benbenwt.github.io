@@ -1,3 +1,49 @@
+crontab
+
+```
+55 17 * * *  root python3.7 /root/module/lisa/clock_py.py
+55 17 * * *  root python3.7 /root/module/lisa/clock_py1.py
+
+0  4  * * *  root java -jar /root/module/dump_hdfs-1.0-SNAPSHOT.jar  "/home/node/platform_data/stix/$(date -d last-day +%Y-%m-%d)" 
+"hdfs://hbase:9000/user/root/stix/$(date -d last-day +%Y-%m-%d)"
+
+0  4  * * *  root java -jar /root/module/dump_hdfs-1.0-SNAPSHOT.jar  "/home/node/platform_data/stix1/$(date -d last-day +%Y-%m-%d)" "hdfs://hbase:9000/user/root/stix/$(date -d last-day +%Y-%m-%d)"
+
+```
+
+
+
+小作业模式：mapreduce.job.ubertask.enable
+
+​    -D mapreduce.job.ubertask.enable=true 
+
+```
+
+/user/root/stix/$(date -d last-day +%Y-%m-%d)
+```
+
+
+
+```
+java -jar D:\DevInstall\IdeaProjects\dump_hdfs\target\dump_hdfs-1.0-SNAPSHOT.jar "C:\\Users\\guo\\Desktop\\dump_hdfs" "hdfs://hbase:9000/"
+java -jar /root/module/dump_hdfs-1.0-SNAPSHOT.jar  "/home/node/platform_data/stix/$(date -d last-day +%Y-%m-%d)" "hdfs://hbase:9000/"
+java -jar /root/module/dump_hdfs-1.0-SNAPSHOT.jar  "/home/node/platform_data/stix/$(date +%Y-%m-%d)" "hdfs://hbase:9000/"
+前一天:date -d last-day +%Y-%m-%d
+```
+
+
+
+| hostname | ip   | 服务                                                  |
+| -------- | ---- | ----------------------------------------------------- |
+| lisa     | 184  | lisa1,java,lisa_submit1,lisa_submit,dump_hdfs,dump_es |
+| hbase    | 185  | hdfs-mater,hive,mapreduce-start,dump_mysql            |
+| hbase1   | 186  | yarn-master,nginx                                     |
+| hbase2   | 187  | es,mysql,lisa2,                                       |
+
+1   /home/node/paltform_data/sample1
+
+2  /home/node/paltform_data/sample
+
 ### lisa
 
 >重新build遇到的主要问题：
@@ -74,6 +120,18 @@ delete * from cel...
 #清除./data/storate中文件即可。
 ```
 
+##### 更改监听ip和端口
+
+```
+修改docker-compose.yml中的nginx服务的的args->webhost,让后重新docker-compose build
+```
+
+
+
+服务复用调用，代码复用，非调用式关系如消息队列
+
+
+
 sample提交-lisa-lisa-stix2-hdfs,es
 
 按日期，t+1天再处理t天的数据。
@@ -103,8 +161,9 @@ Path path=split.getPath();
 
 
 ```
-hadoop jar mapreduce_start-1.0-SNAPSHOT.jar com.ti.mr.getSingleInfo.wordcount.WordCountDriver input output
-hadoop jar mapreduce_start-1.0-SNAPSHOT.jar com.ti.mr.getSingleInfo.getInfo.JsonDriver input output
+hadoop jar /root/software/mapreduce_start-1.0-SNAPSHOT.jar  input output
+hadoop jar /root/software/mapreduce_start-1.0-SNAPSHOT.jar  input1 output
+hadoop fs -rm -r  ouput
 ```
 
 
@@ -132,9 +191,12 @@ category,value,time三元组
 ```
 #java api不要写分号结尾
  select type,sampletime, count(*) nums   from sample where type!='NULL' and sampletime!='NULL' group by type,sampletime;
+ 
  select architecture,count(1) nums from sample group by architecture
  !connect jdbc:hive2://hbase:10000/platform root root
  hive存储裁掉time
+ create external table sample1(md5 string,SHA256 string,sha1 string,size string,architecture string,languages string,endianess string,type string,sampletime string,ip string,url string,cveid string,location string,identity string,hdfs string)row format delimited fields terminated by '/t';
+ load data inpath '/dbtac/tac/*.csv' into table trajectory; #从hdfs中上传数据
 ```
 
 ```
@@ -305,7 +367,7 @@ CREATE TABLE `architecture`
 location
 
 ```
-CRAETE TABLE `location`
+CRAEATE TABLE `location`
 (
 	`location_id` INT UNSIGNED AUTO_INCREMENT,
 	 `location` VARCHAR(20) NOT NULL,

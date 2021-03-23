@@ -28,9 +28,15 @@ https://www.cnblogs.com/zhaolizhe/p/6923501.html
 
 # 其他软件的命令
 
-### 文件
+### VIM
 
-### 网络
+##### 查找
+
+/  或者 ？
+
+
+
+
 
 # 脚本
 
@@ -44,7 +50,7 @@ https://www.cnblogs.com/zhaolizhe/p/6923501.html
 
 ### 变量
 
->字符串，数组，整数
+>包含字符串，数组，整数等类型
 
 name="bob"
 
@@ -56,15 +62,21 @@ unset name
 
 创建后变量只读
 
-##### 变量使用范围
+### 变量使用范围
 
-本地变量：只能在shell内使用
+**本地变量**：只能在shell内使用
 
-环境变量：对用户或所有用户可见，如PATH，env。
+**环境变量**：对用户或所有用户可见，如PATH，env。配置在用户目录中，只有配置的用户可见。
 
-位置变量：bash pos.sh a b c d e，依次打印脚本名，参数名等。
+用户环境变量在~/.bashrc ，系统环境变量在etc/profile中。
 
-pos.sh内容：echo $0,echo $1 .......
+添加path变量，打开对应文件，export PATH=$PATH:添加的目录。
+
+source ~/.bashrc ，source读取并执行文件中命令。
+
+**位置变量**：由脚本调用时使用的参数。例如，bash pos.sh a b c d e，该脚本依次打印脚本名，参数名。
+
+pos.sh的内容：echo $0,echo $1 .......
 
 $*，所有参数
 
@@ -72,13 +84,7 @@ $#，参数的个数
 
 $?,上次的执行结果，0为正确。
 
-##### path变量
 
-用户环境变量在~/.bashrc ，系统环境变量在etc/profile中。
-
-添加path变量，打开对应文件，export PATH=$PATH:添加的目录。
-
-source ~/.bashrc ，source读取并执行文件中命令。
 
 ### 文件包含
 
@@ -88,11 +94,11 @@ source include.sh
 
 ### 字符串
 
-双引号：可以使用$,`,\,",之外的，可以解析变量。
+双引号：" "可以使用$,`,\,",之外的，可以解析变量。
 
-单引号不会解析变量，所有字符当常量字符。
+单引号：''包裹的字符不会解析变量，所有字符当常量字符。
 
-反引号：`表示当作命令执行的结果。
+反引号：``包裹的字符表示获取字符作为命令执行的结果。
 
 #str1：长度
 
@@ -106,7 +112,7 @@ echo $(array[0])
 
 ### 各种运算
 
-**文件表达式**
+##### **文件表达式**
 
 -e filename 如果 filename存在，则为真
 -d filename 如果 filename为目录，则为真 
@@ -120,13 +126,13 @@ echo $(array[0])
 filename1 -nt filename2 如果 filename1比 filename2新，则为真。
 filename1 -ot filename2 如果 filename1比 filename2旧，则为真。
 
-**数值**
+##### **数值**
 
 expr 1+3
 
 expr 1\*3   
 
-less,grater,than,equal
+less,grater,than,equal,not equal
 
 -lt:小于
 
@@ -140,11 +146,11 @@ less,grater,than,equal
 
 -nq:不等于
 
-test 1 -eq 2,0为成功。
+test 1 -eq 2:返回值为0成功。
 
 
 
-字符串比较：
+##### 字符串比较：
 
 ​	=,!=
 
@@ -154,7 +160,7 @@ test 1 -eq 2,0为成功。
 
 
 
-文件判断：
+##### 文件判断：
 
 -f:普通文件
 
@@ -172,7 +178,7 @@ test 1 -eq 2,0为成功。
 
 
 
-逻辑判断：
+##### 逻辑判断：
 
   -a:逻辑与
 
@@ -207,8 +213,6 @@ if [ "abc"="abd" ]
 
 
 ##### case
-
-
 
 case $ch in 
 

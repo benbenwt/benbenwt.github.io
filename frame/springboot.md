@@ -237,6 +237,29 @@ jsp使用很少，一般使用如Thymelef等。
 
 >https://blog.csdn.net/aiyowei1106/article/details/85273705
 
+### 打包修改配置文件
+
+##### 自定义属性
+
+```
+application.ylm
+user:
+	sample_path: /home
+java program
+@Value("${user.sample_path}")
+String path
+```
+
+##### 替换jar包内文件
+
+```
+jar tf file-upload-1.0-SNAPSHOT.jar 查看清单
+jar xf file-upload-1.0-SNAPSHOT.jar BOOT-INF/classes/config.properties  解压指定文件
+jar uf file-upload-1.0-SNAPSHOT.jar BOOT-INF/classes/config.properties  替换文件
+```
+
+
+
 ##### 基本流程
 
 1，将当前模块依赖的公共模块在project structure中引入。并将公共模块maven install到本地仓库，然后在当前模块pom中引入功能模块坐标。这样，在打包时会将公共模块加入jar内。

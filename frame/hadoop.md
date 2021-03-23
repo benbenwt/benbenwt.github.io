@@ -625,6 +625,15 @@ pom.xml
 
 # MapReduce更多功能
 
+### 命令
+
+```
+yarn application -list
+for i in  `yarn application  -list | grep -w  ACCEPTED | awk '{print $1}' | grep application_`; do yarn  application -kill $i; done
+```
+
+
+
 ### NLineInputFormat
 
 driver:
@@ -832,6 +841,7 @@ hdfs dfs -put filename  hdsf_path
 hdfs dfs -mkdir directoryname
 hdfs dfs -rm -r directoryname
 hdfs dfs -ls 
+hadoop fs -ls
 ```
 
 

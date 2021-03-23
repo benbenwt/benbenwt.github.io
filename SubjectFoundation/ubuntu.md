@@ -1,6 +1,62 @@
 # centos
 
-### sshd
+### 软件安装
+
+对于编译型语言，需要编译后进行安装。rpm是提供给redhat系列系统的，底层包管理工具，他会安装编译好的软件，但要手动安装所需依赖。dpkg是deb系列系统的包管理工具，同rpm。yum和apt则会自动安装编译后软件，并处理其所需依赖，分别用于centos和ubuntu。
+
+对于解释型语言，有对应解释器和所需依赖即可。例如java的虚拟机，可以直接运行字节码文件，无需针对不同平台编译最终的安装包。
+
+##### yum
+
+yum-config-manageer
+
+```
+yum-config-manager -h
+yum repolist all
+yum repolist enabled
+yum-config-manager --disable mysql-connectors-community
+
+cd /etc/yum.repos.d/
+#管理下载docker的源，将其替换为aliyun
+vim docker-ce.repo
+```
+
+##### rpm
+
+```
+rpm -qa packagename
+rpm -e name --nodeps
+rpm -ivh name
+
+```
+
+yum安装
+
+```
+#yum三个rpm包yum,fastesmirror,metadata-parser，其中metadata和fastesmirror互相依赖，要同一条安装。
+https://blog.csdn.net/m0_37886429/article/details/75009382
+http://mirror.centos.org/centos/7/os/x86_64/Packages/
+```
+
+
+
+### 常用命令
+
+pwd
+
+cat
+
+### 网络
+
+##### ssh连接与ftp
+
+ssh连接和ftp使用系统中已创建的用户名及密码，加上ip和端口实现访问。
+
+ssh默认在22，ftp默认在21,sftp，默认在22端口。修改ssh在etc/ssh/ssh_config中修改。
+
+notepad配置好sftp插件，填写参数即可上传。
+
+##### sshd
 
 ssh-keygen -t rsa 
 
@@ -12,19 +68,11 @@ less secure
 
 cat /var/log/secure
 
-### 常用命令
-
-pwd
-
-cat
-
-### 网络
-
 ##### 网卡
 
 brctl命令
 
-### 参数说明和示例
+##### 参数说明和示例
 
 | 参数                      | 说明                   | 示例                  |
 | ------------------------- | ---------------------- | --------------------- |
@@ -45,7 +93,7 @@ brctl命令
 来源：简书
 著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。
 
-### iptables
+##### iptables
 
 
 
@@ -134,21 +182,11 @@ firewall-cmd --list-all
 
 
 
-### 常用目录
 
-/etc/hosts
 
-/etc/sysconfig/network
 
-### ssh连接与ftp
 
-ssh连接和ftp使用系统中已创建的用户名及密码，加上ip和端口实现访问。
-
-ssh默认在22，ftp默认在21,sftp，默认在22端口。修改ssh在etc/ssh/ssh_config中修改。
-
-notepad配置好sftp插件，填写参数即可上传。
-
-### 服务器之间copy文件
+##### 服务器之间copy文件
 
 yum install ssh-clients安装scp命令
 
@@ -170,7 +208,11 @@ rsync     -rvl  /tmp   root@hbae:/tmp
 
 ### 文件
 
+##### 常用目录
 
+/etc/hosts
+
+/etc/sysconfig/network
 
 ### problem
 
@@ -252,6 +294,128 @@ ip addr查看网卡
 
 单节点配置文件
 
+##### Error: requested datatype primary not available
+
+```
+yum clean all
+rm -rf /var/cache/yum
+yum list iostat
+```
+
+
+
+
+
+
+
+
+
+# ubuntu
+
+### 系统
+
+cat /proc/version
+lsb_release -a
+uname -a  架构
+dpkg  多少位
+getconf 系统变量配置
+arch 架构
+
+### 网络及服务
+
+netstat -tlnp 查看服务端口号
+
+ss -ntl
+
+service nginx reload 重新加载配置
+ps -ef | grep redis
+ctrl+z 推出当前进程
+pwd 打印工作路径，print work directory
+mv redis-5.0.5 /usr/local/redis
+
+make test
+make install
+redis-server
+ps -ef
+ps -aux|grep redis 查看端口
+netstat -nlt|grep 6379
+weget  url  下载文件
+exit
+wget http://download.redis.io/releases/reids-5.0.5.tar.gz
+​curl
+
+##### ufw
+
+ufw default 
+ufw enable
+
+ufw status numbered
+ufw delete 数字
+
+ufw allow ip
+
+ufw deny ip
+
+ufw allow from ip to any port 端口号
+
+
+
+
+
+### 文件管理
+
+### 查看日志
+
+who /var/log/wtmp
+tail/more    /var/log/secure
+
+##### 查找文件
+
+whereis 文件名   模糊查找
+find /-name 文件名
+locate  文件名
+
+cat文件名
+
+##### 权限管理
+
+chmod使用的数字的意思： 读（r=4），写（w=2），执行（x=1）可读可写为4+2=6 依次内存 755表示的是文件所有者权限7（三者权限之和），与所有者同组用户5（读+执行），其他用户同前一个5，这里的4的意思是（其他）用户执行拥有所有者相同的文件权限（对于其他要使用的文件）
+
+##### 文件权限
+
+参考博客：https://blog.csdn.net/BjarneCpp/article/details/79912495
+
+一个文件可以由10位字符表示，0位是表示文件类型，123位表示user用户权限，456位表示用户组的权限，789位表示其他用户的权限。r表示读，w表示写，x表示写。-在0位表示普通文件，在其他位表示无此权限。d在0位表示文件夹类型。
+
+如下例子表示，该普通文件，用户可读可写可执行。用户组可读,可写。其他只可读。
+
+-rwxrw-r--
+
+chmod使用数字表示权限，1为执行，2为写，4为读。共三位表示用户，用户组，其他用户。最高权限为7，即三者之和。
+
+用法如下,将上边的10位例子写成chmod形式，如下：chmod   731  1.txt
+
+chown使用字母修改权限：chmod g+w 1.txt,为用户组添加1.txt的写权限。g表示用户组，u表示用户，
+
+**用户与组**
+
+cat /etc/group
+
+cat /etc/shadow
+
+**rarlab**
+
+```
+#此版本centos7和ubuntu16.04无问题
+wget http://www.rarlab.com/rar/rarlinux-x64-5.3.0.tar.gz
+```
+
+##### 软连接
+
+```
+sudo ln -s /usr/local/bin/docker-compose /usr/bin/docker-compose
+```
+
 find
 
 ```
@@ -260,10 +424,6 @@ find -size -2kb
 find ./ -name '.py' -exec rm -rf {} ;
 find ./ -name "*" -type f -size 0c | xargs -n 1 rm -f
 ```
-
-
-
-
 
 linux计算hash
 
@@ -278,48 +438,9 @@ sha384sum
 shasum -a 512 -c 
 ```
 
-# ubuntu
-
-### apt
-
-apt源文件:/etc/apt/sources.list
-
-```
-apt-get update
-apt-get upgrade
-apt-get source git
-```
-
-给git配置代理
-
-```
-git config --global http.proxy 'socks5://127.0.0.1：1080'
-git config --global https.proxy 'socks5://127.0.0.1：1080'
-git config --global http.proxy 'http://127.0.0.1：1080'
-git config --global https.proxy 'http://127.0.0.1：1080'
-```
+# 
 
 
-
-### 系统
-
-uname -a
-
-cat  /etc/issue ，适用所有
-
-cat /proc/version，使用所有
-
-cat /etc/redhat-release，只适用于RedHat，SUSE，Debian等发行版本
-
-lsb_release -a 所有发行版本
-
-### 用户与组
-
-cat /etc/group
-
-cat /etc/shadow
-
-## 文件系统
 
 误解压文件，导致多了很多小文件。撤销操作
 
@@ -351,18 +472,45 @@ tar
 -f: 使用档案名字，切记，这个参数是最后一个参数，后面只能接档案名。
 ```
 
+### 软件管理
 
-
-## 增加磁盘
-
-### 基本命令
+##### apt
 
 sudo apt-get update刷新仓库的索引
 
+apt源文件:/etc/apt/sources.list
+
+```
+apt-get update
+apt-get upgrade
+apt-get source git
+apt-get  remove name
+apt-get install --reinstall zlibc zliblg zliblg-dev
+```
+
+给git配置代理
+
+```
+git config --global http.proxy 'socks5://127.0.0.1：1080'
+git config --global https.proxy 'socks5://127.0.0.1：1080'
+git config --global http.proxy 'http://127.0.0.1：1080'
+git config --global https.proxy 'http://127.0.0.1：1080'
+```
+
+### 磁盘管理
+
+uname -a
+
+cat  /etc/issue ，适用所有
+
+cat /proc/version，使用所有
+
+cat /etc/redhat-release，只适用于RedHat，SUSE，Debian等发行版本
+
+lsb_release -a 所有发行版本
+
 分区，格式化，挂载
 ​fdisk  -l  查看分区  n,p,w
-
-**管理分区**
 
 **删除分区**
 
@@ -373,120 +521,62 @@ d
 w
 ```
 
-
-
+```
+#格式化，并载磁盘到文件系统
 mkfs  -t ext4  /dev/sdb1
 mkdir /home/yoki/sdb1
 mount  /dev/sdb1  /home/yoki/sdb1
+#修改，使得开机自动挂载
 gedit etc/fstab
 /deb/sdb1  /home/yoki/sdb1 ext4  defaults 0 1
-​
-​df -H 查看容量，挂载
+```
+
+
+
+df -H 查看容量，挂载
 blkid  查看
 sudo chmod -R 4755 /home/sda1
 sudo chmod -R 777 /home/sda1
-chmod使用的数字的意思： 读（r=4），写（w=2），执行（x=1）可读可写为4+2=6 依次内存 755表示的是文件所有者权限7（三者权限之和），与所有者同组用户5（读+执行），其他用户同前一个5，这里的4的意思是（其他）用户执行拥有所有者相同的文件权限（对于其他要使用的文件）
-​
-
-### 其他
-ctrl+c 推出当前
-top 查看进程
-kill pid清楚
-
-###  步骤
-扩充磁盘使用此命令，注意磁盘内的数据丢失
-VBoxManage list hdds
-VBoxManage modifyhd 0bd9c696-1735-48ce-81cf-04e9f64c2418 –resize 51200 
-新建磁盘直接软件新建
-​1虚拟机新建磁盘，真机插入磁盘。
-2分区
-3格式化
-4挂载及修改挂载文件
 
 
 
-## VirtualBox迁移虚拟机
-1将vdi赋值到对应目录
-2到virtualbox软件的安装目录，执行VBoxManage internalcommands sethduuid “G:\新建文件夹\ubuntu16-02\ubuntu16-02.vdi” 
-3进入virtualbox进入设置，存储，删除旧的磁盘，添加新磁盘。
-或将原虚拟机复制到新目录，控制，注册导入。
 
-## 文件/usr/lib/jvm/java-8-openjdk-amd64/jre/bin/java
 
-解压 :
+### vultr搭建
 
-```
-tar -xzvf hive-x.y.z.tar.gz
-```
+vultr使用心得
+http://blog.51cto.com/13940125/2165848
+1服务器搭建
+购买服务器
+检测服务器（能否ping通？,一把都开启了22，port 22开启？） 
+摧毁服务器or进入第二步
+2x贝壳连接
+连接服务器(使用vultr提供的root，和密码)
+(yum install git -y)
+ss搭建
+   git clone   https://github.com/Flyzy2005/ 
 
-unzip
-cd-  跳回上次目录
-df -h 查看磁盘容量
-touch 1.txt创建文件
-​ls-lrt 查看软连接
+ss-fly
+   ss-fly/ss-fly.sh -i password 1024
+bbr加速
+    ss-fly/ss-fly.sh -bbr
+（firewall set）
+3酸酸连接
+切换为系统代理
 
-ls -l   查看软连接
+ssh使用用户名和密码登录，共享数据，登录主机。
+ssl为了数据加密和交流。
+问题多出在服务器搭建。
+https://medium.com/@antiless.dev/超详细-vultr-vps-搭建-ss-新手图文指导教程-4d6b33e411b6
+小站:![img](file:///C:\Users\guo\AppData\Roaming\Tencent\QQTempSys\`7_{~]GF$3{MOQ4V_}PH]YC.png)www.flyzy2005.com
 
-##### 文件权限
+##### ssh服务ip限制
+etc/ssh/sshd_config配置端口
+在etc/hosts.allow  /etc/hosts.deny
+控制ip访问服务。
+grep sshd /var/log/auth.log | less
 
-参考博客：https://blog.csdn.net/BjarneCpp/article/details/79912495
-
-一个文件可以由10位字符表示，0位是表示文件类型，123位表示user用户权限，456位表示用户组的权限，789位表示其他用户的权限。r表示读，w表示写，x表示写。-在0位表示普通文件，在其他位表示无此权限。d在0位表示文件夹类型。
-
-如下例子表示，该普通文件，用户可读可写可执行。用户组可读,可写。其他只可读。
-
--rwxrw-r--
-
-chmod使用数字表示权限，1为执行，2为写，4为读。共三位表示用户，用户组，其他用户。最高权限为7，即三者之和。
-
-用法如下,将上边的10位例子写成chmod形式，如下：chmod   731  1.txt
-
-chown使用字母修改权限：chmod g+w 1.txt,为用户组添加1.txt的写权限。g表示用户组，u表示用户，
-
-### 查找文件
-whereis 文件名   模糊查找
-find /-name 文件名
-locate  文件名
-
-cat文件名
-
-## 网络及进程
-
-netstat -tlnp 查看服务端口号
-
-ss -ntl
-
-service nginx reload 重新加载配置
-ps -ef | grep redis
-ctrl+z 推出当前进程
-pwd 打印工作路径，print work directory
-mv redis-5.0.5 /usr/local/redis
-
-make test
-make install
-redis-server
-ps -ef
-ps -aux|grep redis 查看端口
-netstat -nlt|grep 6379
-weget  url  下载文件
-exit
-wget http://download.redis.io/releases/reids-5.0.5.tar.gz
-​curl
-
-## ufw
-ufw default 
-ufw enable
-
-ufw status numbered
-ufw delete 数字
-
-ufw allow ip
-
-ufw deny ip
-
-ufw allow from ip to any port 端口号
-
-## 修改sshd端口并开放
+##### 修改sshd端口并开放
 
 >sshd为服务器端程序
 >
@@ -539,41 +629,7 @@ ufw enable
 检查设置规则
 sudo ufw status
 
-### vultr搭建
-
-vultr使用心得
-http://blog.51cto.com/13940125/2165848
-1服务器搭建
-购买服务器
-检测服务器（能否ping通？,一把都开启了22，port 22开启？） 
-摧毁服务器or进入第二步
-2x贝壳连接
-连接服务器(使用vultr提供的root，和密码)
-(yum install git -y)
-ss搭建
-   git clone   https://github.com/Flyzy2005/ 
-
-ss-fly
-   ss-fly/ss-fly.sh -i password 1024
-bbr加速
-    ss-fly/ss-fly.sh -bbr
-（firewall set）
-3酸酸连接
-切换为系统代理
-
-ssh使用用户名和密码登录，共享数据，登录主机。
-ssl为了数据加密和交流。
-问题多出在服务器搭建。
-https://medium.com/@antiless.dev/超详细-vultr-vps-搭建-ss-新手图文指导教程-4d6b33e411b6
-小站:![img](file:///C:\Users\guo\AppData\Roaming\Tencent\QQTempSys\`7_{~]GF$3{MOQ4V_}PH]YC.png)www.flyzy2005.com
-
-##### ssh服务ip限制
-etc/ssh/sshd_config配置端口
-在etc/hosts.allow  /etc/hosts.deny
-控制ip访问服务。
-grep sshd /var/log/auth.log | less
-
-### 服务端安装shadowsocks
+##### 服务端安装shadowsocks
 
 wget –no-check-certificate  https://raw.githubusercontent.com/teddysun/shadowsocks_install/master/shadowsocks.sh
 
@@ -581,7 +637,7 @@ chmod +x shadowsocks.sh
 
 ./shadowsocks.sh 2>&1 | tee shadowsocks.log
 
-### 客户端端设置
+##### 客户端ssr设置
 
 linux使用electron-ssr界面插件，进入该软件后会自动下载python-ssr。也可自己下载然后指定根目录。
 
@@ -591,7 +647,7 @@ https://github.com/qingshuisiyuan/electron-ssr-backu
 
 登录服务器，一般在/etc/shadowsocks.json或etc/shadowsocks/shadowsacks.json中有信息。
 
-## bbr服务
+##### bbr服务
 
 >bbr时谷歌推出的一种提高网络利用率的算法，改变了tcp传统的拥塞控制策略。
 
@@ -610,28 +666,9 @@ sysctl net.ipv4.tcp_available_congestion_control查看使用的算法。
 
 lsmod |grep bbr查看是否开启bbr.
 
+### problem
 
-
-### 查看日志
-
-who /var/log/wtmp
-tail/more    /var/log/secure
-
-### ssh problem
-配置ufw特定ip访问特定端口，总是配完了无法访问，是因为实际ip不是ipconfig的显示ip。可以查看登录记录，知道实际ip.
-
-### 其他
-
-cat /proc/version
-lsb_release -a
-uname -a  架构
-dpkg  多少位
-getconf 系统变量配置
-arch 架构
-
-
-
-### can not get lock
+##### can not get lock
 ps aux|grep apt
 sudo kill -9 pid
 
@@ -639,18 +676,15 @@ sudo kill -9 pid
 
 关闭virtualbox3D加速
 
-# vmware
+***libappindicator3.so.1()(64bit) 被 google-chrome-stable-81.0.4044.138-1.x86_64 需要\***
 
-- win10 1903安装黑屏
-  win10内置沙盒与vmware冲突。
-  解决，升级vmware。
+已安装此libappindicator3.so.1依赖，仍有此提示.
 
-# git
+```
+#查看下层的依赖，将其安装即可
+yum provides */libappindicator3.so.1
+```
 
-- 基本
-  git clone git://远程Git库地址  filename
+##### ssh problem
 
-### problem
-
-##### Unable to establish SSL connection.
-
+配置ufw特定ip访问特定端口，总是配完了无法访问，是因为实际ip不是ipconfig的显示ip。可以查看登录记录，知道实际ip.

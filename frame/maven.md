@@ -87,3 +87,9 @@ mvn -version
 ##### 已删除依赖还在右侧栏
 
 点击File->Invalidate caches/restart
+
+##### 引用module修改了项目结构和pom仍无效
+
+点击execute maven goal，执行mvn idea:idea，mvn -U idea:idea
+
+http://maven.apache.org/plugins/maven-idea-plugin/usage.html

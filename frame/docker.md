@@ -94,6 +94,21 @@ CMD ["./docker/worker/init.sh"]
 
 https://docs.docker.com/engine/install/ubuntu/，配置依赖及安装ce，cli等。
 
+```
+sudo yum install -y yum-utils \
+  device-mapper-persistent-data \
+  lvm2
+sudo yum-config-manager \
+    --add-repo \
+    http://mirrors.aliyun.com/docker-ce/linux/centos/docker-ce.repo
+sudo yum-config-manager \
+    --add-repo \
+    https://mirrors.tuna.tsinghua.edu.cn/docker-ce/linux/centos/docker-ce.repo
+ sudo yum install docker-ce docker-ce-cli containerd.io
+```
+
+
+
 ##### 使用阿里云镜像加速下载
 
 https://cr.console.aliyun.com/cn-hangzhou/instances/mirrors
@@ -404,6 +419,19 @@ curl localhost:9870
   ### idea整合docker
 
   ### docker compose
+
+https://docs.docker.com/compose/install/
+
+```
+docker-compose up
+docker-compose down
+docker-compose --scale servername=5
+docker-compose build servername
+docker-compose up servername
+
+```
+
+.dockerignore在docker-compose.yml的同级。ignore中的文件会被忽略，dockerfile无法执行对应COPY等操作。dockerfile中的COPY路劲必须是相对路径，以docker-compose的同级目录为基准。
 
   ### docker swarm
 
