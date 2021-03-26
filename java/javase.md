@@ -383,7 +383,7 @@ set,get流程较少，使用rangeCheck检查下标后，即可取值。
 ##### Queue
 
 ```
-Queue只定义了五个方法，分别为add,remove,element,offer,poll
+继承自collection接口，Queue只定义了五个方法，分别为add,remove,element,offer,poll
 ```
 
 remove获取并移除队首元素，为空返回null。
