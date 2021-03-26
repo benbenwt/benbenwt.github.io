@@ -1,14 +1,37 @@
-
+```
+总体继承和实现关系，每个父类实现了什么。
+```
 
 # util
 
 >Collection为顶级的接口，List接口继承自Collection，AbstractCollection实现自Collection。
 
+### Iterator
+
+>Iterator为util包中较高等级的接口。Collection及其子接口，子类，子抽象类等都基于其实现add，get，set，remove等方法。如，AbstractList，ArrayList，LinkedList等
+
+```
+#对Iterator中剩下的元素进行操作,default标记的方法为普通方法。该方法会被类继承，若一个类同时继承了冲突的同名default方法，则必须重写。若继承的类和实现的接口中default方法冲突，则覆盖掉interface中的default中方法。
+default void forEachRemaining
+```
+
+Iterator定义的函数有，next，hasNext，remove。
+
+##### ListIterator
+
+```
+继承Iterator，新定义了add,set,previous,previousIndex,hasPrevious,nextIndex
+```
+
+previous:返回前一个元素值，并向该方向移动。
+
+next：返回后一个元素，并向该方向移动。
+
 ### Collection
 
 ##### Collection接口
 
->Collection接口提供了增删改查的抽象方法
+>Collection接口继承了Iterator，提供了增删改查的抽象方法
 
 collection接口定义了如下：
 
@@ -91,6 +114,8 @@ int hashCode();
 ```
 
 AbstractCollection
+
+
 
 ##### List接口
 
@@ -241,6 +266,8 @@ AbstractCollection没有实现add方法，其实现了remove,removeAll,containAl
 ##### AbstractList
 
 >AbstractList实现了List接口，继承了AbstractCollection类。但是，它没有实现List接口中的add,remove,set,get等关于index的操作。其实现了List中的Indexof,LastIndexOf,Sublist，addAll，equals等方法。自己创建了rangeCheckForAdd,removeRange,outofBoundMsg方法等。
+>
+>在Abstract类中首次实现了Iterator接口，其使用Itr实现了Iterator。又使用ListItr继承和实现了ListIterator，Itr类。随后的子类多使用它定义的ListItr内部类。
 
 31 * i == (i << 5）- i,31是奇素数，且可用移位和减法代替。
 
@@ -251,6 +278,18 @@ public int hashCode() {
         hashCode = 31*hashCode + (e==null ? 0 : e.hashCode());
     return hashCode;
 }
+```
+
+###### Itr内部类
+
+```
+其实现了Iterator接口，实现了next,remove,hasNext三个方法，并重写了checkForComodification方法。
+```
+
+###### ListItr内部类
+
+```
+实现和继承了Itr和ListIterator接口,其实现了previous,nextIndex,previousIndex,add,set这几个函数
 ```
 
 ##### ArrayList
@@ -341,6 +380,64 @@ remove，检查下标，移动数组位置，将空位置null方便gc。
 
 set,get流程较少，使用rangeCheck检查下标后，即可取值。
 
+##### Queue
+
+```
+Queue只定义了五个方法，分别为add,remove,element,offer,poll
+```
+
+remove获取并移除队首元素，为空返回null。
+
+offer获取并移除队首元素，为空抛出异常。
+
+element用于获取队首元素，但不删除。为空返回null
+
+poll获取队首元素但不移除，队列为空抛出异常
+
+##### Deque
+
+```
+继承自Queue,基于remove,offer,element,poll添加了很多方法。同时定义了size,peek,push,pop,contain,iterator,get*等方法。
+```
+
+##### AbstractSequentialList
+
+```
+继承自AbstractList，需要自己实现set,get,add,remove方法
+```
+
+```
+#获取从index处起始的iterator，取出oldValue返回并set新值。
+public E set(int index, E element) {
+        try {
+            ListIterator<E> e = listIterator(index);
+            E oldVal = e.next();
+            e.set(element);
+            return oldVal;
+        } catch (NoSuchElementException exc) {
+            throw new IndexOutOfBoundsException("Index: "+index);
+        }
+    }
+```
+
+```
+get函数：使用AbstractList实现的listIterator迭代器取得index处的值。
+remove调用iterator的remove移除index处的值
+add调用iterator的add函数添加值
+```
+
+
+
+##### LinkedList
+
+>LinkedList继承和实现了AbstractSequentialList,Serializable,Cloneable,Deque
+
+LinkedList相比于ArrayList:
+
+```
+都继承了AbstractList，所以都支持index相关操作。都实现了了Serializable和cloned接口,并实现了Clone，readObject,writeObject方法。但其实现了了Deque接口，故实现了peek,offer,poll,element等方法。而ArrayList接口实现了RandomAccess接口，该接口无实际功能是一个标记接口，被此接口标记的List进行binarySearch时，使用普通的for循环，否则使用迭代器进行循环。
+```
+
 ### Map
 
 >由上而下为Map接口，abstractMap和HashTable，HashMap。
@@ -387,8 +484,10 @@ HashMap
 
 ### String
 
-```
+equals
 
+```
+#String属性有hash和value值。value值实际上是字符数组，用来存储内容。hash为重写的方法，用于equals和Mapkey使用。
 public String(String original) {
     this.value = original.value;
     this.hash = original.hash;
@@ -396,7 +495,7 @@ public String(String original) {
 ```
 
 ```
-equals()
+#String重写了equals()，流程为先比较是否为同一栈对象，若其为字符串再比较长度，最后逐个比较字符数组内容。
 public boolean equals(Object anObject) {
     if (this == anObject) {
         return true;
@@ -672,6 +771,15 @@ how：
     （代理类类加载器，被代理类接口，代理类对象）
 
   
+
+# long
+
+```
+#判断该类是否为某个类的父类
+isAssignableFrom()
+#判断该示例是否为某个类的子类的实例
+instanceof()
+```
 
 
 

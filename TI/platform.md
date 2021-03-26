@@ -1,8 +1,105 @@
+### 版本
+
+java8,hadoop2.10.x,3.1.1+,3.2.x,hbase2.3.x，hive
+
+java8,hadoop3.1.4,hive3.1.2,hbase2.3.3,mysql5.7.28,mysql-connector-5.1.37
+
+
+
+```
+#import org.apache.commons.io.FileUtils;常用io包
+String json_str = FileUtils.readFileToString(file, "UTF-8");
+```
+
+```
+#import org.apache.hadoop.io.IOUtils; hadoop提供的io工具包
+ Configuration configuration = new Configuration();
+        configuration.set("fs.hdfs.impl", org.apache.hadoop.hdfs.DistributedFileSystem.class.getName());
+        configuration.set("fs.file.impl", org.apache.hadoop.fs.LocalFileSystem.class.getName());
+        FileSystem fs = FileSystem.get(URI.create(hdfsPath), configuration);
+        FSDataOutputStream out = fs.create(new Path(hdfsPath));//创建一个输出流
+        InputStream in = new FileInputStream(new File(localPath));//从本地读取文件
+        IOUtils.copyBytes(in, out, 100, true);
+        System.out.println("上传完毕");
+```
+
+
+
+```
+ntpdate  pool.ntp.org
+date -R 
+执行时间
+17   1,4   6 
+```
+
+```
+date
+timedatectl  list-timezones  
+date  -R
+timedatectl set-timezone Asia/Shanghai
+ntpdate  pool.ntp.org
+```
+
+```text
+sudo yum -y install ntp
+```
+
+
+
+dump_hive
+
+```
+#!/bin/sh
+PATH=/usr/local/bin:/usr/bin:/usr/local/sbin:/usr/sbin:/bin:/sbin
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib
+hadoop jar /root/software/mapreduce_start-1.0-SNAPSHOT.jar  "hdfs://hbase:9000/user/root/stix/$(date -d last-day +%Y-%m-%d)/" "hdfs://hbase:9000/user/root/dump_hive_result/$(date -d last-day +%Y-%m-%d)/"
+
+hadoop jar /root/software/mapreduce_start-1.0-SNAPSHOT.jar  "hdfs://hbase:9000/user/root/stix/$(date -d last-day +%Y-%m-%d)/" "hdfs://hbase:9000/user/root/dump_hive_result/$(date -d last-day +%Y-%m-%d)/"&&hdfs df
+s -mv "hdfs://hbase:9000/user/root/dump_hive_result/$(date -d last-day +%Y-%m-%d)/"  "/user/hive/warehouse/platform.db/sample"
+```
+
+
+
+```
+#centos crontab
+vim /etc/crontab
+crontab -e
+serivce crond restart
+
+```
+
 crontab
 
 ```
+#crontab失效，将命令卸载sh内，添加环境变量。且不要再crontab中指定执行用户即可。
+/usr/bin/command.sh:
+#!/bin/sh
+PATH=/usr/local/bin:/usr/bin:/usr/local/sbin:/usr/sbin:/bin:/sbin
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib
+java -jar /root/module/dump_hdfs-1.0-SNAPSHOT.jar  "/home/node/platform_data/stix/$(date -d last-day +%Y-%m-%d)" "hdfs://hbase:9000/user/root/stix/$(date -d last-day +%Y-%m-%d)/"
+
+crontab -e
+提交stix
+1 0  * * *   /root/module/dump_hdfs.sh
+1 0  * * *   /root/module/dump_es.sh
+提交到lisa，生成stix
+1 0 * * *   /root/module/clock_py.sh
+1 0 * * *  /root/module/clock_py1.py
+
+
+```
+
+
+
+```
+crontab  -e
+
+```
+
+
+
+```
 55 17 * * *  root python3.7 /root/module/lisa/clock_py.py
-55 17 * * *  root python3.7 /root/module/lisa/clock_py1.py
 
 0  4  * * *  root java -jar /root/module/dump_hdfs-1.0-SNAPSHOT.jar  "/home/node/platform_data/stix/$(date -d last-day +%Y-%m-%d)" 
 "hdfs://hbase:9000/user/root/stix/$(date -d last-day +%Y-%m-%d)"
@@ -29,16 +126,17 @@ java -jar D:\DevInstall\IdeaProjects\dump_hdfs\target\dump_hdfs-1.0-SNAPSHOT.jar
 java -jar /root/module/dump_hdfs-1.0-SNAPSHOT.jar  "/home/node/platform_data/stix/$(date -d last-day +%Y-%m-%d)" "hdfs://hbase:9000/"
 java -jar /root/module/dump_hdfs-1.0-SNAPSHOT.jar  "/home/node/platform_data/stix/$(date +%Y-%m-%d)" "hdfs://hbase:9000/"
 前一天:date -d last-day +%Y-%m-%d
+java -jar dump_es-1.0-SNAPSHOT.jar  "/home/node/platform_data/stix/$(date -d last-day +%Y-%m-%d)"  "hbase2"
 ```
 
 
 
 | hostname | ip   | 服务                                                  |
 | -------- | ---- | ----------------------------------------------------- |
-| lisa     | 184  | lisa1,java,lisa_submit1,lisa_submit,dump_hdfs,dump_es |
-| hbase    | 185  | hdfs-mater,hive,mapreduce-start,dump_mysql            |
+| hbase    | 187  | hdfs-mater,hive,mapreduce-start,dump_mysql            |
 | hbase1   | 186  | yarn-master,nginx                                     |
-| hbase2   | 187  | es,mysql,lisa2,                                       |
+| hbase2   | 185  | es,mysql,lisa2,                                       |
+| lisa     | 184  | lisa1,java,lisa_submit1,lisa_submit,dump_hdfs,dump_es |
 
 1   /home/node/paltform_data/sample1
 
@@ -126,12 +224,6 @@ delete * from cel...
 修改docker-compose.yml中的nginx服务的的args->webhost,让后重新docker-compose build
 ```
 
-
-
-服务复用调用，代码复用，非调用式关系如消息队列
-
-
-
 sample提交-lisa-lisa-stix2-hdfs,es
 
 按日期，t+1天再处理t天的数据。
@@ -172,19 +264,19 @@ hadoop fs -rm -r  ouput
 
 
 
-##### 备忘
-
-新的stix加入，添加。
-
-type添加
-
-category,value,time三元组
-
-服务器密码:240711.wt
 
 
+### hive和hbase
 
 ##### hive
+
+```
+#指定字符集
+create database amon DEFAULT CHARSET utf8 COLLATE utf8_general_ci;
+alter table sample modify column COMMENT varchar(256) character set utf8;
+```
+
+
 
 连接
 
@@ -195,8 +287,8 @@ category,value,time三元组
  select architecture,count(1) nums from sample group by architecture
  !connect jdbc:hive2://hbase:10000/platform root root
  hive存储裁掉time
- create external table sample1(md5 string,SHA256 string,sha1 string,size string,architecture string,languages string,endianess string,type string,sampletime string,ip string,url string,cveid string,location string,identity string,hdfs string)row format delimited fields terminated by '/t';
- load data inpath '/dbtac/tac/*.csv' into table trajectory; #从hdfs中上传数据
+ create external table sample(md5 string,SHA256 string,sha1 string,size string,architecture string,languages string,endianess string,type string,sampletime string,ip string,url string,cveid string,location string,identity string,hdfs string)row format delimited fields terminated by '\t';
+load data inpath 'hdfs://hbase:9000/user/root/output/part-r-00000' into table sample; #从hdfs中上传数据
 ```
 
 ```
@@ -205,8 +297,6 @@ category,value,time三元组
 ```
 
 
-
-##### hive和hbase表：
 
 单个信息，用来检索，统计；md5,SHA256,sha1,size,architecture,language,endianess,type,              		sampletime,ip,url,cveid,location,identity,      hdfs				
 
@@ -240,84 +330,14 @@ create table sample(md5 string,SHA256 string,sha1 string,size string,architectur
 
 
 
-### 数据
 
-lisa生成,各种格式ti。
-
-stix原始数据
-
-	待统计数据,单个样本
-
-##### 				          nginx前端个体样本数据及原始数据
-
-##### 		  搜索页面
-
-				mysql统计数据
-
-##### 								                         spring统计模块
-
-								nginx前端统计页面
-
-到网站或自己的库查询ti
-
-## 基本
-
-Springcloud搭建
-
-前端页面搭在nginx上，使用echart。Bootstrap。
-
-请求consumer，consumer会依据eureka名称请求对应的客户端。
-
-数据库用mongodb，对于·统计过慢，用redis缓存。
-
- 
-
-Docker，使用dockerfile搭建服务环境环境，挂载目录上传html和jar包。
 
 ### 数据库
 
-category
+**category**
 
 ```
-<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-
-<mapper namespace="com.ti.platform_provider_statistic8001.mapper.CategoryMapper">
-
-    <select id="getCategoryInfoNow" resultType="Category">
-        SELECT category_id categoryId,category,value,percent,time FROM `category_tbl` WHERE  time=(SELECT MAX(time) FROM `category_tbl`)
-    </select>
-
-    <select id="getCategoryInfoByDay" resultType="Category">
-SELECT category_id categoryId,category,value,percent,time FROM category_tbl a WHERE a.time IN
-(SELECT time FROM(SELECT DISTINCT b.time FROM  `category_tbl` b ORDER BY b.time DESC LIMIT 10)AS times) AND a.category IN
-(SELECT * FROM (SELECT category FROM category_tbl  GROUP BY category  ORDER BY  count(category) DESC LIMIT 2)AS category_list) ORDER BY category,time
-    </select>
-
-</mapper>
-```
-
-
-
-Springcloud搭建
-
-前端页面搭在nginx上，使用echart。Bootstrap。
-
-请求consumer，consumer会依据eureka名称请求对应的客户端。
-
-数据库用mysql，统计后的关系型数据放到mysql。 
-
-Docker，使用dockerfile搭建服务环境环境，挂载目录上传html和jar包。
-
- 
-
-计算统计结果，展示统计信息后台，crudstix文件，nginx前端，数据库。
-
-category value  percent time 
-
-family value
-
- ```
+#建表语句
 CREATE TABLE `category_tbl`
 (
     `category_id` INT UNSIGNED AUTO_INCREMENT,
@@ -325,24 +345,36 @@ CREATE TABLE `category_tbl`
     `value`  INT NOT NULL,
     `time`  DATE,
     PRIMARY KEY(`category_id`)
-)ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
-#统计cve漏洞,恶意软件数量
-select category,sum(tmp.value) value from  
-(select CASE WHEN `category` IN('fish','door') THEN 'other'
-WHEN `category` IN ('vulnerabilities') THEN 'vulnerabilities'
-ELSE `category` END AS `category`,sum(value) value from category_tbl  group by  `category`) tmp group by tmp.category
- 
-
- ```
-
-柱状图当前统计=源数据截至当前日每个类数量，样本时间<当前时间。
-
-折线：源数据截至某日累积样本数，样本时间<n日,n=1……。每周和每月数据取该段时间最大日期即可。某日月周没有，即取前一周月日。新增即是相减。
-
-单个样本：该样本所处时间点。源数据，按某策略更新mysql统计数据即可。前端要展示，不存mysql里。
+)ENGINE=InnoDB DEFAULT CHARSET=utf8
+```
 
 ```
+#统计cve漏洞,恶意软件数量
+select category,sum(tmp.value) value from  
+(select CASE WHEN `category` IN ('vulnerabilities') THEN 'vulnerabilities'
+ELSE "other" END AS `category`,sum(value) value from category_tbl  group by  `category`) tmp group by tmp.category
+```
+
+
+
+```
+#获取最近七天，排名靠前的两类。
+SELECT category_id categoryId,category,value,percent,time FROM category_tbl a WHERE a.time IN
+(SELECT time FROM(SELECT DISTINCT b.time FROM  `category_tbl` b ORDER BY b.time DESC LIMIT 10)AS times) AND a.category IN
+(SELECT * FROM (SELECT category FROM category_tbl  GROUP BY category  ORDER BY  count(category) DESC LIMIT 2)AS category_list) ORDER BY category,time
+```
+
+```
+#获取最新的一天，其各个类别的累积数量。
+SELECT category_id categoryId,category,value,percent,time FROM `category_tbl` WHERE  time=(SELECT MAX(time) FROM `category_tbl`)
+```
+
+
+
+**family**
+
+```
+#建表语句
 CREATE TABLE `family_tbl`
 (
     `family_id` INT UNSIGNED AUTO_INCREMENT,
@@ -352,7 +384,7 @@ CREATE TABLE `family_tbl`
 )ENGINE=InnoDB DEFAULT CHARSET=utf8;
 ```
 
-architecture
+**architecture**
 
  ```
 CREATE TABLE `architecture`
@@ -364,7 +396,7 @@ CREATE TABLE `architecture`
 )ENGINE=InnoDB DEFAULT CHARSET=utf8;
  ```
 
-location
+**location**
 
 ```
 CRAEATE TABLE `location`
@@ -379,8 +411,6 @@ select location_id locationId,location,value  from location
 ```
 
 
-
-mysql事件删除过期数据。日统计信息。后端要提供单个样本具体信息，
 
 1
 
@@ -431,144 +461,9 @@ SELECT category_id categoryId,category,value,time FROM category_tbl a WHERE a.ti
 
 
 
-##### 版本
+### 备忘
 
-java8,hadoop2.10.x,3.1.1+,3.2.x,hbase2.3.x，hive
+服务器密码:240711.wt
 
-java8,hadoop3.1.4,hive3.1.2,hbase2.3.3,mysql5.7.28,mysql-connector-5.1.37
-
-dump_mysql
-
-```
-package com.ti.dump_mysql.utils;
-
-
-
-import java.sql.*;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.time.LocalDate;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
-
-
-public class MysqlConnect {
-    public static final  String driverName="com.mysql.cj.jdbc.Driver";
-    Connection conn;
-    public void init(String url,String user,String root) throws ClassNotFoundException, SQLException {
-        Class.forName(driverName);
-        conn= DriverManager.getConnection(url,user,root);
-        System.out.println(conn);
-        Statement st=conn.createStatement();
-        st.execute("delete from category_tbl");
-        st.execute("delete from  architecture");
-    }
-    public static void main(String[] args) throws SQLException, ClassNotFoundException {
-        Map<String, Map<String,Integer>> info=new HashMap<>();
-        System.out.println(info.get("a"));
-//        MysqlConnect mysqlConnect=new MysqlConnect();
-//        String url="jdbc:mysql://localhost:3306/platform?useUnicode=true&characterEncoding=utf-8&useSSL=true&serverTimezone=UTC";
-//        mysqlConnect.init(url,"root","root");
-//        mysqlConnect.insertSample();
-    }
-    public Map<String, Map<String,Integer>>  caculateAccuNums(ResultSet resultSet) throws SQLException {
-        /*三维数组吧，才能随机读取.category,time,value*/
-        Map<String, Map<String,Integer>> info=new HashMap<>();
-        Map<String,Integer> tmp=new HashMap<>();
-        Map<String,Integer> categoryCount=new HashMap<>();
-        while(resultSet.next())
-        {
-            String category=resultSet.getString(1);
-            String time=resultSet.getString(2);
-            Integer value=resultSet.getInt(3);
-
-            String subTime=time.substring(0,10);
-
-            tmp.clear();
-            tmp.put(category,value);
-
-            info.put(subTime,new HashMap<>(tmp));
-
-            categoryCount.put(category,0);
-        }
-        System.out.println(categoryCount);
-
-        LocalDate localDate=LocalDate.now();
-        LocalDate startDate=localDate.minusDays(360);
-        LocalDate vardate=startDate;
-        LocalDate endBorder=localDate.plusDays(1);
-
-        Map<String, Map<String,Integer>> result=new HashMap<>();
-        Map<String, Integer> resultTmp=new HashMap<>();
-        Map<String, Integer> categoryValue;
-        int newCount;
-        //
-        while(vardate.isBefore(endBorder))
-        {//循环日期
-            System.out.println("vardate："+vardate);
-
-            categoryValue= info.get(vardate.toString());
-            System.out.println("add ："+categoryValue);
-
-            if(categoryValue!=null)
-            {//遍历不为0类别
-                //count
-                for(Map.Entry<String,Integer> entry:categoryValue.entrySet())
-                {
-                    newCount=categoryCount.get(entry.getKey())+entry.getValue();
-                    categoryCount.put(entry.getKey(),newCount);
-                }
-            }
-            //当前vardate，累计categoryCount数目存储
-            for(Map.Entry<String,Integer> entry:categoryCount.entrySet())
-            {
-                resultTmp.put(entry.getKey(),categoryCount.get(entry.getKey()));
-                result.put(vardate.toString(),resultTmp);
-            }
-            System.out.println("accu :"+categoryCount);
-            vardate=vardate.plusDays(1);
-        }
-        return result;
-    }
-    public void  insertCategory(ResultSet resultSet) throws SQLException, ParseException {
-        Map<String, Map<String,Integer>> result=caculateAccuNums(resultSet);
-
-        PreparedStatement ps=conn.prepareStatement("insert into category_tbl(time,category,`value`) values(?,?,?)");
-        /*time category nums*/
-        for(Map.Entry<String,Map<String,Integer>> entry:result.entrySet())
-        {
-            //time
-            SimpleDateFormat simpleDateFormat=new SimpleDateFormat("yyyy-MM-dd");
-            Date date=simpleDateFormat.parse(entry.getKey());
-            java.sql.Date sqlDate=new java.sql.Date(date.getTime());
-            ps.setDate(1,sqlDate);
-
-           for(Map.Entry<String,Integer> entry1:entry.getValue().entrySet())
-           {
-               String categoryStr=entry1.getKey();
-               ps.setString(2,categoryStr);
-
-               int nums=entry1.getValue();
-               ps.setInt(3,nums);
-               ps.execute();
-           }
-        }
-        ps.close();
-    }
-
-    public void insertArch(ResultSet arch) throws SQLException {
-        Statement st=conn.createStatement();
-        while(arch.next())
-        {
-            String sql="insert into architecture(architecture,`value`) values('"+arch.getString(1)+"',"+arch.getString(2)+");";
-            System.out.println(sql);
-            st.execute(sql);
-        }
-        st.close();
-    }
-
-}
-
-```
+3.25：统一中英文location
 

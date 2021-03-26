@@ -314,6 +314,18 @@ yum list iostat
 
 ### 系统
 
+##### crontab
+
+```
+#开启crontab日志
+vim /etc/rsyslog.d/50-default.conf
+取消cron*注释
+service rsyslog  restart
+service cron restart
+```
+
+
+
 cat /proc/version
 lsb_release -a
 uname -a  架构
