@@ -32,6 +32,8 @@ hadoop102    hadoop103  hadoop104
 
 Minio 存储服务 thumbor 图片裁剪等
 
-openCTI 情报聚合
+openCTI 情报下载
 
-grakn ai
+CTI 
+
+grakn ai:图数据库

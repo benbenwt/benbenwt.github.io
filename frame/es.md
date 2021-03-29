@@ -1,3 +1,5 @@
+es 7.11
+
 /etc/sysconfig/network-scripts/ifcfg-exxx，
 
 ip addr查看网卡
@@ -50,10 +52,6 @@ vim /etc/security/limits.d/90-nproc.conf
 ```
 
 
-
-无法访问9200，用nmap扫一下就好了。
-
-查询url,hash,architecture,catetory.
 
 ```
 使用should查询并行的多个结果

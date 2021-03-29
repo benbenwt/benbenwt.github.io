@@ -76,7 +76,7 @@ crontab
 #!/bin/sh
 PATH=/usr/local/bin:/usr/bin:/usr/local/sbin:/usr/sbin:/bin:/sbin
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib
-java -jar /root/module/dump_hdfs-1.0-SNAPSHOT.jar  "/home/node/platform_data/stix/$(date -d last-day +%Y-%m-%d)" "hdfs://hbase:9000/user/root/stix/$(date -d last-day +%Y-%m-%d)/"
+java -jar /root/module/dump_hdfs-1.0-SNAPSHOT.jar  "/home/node/platform_data/stix/$(date -d last-day +%Y-%m-%d)" "hdfs://hbase:9000/user/root/stix/$(date -d last-day +%Y-%m-%d)/">/var/log/dump_hdfs.log 2>&1
 
 crontab -e
 提交stix
@@ -133,7 +133,7 @@ java -jar dump_es-1.0-SNAPSHOT.jar  "/home/node/platform_data/stix/$(date -d las
 
 | hostname | ip   | 服务                                                  |
 | -------- | ---- | ----------------------------------------------------- |
-| hbase    | 187  | hdfs-mater,hive,mapreduce-start,dump_mysql            |
+| hbase    | 187  | hdfs-mater,hive,dump_hive_mysql                       |
 | hbase1   | 186  | yarn-master,nginx                                     |
 | hbase2   | 185  | es,mysql,lisa2,                                       |
 | lisa     | 184  | lisa1,java,lisa_submit1,lisa_submit,dump_hdfs,dump_es |
@@ -458,6 +458,8 @@ SELECT category_id categoryId,category,value,time FROM category_tbl a WHERE a.ti
 ```
 
 源数据，stix2文件。待统计数据：单个结构化的样本，包含发生时间等属性。统计数据：截至某日，共发生各种类多少次等。
+
+
 
 
 

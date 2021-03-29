@@ -383,6 +383,21 @@ mr-jobhistory-daemon.sh start historyserver
 
 
 
+### hdfs
+
+```
+Configuration configuration = new Configuration();
+configuration.set("fs.hdfs.impl", org.apache.hadoop.hdfs.DistributedFileSystem.class.getName());
+configuration.set("fs.file.impl", org.apache.hadoop.fs.LocalFileSystem.class.getName());
+FileSystem fs = FileSystem.get(URI.create(hdfsPath), configuration);
+FSDataOutputStream out = fs.create(new Path(hdfsPath));//创建一个输出流
+InputStream in = new FileInputStream(new File(localPath));//从本地读取文件
+IOUtils.copyBytes(in, out, 100, true);
+System.out.println("上传完毕");
+```
+
+
+
 # MapReduce开发环境搭建
 
 1官网下载hadoop3.1.4.tar.gz并解压缩

@@ -1,5 +1,5 @@
 ```
-总体继承和实现关系，每个父类实现了什么。
+各个类，接口之间的继承和实现关系。每个类的属性和方法，优缺点，适用场景，代码逻辑如何实现这些特点的。
 ```
 
 # util
@@ -438,11 +438,75 @@ LinkedList相比于ArrayList:
 都继承了AbstractList，所以都支持index相关操作。都实现了了Serializable和cloned接口,并实现了Clone，readObject,writeObject方法。但其实现了了Deque接口，故实现了peek,offer,poll,element等方法。而ArrayList接口实现了RandomAccess接口，该接口无实际功能是一个标记接口，被此接口标记的List进行binarySearch时，使用普通的for循环，否则使用迭代器进行循环。
 ```
 
+##### Set
+
+>继承了Collection，和List及Queue的区别主要为,其元素值不可重复。主要有add,remove,clear,iterator,equals,hahsCode系列的函数。特有default spliterator()，
+
+default spliterator():与Stream Api一起使用，用于并行处理。需要自行实现其内容。暂时不细看。
+
+##### AbstractSet
+
+>实现了Set接口,实现了三个方法，hashCode,equals,removeAll。
+
+##### HashSet
+
+>继承了AbstractSet,实现了iterator,add,remove,clear等参数。hashset使用onlyIfAbsent替换equals相等的元素，保证值的唯一性。
+
+HashSet会调用HashMap进行存储，HashMap的putValue参数构造如下.
+
+```
+final V putVal(int hash, K key, V value, boolean onlyIfAbsent, boolean evict)  public boolean add(E e) {
+        return map.put(e, PRESENT)==null;
+    }
+hash由输入的key计算得来，key就是set.put(e)插入的e值。value是一个static final变量，内容为Object。onlyIfAbsent由map.put设定，其总为false，也就是若插入equals相等的元素，即覆盖它。
+```
+
 ### Map
 
 >由上而下为Map接口，abstractMap和HashTable，HashMap。
 
-##### 关于红黑树
+##### Map接口
+
+map中的内部接口Entry。静态内部类只可调用类成员，非静态内部类可以调用所有。但是由于内部接口无法实例化，故只能调用类成员，内部接口默认是静态接口，无需指定static关键字。
+
+###### 内部接口Entry
+
+>其定义了getkey,getvalue,setvalue等。用于Set<Entry<k,v>> entrySet进行迭代访问。
+
+##### AbstractMap
+
+>AbstractMap实现了Map接口的containValue,containKey,size,isEmpty,get,putAll,remove,values,clear,keyset,entrySet。还有hashcode,equals,toString等基础方法。但是需要其子类自己实现put等方法。
+
+##### HashMap
+
+>继承和实现AbstractMap,Clone,Serializable。
+
+###### 内部类Node
+
+>其为具有4个属性的静态类，next指向下一个对象，依次相连。
+>
+>```
+>final int hash;
+>final K key;
+>V value;
+>Node<K,V> next;
+>```
+
+其有三个函数，hashCode,equals,setValue。
+
+```
+transient表示此属性不进行序列化，只可存活在内存中。无法序列化进行存储或传输。
+```
+
+调用旋转函数调整平衡二叉树结构的流程：put/remove,treeifyBin,treeify,balanceInsertion,RotateLeft,RotateRight
+
+balance*函数是调整的具体内容。
+
+##### TreeMap
+
+>实现NavigableMap->SortedMap->Map。TreeMap使用红黑树实现，SortedMap指定了部分函数，TreeMap是有序的结构。
+
+###### 关于红黑树
 
 >红黑数定义如下：
 >
@@ -471,16 +535,6 @@ rotation操作分为4种，分别为左左，左右，右右，右左。
 ```
 
 
-
-##### Map接口
-
-map中的内部接口Entry。静态内部类只可调用类成员，非静态内部类可以调用所有。但是由于内部接口无法实例化，故只能调用类成员，内部接口默认是静态接口，无需指定static关键字。
-
-##### AbstractMap
-
->AbstractMap实现了Map接口的
-
-HashMap
 
 ### String
 
@@ -604,7 +658,7 @@ public char[] toCharArray() {
 
 
 
-### 正则表达式
+#### 正则表达式
 
 ##### 常用函数
 
@@ -682,13 +736,51 @@ exp2(?!exp1)​    匹配exp2后面不是exp1的位置
 
 other
 
-### Object
+# long
 
-### 创建对象5种方式
+```
+#判断该类是否为某个类的父类
+isAssignableFrom()
+#判断该示例是否为某个类的子类的实例
+instanceof()
+```
+
+##### Clone
+
+###### 深拷贝与浅拷贝
+
+基本类型存储在栈中
+引用类型将引用放在栈，实际值存储在堆中，栈中的引用指向堆中存放的数据。
+​浅拷贝就是直接非静态的属性，即对于基础类型复制其值，而引用类型只复制引用，所以和原对象指向相同的值。
+深拷贝则是无论引用类型还是基础类型，都复制独立的一份。
+如何实现深拷贝：
+对于每个引用类型，让其继承cloneable，并重写其clone方法。​
+
+```
+equals()
+public boolean equals(Object obj) {
+              return (this == obj);
+           }
+```
+
+在java中==是比较两个引用对象的引用或比较基础类型的值。
+此处即比较对象的地址。
+重写equals的要求:
+1自反性 2对称性 3传递性 4一致性 5对于任何非x，x.equals（null）值为null​
+参考String类的equals
+重写equals必须重写hashcode()，因为必须保证值相同的对象必须有相同的hashcode。若两者equals结果为true，hashcode一定相同。若hashcode不同，equals一定为false。hashcode相同时，equals不一定为true。
+
+当map插入时，先比较hashcode，确定存储位置。再使用equals与存储的值比较，如果为true则不存储该值，为false就插入到散列结构中。散列结构一般为二叉树和红黑树。
+
+如果重写equals但不重写hashcode，会出现equals为true，但hashcode不一样的情况。
+
+##### Object
+
+###### 创建对象5种方式
 
 1.new 2.用类的newinstance 3用constructor的newinstance 4clone 5反序列化
 
-### 序列化
+###### 序列化
 
 序列化指将java对象数据，通过某种方式转换成二进制流，可以存储和在网络上传输。
 反序列化是从流或网络上读取二进制，再恢复成对象的过程。
@@ -705,83 +797,239 @@ other
     ByteArrayInputStream bis = new ByteArrayInputStream(bos.toByteArray());
     ObjectInputStream ois = new ObjectInputStream(bis);
 
-### 深拷贝与浅拷贝
+##### Reflect
 
-基本类型存储再栈中
-引用类型将引用放在栈，实际值存储再堆中，栈中的引用指向堆中存放的数据。
-​浅拷贝就是直接非静态的属性，即对于基础类型复制其值，而引用类型只复制引用，所以和原对象指向相同的值。
-深拷贝则是无论引用还是基础，都复制独立的一份。
-how：
-对于每个引用类型，让其继承cloneable，并重写其clone方法。​
+>可以分析类的能力，动态的操作java代码称为反射。多用于开发供他人使用的构建工具。
 
-equals()
-public boolean equals(Object obj) {
-              return (this == obj);
-           }
-在java中==是比较两个引用对象的引用或比较基础类型的值。
-此处即比较对象的地址。
-我们自己如何改写equals：how
-1自反性 2对称性 3传递性 4一致性 5对于任何非x，x.equals（null）值为null​
-参考String类的equals
-若​涉及到父类和子类则instanceof判断类型不合理。可根据情况使用getclass（），获得运行时类。
-重写equals必须重写hashcode（）
+###### Class
 
-### hashcode（）
-
-java集合的实现借助哈希表，他可以快速使用equals函数，快速操作。
-当集合添加元素时
-​1若其位置上无冲突，放置。
-2若有冲突，则equals，如不同放置在链表上。
-由此可以看出，放置在同一位置的可以是equals不等的元素。
-​
-故equals同，hash同
-不同，不同
-​
-hash同，equals不一定
-不同，不同​​
-
-how：
-避免冲突，为int，4字节，避免超出，借鉴String的hashcode。
-由于map集合也使用hash进行比对，作为key的对象必须重写equals和hashcode。​​
-
-- toString()
-  public String toString() {
-      return getClass().getName() + "@" + Integer.toHexString(hashCode());
-  }
-
--  clone()
-  返回当前对象的副本，是深拷贝，互不影响。
-  调用对象的clone方法，必须让类实现Cloneable接口，覆写clone方法。
-  ​
-
-- 关键字
-
-  - native
-    被修饰的方法是用C/C++语言实现的，并且被编译成了DLL，由java去调用
-
-- reflect
-
-  - 原理
-    使用流程
-    method.invoke(instance,args) method.invoke(instance)
-    1创建一个输出类
-    2创建代理类，自定义函数并在其中用反射调用​方法，添加前置和后置的操作，实现动态代理。
-    若使用java的动态代理类，需要接口，则让代理类继承InvocationHandler。在讲操作交给Proxy。
-     Subject proxyInstance = (Subject) Proxy.newProxyInstance(subjectProxy.getClass().getClassLoader(), subject.getClass().getInterfaces(), subjectProxy);
-    （代理类类加载器，被代理类接口，代理类对象）
-
-  
-
-# long
-
-```
-#判断该类是否为某个类的父类
-isAssignableFrom()
-#判断该示例是否为某个类的子类的实例
-instanceof()
-```
+>关系:继承和实现了Serializable,GenericDeclaration,Type,AnnotatedElement。该类描述了一个类的信息，如属性，方法。
 
 
+
+取反射类
+1.Class stu=Class.forName("com.weitao.domain.Student);  由字符串常量取得
+​2.Class s=stu.getClass();             由类的实列取得
+3.Class s=Student.class;            由类对象取得
+
+获得属性
+getFidlds(),getField(String name)                        可以取得该类所有方法，但无法取得父类方法
+getDeclaredFields,getDeclaredField(String name)   
+
+获得方法
+getMethods(),getMethod(String name,Class Class<?>..paramTypes)         可以取得该类所有方法，但无法取得父类方法
+getDeclaredMethods(),getMethod(String name,Class Class<?>..paramTypes) 无法取得静态方法，但能父类方法
+
+
+获得构造方法
+getConstructors(),getConstructor(Class<?>..paramsTypes)
+​getDeclaredConstructors(),getDeclaredConstructor(Class<?>..paramsTypes)
+
+获得其他
+getName();
+newInstance();
+getInterFaces();
+getPackage();​
+
+实例化对象
+使用获取到的反射类s.
+​1Student stu=(Student)s.newInstance();
+​2Constructor<Student>  constructor=s.getConstructor(String.class);
+Student stu=constructor.newInstance("李四");
+
+##### Thread
+
+- 线程与锁
+
+  - 进程和线程
+    进程：并发执行的程序在执行过程中分配计算机资源的基本单位。
+    线程：是进程的一个执行单元，是比进程更小的基本单位。
+    一个程序至少一个进程，一个进程至少一个线程。
+    ​​区别：进程的地址空间和资源是独立的，一个崩溃互不影响。
+    但线程开销更小。
+    应用场景：用户接入tomcat，tomcat分配给新线程，再调用servlet。
+    ​​                         后台备份，前台不断询问后端进度。
+
+  - 线程的实现
+    继承Thread,实现Runnable,重写run方法。
+
+  - 线程的状态
+
+    
+
+    - new:对象被创建后状态
+
+    - runnable:对象start()后，等待cpu资源
+
+    - running:获取到cpu，执行线程，只能由runnable转换而来
+
+    - blocking:放弃cpu，停止
+
+      - 等待阻塞
+        - 调用wait(),失去锁，进入等待池。等待自己被唤醒。
+
+      - 同步阻塞
+        - 当线程申请锁失败，进入锁池，等待锁。
+
+      - 其他阻塞
+        - 通过调用join()，sleep()不会释放锁,IO请求。当以上操作结束或完成，进入就绪状态。
+
+  - 多线程实现同步方法
+    sychronized可以修饰方法，代码块。
+    ReentrantLock:阻塞所，可重入，操作由程序员编写。可实现非公平锁。
+    automaticInteger乐观锁，如原子变量就是乐观锁的应用。
+    ​wait(),notify(),sleep()：wait使一个线程处于等待状态，释放所有lock。sleep保留锁。
+    volatile(易变的):确保每次都重新取值，而不是使用寄存器的值。
+
+  - 线程池
+
+    - ThreadPool类型
+      ThreadPoolExecutor, ScheduledThreadPoolExecutor通常由工厂类Executors创建。
+      ​Executors可以创建三种类型的ThreadPoolExecutor:
+      SingleThreadPool,FixedThreadPool和CachedThreadPool。
+      ​Executors可以创建2种类型的ScheduledThreadPoolExecutor：
+      ​SingleScheduledThreadPoo和ScheduledThreadPool。
+
+    - ThreadPoolExecutor的重要参数
+      corePoolSize:核心线程数量
+      ​ maximumPoolSize:最大线程数量 
+      ​workQueue:等待队列，当线程数量​​大于corePoolSize时，任务封装成worker放入队列。 keepAliveTime:当线程数超过corePoolSize时，超过此时间空闲，则回收。
+      timeUnit:时间单位
+      ​ threadFactory:指定创建的线程池类型
+      handler:拒绝策略
+
+    - 等待阻塞队列
+
+      - ArrayBlockingQueue
+
+      - Linked Blocking Queue
+
+      - Synchro nousBlockingQueue
+
+      - PriorityBlockingQueue
+
+    - 拒绝策略
+      AbortPolicy抛出RejectedExecutionException
+      ​DiscardPolicy什么也不做，直接忽略
+      ​DiscardOldestPolicy丢弃执行队列中最老的任务，尝试为当前提交的任务腾出位置
+      ​CallerRunsPolicy直接由提交任务者执行这个任务
+
+    - 过程原理
+      If fewer than corePoolSize threads are running, the Executor always prefers adding a new thread rather than queuing.
+      ​ If corePoolSize or more threads are running, the Executor always prefers queuing a request rather than adding a new thread.
+      ​ If a request cannot be queued, a new thread is created unless this would exceed maximumPoolSize, in which case, the task will be rejected.
+      即： corePoolSize -> 任务队列 -> maximumPoolSize -> 拒绝策略 
+
+    - 线程池状态
+
+      - running:能接受，能处理
+
+      - shutdown:不接受新任务，能处理已添加
+
+      - stop:不接受新任务，不处理已添加
+
+      - tidying:由shutdown和stop转换而来
+
+      - terminated:线程时彻底终止。由tidying执行terminated()转换而来
+
+    - Executors快捷创建线程
+      newFixedThreadPool(int nThreads)创建固定大小的线程池
+      ​newSingleThreadExecutor()创建只有一个线程的线程池
+      ​newCachedThreadPool()创建一个不限线程数上限的线程池，任何提交的任务都将立即执行
+
+    - 使用ThreadPoolExecutor安全创建线程
+      填写ThreadPoolExecutor重要参数：
+      ​ExecutorService executorService = new ThreadPoolExecutor(2, 2, 
+                      0, TimeUnit.SECONDS, 
+                      new ArrayBlockingQueue<>(512), // 使用有界队列，避免OOM
+                      new ThreadPoolExecutor.DiscardPolicy());
+
+    - 提交任务
+      Future<T> submit(Callable <T> task):
+      ​关注返回值,用future.get()获得返回信息
+      Future<T> submit(Runnable task)  不关注返回值
+      void execute(Runnable command)​   不关注返回值
+
+    - 中断线程
+
+      - shutdown
+
+      - shutdownnow
+
+    - 如何正确使用线程池
+      避免使用无界队列
+      明确拒绝任务时的行为
+      获取处理结果和异常
+      ExecutorService executorService = Executors.newFixedThreadPool(4);
+      Future<Object> future = executorService.submit(new Callable<Object>() {
+              @Override
+              public Object call() throws Exception {
+                  throw new RuntimeException("exception in call~");// 该异常会在调用Future.get()时传递给调用者
+              }
+          });
+          
+      try {
+        Object result = future.get();
+      } catch (InterruptedException e) {
+        // interrupt
+      } catch (ExecutionException e) {
+        // exception in Callable.call()
+        e.printStackTrace();
+      }
+
+    - 线程池的优势
+      降低资源消耗，创建和销毁线程很占用资源，jvm需要跟踪回收。
+      提高响应速度，任务到达，无需等待创建线程。
+      方便管理
+
+    - AQS同步器
+      AQS就是实现锁的框架，内部实现时FIFO，state状态，定义内部内ConditionObject
+
+  - sleep和yield
+    sleep保留锁，进入阻塞状态。他会给予低优先级线程机会。可能出现死锁，和interruptedExceptoion。
+    yield进入就绪状态，只会给相同优先级或更高优先级的线程运行机会。
+
+  - stop和suspend
+    stop强制中断线程，解除所有锁定，其他线程就可以访问对象。
+    suspend()目标线程停止，但仍然持有锁，可能导致死锁。A需要B来苏醒，B需要A的锁。
+    应该使用wait(),notify().​
+
+  - cyclicbarrier和countdownlatch
+    CountDownLatch用于A等待若干个线程执行完任务后，他才执行。
+    CylicBarrier一般用于一组线程互相等待至某个状态，然后同时执行。
+
+  - 公平锁和非公平锁，可重入锁，读写锁，中断锁
+    用队列FIFO是公平锁的一个完美方式，能保证每个人都拿到锁。
+    公平锁效率低，非公平锁能利用好cpu碎片时间。
+    非公平锁需要锁时，直接尝试获取锁，失败则排到队尾。
+    ​可重入：多次申请一个对象的锁，如method1调用method2，就会再次申请对象锁。
+    读写锁：使多个线程的读操作不冲突。
+    中断锁：B在锁池等待，但突然要处理其他事情，就中断自己。​
+
+  - sychronized和Lock
+    都是阻塞锁。都可重入，sychronized使用计数器实现。Lock需要程序员自己实现，更加灵活适用复杂的场景，sychronized由系统隐式实现。
+
+  - 悲观锁和乐观锁
+    悲观锁：假设数据一定发生冲突，通过阻塞来保证数据安全。
+    乐观锁：假设不会发生冲突，到更新时再检查。
+    ​CAS就是使用的乐观锁,v:内存值，A：期望的旧值 B：新值，比较v，A,若相等才交换为B。无法处理ABA的情况，处理方法，加上version号。
+
+  - 死锁
+    互斥条件：一个资源只能被一个进程使用
+    请求与保持条件：一个进程请求资源而阻塞时，对已获得的资源不释放。
+    不剥夺条件：进程已获得的资源，在使用完之前，不能强行剥夺
+    循环等待条件​：若干进程形成头尾相接的循环等待资源关系。
+
+  - 避免死锁
+    1：破环请求和保持条件：请求失败后，释放已有资源。
+    2:破坏不可抢占，代价大。
+    3：破环循环，规定顺序，避免相互等待。​
+
+##### Annotation
+
+# IO
+
+# NET
 
 # GC
 
@@ -977,7 +1225,7 @@ Connection提供了事务处理的方法，通过调用setAutoCommit(false)可�
   - 连接池
     1避免创建和释放连接的消耗，提高性能。典型的用时间换空间，与线程池同理。
 
-# IO
+
 
 # OOP
 
@@ -1102,265 +1350,6 @@ Connection提供了事务处理的方法，通过调用setAutoCommit(false)可�
     在一定条件下也会被gc，这块区域对应Permanent  generation持久代。
 
     - 运行时常量池，其空间从方法区分配，存储类中常量，方法，域引用信息。
-
-# 集合
-
-- Collection
-
-  - Set
-
-  - List
-    - ArrayList和LinkedList
-      arrayList是动态数组实现的，linkedList是双向链表实现的。
-      随机访问的get和set方法，arrayList更快。
-      增删操作，linkedList更快。​
-      
-    - ArrayList
-      
-      基于array实现
-      
-      - ArrayList<>(mincapacity)
-        若mincapacity>0,创建对应长度数组。
-        为0创建默认空数组。
-        否则capacity不合法
-      
-      - add(element)
-        1计算所需大小：若为空数组，使用默认空间大小，否则使用传入的size+1，也就是实际元素个数。
-        2查看是否需要扩容，若所需空间大于旧空间的1.5倍，扩充至所需空间大小。若过大，则。。。其次，就扩充至1.5倍即可。
-      
-      - remove(index)
-        1判断合法性，计算需要挪动多少元素
-        2使用Array.copy
-      
-      - remove(object)
-        1判断合法性，计算实在前半部分还是后边。
-        2开始从头或尾查找，得到index
-        3计算并Array.copy
-      
-    - HashMap
-    
-    - 
-
-- Map
-
-  - TreeMap
-
-  - HashMap
-
-# Reflection
-
-- 获取反射类
-  1.Class stu=Class.forName("com.weitao.domain.Student);
-  ​2.Class s=stu.getClass();
-  3.Class s=Student.class;
-- 获得属性
-  getFidlds(),getField(String name)
-  getDeclaredFields,getDeclaredField(String name)​
-- 获得方法
-  getMethods(),getMethod(String name,Class Class<?>..paramTypes)
-  getDeclaredMethods(),getMethod(String name,Class Class<?>..paramTypes)
-  ​
-- 获得构造方法
-  getConstructors(),getConstructor(Class<?>..paramsTypes)
-  ​getDeclaredConstructors(),getDeclaredConstructor(Class<?>..paramsTypes)
-- 获得其他
-  getName();
-  newInstance();
-  getInterFaces();
-  getPackage();​
-- 实例化对象
-  使用获取到的反射类s.
-  ​1Student stu=(Student)s.newInstance();
-  ​2Constructor<Student>  constructor=s.getConstructor(String.class);
-  Student stu=constructor.newInstance("李四");
-
-# Thread
-
-- 线程与锁
-
-  - 进程和线程
-    进程：并发执行的程序在执行过程中分配计算机资源的基本单位。
-    线程：是进程的一个执行单元，是比进程更小的基本单位。
-    一个程序至少一个进程，一个进程至少一个线程。
-    ​​区别：进程的地址空间和资源是独立的，一个崩溃互不影响。
-    但线程开销更小。
-    应用场景：用户接入tomcat，tomcat分配给新线程，再调用servlet。
-    ​​                         后台备份，前台不断询问后端进度。
-
-  - 线程的实现
-    继承Thread,实现Runnable,重写run方法。
-
-  - 线程的状态
-
-    
-
-    - new:对象被创建后状态
-
-    - runnable:对象start()后，等待cpu资源
-
-    - running:获取到cpu，执行线程，只能由runnable转换而来
-
-    - blocking:放弃cpu，停止
-
-      - 等待阻塞
-        - 调用wait(),失去锁，进入等待池。等待自己被唤醒。
-
-      - 同步阻塞
-        - 当线程申请锁失败，进入锁池，等待锁。
-
-      - 其他阻塞
-        - 通过调用join()，sleep()不会释放锁,IO请求。当以上操作结束或完成，进入就绪状态。
-
-  - 多线程实现同步方法
-    sychronized可以修饰方法，代码块。
-    ReentrantLock:阻塞所，可重入，操作由程序员编写。可实现非公平锁。
-    automaticInteger乐观锁，如原子变量就是乐观锁的应用。
-    ​wait(),notify(),sleep()：wait使一个线程处于等待状态，释放所有lock。sleep保留锁。
-    volatile(易变的):确保每次都重新取值，而不是使用寄存器的值。
-
-  - 线程池
-
-    - ThreadPool类型
-      ThreadPoolExecutor, ScheduledThreadPoolExecutor通常由工厂类Executors创建。
-      ​Executors可以创建三种类型的ThreadPoolExecutor:
-      SingleThreadPool,FixedThreadPool和CachedThreadPool。
-      ​Executors可以创建2种类型的ScheduledThreadPoolExecutor：
-      ​SingleScheduledThreadPoo和ScheduledThreadPool。
-
-    - ThreadPoolExecutor的重要参数
-      corePoolSize:核心线程数量
-      ​ maximumPoolSize:最大线程数量 
-      ​workQueue:等待队列，当线程数量​​大于corePoolSize时，任务封装成worker放入队列。 keepAliveTime:当线程数超过corePoolSize时，超过此时间空闲，则回收。
-      timeUnit:时间单位
-      ​ threadFactory:指定创建的线程池类型
-      handler:拒绝策略
-
-    - 等待阻塞队列
-
-      - ArrayBlockingQueue
-
-      - Linked Blocking Queue
-
-      - Synchro nousBlockingQueue
-
-      - PriorityBlockingQueue
-
-    - 拒绝策略
-      AbortPolicy抛出RejectedExecutionException
-      ​DiscardPolicy什么也不做，直接忽略
-      ​DiscardOldestPolicy丢弃执行队列中最老的任务，尝试为当前提交的任务腾出位置
-      ​CallerRunsPolicy直接由提交任务者执行这个任务
-
-    - 过程原理
-      If fewer than corePoolSize threads are running, the Executor always prefers adding a new thread rather than queuing.
-      ​ If corePoolSize or more threads are running, the Executor always prefers queuing a request rather than adding a new thread.
-      ​ If a request cannot be queued, a new thread is created unless this would exceed maximumPoolSize, in which case, the task will be rejected.
-      即： corePoolSize -> 任务队列 -> maximumPoolSize -> 拒绝策略 
-
-    - 线程池状态
-
-      - running:能接受，能处理
-
-      - shutdown:不接受新任务，能处理已添加
-
-      - stop:不接受新任务，不处理已添加
-
-      - tidying:由shutdown和stop转换而来
-
-      - terminated:线程时彻底终止。由tidying执行terminated()转换而来
-
-    - Executors快捷创建线程
-      newFixedThreadPool(int nThreads)创建固定大小的线程池
-      ​newSingleThreadExecutor()创建只有一个线程的线程池
-      ​newCachedThreadPool()创建一个不限线程数上限的线程池，任何提交的任务都将立即执行
-
-    - 使用ThreadPoolExecutor安全创建线程
-      填写ThreadPoolExecutor重要参数：
-      ​ExecutorService executorService = new ThreadPoolExecutor(2, 2, 
-                      0, TimeUnit.SECONDS, 
-                      new ArrayBlockingQueue<>(512), // 使用有界队列，避免OOM
-                      new ThreadPoolExecutor.DiscardPolicy());
-
-    - 提交任务
-      Future<T> submit(Callable <T> task):
-      ​关注返回值,用future.get()获得返回信息
-      Future<T> submit(Runnable task)  不关注返回值
-      void execute(Runnable command)​   不关注返回值
-
-    - 中断线程
-
-      - shutdown
-
-      - shutdownnow
-
-    - 如何正确使用线程池
-      避免使用无界队列
-      明确拒绝任务时的行为
-      获取处理结果和异常
-      ExecutorService executorService = Executors.newFixedThreadPool(4);
-      Future<Object> future = executorService.submit(new Callable<Object>() {
-              @Override
-              public Object call() throws Exception {
-                  throw new RuntimeException("exception in call~");// 该异常会在调用Future.get()时传递给调用者
-              }
-          });
-          
-      try {
-        Object result = future.get();
-      } catch (InterruptedException e) {
-        // interrupt
-      } catch (ExecutionException e) {
-        // exception in Callable.call()
-        e.printStackTrace();
-      }
-
-    - 线程池的优势
-      降低资源消耗，创建和销毁线程很占用资源，jvm需要跟踪回收。
-      提高响应速度，任务到达，无需等待创建线程。
-      方便管理
-
-    - AQS同步器
-      AQS就是实现锁的框架，内部实现时FIFO，state状态，定义内部内ConditionObject
-
-  - sleep和yield
-    sleep保留锁，进入阻塞状态。他会给予低优先级线程机会。可能出现死锁，和interruptedExceptoion。
-    yield进入就绪状态，只会给相同优先级或更高优先级的线程运行机会。
-
-  - stop和suspend
-    stop强制中断线程，解除所有锁定，其他线程就可以访问对象。
-    suspend()目标线程停止，但仍然持有锁，可能导致死锁。A需要B来苏醒，B需要A的锁。
-    应该使用wait(),notify().​
-
-  - cyclicbarrier和countdownlatch
-    CountDownLatch用于A等待若干个线程执行完任务后，他才执行。
-    CylicBarrier一般用于一组线程互相等待至某个状态，然后同时执行。
-
-  - 公平锁和非公平锁，可重入锁，读写锁，中断锁
-    用队列FIFO是公平锁的一个完美方式，能保证每个人都拿到锁。
-    公平锁效率低，非公平锁能利用好cpu碎片时间。
-    非公平锁需要锁时，直接尝试获取锁，失败则排到队尾。
-    ​可重入：多次申请一个对象的锁，如method1调用method2，就会再次申请对象锁。
-    读写锁：使多个线程的读操作不冲突。
-    中断锁：B在锁池等待，但突然要处理其他事情，就中断自己。​
-
-  - sychronized和Lock
-    都是阻塞锁。都可重入，sychronized使用计数器实现。Lock需要程序员自己实现，更加灵活适用复杂的场景，sychronized由系统隐式实现。
-
-  - 悲观锁和乐观锁
-    悲观锁：假设数据一定发生冲突，通过阻塞来保证数据安全。
-    乐观锁：假设不会发生冲突，到更新时再检查。
-    ​CAS就是使用的乐观锁,v:内存值，A：期望的旧值 B：新值，比较v，A,若相等才交换为B。无法处理ABA的情况，处理方法，加上version号。
-
-  - 死锁
-    互斥条件：一个资源只能被一个进程使用
-    请求与保持条件：一个进程请求资源而阻塞时，对已获得的资源不释放。
-    不剥夺条件：进程已获得的资源，在使用完之前，不能强行剥夺
-    循环等待条件​：若干进程形成头尾相接的循环等待资源关系。
-
-  - 避免死锁
-    1：破环请求和保持条件：请求失败后，释放已有资源。
-    2:破坏不可抢占，代价大。
-    3：破环循环，规定顺序，避免相互等待。​
 
 # 待整理
 
