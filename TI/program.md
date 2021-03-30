@@ -1,5 +1,14 @@
 # 项目
 
+```
+大部分论文做的部分:
+集成异构信息源数据:正则提取,nlp提取,沙箱提取，数据集
+存储到集成平台:hdfs,es,web
+图知识库:grank
+溯源:GCN,关联，可信度，溯源态势(较少)
+防护：流量，
+```
+
 >sitx2:https://docs.oasis-open.org/cti/stix/v2.1/cs01/stix-v2.1-cs01.html#_s5l7katgbp09
 
 **malware_types** :list of malware type

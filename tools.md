@@ -1,3 +1,27 @@
+##### TI
+
+virustotal
+
+ibm x-force exchange
+
+alienvultr
+
+微步
+
+
+
+文献网站
+
+peer j
+
+papers code
+
+图书馆
+
+情报学报
+
+谷歌
+
 ##### 下载
 
 sourceforge
@@ -5,12 +29,6 @@ sourceforge
 slideshare
 
 https://notepad-plus.en.softonic.com/download
-
-##### 论文
-
-peer j
-
-papers code
 
 ##### 镜像
 
