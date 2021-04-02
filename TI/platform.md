@@ -131,12 +131,12 @@ java -jar dump_es-1.0-SNAPSHOT.jar  "/home/node/platform_data/stix/$(date -d las
 
 
 
-| hostname | ip   | 服务                                                  |
-| -------- | ---- | ----------------------------------------------------- |
-| hbase    | 187  | hdfs-mater,hive,dump_hive_mysql                       |
-| hbase1   | 186  | yarn-master,nginx                                     |
-| hbase2   | 185  | es,mysql,lisa2,                                       |
-| lisa     | 184  | lisa1,java,lisa_submit1,lisa_submit,dump_hdfs,dump_es |
+| hostname | ip   | 服务                                                   |
+| -------- | ---- | ------------------------------------------------------ |
+| hbase    | 187  | hdfs-mater,hive,dump_hive_mysql,kafka                  |
+| hbase1   | 186  | yarn-master,nginx                                      |
+| hbase2   | 185  | es,mysql,lisa2,grakn                                   |
+| lisa     | 184  | lisa1,java,lisa_submit1,lisa_submit2,dump_hdfs,dump_es |
 
 1   /home/node/paltform_data/sample1
 
@@ -214,7 +214,7 @@ docker-compose up
 docker exec  -it container_id /bin/bash
 mysql -ulisa -plisa
 use lisadb
-delete * from cel...
+delete  from cel...
 #清除./data/storate中文件即可。
 ```
 

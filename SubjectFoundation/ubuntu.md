@@ -15,6 +15,8 @@ yum-config-manager -h
 yum repolist all
 yum repolist enabled
 yum-config-manager --disable mysql-connectors-community
+sudo yum-config-manager --add-repo https://repo.grakn.ai/repository/meta/rpm.repo
+sudo yum update
 
 cd /etc/yum.repos.d/
 #管理下载docker的源，将其替换为aliyun
@@ -335,6 +337,12 @@ arch 架构
 
 ### 网络及服务
 
+```
+ps -aux|grep qemu|awk '{print $2}'|xargs kill -9
+```
+
+
+
 netstat -tlnp 查看服务端口号
 
 ss -ntl
@@ -435,6 +443,7 @@ find -size -2kb
 向下取整
 find ./ -name '.py' -exec rm -rf {} ;
 find ./ -name "*" -type f -size 0c | xargs -n 1 rm -f
+find ./ |wc -l
 ```
 
 linux计算hash
