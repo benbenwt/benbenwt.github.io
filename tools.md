@@ -8,19 +8,29 @@ alienvultr
 
 微步
 
+virusshare
 
-
-文献网站
+##### 文献网站
 
 peer j
 
+connected paper
+
 papers code
+
+awesome list
+
+Aminor
 
 图书馆
 
 情报学报
 
 谷歌
+
+kaggle
+
+github
 
 ##### 下载
 

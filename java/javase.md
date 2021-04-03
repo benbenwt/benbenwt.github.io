@@ -461,6 +461,12 @@ final V putVal(int hash, K key, V value, boolean onlyIfAbsent, boolean evict)  p
 hash由输入的key计算得来，key就是set.put(e)插入的e值。value是一个static final变量，内容为Object。onlyIfAbsent由map.put设定，其总为false，也就是若插入equals相等的元素，即覆盖它。
 ```
 
+##### Vector
+
+>继承和实现了AbstractList，RandomAccess,Cloneable,Serialiable.Vector操作是线程安全的。
+
+
+
 ### Map
 
 >由上而下为Map接口，abstractMap和HashTable，HashMap。
@@ -537,6 +543,8 @@ rotation操作分为4种，分别为左左，左右，右右，右左。
 
 
 ### String
+
+##### String类
 
 equals
 
@@ -656,7 +664,15 @@ public char[] toCharArray() {
 }
 ```
 
+##### StringBuilder类
 
+>继承AbstractStringBuilder,定义了value,count等属性，和append,容量相关,delete,deleteCharAt,insert,reverse等属性.
+
+其线程不安全，使用一个可变字符数组。
+
+##### StringBuffer类
+
+>线程安全，在StringBuilder的基础上添加了synchronized。
 
 #### 正则表达式
 
@@ -1050,57 +1066,116 @@ handler:拒绝策略
 
 # IO
 
-# NET
+##### InputStreamReader类
 
-# GC
+>他是字节流到字符流的桥梁，读取字节并用特定字符集节码，字符集默认使用平台字符集。要保证效率使用BufferReader。其定义的属性有StreamDecoder，方法有getEncode,read,ready,close。
 
-### 为什么要gc
+##### BufferedReader
+
+>BufferedReader继承自Reader，提供高效字符读取,其定义了Reader,char,nChars,nextChar,ensureOpen(),read(),readline()。缓冲区的大小可以指定，否则使用默认大小。大多数情况下默认大小就够用的。 每次Reader的读取请求都会产生相应的对字符或字节流的读取请求，所以最好用BufferedReader包装那些read操作影响效率的Reader，比如FileReader和InputStreamReader。
+
+# JVM
+
+### JVM的结构
+
+JVM = 类加载器 classloader + 执行引擎 execution engine + 运行时数据区域 runtime data area
+
+##### classloader
+
+###### 两种装载方式
+
+classloader两种装载class的方式：
+1.隐式：运行过程中，碰到new方式生成对象时，隐式调用classloader到JVM。
+2.显示：通过class.forname()动态加载。​
+
+###### 双亲委派模型（Parent Delegation Model）
+
+**工作过程**
+1当前ClassLoader首先从自己已经加载的类中查询此类是否已加载。若已经加载就返回加载的类。
+每个类加载器都有自己的加载缓存，当一个类被加载以后就会放入缓存。
+2当前classloader的缓存中没有找到时，委托父类加载器去加载，父类加载器采用同样的策略，直到找到或到达bootstrap classloader.
+3.当所有的父类加载器都没有加载时，再由当前的类加载器加载，并放入自己的缓存。​
+
+**优点**
+1为了安全性，避免用户的类动态替换java的核心类，比如String。同时避免了重复加载，因为相同的class文件被不同classloader加载是不同的两个类，相互转型会抛出classCaseException。
+
+**常用类加载器**
+Bootstrap class loader：所有类加载器的父类，当运行jvm时，她负责核心库的加载，如java.lang.*等。例如java.lang.Object就是由根类加载器加载的。此加载器不是由java编写的，而是c/c++写的。
+Extension class loader：这个加载器加载除了基本API之外的拓展类。
+AppClassLoader:加载应用程序和程序员自定义的类。​
+用户也可以自定义自己的类加载器，java提供了java.long.classloader.
+
+##### **执行引擎**
+
+执行字节码，或者执行本地方法。
+
+###### JIT Complier
+
+>JIT编译器是动态编译器的一种，相对的静态编译器则指C/C++编译器。
+
+对于重复执行较多的代码，JIT将其单独翻译为对应平台的机器码，以后调用直接执行即可，提高程序执行速度。但是编译程序和优化需要一定时间，并且占用一定内存，无法在程序刚启动时使用编译器。
+
+而java解释器则是一行一行将java字节码翻译为机器码，不可复用机器码，执行效率较低。
+
+##### runtime data area
+
+jvm运行期间，对内存空间的划分和分配。jvm将内存分为了6个区域来存储。程序员所写的程序都被加载到运行时数据区域中，不同类别存放在heap，java stack,native method stack,PC register ,method area.
+
+###### java stacks
+
+每个jvm线程都有自己私有的java虚拟栈，每个方法占用一个栈帧，这个栈帧和线程同时创建，他的生命周期和线程相同。
+每个java方法被执行时创建一个栈帧用于存储变量表，操作数，动态链接，方法出口等信息。每个方法被调用直至执行完成对应着再java stack中入栈和出战的过程。
+
+###### native method stack
+
+与虚拟机栈的作用相似，虚拟机栈执行java方法，而本地方法栈为虚拟机使用到的本地方法服务。
+本地方法：由其他语言编写，和处理器相关的机器代码。本地方法保存在动态链接库中，即dll中。
+
+###### PC regiters
+
+程序计数器保存当前线程执行到哪行（指令地址），以便线程之间切换。
+​每个线程都有自己的PC，以便完成不同线程切换。
+
+###### heap Memory
+
+所有线程共享的一块区域，用来存储对象实例和数组值。new的对象实例。
+
+jvm初始分配的内存由-Xms,-Xmx指定，默认值分别为物理内存的1/64和1/4。
+
+###### method area
+
+方法区是线程共享区域，用于存储每个类的结构信息。例如成员变量和方法数据，构造函数和普通函数字节码内容，还包括一些类，实例，接口初始化时用到的特殊方法。当开发人员在程序中通过class对象的getName，isInstance获取消息时，这些数据都来自方法区。
+在一定条件下也会被gc，这块区域对应Permanent  generation持久代。
+
+运行时常量池，其空间从方法区分配，存储类中常量，方法，域引用信息。
+
+### GC
+
+##### 为什么要gc
 
 当一个对象不可达，或一个对象没有任何引用指向它，他就没有必要存在，此时就可以被gc回收。
 
-### jvm区域
 
-##### java stack
-
-每个jvm线程都有自己私有的java虚拟栈，这个栈和线程同时创建，他的生命周期和线程相同。每个java方法被执行时创建一个栈帧用于存储变量表，操作数，动态链接，方法出口等信息。每个方法被调用直至执行完成对应着再java stack中入栈和出战的过程。
-
-##### native method stack
-
-与虚拟机栈的作用相似，虚拟机栈执行java方法，而本地方法栈为虚拟机使用到的本地方法服务。本地方法：由其他语言编写，和处理器相关的机器代码。本地方法保存在动态链接库中，即dll中。
-
-##### heap
-
-所有线程共享的一块区域，用来存储对象实例和数组值。new的对象。
-
-##### PC regiter
-
-程序计数器保存当前线程执行到哪行（指令地址），以便线程之间切换。每个线程都有自己的PC，以便完成不同线程切换。
-
-##### method area
-
-方法区是线程共享区域，用于存储每个类的结构信息。例如成员变量和方法数据，构造函数和普通函数字节码内容，还包括一些类，实例，接口初始化时用到的特殊方法。当开发人员在程序中通过class对象的getName，isInstance获取消息时，这些数据都来自方法区。在一定条件下也会被gc，这块区域对应Permanent generation持久代。
-
-##### 运行时常量池，其空间从方法区分配，存储类中常量，方法，域引用信息。
 
 ##### 触发gc的情况
 
 非线程对象不被指向或超出作用域
 线程对象线程未启动或停止
 
-##### 改变对象引用，置为null或指向其他对象。
+###### 改变对象引用，置为null或指向其他对象。
 
 Object x=new Object();//object1 
    Object y=new Object();//object2 
    x=y;//object1 变为垃圾 
    x=y=null;//object2 变为垃圾
 
-##### 超出作用域
+###### 超出作用域
 
 if(i==0){ 
       Object x=new Object();//object1 
    }//括号结束后object1将无法被引用，变为垃圾 
 
-##### 类嵌套导致未完全释放
+###### 类嵌套导致未完全释放
 
 class A{ 
       A a; 
@@ -1109,7 +1184,7 @@ class A{
    x.a= new A();//又分配了一个空间 
    x=null;//将会产生两个垃圾 
 
-##### 线程中的垃圾
+###### 线程中的垃圾
 
 class A implements Runnable{   
      void run(){ 
@@ -1143,6 +1218,12 @@ class A implements Runnable{
 分代：新生代，老生代
 新生代：存活少，使用复制算法。
 老生代：存活多，使用标记清除或标记整理算法。​
+
+
+
+# NET
+
+
 
 # DB
 
@@ -1313,80 +1394,7 @@ Connection提供了事务处理的方法，通过调用setAutoCommit(false)可�
 
 # Exception
 
-# JVM
 
-### JVM的结构
-
-JVM = 类加载器 classloader + 执行引擎 execution engine + 运行时数据区域 runtime data area
-
-##### classloader
-
-###### 两种装载方式
-
-classloader两种装载class的方式：
-1.隐式：运行过程中，碰到new方式生成对象时，隐式调用classloader到JVM。
-2.显示：通过class.forname()动态加载。​
-
-###### 双亲委派模型（Parent Delegation Model）
-
-**工作过程**
-1当前ClassLoader首先从自己已经加载的类中查询此类是否已加载。若已经加载就返回加载的类。
-每个类加载器都有自己的加载缓存，当一个类被加载以后就会放入缓存。
-2当前classloader的缓存中没有找到时，委托父类加载器去加载，父类加载器采用同样的策略，直到找到或到达bootstrap classloader.
-3.当所有的父类加载器都没有加载时，再由当前的类加载器加载，并放入自己的缓存。​
-
-**优点**
-1为了安全性，避免用户的类动态替换java的核心类，比如String。同时避免了重复加载，因为相同的class文件被不同classloader加载是不同的两个类，相互转型会抛出classCaseException。
-
-**常用类加载器**
-Bootstrap class loader：所有类加载器的父类，当运行jvm时，她负责核心库的加载，如java.lang.*等。例如java.lang.Object就是由根类加载器加载的。此加载器不是由java编写的，而是c/c++写的。
-Extension class loader：这个加载器加载除了基本API之外的拓展类。
-AppClassLoader:加载应用程序和程序员自定义的类。​
-用户也可以自定义自己的类加载器，java提供了java.long.classloader.
-
-##### **执行引擎**
-
-执行字节码，或者执行本地方法。
-
-###### JIT Complier
-
->JIT编译器是动态编译器的一种，相对的静态编译器则指C/C++编译器。
-
-对于重复执行较多的代码，JIT将其单独翻译为对应平台的机器码，以后调用直接执行即可，提高程序执行速度。但是编译程序和优化需要一定时间，并且占用一定内存，无法在程序刚启动时使用编译器。
-
-而java解释器则是一行一行将java字节码翻译为机器码，不可复用机器码，执行效率较低。
-
-##### runtime data area
-
-jvm运行期间，对内存空间的划分和分配。jvm将内存分为了6个区域来存储。程序员所写的程序都被加载到运行时数据区域中，不同类别存放在heap，java stack,native method stack,PC register ,method area.
-
-###### java stacks
-
-每个jvm线程都有自己私有的java虚拟栈，每个方法占用一个栈帧，这个栈帧和线程同时创建，他的生命周期和线程相同。
-每个java方法被执行时创建一个栈帧用于存储变量表，操作数，动态链接，方法出口等信息。每个方法被调用直至执行完成对应着再java stack中入栈和出战的过程。
-
-###### native method stack
-
-与虚拟机栈的作用相似，虚拟机栈执行java方法，而本地方法栈为虚拟机使用到的本地方法服务。
-本地方法：由其他语言编写，和处理器相关的机器代码。本地方法保存在动态链接库中，即dll中。
-
-###### PC regiters
-
-程序计数器保存当前线程执行到哪行（指令地址），以便线程之间切换。
-​每个线程都有自己的PC，以便完成不同线程切换。
-
-###### heap Memory
-
-所有线程共享的一块区域，用来存储对象实例和数组值。new的对象实例。
-
-jvm初始分配的内存由-Xms,-Xmx指定，默认值分别为物理内存的1/64和1/4。
-
-###### method area
-
-方法区是线程共享区域，用于存储每个类的结构信息。例如成员变量和方法数据，构造函数和普通函数字节码内容，还包括一些类，实例，接口初始化时用到的特殊方法。当开发人员在程序中通过class对象的getName，isInstance获取消息时，这些数据都来自方法区。
-在一定条件下也会被gc，这块区域对应Permanent  generation持久代。
-
-运行时常量池，其空间从方法区分配，存储类中常量，方法，域引用信息。
 
 
 
