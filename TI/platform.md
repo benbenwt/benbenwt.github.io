@@ -151,7 +151,7 @@ java -jar dump_es-1.0-SNAPSHOT.jar  "/home/node/platform_data/stix/$(date -d las
 >2无法安装r2pipe，将requirements.txt中版本改为1.5.3，进行build。
 
 ```
-#lisa-worker的内容,再将requirements.txt中ripe2改为1.5.3版本,将.dockerignore中的images注释掉。
+#lisa-worker的内容,再将requirements.txt中r2pipe2改为1.5.3版本,将.dockerignore中的images注释掉。
 FROM python:3.6-slim
 
 ARG maxmind_key
@@ -223,6 +223,143 @@ delete  from cel...
 ```
 修改docker-compose.yml中的nginx服务的的args->webhost,让后重新docker-compose build
 ```
+
+##### rabbitmq不消费
+
+```
+closing AMQP connection <0.13372.1> (172.42.0.10:41766 -> 172.42.0.13:5672):
+missed heartbeats from client, timeout: 60s
+添加定时重启celery的功能，缓解这种情况。由于它不消费没有什么特征，服务也在跑，只能定时了。
+在宿主机执行此命令，启动新的consumer。sudo docker exec -it $DOCKER_ID /bin/bash -c 'cd /home/lisa && ./docker/worker/init.sh'
+```
+
+
+
+###### 快照
+
+```
+删除了lisa的storage，无成功，是由于恶意类型不支持。
+对于消息队列阻塞，进入worker重新启动celery即可。
+对于想暂停队列，进入./data/storage，删除所有.随后，消费者会快速调用消息，消息队列会自动清空。
+```
+
+##### 结构
+
+```
+REACT build之后，将编译好的文件复制到nginx基础镜像中，路径为/usr/share/nginx/html,让nginx代理.代理ip和端口由docker build的webhost参数决定。
+前端用React编写，编译后由nginx代理。后端由flask编写，使用uwsgi进行代理。tasks运行在worker容器中，在worker中运行qemu，radare2等。worker和api为复用调用关系，api通过celery的远程调用模块，异步调用full_analysis或pcap_analysis.当worker数量增加时，也只用继续监听对应的celery队列，实现多个worker异步调用。相比于kafka，它省略了编写生产者和消费者的代码，直接用调用的代码形式，实现了消息的添加和读取。他和rpc还是不同的，rpc是服用调用的关系。当然，它也可以非异步方式调用，就成了rpc类似的，但无必要。它使用形参形式，传递所需要传递的消息。
+实际上api模块只用操作消息队列和数据库，以及存储文件。由worker控制读取。
+
+D:\lisa_docker\lisa\lisa\web_api中为后端的是实现代码，python的flask实现。
+@app.route('/api/tasks/create/file', methods=['POST']）提交样本的接口.
+
+routes.py为后端接口，在其中远程调用tasks。
+tasks.py为lisa的监听脚本，他会调用r2pipe等处理提交的恶意样本。
+
+查看container是否运行:
+进入worker： 
+apt-get update
+apt-get install procps
+ps -aux|grep tasks
+进入api：
+ps -aux|grep routes
+```
+
+处理提交的恶意样本,routes:
+
+```
+    task_id = uuid()
+    //存储恶意样本
+	os.mkdir(f'{storage_path}/{task_id}')
+    file_path = f'{storage_path}/{task_id}/{file.filename}'
+    file.save(file_path)
+
+    # run analysis
+    args = (file_path,)
+    kwargs = {'pretty': pretty, 'exec_time': exec_time}
+    #通过消息队列远程调用worker执行分析任务。
+    tasks.full_analysis.apply_async(args, kwargs, task_id=task_id)
+	#返回task_id
+    res = {
+        'task_id': task_id
+    }
+    return jsonify(res)
+```
+
+监听消息队列
+
+```
+@celery_app.task(bind=True, base=LiSaBaseTask)
+def full_analysis(self, file_path, pretty=False, exec_time=20):
+    """Full sandbox analysis task.
+
+    :param file_path: Path to file.
+    :param pretty: Output json indentation.
+    :param exec_time: Execution time.
+    """
+    #刷新消息队列状态
+    self.update_state(meta={'filename': os.path.basename(file_path)})
+
+    data_dir = f'{storage_path}/{self.request.id}'
+	#调用worker
+    # run top level and submodules
+    master = Master(file_path, data_dir, exec_time)
+    master.load_analyzers()
+    master.run()
+
+    output_file = f'{data_dir}/report.json'
+
+    save_output(master.output, output_file, pretty)
+
+    return 'binary'
+```
+
+创建analyzer
+
+```
+def create_analyzer(analyzer_path, file_path):
+    """Imports analyzer class and creates analyzer object
+
+    :param analyzer_path: Path to analyzer in format 'module.Class'.
+    :returns: Instantiated analyzer object.
+    """
+    mod_name, class_name = analyzer_path.rsplit('.', 1)
+
+    analyzer_module = import_module(mod_name)
+    analyzer_class = getattr(analyzer_module, class_name)
+
+    return analyzer_class(file_path)
+通过字符串，动态引入自己编写的module，并获取类属性。
+```
+
+启动r2pipe
+
+```
+ def run_analysis(self):
+        """Main analysis method.
+
+        :returns: Dictionary containing analysis results.
+        """
+        log.info('Static Analysis started.')
+
+        # start radare2
+        self._r2 = r2pipe.open(self._file.path, ['-2'])
+        self._r2.cmd('aaa')
+
+        # binary info
+        self._r2_info()
+
+        # strings
+        self._load_strings()
+
+        self._r2.quit()
+        log.info('Static Analysis finished.')
+
+        return self._output
+r2pipe说radare所支持的一个python api。
+```
+
+
 
 sample提交-lisa-lisa-stix2-hdfs,es
 

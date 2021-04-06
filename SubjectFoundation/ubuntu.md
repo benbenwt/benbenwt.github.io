@@ -384,6 +384,27 @@ ufw allow from ip to any port 端口号
 
 ### 文件管理
 
+##### trash管理
+
+```
+所在路径
+/home/yourname/.local/share/Trash/files
+./.trash*/files
+```
+
+
+
+```
+查看文件夹容量
+du -ah --max-depth=1 
+du -sh
+按大小排序
+ls -lS
+ls -lSr
+```
+
+
+
 ### 查看日志
 
 who /var/log/wtmp
@@ -507,6 +528,18 @@ apt-get upgrade
 apt-get source git
 apt-get  remove name
 apt-get install --reinstall zlibc zliblg zliblg-dev
+#配置源
+sudo vim /etc/apt/sources.list
+deb http://mirrors.ustc.edu.cn/ubuntu/ xenial main restricted universe multiverse
+deb http://mirrors.ustc.edu.cn/ubuntu/ xenial-security main restricted universe multiverse
+deb http://mirrors.ustc.edu.cn/ubuntu/ xenial-updates main restricted universe multiverse
+deb http://mirrors.ustc.edu.cn/ubuntu/ xenial-proposed main restricted universe multiverse
+deb http://mirrors.ustc.edu.cn/ubuntu/ xenial-backports main restricted universe multiverse
+deb-src http://mirrors.ustc.edu.cn/ubuntu/ xenial main restricted universe multiverse
+deb-src http://mirrors.ustc.edu.cn/ubuntu/ xenial-security main restricted universe multiverse
+deb-src http://mirrors.ustc.edu.cn/ubuntu/ xenial-updates main restricted universe multiverse
+deb-src http://mirrors.ustc.edu.cn/ubuntu/ xenial-proposed main restricted universe multiverse
+deb-src http://mirrors.ustc.edu.cn/ubuntu/ xenial-backports main restricted universe multiverse
 ```
 
 给git配置代理

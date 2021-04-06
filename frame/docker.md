@@ -218,6 +218,7 @@ docker container   stop id  停止正运行进程。
 ### 常用其他命令
 
 ```
+sudo docker exec -it $DOCKER_ID /bin/bash -c 'cd /home/lisa && ./docker/worker/init.sh'
 #清除部分container和image，腾出空间。
 docker system prune -a
 ```
@@ -297,6 +298,12 @@ curl localhost:9870
   >构建生成镜像，镜像是一层一层的。
 >
   >开发者开发完毕，使用docker封装好环境和服务，使用者使用命令拉取和运行，不用关心运行环境。
+
+ARG webhost=locahost:4242，定义的ARG在build必须通过**--build-arg a_name=a_value**形式指定。
+
+--from=build 从build复制，build为基础环境的别名.如FROM  centos as build.多个from是为了编译环境和发布环境分离，使得最终的镜像只包含需要的部分。
+
+或者在docker-compose中指定。
 
   dockerfile1例子：
 
@@ -419,6 +426,14 @@ curl localhost:9870
   ### idea整合docker
 
   ### docker compose
+
+##### depends_on
+
+```
+被依赖的镜像必须先启动，而且
+```
+
+
 
 https://docs.docker.com/compose/install/
 

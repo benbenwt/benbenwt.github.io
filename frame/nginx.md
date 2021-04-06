@@ -79,6 +79,23 @@ location	/	{
 
 使用反向代理替换ip+端口。即使用同意端口反向代理想要访问的跨域ip+端口。
 
+##### try_files
+
+https://www.cnblogs.com/boundless-sky/p/9459775.html
+
+```
+
+location /api { try_files $uri @app; }
+uri为除去ip和端口的url后缀部分，app为指定的配置项，用于控制转发。当配置多个选项时，前面的失败会尝试后边的选项。
+location @app {
+    include uwsgi_params;
+    uwsgi_pass api:5000;
+  }
+该配置项指定转发对象，
+```
+
+
+
 
 # problem
 
