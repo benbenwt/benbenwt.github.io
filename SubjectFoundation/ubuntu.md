@@ -216,6 +216,15 @@ rsync     -rvl  /tmp   root@hbae:/tmp
 
 /etc/sysconfig/network
 
+```
+#centos7
+hostnamectl查看信息
+/etc/hostname修改主机名
+systemctl restart systemd-hostnamed重启服务或重启电脑
+```
+
+
+
 ### problem
 
 ##### 当前用户不是root用户，修改etc文件。
@@ -389,7 +398,7 @@ ufw allow from ip to any port 端口号
 ```
 所在路径
 /home/yourname/.local/share/Trash/files
-./.trash*/files
+对应挂载磁盘的垃圾箱路径./.Trash*/files
 ```
 
 
@@ -401,6 +410,7 @@ du -sh
 按大小排序
 ls -lS
 ls -lSr
+ls  -lH
 ```
 
 
