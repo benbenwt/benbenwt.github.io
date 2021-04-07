@@ -1,3 +1,9 @@
+```
+推荐版本Java8+Hadoop2.7+Spark2.4.5
+```
+
+
+
 ### 版本
 
 java8,hadoop2.10.x,3.1.1+,3.2.x,hbase2.3.x，hive
@@ -62,7 +68,6 @@ s -mv "hdfs://hbase:9000/user/root/dump_hive_result/$(date -d last-day +%Y-%m-%d
 
 ```
 #centos crontab
-vim /etc/crontab
 crontab -e
 serivce crond restart
 

@@ -50,11 +50,13 @@ kafka由多个broker构成，每个broker由topic和partion构成，一个topic�
 ##### standalone
 
 ```
+#启动独立的zookeeper
 zkServer.sh start
 zkCli.sh -server localhost：2181
 ```
 
 ```
+#查看zookeeper结点
 ls /
 get /zk_test
 set /zk_test name
