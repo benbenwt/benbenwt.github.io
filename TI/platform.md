@@ -2,6 +2,11 @@
 推荐版本Java8+Hadoop2.7+Spark2.4.5
 ```
 
+```
+chmod +x /etc/rc.d/rc.local
+vim /etc/rc.d/rc.local
+```
+
 
 
 ### 版本
@@ -41,13 +46,28 @@ date -R
 ```
 date
 timedatectl  list-timezones  
-date  -R
 timedatectl set-timezone Asia/Shanghai
+date  -R
+#网络同步时间
 ntpdate  pool.ntp.org
+#修改时区，文件软连接方式.实际上其所有时间都快了8小时，直接用utc算了，刚好少了8小时。
+ln -s /usr/share/zoneinfo/Universal /etc/localtime
+#将系统时间写入硬件时间
+hwclock -w
+#硬件时间写入系统时间
+hwclock -s
 ```
 
 ```text
 sudo yum -y install ntp
+```
+
+```
+export HADOOP_HOME=/root/module/hadoop-3.1.4
+export PATH=$PATH:$HADOOP_HOME/bin
+export PATH=$PATH:$HADOOP_HOME/sbin
+PATH=$PATH:/usr/local/bin:/usr/bin:/usr/local/sbin:/usr/sbin:/bin:/sbin
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib
 ```
 
 
@@ -134,11 +154,133 @@ java -jar /root/module/dump_hdfs-1.0-SNAPSHOT.jar  "/home/node/platform_data/sti
 java -jar dump_es-1.0-SNAPSHOT.jar  "/home/node/platform_data/stix/$(date -d last-day +%Y-%m-%d)"  "hbase2"
 ```
 
+hbase失败重启脚本
+
+```
+#!/bin/bash
+export HADOOP_HOME=/root/module/hadoop-3.1.4
+export PATH=$PATH:$HADOOP_HOME/bin
+export PATH=$PATH:$HADOOP_HOME/sbin
+PATH=$PATH:/usr/local/bin:/usr/bin:/usr/local/sbin:/usr/sbin:/bin:/sbin
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib
+
+check_one_service(){
+  run=$(ps -ef|grep "$1"|grep -v "grep")
+  if [ "$run" ];then
+  echo "$1  is alive!"
+  else
+  echo "$1 was shutdown!"
+  echo "Starting $1..."
+  eval $2
+  echo "$1 was started!"  
+  fi
+  sleep 5
+}
+while :
+do
+#check hdfs,hiveserver2
+check_one_service "org.apache.hadoop.hdfs.server.namenode.NameNode" "nohup start-dfs.sh &"
+check_one_service "org.apache.hive.service.server.HiveServer2"  "nohup hiveserver2 &"
+#check zookeeper,kafka
+check_one_service "org.apache.zookeeper.server.quorum.QuorumPeerMain" "nohup /root/module/apache-zookeeper-3.5.9-bin/bin/zkServer.sh start"
+check_one_service "kafka" "nohup /root/module/kafka_2.12-2.4.1/bin/kafka-server-start.sh  /root/module/kafka_2.12-2.4.1/config/server.properties &"
+#check dump_hive ,dump_mysql
+check_one_service "mapreduce_start-1.0-SNAPSHOT.jar"    "nohup java11 -jar  /root/software/mapreduce_start-1.0-SNAPSHOT.jar &"
+check_one_service "dump_mysql_jar.jar"  "nohup java11 -jar /root/software/dump_mysql_jar.jar &"
+done
+```
+
+```
+#hbase1
+#!/bin/bash
+export HADOOP_HOME=/root/module/hadoop-3.1.4
+export PATH=$PATH:$HADOOP_HOME/bin
+export PATH=$PATH:$HADOOP_HOME/sbin
+PATH=$PATH:/usr/local/bin:/usr/bin:/usr/local/sbin:/usr/sbin:/bin:/sbin
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib
+
+check_one_service(){
+  run=$(ps -ef|grep "$1"|grep -v "grep")
+  if [ "$run" ];then
+  echo "$1  is alive!"
+  else
+  echo "$1 was shutdown!"
+  echo "Starting $1..."
+  eval $2
+  echo "$1 was started!"  
+  fi
+  sleep 5
+}
+while :
+do
+check_one_service "org.apache.hadoop.yarn.server.resourcemanager.ResourceManager"       "nohup start-yarn.sh &"
+check_one_service "nginx"  "nginx"
+done
+```
+
+```
+#!/bin/bash
+export HADOOP_HOME=/root/module/hadoop-3.1.4
+export PATH=$PATH:$HADOOP_HOME/bin
+export PATH=$PATH:$HADOOP_HOME/sbin
+PATH=$PATH:/usr/local/bin:/usr/bin:/usr/local/sbin:/usr/sbin:/bin:/sbin
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib
+
+check_one_service(){
+  run=$(ps -ef|grep "$1"|grep -v "grep")
+  if [ "$run" ];then
+  echo "$1  is alive!"
+  else
+  echo "$1 was shutdown!"
+  echo "Starting $1..."
+  eval $2
+  echo "$1 was started!"  
+  fi
+  sleep 5
+}
+while :
+do
+check_one_service "org.elasticsearch.bootstrap.Elasticsearch"  "su - elas -c  \"nohup elasticsearch  &\" "
+check_one_service "mysql" "nohup systemctl start mysqld  &"
+check_one_service "grakn" "nohup grakn server start &"
+check_one_service "lisa.web_api.tasks" "service docker start && cd /root/module/lisa_/lisa/ && nohup docker-compose up --scale worker=5 &"
+done
+```
+
+```
+#lisa
+#!/bin/bash
+export HADOOP_HOME=/root/module/hadoop-3.1.4
+export PATH=$PATH:$HADOOP_HOME/bin
+export PATH=$PATH:$HADOOP_HOME/sbin
+PATH=$PATH:/usr/local/bin:/usr/bin:/usr/local/sbin:/usr/sbin:/bin:/sbin
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib
+
+check_one_service(){
+  run=$(ps -ef|grep "$1"|grep -v "grep")
+  if [ "$run" ];then
+  echo "$1  is alive!"
+  else
+  echo "$1 was shutdown!"
+  echo "Starting $1..."
+  eval $2
+  echo "$1 was started!"  
+  fi
+  sleep 5
+}
+while :
+do
+check_one_service "es_provider_search8011-0.0.1-SNAPSHOT.jar"  "nohup java11 -jar /root/module/es_provider_search8011-0.0.1-SNAPSHOT.jar  &"
+check_one_service "platform_provider_statistic8001-0.0.1-SNAPSHOT.jar" "nohup java11 -jar platform_provider_statistic8001-0.0.1-SNAPSHOT.jar &"
+check_one_service "lisa.web_api.tasks" "service docker start && cd /root/module/lisa_/lisa/ && nohup docker-compose up --scale worker=5 &"
+done
+```
+
 
 
 | hostname | ip   | 服务                                                   |
 | -------- | ---- | ------------------------------------------------------ |
-| hbase    | 187  | hdfs-mater,hive,dump_hive_mysql,kafka                  |
+| hbase    | 187  | hdfs-mater,hive,dump_hive,dump_mysql,kafka,zookeeper   |
 | hbase1   | 186  | yarn-master,nginx                                      |
 | hbase2   | 185  | es,mysql,lisa2,grakn                                   |
 | lisa     | 184  | lisa1,java,lisa_submit1,lisa_submit2,dump_hdfs,dump_es |
@@ -146,6 +288,15 @@ java -jar dump_es-1.0-SNAPSHOT.jar  "/home/node/platform_data/stix/$(date -d las
 1   /home/node/paltform_data/sample1
 
 2  /home/node/paltform_data/sample
+
+
+
+```
+PATH=$PATH:/usr/local/bin:/usr/bin:/usr/local/sbin:/usr/sbin:/bin:/sbin
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib
+```
+
+
 
 ### lisa
 
@@ -235,7 +386,10 @@ delete  from cel...
 closing AMQP connection <0.13372.1> (172.42.0.10:41766 -> 172.42.0.13:5672):
 missed heartbeats from client, timeout: 60s
 添加定时重启celery的功能，缓解这种情况。由于它不消费没有什么特征，服务也在跑，只能定时了。
-在宿主机执行此命令，启动新的consumer。sudo docker exec -it $DOCKER_ID /bin/bash -c 'cd /home/lisa && ./docker/worker/init.sh'
+在宿主机执行此命令，启动新的consumer。
+在宿主机中杀死无用的消费者，发现自动创建新的消费者开始消费消息队列了。而且docker容器不会消失。但不知道何时阻塞，执行kill。设定定时半小时清除一次。
+ps -ef |grep lisa.web_api.tasks|grep -v "grep"|awk '{print $2}'|xargs kill -9
+sudo docker exec -it $DOCKER_ID /bin/bash -c 'cd /home/lisa && ./docker/worker/init.sh'
 ```
 
 

@@ -1396,6 +1396,21 @@ Connection提供了事务处理的方法，通过调用setAutoCommit(false)可�
 
 
 
+# NIO
+
+##### 路径拼接
+
+```
+#使用Paths.get拼接，或使用separatorChar。separatorChar可以实现不同平台的分隔符。
+Path currentRelativePath= Paths.get("");
+Path currentDir=currentRelativePath.toAbsolutePath();
+System.out.println(currentDir);
+
+String filename="data"+ File.separatorChar+"test.log";
+Path filepath=currentDir.resolve(filename);
+System.out.println(filepath);
+```
+
 
 
 # 待整理
