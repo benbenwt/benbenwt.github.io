@@ -1,6 +1,31 @@
-##### 重新安装pip
+### Anaconda
 
-##### 编译安装python
+```
+#安装
+
+#命令
+conda create -n pytorch python=3.6
+activate pytorch
+conda config --add channels https://mirrors.tuna.tsinghua.edu.cn/anaconda/pkgs/free/
+conda config --add channels https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/conda-forge 
+conda config --add channels https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/msys2/
+
+conda config --add channels https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/pytorch/
+
+conda install pytorch torchvision cudatoolkit=10.1 
+
+conda config --set remote_read_timeout_secs 1000.0
+进入pytorch生成对应命令
+conda install pytorch torchvision torchaudio cudatoolkit=11.1 --channels https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/pytorch/
+
+conda install --offline 包名
+```
+
+
+
+
+
+### 编译安装python
 
 ```
 yum remove python3 python3.x
@@ -17,6 +42,8 @@ make && make install
 pip install pythonModuleName -i https://mirrors.aliyun.com/pypi/simple
 pip install pythonModuleName --extra-index-url https://mirrors.aliyun.com/pypi/simple
 ```
+
+### problem
 
 ##### pycountry不可使用
 

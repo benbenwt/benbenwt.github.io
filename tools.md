@@ -1,5 +1,7 @@
 ##### TI
 
+life
+
 virustotal
 
 ibm x-force exchange
@@ -11,7 +13,9 @@ alienvultr
 virusshare
 
 ```
- security system state, security visualization, sit-uational awareness
+Data mining, Malware detection, Classification, Behavior-based, Signature-
+based
+security system state, security visualization, sit-uational awareness
 network security awareness; security situational awareness;
 big data; network threats; feature graph clustering; community discovery; attacker discovery; attac[…]
 摘自：基于大数据和图社群聚类算法的攻击者画像构建
@@ -54,8 +58,10 @@ Netpoketool
 
 ```
 #dataset
+malware,pcap,log,
 https://archive.ics.uci.edu/ml/index.php
 #site
+http://www.covert.io/
 https://www.researchgate.net/
 https://link.springer.com/chapter/10.1007%2F978-3-030-65726-0_4
 https://www.zhihu.com/question/30111950
