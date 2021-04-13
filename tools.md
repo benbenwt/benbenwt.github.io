@@ -1,5 +1,25 @@
 ##### TI
 
+```
+malware class 2015 microsoft 
+```
+
+```
+#ember安装和配置
+Install after cloning the EMBER repository
+Use pip or conda to install the required packages before installing ember itself:
+
+pip install -r requirements.txt
+python setup.py install
+conda config --add channels conda-forge
+conda install --file requirements_conda.txt
+python setup.py install
+#malconv安装
+安装pytorch
+```
+
+
+
 life
 
 virustotal
