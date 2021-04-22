@@ -18,6 +18,49 @@ user: iot  password:attify
 >
 >/scratch/number,存储生成的一键运行脚本和image.raw。
 
+```
+写漏洞脚本，如果需要ida操作，或网页操作呢。
+```
+
+```
+#tenda路由器qemu启动
+cp $(which qemu-arm-static) ./
+cp httpd  ./bin
+sudo chroot ./ ./qemu-arm-static ./bin/httpd
+
+#网络
+https://blog.csdn.net/song_lee/article/details/113800058
+会自动检索名称为br0的网卡,所以要事先在宿主机创建好br0
+sudo tunctl -t br0 -u iot          
+sudo ifconfig br0 192.168.10.1/24 
+```
+
+```
+Kernel IP routing table
+Destination     Gateway         Genmask         Flags Metric Ref    Use Iface
+default         _gateway        0.0.0.0         UG    100    0        0 ens32
+192.168.0.0     0.0.0.0         255.255.255.0   U     0      0        0 tap2_0
+192.168.0.1     192.168.0.1     255.255.255.255 UGH   0      0        0 tap2_0
+192.168.10.0    0.0.0.0         255.255.255.0   U     0      0        0 br0
+192.168.190.0   0.0.0.0         255.255.255.0   U     100    0        0 ens32
+目的网络，网关，子网掩码，U可用，G网关，H特定单一主机，Metric路由耗费，Iface网络接口
+```
+
+```
+poc,expr
+```
+
+```
+metasploit service ssl port:3790
+localhost:3650
+java -jar buirpsuite.jar
+sudo tcpdump -i tap1 icmp
+```
+
+
+
+
+
 ##### 使用流程
 
 ```
@@ -66,6 +109,12 @@ curl -d "SERVICES=DEVICE.ACCOUNT&attack=ture%0aAUTHORIZED_GROUP=1" "http://192.1
 
 
 
+qemu
+
+```
+qemu-img create -f raw "${IMAGE}" 1G
+```
+
 
 
 ##### run.sh
@@ -95,7 +144,7 @@ IMAGE=`get_fs ${IID}`
 KERNEL=`get_kernel ${ARCHEND}`
 #生成对应qemu指令,对应关系：armel:qemu-system.arm,mipseb:qemu-system-mips,mipsel:qemu-system-mipsel
 QEMU=`get_qemu ${ARCHEND}`
-#生成qemu使用的开发板类型
+#生成qemu使用的开发板类型,armel:virt,mipseb:malta,mipsel:malta
 QEMU_MACHINE=`get_qemu_machine ${ARCHEND}`
 #生成qemu虚拟机的根文件系统路径，对应为，armel:/dve/vda1,mipseb:/dev/sda1,mipsel:/dev/sda1
 QEMU_ROOTFS=`get_qemu_disk ${ARCHEND}`

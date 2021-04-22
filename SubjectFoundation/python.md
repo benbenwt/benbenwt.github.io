@@ -1,3 +1,41 @@
+##### EMBER
+
+```
+#ember安装和配置
+Install after cloning the EMBER repository
+Use pip or conda to install the required packages before installing ember itself:
+#use pip
+pip install -r requirements.txt
+python setup.py install
+#use conda
+conda config --add channels conda-forge
+conda install --file requirements_conda.txt
+python setup.py install
+#malconv安装
+安装pytorch
+```
+
+```
+#ember代码
+#malconv
+    def __init__(self, out_size=2, channels=128, window_size=512, embd_size=8):
+        super(MalConv, self).__init__()
+        #有257个数据，每个数据8维，补全为0，不进行补全。
+        self.embd = nn.Embedding(257,embd_size, padding_idx=0)
+        
+        self.window_size = window_size
+    	#输入向量的长度，词向量维度。卷积产生的通道，有多少个就需要多少个一维卷积。卷积核尺寸。卷积步长
+        self.conv_1 = nn.Conv1d(embd_size, channels, window_size, stride=window_size, bias=True)
+        self.conv_2 = nn.Conv1d(embd_size, channels, window_size, stride=window_size, bias=True)
+        #自适应最大池化，输出尺寸为(1,1)
+        self.pooling = nn.AdaptiveMaxPool1d(1)
+        #线性结构，前一层神经元和当前层神经元。
+        self.fc_1 = nn.Linear(channels, channels)
+        self.fc_2 = nn.Linear(channels, out_size)
+```
+
+
+
 ### Anaconda
 
 ```
@@ -26,31 +64,26 @@ conda update --all
 conda update --strict-channel-priority --all
 conda clean -i 
 ping mirror.tuna.tsinghua.edu.cn
+
+conda config --show-sources
+conda list
+conda info
 #创建新环境用conda创建，不要用pycharm，会创建失败。
 ```
 
 ```
-#.condar
+#.condarc配置,使用命令添加后仍无法下载。删除channels下的defaults，https改为http，添加后缀win-64
 channels:
+  - conda-forge
+  - http://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/pytorch/win-64
+  - http://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/msys2/win-64
+  - http://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/conda-forge/win-64
+  - http://mirrors.tuna.tsinghua.edu.cn/anaconda/pkgs/free/win-64
+  - http://mirrors.tuna.tsinghua.edu.cn/anaconda/pkgs/main/win-64
+remote_read_timeout_secs: 1000.0
 show_channel_urls: true
-channel_alias: https://mirrors.tuna.tsinghua.edu.cn/anaconda
-default_channels:
-  - https://mirrors.tuna.tsinghua.edu.cn/anaconda/pkgs/main
-  - https://mirrors.tuna.tsinghua.edu.cn/anaconda/pkgs/free
-  - https://mirrors.tuna.tsinghua.edu.cn/anaconda/pkgs/r
-  - https://mirrors.tuna.tsinghua.edu.cn/anaconda/pkgs/pro
-  - https://mirrors.tuna.tsinghua.edu.cn/anaconda/pkgs/msys2
-custom_channels:
-  conda-forge: https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud
-  msys2: https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud
-  bioconda: https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud
-  menpo: https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud
-  pytorch: https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud
-  simpleitk: https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud
-ssl_verify: false
+
 ```
-
-
 
 
 
@@ -64,12 +97,6 @@ yum install zlib-devel bzip2-devel openssl-devel ncurses-devel sqlite-devel read
 make && make install
 ```
 
-```
-#下载卡住快照
-删除channels下的defaults，https改为http，添加后缀win-64
-
-```
-
 
 
 ### pip
@@ -81,6 +108,13 @@ pip install pythonModuleName --extra-index-url https://mirrors.aliyun.com/pypi/s
 阿里的：http://mirrors.aliyun.com/pypi/simple/
 豆瓣的：http://pypi.douban.com/simple/
 ```
+
+```
+#pyinstaller
+pyinstaller -F test.py
+```
+
+
 
 ### problem
 
@@ -102,5 +136,11 @@ to
 
 3.Then rebuild using:
 PyInstaller --clean temp2.spec
+```
+
+##### collecting package metadata卡住
+
+```
+删除.condarc
 ```
 

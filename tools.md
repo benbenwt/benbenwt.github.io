@@ -1,26 +1,42 @@
 ##### TI
 
 ```
+固件：厂商官网
+Metasploit
+https://www.exploit-db.com/exploits/45909
+http://support.netgear.cn/doucument/More.asp?id=2251
+FirmTool是CNCERT自主研发一款固件脆弱性分析工具，主要用于工控和物联网固件的安全性检测，
+```
+
+
+
+```
+知乎
+```
+
+
+
+https://www.cvedetails.com/
+
+```
+扫描:漏洞（模拟攻击），恶意软件（静态，动态）
+入侵检测：日志，流量->画像（收集数据，统计），态势（资产，风险，ids）
+威胁情报
+```
+
+
+
+```
+用一个较复杂的模式去拟合数据中的规律和特征，也就是说使用其蕴含的信息进行决策的。人要懂得其中的关键性知识，特征，拟人性。一个人类完成这个任务需要什么知识，你使用模型实现也无可避免，不然无法去优化。
+```
+
+```
 malware class 2015 microsoft 
 ```
 
-```
-#ember安装和配置
-Install after cloning the EMBER repository
-Use pip or conda to install the required packages before installing ember itself:
-
-pip install -r requirements.txt
-python setup.py install
-conda config --add channels conda-forge
-conda install --file requirements_conda.txt
-python setup.py install
-#malconv安装
-安装pytorch
-```
-
-
-
 life
+
+https://www.cvedetails.com/
 
 virustotal
 
@@ -33,9 +49,15 @@ alienvultr
 virusshare
 
 ```
+ situational awareness, threat intelligence, game theory, network security, nash equilibrium
+malware image
+attacker behaviour modelling, cyber security,
+fusion hidden markov models, hidden markov models, honeypot,
+markov chain, sequence models, threat intelligence.
+big data; network threats; feature graph clustering; community discovery; attacker discovery; attacker portrait
 Data mining, Malware detection, Classification, Behavior-based, Signature-
 based
-security system state, security visualization, sit-uational awareness
+security system state, security visualization, situational awareness
 network security awareness; security situational awareness;
 big data; network threats; feature graph clustering; community discovery; attacker discovery; attac[…]
 摘自：基于大数据和图社群聚类算法的攻击者画像构建
@@ -92,31 +114,43 @@ https://www.sciencedirect.com/science/article/abs/pii/S0951832010000232?via%3Dih
 https://arxiv.org/abs/2003.05822
 ```
 
+```
+ida,jeb,ghidra
+```
+
 
 
 ##### 文献网站
 
-sci-hub
+```
+知乎,图书馆(iee,知网),谷歌,sci-hub
+```
+
+```
+github,kaggle,paperswithcode
+```
+
+```
+情报学报,dblp
+```
+
+```
+Fuzzers, Analysis, Backdoors, DoS, Exploits, Generic, Reconnaissance, Shellcode and Worms.
+```
+
+
 
 peer j
 
 connected paper
 
-papers code
 
-awesome list
 
-Aminor
+site:github:awesome list
 
-图书馆
 
-情报学报
 
-谷歌
 
-kaggle
-
-github
 
 ##### 下载
 
