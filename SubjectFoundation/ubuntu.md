@@ -301,6 +301,8 @@ ssh-copy-id无效
 
 /etc/sysconfig/network-scripts/ifcfg-exxx，
 
+sudo vi /etc/network/interfaces
+
 ip addr查看网卡
 
 单节点配置文件
@@ -325,6 +327,8 @@ yum list iostat
 
 ### 系统
 
+
+
 ##### crontab
 
 ```
@@ -348,6 +352,13 @@ arch 架构
 
 ```
 ps -aux|grep qemu|awk '{print $2}'|xargs kill -9
+```
+
+```
+#ens33 查看不到了
+ifconfig ens33  up
+sudo /sbin/dhclient
+sudo systemctl restart network-manager.service
 ```
 
 

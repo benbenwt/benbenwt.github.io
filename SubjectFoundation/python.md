@@ -39,9 +39,26 @@ python setup.py install
 ### Anaconda
 
 ```
+#jupyter切换虚拟环境
+conda install nb_conda
+conda install -c conda-forge nb_conda_kernels
+jupyter serverextension disable nb_conda
+jupyter serverextension enable nb_conda
+```
+
+```
+#jupyter ipprocess import error
+1.pip install ipywidgets
+2.jupyter nbextension enable --py widgetsnbextension
+```
+
+
+
+```
 #安装
 
 #命令
+
 conda create -n lisa --clone base
 conda create -n pytorch python=3.6
 activate pytorch
@@ -54,10 +71,17 @@ conda config --add channels https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/
 
 
 conda config --set remote_read_timeout_secs 1000.0
+#安装pytorch
 进入pytorch生成对应命令
 conda install pytorch torchvision torchaudio cpuonly -c pytorch --channels https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/pytorch/
-
+#安装tensofrflow
+conda install tensorflow -c https://mirrors.tuna.tsinghua.edu.cn/anaconda/pkgs/free/
 conda install --offline 包名
+#离线安装mkl
+到https://mirrors.bfsu.edu.cn/anaconda/pkgs/free/win-64/下载tar包
+到anaconda\Lib\site-packages\下创建tensorflow文件夹，放入tar包
+使用conda进入该目录，执行conda install --offline  -f 包名
+
 conda clean --all
 conda clean --packages --tarballs
 conda update --all
@@ -103,6 +127,7 @@ make && make install
 
 ```
 临时更换源
+pip install -i https://pypi.tuna.tsinghua.edu.cn/simple tensorflow
 pip install pythonModuleName -i https://mirrors.aliyun.com/pypi/simple
 pip install pythonModuleName --extra-index-url https://mirrors.aliyun.com/pypi/simple
 阿里的：http://mirrors.aliyun.com/pypi/simple/

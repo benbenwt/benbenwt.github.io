@@ -5,6 +5,7 @@
 Metasploit
 https://www.exploit-db.com/exploits/45909
 http://support.netgear.cn/doucument/More.asp?id=2251
+https://www.itdaan.com/so?q=NetGear%E5%A4%9A%E6%AC%BE%E8%B7%AF%E7%94%B1%E5%99%A8%E8%BF%9C%E7%A8%8B%E5%91%BD%E4%BB%A4%E6%B3%A8%E5%85%A5%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90+%E6%9B%B4%E6%96%B0%E8%A1%A5%E4%B8%81%E5%88%86%E6%9E%90+&page=8
 FirmTool是CNCERT自主研发一款固件脆弱性分析工具，主要用于工控和物联网固件的安全性检测，
 ```
 
