@@ -1,10 +1,24 @@
 ```
+java请求createfile接口，开始分析文件。
+查看pending，fail，success。
+success一个report，消息通知python进行获取转换（或者直接耦合进lisa，进行调用）
+·····················································································
+转换完成一个消息通知java进行提交到hdfs和es
+```
+
+
+
+```
 推荐版本Java8+Hadoop2.7+Spark2.4.5
 ```
 
 ```
 chmod +x /etc/rc.d/rc.local
 vim /etc/rc.d/rc.local
+```
+
+```
+提交的malware没写kafka
 ```
 
 
@@ -218,6 +232,8 @@ check_one_service "nginx"  "nginx"
 done
 ```
 
+hbase2
+
 ```
 #!/bin/bash
 export HADOOP_HOME=/root/module/hadoop-3.1.4
@@ -284,6 +300,12 @@ done
 | hbase1   | 186  | yarn-master,nginx                                      |
 | hbase2   | 185  | es,mysql,lisa2,grakn                                   |
 | lisa     | 184  | lisa1,java,lisa_submit1,lisa_submit2,dump_hdfs,dump_es |
+
+```
+lisa在/root/module/lisa_/lisa
+```
+
+
 
 1   /home/node/paltform_data/sample1
 
@@ -405,9 +427,11 @@ sudo docker exec -it $DOCKER_ID /bin/bash -c 'cd /home/lisa && ./docker/worker/i
 ##### 结构
 
 ```
-REACT build之后，将编译好的文件复制到nginx基础镜像中，路径为/usr/share/nginx/html,让nginx代理.代理ip和端口由docker build的webhost参数决定。
-前端用React编写，编译后由nginx代理。后端由flask编写，使用uwsgi进行代理。tasks运行在worker容器中，在worker中运行qemu，radare2等。worker和api为复用调用关系，api通过celery的远程调用模块，异步调用full_analysis或pcap_analysis.当worker数量增加时，也只用继续监听对应的celery队列，实现多个worker异步调用。相比于kafka，它省略了编写生产者和消费者的代码，直接用调用的代码形式，实现了消息的添加和读取。他和rpc还是不同的，rpc是服用调用的关系。当然，它也可以非异步方式调用，就成了rpc类似的，但无必要。它使用形参形式，传递所需要传递的消息。
-实际上api模块只用操作消息队列和数据库，以及存储文件。由worker控制读取。
+	REACT build之后，将编译好的文件复制到nginx基础镜像中，路径为/usr/share/nginx/html,让nginx代理.代理ip和端口由docker build的webhost参数决定。
+	前端用React编写，编译后由nginx代理。后端由flask编写，使用uwsgi进行代理。tasks运行在worker容器中，在worker中运行qemu，radare2等。worker和api为复用调用关系，api通过celery的远程调用模块，异步调用full_analysis或pcap_analysis.当worker数量增加时，也只用继续监听对应的celery队列，实现多个worker异步调用。
+	相比于kafka，它省略了编写生产者和消费者的代码，直接用调用的代码形式，实现了消息的添加和读取。他和rpc还是不同的，rpc是复用调用的关系。当然，它也可以非异步方式调用，就成了rpc类似的，但无必要。它使用形参形式，传递所需要传递的消息。
+	但是，为了实现直接本地调用函数名的抽象使用，必须在每台机器都有一份完整的生产者和消费者代码。而传统的消息队列是不需要的。
+	实际上api模块只用操作消息队列和数据库，以及存储文件。由worker控制读取。
 
 D:\lisa_docker\lisa\lisa\web_api中为后端的是实现代码，python的flask实现。
 @app.route('/api/tasks/create/file', methods=['POST']）提交样本的接口.

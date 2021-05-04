@@ -1,6 +1,22 @@
 ##### TI
 
 ```
+in:name React stars:>5000
+ in:readme React
+ in:description 
+```
+
+
+
+```
+#ti
+基于符号逻辑和统计推理方法
+Peer-To-Peer，RDF，OWL EL。Gray XMT  RDFS推理。
+```
+
+
+
+```
 固件：厂商官网
 Metasploit
 https://www.exploit-db.com/exploits/45909
@@ -186,3 +202,9 @@ openCTI 情报下载
 CTI 
 
 grakn ai:图数据库
+
+```
+#Daily
+
+```
+

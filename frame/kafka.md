@@ -43,6 +43,12 @@ kafka由多个broker构成，每个broker由topic和partion构成，一个topic�
 
 同一个分区的数据只能被同一个cg里的一个消费者消费。
 
+```
+conda install --channel https://conda.anaconda.org/conda-forge kafka-python
+```
+
+
+
 ##### 版本
 
 >kafka 2.4.1 zookeeper 3.5.9
@@ -71,6 +77,7 @@ bin/zookeeper-server-start.sh config/zookeeper.properties
 bin/kafka-server-start.sh config/server.properties
 bin/kafka-server-stop.sh
 bin/kafka-topics.sh --create --bootstrap-server hbase:9092 --replication-factor 1 --partitions 1 --topic test
+#查看所有topic
 bin/kafka-topics.sh --list --bootstrap-server hbase:9092
 test
 bin/kafka-topics.sh --delete --zookeeper localhost:2181 --topic test
