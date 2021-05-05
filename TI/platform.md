@@ -1,4 +1,18 @@
 ```
+一个页面，三个分页
+```
+
+
+
+```
+pip安装stix2，使用清华源。pip安装kafka
+复制transfer.py,producer.py
+更改tasks.py,添加transfer调用和kafka。
+```
+
+
+
+```
 java请求createfile接口，开始分析文件。
 查看pending，fail，success。
 success一个report，消息通知python进行获取转换（或者直接耦合进lisa，进行调用）
@@ -298,7 +312,7 @@ done
 | -------- | ---- | ------------------------------------------------------ |
 | hbase    | 187  | hdfs-mater,hive,dump_hive,dump_mysql,kafka,zookeeper   |
 | hbase1   | 186  | yarn-master,nginx                                      |
-| hbase2   | 185  | es,mysql,lisa2,grakn                                   |
+| hbase2   | 185  | elastic,mysql,lisa2,grakn,dump_hdfs,dump_es            |
 | lisa     | 184  | lisa1,java,lisa_submit1,lisa_submit2,dump_hdfs,dump_es |
 
 ```

@@ -20,6 +20,18 @@ var arr1=new Array()
 
 arr1.push({value:value});
 
+**遍历**
+
+```
+$.each(map,function(k,v)
+	{
+		console.log(k);
+	}
+)
+```
+
+
+
 ##### Map
 
 var map1=new Map()
@@ -92,48 +104,16 @@ $(".form-control").keypress(function (e) {
 
 ##### 页面json显示失效
 
-解决：jquery代码
-
 ```
-var pre_var=$("<pre></pre>").append(syntaxHighlight(response));
-$("#show_report").append(pre_var);
-```
-
-css代码
-
-```
-<style >
-    #show_port{
-    pre {
-        outline: 1px solid #ccc;
-        padding: 5px;
-        .json-string {
-            color: #c62628;
-        }
-        .json-number, .json-boolean {
-            color: #1f1bcc;
-        }
-        .json-null {
-            color: #818181;
-        }
-        .json-key {
-            color: #861d8f;
-        }
-        }
+function format_json(json)
+    {
+        json=JSON.stringify(JSON.parse(json),null,4);
+        return json;
     }
-</style>
+//解析字符串为json对象，再转为缩进字符串。注意，有时候reponse看起来是json实际上为jsonobject，如lisa的report返回值。此时会提醒Unexpected token o in JSON at position 1,实际上它解析的是"[Object Object]"，故position1为字符o。
 ```
 
-html代码
 
-```
-<div id="main" >
-    <div id="show_report" style="width: 80%;height:70%;background-color: ghostwhite;">
-
-    </div>
-
-</div>
-```
 
 ##### 跳转失效
 
@@ -212,3 +192,17 @@ html代码
 ##### ajax异步问题
 
 使用异步时，可能在静态页面之前调用了succss回调函数，使得函数失效。使用同步即可。
+
+**通过参数控制添加函数**
+
+```
+function test(funcName)
+{
+	$("<a></a>").click(fucntion(){
+		eval(funcName)();//func形参为func2时，这一句本质上是func2()
+	});
+}
+test("fucn2")//为a标签添加func2函数点击
+eval会执行参数中的js返回结果
+```
+
