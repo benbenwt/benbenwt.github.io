@@ -133,7 +133,7 @@ java -jar /root/module/dump_hdfs-1.0-SNAPSHOT.jar  "/home/node/platform_data/sti
 
 crontab -e
 提交stix
-1 0  * * *   /root/module/dump_hdfs.sh
+1 0  * * *   * i/root/module/dump_hdfs.sh
 1 0  * * *   /root/module/dump_es.sh
 提交到lisa，生成stix
 1 0 * * *   /root/module/clock_py.sh
@@ -308,12 +308,12 @@ done
 
 
 
-| hostname | ip   | 服务                                                   |
-| -------- | ---- | ------------------------------------------------------ |
-| hbase    | 187  | hdfs-mater,hive,dump_hive,dump_mysql,kafka,zookeeper   |
-| hbase1   | 186  | yarn-master,nginx                                      |
-| hbase2   | 185  | elastic,mysql,lisa2,grakn,dump_hdfs,dump_es            |
-| lisa     | 184  | lisa1,java,lisa_submit1,lisa_submit2,dump_hdfs,dump_es |
+| hostname | ip   | 服务                                                        |
+| -------- | ---- | ----------------------------------------------------------- |
+| hbase    | 187  | hdfs-mater,hive,dump_hive,dump_mysql,kafka,zookeeper        |
+| hbase1   | 186  | yarn-master,nginx                                           |
+| hbase2   | 185  | elastic,mysql,lisa2,grakn,dump_hdfs,dump_es                 |
+| lisa     | 184  | lisa1,es_provider,mapreduce,lisa_submit1,,dump_hdfs,dump_es |
 
 ```
 lisa在/root/module/lisa_/lisa
