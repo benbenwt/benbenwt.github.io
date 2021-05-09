@@ -76,6 +76,15 @@ RUN iprange -j data/blacklists/* > data/ipblacklist \
 CMD ["./docker/worker/init.sh"]
 ```
 
+```
+#image
+docker save 0fdf2b4c26d3 > hangge_server.tar
+docker load < hangge_server.tar
+#container
+docker export f299f501774c > hangger_server.tar
+docker import - new_hangger_server < hangger_server.tar
+```
+
 
 
 # docker概述

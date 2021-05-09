@@ -1,6 +1,13 @@
 ##### TI
 
 ```
+hdfs延时，es不延时
+hdfs输入只能为一个文件夹？
+```
+
+
+
+```
 in:name React stars:>5000
  in:readme React
  in:description 
