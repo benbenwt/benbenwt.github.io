@@ -6,6 +6,16 @@ funtion  function_name(param){} ,不会自动执行，通过按键或函数调�
 
 $(function (){})，加载页面后自动执行
 
+### for
+
+```
+for(int i;)
+for(object in content.objects)
+  
+```
+
+
+
 ### each
 
 $.each(list,function(index,item){
