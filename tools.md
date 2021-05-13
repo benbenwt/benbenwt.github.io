@@ -1,4 +1,17 @@
 ```
+爬虫证书
+keytool -list -keystore cacerts -alias vbooking
+keytool -import -alias abc -keystore cacerts -file D://abc.cer
+changeit
+https://tracker.virusshare.com:7000/torrents/VirusShare_00000.zip.torrent?3B9193870FF50310C54EA415C2F21274A795B76C
+
+删除path环境变量的:C:\Program Files (x86)\Common Files\Oracle\Java\javapath
+java security的tsl,certpath
+```
+
+
+
+```
 #tempory
 e09ca031-c3a9-4be2-a082-9cf209b215e4
 ```
