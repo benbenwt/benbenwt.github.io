@@ -93,3 +93,9 @@ mvn -version
 点击execute maven goal，执行mvn idea:idea，mvn -U idea:idea
 
 http://maven.apache.org/plugins/maven-idea-plugin/usage.html
+
+**could not found artifactid**
+
+pom.xml -> maven ->Generate Source And Updete folds
+
+或将父工程先打包

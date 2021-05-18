@@ -1398,7 +1398,15 @@ Connection提供了事务处理的方法，通过调用setAutoCommit(false)可�
 
 # NIO
 
-##### 路径拼接
+
+
+# 待整理
+
+| 类型       | byte | short | int  | long | float | double | char | boolean |
+| ---------- | ---- | ----- | ---- | ---- | ----- | ------ | ---- | ------- |
+| 长度(字节) | 1    | 2     | 4    | 8    | 4     | 8      | 4    | 8       |
+
+### 路径拼接
 
 ```
 #使用Paths.get拼接，或使用separatorChar。separatorChar可以实现不同平台的分隔符。
@@ -1413,11 +1421,28 @@ System.out.println(filepath);
 
 
 
-# 待整理
+##### 路径问题
 
-| 类型       | byte | short | int  | long | float | double | char | boolean |
-| ---------- | ---- | ----- | ---- | ---- | ----- | ------ | ---- | ------- |
-| 长度(字节) | 1    | 2     | 4    | 8    | 4     | 8      | 4    | 8       |
+```
+new File("").getAbsolutePath（）得到jar包放置的目录。使用idea运行得到项目根目录。
+
+打包后无src->main等路径，如果访问jar包内文件，要通过如下方式访问。
+以main和resources为合并的根目录，再加上META-INF文件夹组成根目录。输入相对路径访问即可。如果访问外部，通过绝对路径访问。
+#访问jar包内
+this.getClass().getResource("/library.properties").getPath();
+this.getClass().getClassLoader().getResource()；
+this.getClass().getClassLoader().getResourceAsStream("logback.xml");
+```
+
+##### 自定义外部配置文件
+
+```
+一般使用源码发布，所以不使用所谓的外部配置文件。
+1使用类加载器加载配置文件，可以加载jar内部文件。
+2使用file直接读取jar包外部文件
+3使用Properties类保存属性集
+4使用ResourceBundle
+```
 
 
 

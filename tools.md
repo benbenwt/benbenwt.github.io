@@ -1,4 +1,32 @@
 ```
+#qbittorrent
+https://www.thepythoncode.com/article/download-torrent-files-in-python
+https://www.qbittorrent.org/download.php
+Python wrapper for qBittorrent Web API (for versions above 4.1, for version below and above v3.1.x please use 0.3.1 version).
+```
+
+
+
+```
+#space不够
+权限问题，
+是使用qbittorrent 3.3,python-qbittorrent 0.3.1
+也可4.3.5与0.4.2
+#qbittorrent
+pip3 install python-qbittorrent
+yum -y install epel-release
+yum install qbittorrent-nox.x86_64
+#version
+yum --showduplicates list PACKAGE | expand
+yum install <package name>-<version info>
+```
+
+
+
+```
+apiKey :3103738dd023eb285405409cd17cf817b6207cf654ee5dac47a35ea538aa39fd
+#malware source
+https://zeltser.com/malware-sample-sources/
 爬虫证书
 keytool -list -keystore cacerts -alias vbooking
 keytool -import -alias abc -keystore cacerts -file D://abc.cer

@@ -137,6 +137,8 @@ pip install pythonModuleName --extra-index-url https://mirrors.aliyun.com/pypi/s
 ```
 #pyinstaller
 pyinstaller -F test.py
+#重装pip
+python3 -m pip install --upgrade --force-reinstall pip
 ```
 
 

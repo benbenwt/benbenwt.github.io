@@ -1,14 +1,3 @@
-# 搭建博客
-
-​		创建名为username.github.io的repository。进入setting，开启pages，选择主题下载它的压缩包，解压后上传放在repository中。[index.md](http://index.md/)为根网页,目录结构会被解析为路径，md文件会被解析为静态网页，也可以不写html后缀访问。使用nginx反向代理国内访问。谷歌收录，使用site语法查询，若没有则进入search console操作。添加网址，加头部，上传html都试一下。添加站点地图，若失败，试试html等格式的sitemap。添加robots.txt。
-
-## 基本语法
-
-为了建立静态页面之间的关系，进行页面跳转，使用规定语法进行。
-
-### 链接
-英文方括号加圆弧括号 方括号填写名称，圆弧括号内为网页路径
-
 # git命令
 
 >本地仓库由三棵树构成，
@@ -17,6 +6,17 @@
 >拉取时的顺序相反，所有有时可以使用暂存目录区域的内容恢复拉取操作之前的内容。
 >
 >实际提交改动通过push将head区域中的文件推送到远程仓库。
+
+### 克隆子模块
+
+```
+git submodule add <url> <path>
+git submodule init
+git submodule update
+git submodule update --init --recursive
+```
+
+
 
 ### 添加代理
 
@@ -134,4 +134,17 @@ test/
 
 需要重新编译git
 
-https://blog.csdn.net/RedKeyer/article/details/96119320
+https://blog.csdn.net/RedKeyer/article/details/96119
+
+# 搭建博客
+
+​		创建名为username.github.io的repository。进入setting，开启pages，选择主题下载它的压缩包，解压后上传放在repository中。[index.md](http://index.md/)为根网页,目录结构会被解析为路径，md文件会被解析为静态网页，也可以不写html后缀访问。使用nginx反向代理国内访问。谷歌收录，使用site语法查询，若没有则进入search console操作。添加网址，加头部，上传html都试一下。添加站点地图，若失败，试试html等格式的sitemap。添加robots.txt。
+
+## 基本语法
+
+为了建立静态页面之间的关系，进行页面跳转，使用规定语法进行。
+
+### 链接
+英文方括号加圆弧括号 方括号填写名称，圆弧括号内为网页路径
+
+320

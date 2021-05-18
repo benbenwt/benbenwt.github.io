@@ -68,6 +68,8 @@ get /zk_test
 set /zk_test name
 delete /zk_test
 
+C:\Users\guo\Desktop\lab\Result\stix2\VirusShare_ELF_20200405_part8\598bbee58a81eec6d30326d207a260b9.json
+C:\Users\guo\Desktop\lab\Result\stix2\VirusShare_ELF_20200405_part8\0598aea3e4e081d8ce1cda8649f8b0ec.json
 ```
 
 ```
@@ -81,7 +83,7 @@ bin/kafka-topics.sh --create --bootstrap-server hbase:9092 --replication-factor 
 bin/kafka-topics.sh --list --bootstrap-server hbase:9092
 test
 bin/kafka-topics.sh --delete --zookeeper localhost:2181 --topic test
-bin/kafka-console-producer.sh --broker-list hbase:9092 --topic test
+bin/kafka-console-producer.sh --broker-list hbase:9092 --topic l
 bin/kafka-console-consumer.sh --bootstrap-server hbase:9092 --topic test --from-beginning
 ```
 
@@ -91,5 +93,9 @@ bin/kafka-console-consumer.sh --bootstrap-server hbase:9092 --topic test --from-
 
 ```
 开启过多消费者，将限制的进程杀死即可恢复。
+```
+
+```
+查看客户端是否reset offset，若显示了则一般正常。
 ```
 

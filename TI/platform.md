@@ -1,4 +1,43 @@
 ```
+年
+```
+
+![f0b9a578f02dc6bbd3b5fc08dbb09ac3.png](https://img-blog.csdnimg.cn/img_convert/f0b9a578f02dc6bbd3b5fc08dbb09ac3.png)
+
+```
+lisa 得stix文件filenotfound ，字符串多了个""
+```
+
+
+
+```
+
+全部单个提交到hdfs，存储位置？
+mapreduce一次多个信息或一次一个？得到很多独立小文件，然后合并？
+dumpmysql较随意
+```
+
+
+
+```
+
+# Configure logging for testing: optionally with log file
+log4j.rootLogger=WARN, stdout
+# log4j.rootLogger=WARN, stdout, logfile
+
+log4j.appender.stdout=org.apache.log4j.ConsoleAppender
+log4j.appender.stdout.layout=org.apache.log4j.PatternLayout
+log4j.appender.stdout.layout.ConversionPattern=%d %p [%c] - %m%n
+
+log4j.appender.logfile=org.apache.log4j.FileAppender
+log4j.appender.logfile.File=target/spring.log
+log4j.appender.logfile.layout=org.apache.log4j.PatternLayout
+log4j.appender.logfile.layout.ConversionPattern=%d %p [%c] - %m%n
+```
+
+
+
+```
 	81eae37d2085933c9c3052bf53eac459,	91a33cf58ed899057876e80b1e083854这个样本有公网ip结果
 	a5c26b11-03a7-4c13-a89e-1b4708aefa62
 ```
