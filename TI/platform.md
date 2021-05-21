@@ -1,4 +1,31 @@
 ```
+#select by month，7 month
+SELECT category_id categoryId,category,value,time FROM category_tbl a WHERE a.time IN (SELECT lastday from(SELECT   MAX(time) AS lastday,DATE_FORMAT(time,'%Y-%m') AS subtime FROM category_tbl  GROUP BY subtime ORDER BY lastday DESC LIMIT 7) as lastdaylist)AND a.category IN
+(SELECT * FROM (SELECT category FROM category_tbl  GROUP BY category  ORDER BY  count(category) DESC LIMIT 2)AS category_list) ORDER BY category,timexxxxxxxxxx SELECT category_id categoryId,category,value,time FROM category_tbl a WHERE a.time IN (SELECT lastday from(SELECT   MAX(time) AS lastday,DATE_FORMAT(time,'%Y-%m') AS subtime FROM category_tbl  GROUP BY subtime ORDER BY lastday DESC LIMIT 7) as lastdaylist)AND a.category IN(SELECT * FROM (SELECT category FROM category_tbl  GROUP BY category  ORDER BY  count(category) DESC LIMIT 2)AS category_list) ORDER BY category,timeSELECT   MAX(time) AS lastday,DATE_FORMAT(time,'%Y-%m') AS subtime FROM category_tbl  GROUP BY subtime
+```
+
+
+
+| hostname | ip   | 服务                                                        |
+| -------- | ---- | ----------------------------------------------------------- |
+| hbase    | 187  | hdfs-mater,hive,dump_hive,dump_mysql,kafka,zookeeper        |
+| hbase1   | 186  | yarn-master,nginx                                           |
+| hbase2   | 185  | elastic,mysql,lisa2,grakn,dump_hdfs,dump_es                 |
+| lisa     | 184  | lisa1,es_provider,mapreduce,lisa_submit1,,dump_hdfs,dump_es |
+
+```
+/usr/bin/q
+```
+
+
+
+```
+scp   root@hbase1:/root/module/webpages
+```
+
+
+
+```
 年
 ```
 

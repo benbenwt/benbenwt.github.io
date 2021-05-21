@@ -1,4 +1,7 @@
+
+
 # 背景
+
 >kafka是一种分布式的基于发布与订阅的消息队列。
 
 ## 异步处理
@@ -53,6 +56,12 @@ conda install --channel https://conda.anaconda.org/conda-forge kafka-python
 
 >kafka 2.4.1 zookeeper 3.5.9
 
+```
+kibana 5601,es 9200
+```
+
+
+
 ##### standalone
 
 ```
@@ -83,7 +92,7 @@ bin/kafka-topics.sh --create --bootstrap-server hbase:9092 --replication-factor 
 bin/kafka-topics.sh --list --bootstrap-server hbase:9092
 test
 bin/kafka-topics.sh --delete --zookeeper localhost:2181 --topic test
-bin/kafka-console-producer.sh --broker-list hbase:9092 --topic l
+bin/kafka-console-producer.sh --broker-list hbase:9092 --topic 
 bin/kafka-console-consumer.sh --bootstrap-server hbase:9092 --topic test --from-beginning
 ```
 

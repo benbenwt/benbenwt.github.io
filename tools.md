@@ -1,4 +1,27 @@
 ```
+group关闭后，无法重置offset
+```
+
+
+
+```
+kafka乱码
+
+来源此处中文乱码：LOC-['u7231u5c14u5170', 'u7f8eu56fd']
+python的producer加入,json.dump(result,ensure_ascii=false)
+java的consumer用utf解码，并用StringEscapeUtil解码字符串.
+
+```
+
+
+
+```
+SELECT FROM_UNIXTIME(sm_time,'%Y') as years FROM sentiment GROUP BY years
+```
+
+
+
+```
 #qbittorrent
 https://www.thepythoncode.com/article/download-torrent-files-in-python
 https://www.qbittorrent.org/download.php

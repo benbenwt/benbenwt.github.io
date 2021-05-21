@@ -1,4 +1,22 @@
+```
+POST /_aliases
+{
+  "actions": [
+    {
+      "add": {
+        "index": "my_index",
+        "alias": "my_index_alias"
+      }
+    }
+  ]
+}
+```
+
+
+
 es 7.11
+
+9200
 
 /etc/sysconfig/network-scripts/ifcfg-exxx，
 
@@ -63,7 +81,7 @@ GET
 
 ```
 GET /customer/_doc/1
-curl -X GET "hbase2t:9200/customer/_doc/1?pretty"
+curl -X GET "hbase2:9200/customer/_doc/1?pretty"
 ```
 
 PUT
@@ -162,7 +180,9 @@ pkill -F pid
 
 `git clone git://github.com/mobz/elasticsearch-head.git`
 
-### search
+### search 搜索属性
+
+
 
 ```
 #搜索数据
@@ -171,7 +191,25 @@ GET /myindex/user/1001
 GET /myindex/user/_search
 #
 GET /myindex/user/_search?q=age:21
+GET /myindex/user/_count
+updated:13114  total:13156  myindex:13156
+GET /cti/_search?q=_id=66d90772d57e5e72172186674fb79347
 ```
+
+```
+导入数据
+POST _reindex
+{
+  "source": {
+    "index": "myindex"
+  }
+  , "dest": {
+    "index": "cti"
+  }
+}
+```
+
+
 
 DSL搜索
 
