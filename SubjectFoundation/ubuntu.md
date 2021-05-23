@@ -210,6 +210,54 @@ rsync     -rvl  /tmp   root@hbae:/tmp
 
 ### 文件
 
+```
+1、 统计当前文件夹下文件的个数
+
+　　ls -l |grep "^-"|wc -l
+
+2、 统计当前文件夹下目录的个数
+
+　　ls -l |grep "^d"|wc -l
+
+3、统计当前文件夹下文件的个数，包括子文件夹里的 
+
+　　ls -lR|grep "^-"|wc -l
+
+4、统计文件夹下目录的个数，包括子文件夹里的
+
+　　ls -lR|grep "^d"|wc -l
+
+grep "^-" 
+
+　　这里将长列表输出信息过滤一部分，只保留一般文件，如果只保留目录就是 ^d
+
+wc -l 
+
+　　统计输出信息的行数，因为已经过滤得只剩一般文件了，所以统计结果就是一般文件信息的行数，又由于一行信息对应一个文件，所以也就是文件的个数。
+```
+
+```
+遍历文件夹删除特定文件，清除lisa的所有存储，保留report.json。
+#! /bin/bash
+function read_dir(){
+for file in `ls $1` #注意此处这是两个反引号，表示运行系统命令
+do
+ if [ -d $1"/"$file ] #注意此处之间一定要加上空格，否则会报错
+ then
+ read_dir $1"/"$file
+ else
+ if [ $file != 'report.json'];then
+ rm -rf $1"/"$file
+ echo $1"/"$file #在此处处理文件即可
+ fi
+done
+} 
+#读取第一个参数
+read_dir $1
+```
+
+
+
 ##### 常用目录
 
 /etc/hosts

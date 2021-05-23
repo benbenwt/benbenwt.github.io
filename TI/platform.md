@@ -1,4 +1,10 @@
 ```
+curl -X GET localhost:9200/_cat/indices?v
+```
+
+
+
+```
 #select by month，7 month
 SELECT category_id categoryId,category,value,time FROM category_tbl a WHERE a.time IN (SELECT lastday from(SELECT   MAX(time) AS lastday,DATE_FORMAT(time,'%Y-%m') AS subtime FROM category_tbl  GROUP BY subtime ORDER BY lastday DESC LIMIT 7) as lastdaylist)AND a.category IN
 (SELECT * FROM (SELECT category FROM category_tbl  GROUP BY category  ORDER BY  count(category) DESC LIMIT 2)AS category_list) ORDER BY category,timexxxxxxxxxx SELECT category_id categoryId,category,value,time FROM category_tbl a WHERE a.time IN (SELECT lastday from(SELECT   MAX(time) AS lastday,DATE_FORMAT(time,'%Y-%m') AS subtime FROM category_tbl  GROUP BY subtime ORDER BY lastday DESC LIMIT 7) as lastdaylist)AND a.category IN(SELECT * FROM (SELECT category FROM category_tbl  GROUP BY category  ORDER BY  count(category) DESC LIMIT 2)AS category_list) ORDER BY category,timeSELECT   MAX(time) AS lastday,DATE_FORMAT(time,'%Y-%m') AS subtime FROM category_tbl  GROUP BY subtime

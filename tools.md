@@ -1,4 +1,10 @@
 ```
+hdfs :hive:May 22 20:40  copy14  copy 119
+```
+
+
+
+```
 group关闭后，无法重置offset
 ```
 
