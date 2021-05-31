@@ -155,7 +155,8 @@ alienvultr
 virusshare
 
 ```
- situational awareness, threat intelligence, game theory, network security, nash equilibrium
+基于置信规则库的网络安全态势感知技术研究
+situational awareness, threat intelligence, game theory, network security, nash equilibrium
 malware image
 attacker behaviour modelling, cyber security,
 fusion hidden markov models, hidden markov models, honeypot,

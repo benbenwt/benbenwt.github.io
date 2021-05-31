@@ -1,16 +1,22 @@
 ```
-curl -X GET localhost:9200/_cat/indices?v
+
+```
+
+```
+xs.glgoo.net
 ```
 
 
+
+```
+curl -X GET localhost:9200/_cat/indices?v
+```
 
 ```
 #select by month，7 month
 SELECT category_id categoryId,category,value,time FROM category_tbl a WHERE a.time IN (SELECT lastday from(SELECT   MAX(time) AS lastday,DATE_FORMAT(time,'%Y-%m') AS subtime FROM category_tbl  GROUP BY subtime ORDER BY lastday DESC LIMIT 7) as lastdaylist)AND a.category IN
 (SELECT * FROM (SELECT category FROM category_tbl  GROUP BY category  ORDER BY  count(category) DESC LIMIT 2)AS category_list) ORDER BY category,timexxxxxxxxxx SELECT category_id categoryId,category,value,time FROM category_tbl a WHERE a.time IN (SELECT lastday from(SELECT   MAX(time) AS lastday,DATE_FORMAT(time,'%Y-%m') AS subtime FROM category_tbl  GROUP BY subtime ORDER BY lastday DESC LIMIT 7) as lastdaylist)AND a.category IN(SELECT * FROM (SELECT category FROM category_tbl  GROUP BY category  ORDER BY  count(category) DESC LIMIT 2)AS category_list) ORDER BY category,timeSELECT   MAX(time) AS lastday,DATE_FORMAT(time,'%Y-%m') AS subtime FROM category_tbl  GROUP BY subtime
 ```
-
-
 
 | hostname | ip   | 服务                                                        |
 | -------- | ---- | ----------------------------------------------------------- |
@@ -23,13 +29,9 @@ SELECT category_id categoryId,category,value,time FROM category_tbl a WHERE a.ti
 /usr/bin/q
 ```
 
-
-
 ```
 scp   root@hbase1:/root/module/webpages
 ```
-
-
 
 ```
 年
@@ -68,8 +70,6 @@ log4j.appender.logfile.layout=org.apache.log4j.PatternLayout
 log4j.appender.logfile.layout.ConversionPattern=%d %p [%c] - %m%n
 ```
 
-
-
 ```
 	81eae37d2085933c9c3052bf53eac459,	91a33cf58ed899057876e80b1e083854这个样本有公网ip结果
 	a5c26b11-03a7-4c13-a89e-1b4708aefa62
@@ -99,8 +99,6 @@ success一个report，消息通知python进行获取转换（或者直接耦合�
 转换完成一个消息通知java进行提交到hdfs和es
 ```
 
-
-
 ```
 推荐版本Java8+Hadoop2.7+Spark2.4.5
 ```
@@ -113,8 +111,6 @@ vim /etc/rc.d/rc.local
 ```
 提交的malware没写kafka
 ```
-
-
 
 ### 版本
 

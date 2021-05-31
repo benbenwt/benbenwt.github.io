@@ -1,204 +1,219 @@
-- SDO
+```
+#Cti来源
+https://api.xforce.ibmcloud.com/doc/
+#虚拟网络拓扑平台
+https://www.nsnam.org/doxygen/group__brite.html#details
+#虚拟网络管理工具
+https://libvirt.org/
+#美国cve库
+https://nvd.nist.gov/vuln/data-feeds#CVE_FEED
+https://thecyberthreat.com/cyber-threat-intelligence-feeds/
+#工具
+Protege OWL编辑器：提供SWRLDroolsTab作为Drools规则引擎，OWL-manchester语法
+https://protege.stanford.edu/
+TopBraid Composer，java的Pellet拥有SWRL内置规则开发和执行。
+```
 
-  攻击者的意图，前期活动，部署恶意软件执行。
-  我们只能对软件进行分析，活动和意图无法复现。
-  ​
-  ​分析软件提取：静态分析得到（攻击链，类型），动态分析
-  一手检测：攻击者，组织，设施。不然只能爬取别人的数据。
-  高级别抽象的的数据：目标，动机
-  ​还有分析的工具啥的，直接填。
 
-  - attack pattern
 
-    ttp：Tactics、技术Techniques和过程Procedures
+SDO
 
-    - external references
-      "external_references": [              
-        {                    "source_name": "capec",                    
-      "url": "https://capec.mitre.org/data/definitions/148.html",               
-           "external_id": "CAPEC-148"                }        
-          ]
-      使用capec规定的pattern，可从微步得到
+攻击者的意图，前期活动，部署恶意软件执行。
+我们只能对软件进行分析，活动和意图无法复现。
+​
+​分析软件提取：静态分析得到（攻击链，类型），动态分析
+一手检测：攻击者，组织，设施。不然只能爬取别人的数据。
+高级别抽象的的数据：目标，动机
+​还有分析的工具啥的，直接填。
 
-    - name
-      并非指attackpattern
+- attack pattern
 
-    - kill_chain_phases
-      ida
+  ttp：Tactics、技术Techniques和过程Procedures
 
-    - creating_by_ref
-      攻击者
+  - external references
+    "external_references": [              
+      {                    "source_name": "capec",                    
+    "url": "https://capec.mitre.org/data/definitions/148.html",               
+         "external_id": "CAPEC-148"                }        
+        ]
+    使用capec规定的pattern，可从微步得到
 
-    - object_marking_refs
-      marking_definition:决定数据分享标准
-      {          "type": "marking-definition",  
-              "spec_version": "2.1",        
-        "id": "marking-definition--f88d31f6-486f-44da-b317-01333bde0b82",          
-      "created": "2017-01-20T00:00:00.000Z",       
-         "definition_type": "tlp",      
-          "definition": {              "tlp": "amber"          }   
-         },
-      ​用于与正确的受众共享信息
+  - name
+    并非指attackpattern
 
-    - 非内嵌关系
+  - kill_chain_phases
+    ida
 
-      - delivers  malware
+  - creating_by_ref
+    攻击者
 
-      - targets identity,location,vulnerability
+  - object_marking_refs
+    marking_definition:决定数据分享标准
+    {          "type": "marking-definition",  
+            "spec_version": "2.1",        
+      "id": "marking-definition--f88d31f6-486f-44da-b317-01333bde0b82",          
+    "created": "2017-01-20T00:00:00.000Z",       
+       "definition_type": "tlp",      
+        "definition": {              "tlp": "amber"          }   
+       },
+    ​用于与正确的受众共享信息
 
-      - uses
+  - 非内嵌关系
 
-  - compaign
+    - delivers  malware
 
-    - name，description
+    - targets identity,location,vulnerability
 
-    - first_seen,last_seen,objective（目标）
+    - uses
 
-  - course of  action
-    - action...
+- compaign
 
-  - grouping
+  - name，description
 
-  - identity
+  - first_seen,last_seen,objective（目标）
 
-  - indicator
+- course of  action
+  - action...
 
-  - infrastructure
+- grouping
 
-    - infrastructure_types
-      infrastructure-type-ov设施作用，如放大，干扰等
+- identity
 
-    - kill_chain_phases
+- indicator
 
-  - Intrusion set
+- infrastructure
 
-    - goals
-      ?
+  - infrastructure_types
+    infrastructure-type-ov设施作用，如放大，干扰等
 
-    - fitst_seen,last_seen
+  - kill_chain_phases
 
-    - resource_level
-      value came from vocabulary attack-resoutce-level-ov
-      ​个人，队伍，组织等。
+- Intrusion set
 
-    - motivation...
+  - goals
+    ?
 
-    - 固定内嵌
+  - fitst_seen,last_seen
 
-    - 其他关系
-      attributed-to threat-actor
-      compromises infrastructure
-      hosts,owns  infrastructure
-      originates-from location
-      ​
+  - resource_level
+    value came from vocabulary attack-resoutce-level-ov
+    ​个人，队伍，组织等。
 
-  - location
+  - motivation...
 
-    - name，des
+  - 固定内嵌
 
-    - latitude，longitude
+  - 其他关系
+    attributed-to threat-actor
+    compromises infrastructure
+    hosts,owns  infrastructure
+    originates-from location
+    ​
 
-    - precision精度
+- location
 
-    - region
+  - name，des
 
-    - country
+  - latitude，longitude
 
-    - administrative_area
+  - precision精度
 
-    - city
+  - region
 
-    - street_address
+  - country
 
-    - postal_code
+  - administrative_area
 
-  - malware
+  - city
 
-  - malware analysis
+  - street_address
 
-    static or dynamic analysis
+  - postal_code
 
-    - result
+- malware
 
-    - analysis_sco_refs
+- malware analysis
 
-    - product用啥分析的
+  static or dynamic analysis
 
-    - version工具版本
+  - result
 
-    - host_vm_ref 动态分析的虚拟环境
+  - analysis_sco_refs
 
-    - installed_software_refs
+  - product用啥分析的
 
-    - configuration——version？
+  - version工具版本
 
-    - modules
+  - host_vm_ref 动态分析的虚拟环境
 
-    - 
+  - installed_software_refs
 
-  - Note
+  - configuration——version？
 
-    othrer information
-
-    - content
-
-    - abstract
-
-    - authors
-
-    - object_refs
-
-  - observed data
-
-    cyber security reslted entities,files ,systems,networks.
-    raw information
-
-    - object_ref,list of sco and sros representing the observation
-
-    - first_seen,last_seen
-
-  - Opinion
-
-    - explanation，why
-
-    - authors
-
-    - opinion，
-
-    - object——refs
-
-  - report
-
-    description of more topics,such as threat actor,malware..
-    连接相关连的物体。
-
-    - name,description
-
-  - Threat Actor
-
-    - name
-
-    - goals
-
-    - sophistication
-
-  - Tool
-    - kill_chains
-
-  - vulnerability
-
-    - external_references
-
-    - name
+  - modules
 
   - 
 
+- Note
+
+  othrer information
+
+  - content
+
+  - abstract
+
+  - authors
+
+  - object_refs
+
+- observed data
+
+  cyber security reslted entities,files ,systems,networks.
+  raw information
+
+  - object_ref,list of sco and sros representing the observation
+
+  - first_seen,last_seen
+
+- Opinion
+
+  - explanation，why
+
+  - authors
+
+  - opinion，
+
+  - object——refs
+
+- report
+
+  description of more topics,such as threat actor,malware..
+  连接相关连的物体。
+
+  - name,description
+
+- Threat Actor
+
+  - name
+
+  - goals
+
+  - sophistication
+
+- Tool
+  - kill_chains
+
+- vulnerability
+
+  - external_references
+
+  - name
+
+- 
+
 - SRO
-
 - SCO
-
 - VO
-
 - 其他
 
   - import url

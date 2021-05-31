@@ -1,3 +1,12 @@
+```
+mysql -uroot -proot
+#指定端口按照此顺序指定参数。
+mysql -P3307 -uemove -h180.89.32.56 -p
+xs.glgoo.net
+```
+
+
+
 ### problem
 
 多个sql不可以公用statement
