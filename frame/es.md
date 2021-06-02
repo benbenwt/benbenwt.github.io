@@ -86,7 +86,9 @@ vim /etc/security/limits.d/90-nproc.conf
 GET
 
 ```
+#_doc类型字段不影响查询结果
 GET /customer/_doc/1
+
 curl -X GET "hbase2:9200/customer/_doc/1?pretty"
 ```
 

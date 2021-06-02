@@ -44,6 +44,23 @@ http://mirror.centos.org/centos/7/os/x86_64/Packages/
 
 ### 常用命令
 
+```
+#系统时间
+date 
+date -R
+#硬件时间
+hwclock --show
+hwclock --hctosys 
+CMOS：clock -w
+timedatectl
+#联网修改
+ntpdate  pool.ntp.org
+hwclock -W
+hwclock
+```
+
+
+
 pwd
 
 cat

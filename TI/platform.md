@@ -1,4 +1,20 @@
 ```
+Deluge2.03
+libTorrent0.13.6
+qbittorrent
+```
+
+
+
+```
+CST因代表4个不同的地方，故时区有4个，分别是UT-6:00、UT+9:30、UT+8:00和 UT-4:00。
+
+GMT表示UTC和UT1。
+```
+
+
+
+```
 xs.glgoo.net
 ```
 

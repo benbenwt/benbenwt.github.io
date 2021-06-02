@@ -155,7 +155,7 @@ alienvultr
 virusshare
 
 ```
-基于置信规则库的网络安全态势感知技术研究
+Malware analysis ATT&CK framework Classification Cyber threat intelligence Advanced persistent threats 
 situational awareness, threat intelligence, game theory, network security, nash equilibrium
 malware image
 attacker behaviour modelling, cyber security,

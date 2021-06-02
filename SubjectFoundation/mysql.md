@@ -1,8 +1,30 @@
 ```
+# which mysqld
+/usr/local/mysql/bin/mysqld
+#显示从何处加载my.cnf文件
+/usr/local/mysql/bin/mysqld --verbose --help |grep -A 1 'Default options'
+#在[mysqld]后加上skip-grant-tables，若没有[mysqld],自己添加一个。
+#充值密码
+set password for 'root'@'localhost'=password('123456');
+```
+
+
+
+```
 mysql -uroot -proot
 #指定端口按照此顺序指定参数。
 mysql -P3307 -uemove -h180.89.32.56 -p
 xs.glgoo.net
+```
+
+```
+SELECT NOW();
+SELECT CURTIME();
+SHOW VARIABLES LIKE "%time_zone%";
+SET GLOBAL time_zone = 'SYSTEM';
+SET time_zone = 'SYSTEM';
+FLUSH PRIVILEGES;
+#根据存入数据，设置正确的时区。若显示时需要转换，可以通过jackson转换时区，jackson也可以控制映射的日期格式。
 ```
 
 
