@@ -2,6 +2,32 @@
 elasticsearch painless
 ```
 
+```
+#查询indicator，控制最终size和shard_size来控制精度。
+GET /myindex/_search 
+{
+  "size":0,
+  "query": {
+    "term": {
+      "objects.type.keyword": {
+        "value": "indicator"
+      }
+    }
+  },
+  "aggs": {
+    "group_by_date": {
+      "terms": {
+        "script": {
+          "source": "def date=doc['objects.created'].value;def real_date=date.toString().substring(0,10);return real_date"
+        },
+        "size":240,
+        "shard_size": 240
+      }
+    }
+  }
+}
+```
+
 
 
 ```
