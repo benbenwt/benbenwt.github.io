@@ -1,4 +1,201 @@
 ```
+elasticsearch painless
+```
+
+
+
+```
+"source": " ((doc['close_date'].value.toInstant().toEpochMilli() - doc['start_date'].value.toInstant().toEpochMilli()) / (3600000.0*24)) < 3.0 "
+#基于query查询，转换日期为字符串截取并聚合排序
+GET /myindex/_search 
+{
+  "size":0,
+  "query": {
+    "term": {
+      "objects.malware_types.keyword": {
+        "value": "unknow"
+      }
+    }
+  },
+  "aggs": {
+    "group_by_date": {
+      "terms": {
+        "script": {
+          "source": "def date=doc['objects.created'].value;def real_date=date.toString().substring(0,10);return real_date"
+        }
+      }
+    }
+  }
+}
+#指定时间段
+{
+  "query": {
+    "bool": {
+      "must": [
+        {
+          "query_string": {
+            "qeury": "date:[2019-05-12 TO 2019-05-14]"
+          }
+        }
+      ]
+    }
+  },
+  "aggs": {
+    "products": {
+      "terms": {
+        "field": "category",
+        "size": 5
+      }
+    }
+  }
+}
+#在query基础上进行聚合,对日期排序，每个分片上传最近8个月数据。
+GET /myindex/_search 
+{
+  "size":0,
+  "query": {
+    "term": {
+      "objects.malware_types.keyword": {
+        "value": "unknow"
+      }
+    }
+  },
+  "aggs": {
+    "group_by_date": {
+      "terms": {
+        "script": {
+          "source": "def date=doc['objects.type.keyword'].value;def real_date=date.substring(1,2);return real_date"
+        }
+      }
+    }
+  }
+}
+```
+
+
+
+```
+elasticsearch 2中采用String类型，其分为analyzed_string和not_analyzed_string。not_analyzed对应3版本的keyword，analyzed对应3版本的text。text会对字符串分词，如new york会被拆分为new 和work。如果对text进行聚合查询，new和york会被分开统计。
+在es3中自动映射为text的字段，会被添加一个fidld域，其中有keyword字段可用于聚合查询。
+```
+
+```
+#查询type类型排行
+GET /myindex/_search
+{
+  "size": 0,
+  "aggs": {
+    "popular_type": {
+      "terms": {
+        "field": "objects.type.keyword"
+      }
+    }
+  }
+}
+#统计恶意软件架构
+GET /myindex/_search
+{
+  "size": 0,
+  "aggs": {
+    "popular_type": {
+      "terms": {
+        "field": "objects.architecture_execution_envs.keyword"
+      }
+    }
+  }
+}
+#统计攻击活动类别及时间，malware_types，first_seen,last_seen,漏洞定义规则再抽取。
+
+#统计攻击活动地区
+GET /myindex/_search
+{
+  "size": 0,
+  "aggs": {
+    "popular_type": {
+      "terms": {
+        "field": "objects.country.keyword"
+      }
+    }
+  }
+}
+```
+
+
+
+```
+#构建索引
+PUT /myindex
+{
+    "mappings": {
+        "properties": {
+          "objects":{
+            "properties": {
+              "type":{
+                "type":"keyword"
+              }
+            }
+          }
+        }
+    }
+}
+```
+
+
+
+```
+POST /myindex/_doc
+{
+  "properties":{
+    "objects.type":{
+      "type":"text",
+      "fielddata":true
+    }
+  }
+}
+```
+
+
+
+```
+#分页查询
+GET /myindex/_search?size=5&from=10000
+```
+
+
+
+```
+#查询type为malware的
+POST /myindex/_search
+{
+"query": {
+	"bool": {
+		"must": [
+			{
+				"match": {
+					"objects.type": "malware"
+							}
+				}
+					]
+	        }
+        }
+}
+#统计type各种类型的个数
+GET /myindex/_search
+{
+  "aggs" : {
+    "stixtype" : {
+      "terms" : {
+         "field" : "objects.type",
+         "size" :  10
+      }
+    }
+  }
+}
+```
+
+
+
+```
 curl -X GET localhost:9200/_cat/indices?v
 ```
 
@@ -279,7 +476,7 @@ POST /myindex/user/_search
 "query": {
 	"bool": {
 		"must": [
-			{
+			{``
 				"match": {
 					"objects.pattern": test"
 							}

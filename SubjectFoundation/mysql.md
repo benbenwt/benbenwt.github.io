@@ -1,4 +1,18 @@
 ```
+#pcap表
+CREATE TABLE pcap(
+id int(11) NOT NULL AUTO_INCREMENT,
+filename VARCHAR(500) NOT NULL,
+task_id VARCHAR(500) NOT NULL,
+date_done  datetime,
+md5 VARCHAR(500) NOT NULL,
+PRIMARY KEY(id)
+)ENGINE=InnoDB DEFAULT CHARSET=utf8;
+```
+
+
+
+```
 # which mysqld
 /usr/local/mysql/bin/mysqld
 #显示从何处加载my.cnf文件

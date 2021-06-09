@@ -1,4 +1,26 @@
 ```
+#opencti架构
+
+```
+
+
+
+```
+1统计
+2字段搜索
+3下载，多个文件压缩包
+4分页,临时解决如下：完全解决使用scroll和scroll-scan
+PUT policy_document/_settings
+{
+  "index":{
+    "max_result_window":1000000
+  }
+}
+```
+
+
+
+```
 Deluge2.03
 libTorrent0.13.6
 qbittorrent
