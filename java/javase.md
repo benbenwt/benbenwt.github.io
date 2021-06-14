@@ -1066,6 +1066,22 @@ handler:拒绝策略
 
 # IO
 
+```
+IO流用于向内存写入数据或从内存读出数据。
+IO流有四个顶级抽象父类，关于java的框架都基于这些类进行IO流的扩展。
+这四个类分别是字节流:InputStream,OutputStream,字符流:Reader，Writer。
+对于压缩文件的输入输出流，从磁盘等待压缩创建的输入流按序读取数据到内存，再从内存中将数据写入压缩文件磁盘中，完成一次压缩。
+BufferedReader和BufferWriter使用了自定义的缓冲区，一次读取8192字节，减少内存读写磁盘次数从而提升速度，和减少mysql网络请求次数原理相同。每次IO或网络请求会耗费时间建立连接、维护协议信息、磁盘寻址和读写
+```
+
+
+
+##### File
+
+>用来描述文件并进行基础性操作的类，方法有renameTo,delete(),exists,isFile,isDirectory,getName,getPath
+
+
+
 ##### InputStreamReader类
 
 >他是字节流到字符流的桥梁，读取字节并用特定字符集节码，字符集默认使用平台字符集。要保证效率使用BufferReader。其定义的属性有StreamDecoder，方法有getEncode,read,ready,close。

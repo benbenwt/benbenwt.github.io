@@ -1,4 +1,162 @@
 ```
+分页,临时解决如下：完全解决使用scroll和scroll-scan
+PUT policy_document/_settings
+{
+  "index":{
+    "max_result_window":1000000
+  }
+}
+```
+
+
+
+
+
+### es分析和分析器
+
+```
+#倒排索引
+为了实现实时查询（1s以内），es使用倒排索引维护信息。信息包括一个列表，列表描述每个单词出现在哪些文档。当进行搜索时只需要搜索需要的文档。
+例如：
+文档1内容：hello dogs Quick foxes
+文档2：good quick fox
+为了检索相似单词，如fox,foxes,quick,Quick。在构建索引时，使用标准化规则，即统一为词根或小写。在查询时也要先标准化再进行查询。
+```
+
+##### 分析器构成
+
+```
+官网文档:
+https://www.elastic.co/guide/cn/elasticsearch/guide/current/analysis-intro.html
+字符过滤器:字符串按序通过字符过滤器，字符过滤器用于分此前的整理，用于去除HTML、&转为and等。
+分词器：字符串被分为单个词条
+Token过滤器：词条按序通过token过滤器，这个过程会改变词条，如QUICK->quick，删除词条，如a，and，the等五用词，或增加词条，例如jump和leap这种同义词。
+es提供自定义：https://www.elastic.co/guide/cn/elasticsearch/guide/current/custom-analyzers.html的分析器：https://www.elastic.co/guide/cn/elasticsearch/guide/current/custom-analyzers.html
+```
+
+##### 内置分析器
+
+```
+标准分析器:默认分词器，按照unicode的定义划分文本，删除标点，最后进行小写。
+简单分析器:任何不是字母的地方分割文本，再小写。
+空格分析器:空格划分
+语言分析器:考虑语言特点，删除and和the等。构建近义词、词根等。
+```
+
+查看分析器如何工作
+
+```
+GET /_analyze
+{
+  "analyzer": "standard",
+  "text": "Text to analyze"
+}
+```
+
+### 映射
+
+>映射用于控制特定字段域的分析器类型、存储类型
+
+```
+主要类型：text,keyword,float,double,boolean,date,byte,short,integer,long
+#查看映射
+GET /gb/_mapping/tweet
+```
+
+
+
+
+
+```
+若构建三个表存储stix2，当需要聚合查询时效率可以接受。但如果需要分页，就要请求全量数据再汇总，效率受限于索引查询，网络传输和网络请求次数开销。
+```
+
+
+
+```
+#从name中统计malware_types分布
+GET /myindex/_search 
+{
+  "size":0,
+  "query": {
+    "term": {
+      "objects.type.keyword": {
+        "value": "report"
+      }
+    }
+  },
+  "aggs": {
+    "group_by_date": {
+      "terms": {
+        "script": {
+          "lang":"painless",
+          "inline": """def name=doc['objects.name.keyword'].value;def loc=/Type-\[(.*?)\]/.matcher(name);if (loc.find()){ def loc_str=loc.group(1).replace(" ","");ArrayList array=new ArrayList();String splitter=",";StringTokenizer tokenValue=new StringTokenizer(loc_str,splitter);def h_time=/<<([0-9-:])>>/.matcher(name);while(tokenValue.hasMoreTokens()){array.add(tokenValue.nextToken()+"####"+doc["objects.created"].value.toString().substring(0,10));}if (array.size()>0){return array}}"""
+        },
+        "size":240,
+        "shard_size": 240
+      }
+    }
+  }
+}
+```
+
+
+
+```
+#从name中统计country分布
+GET /myindex/_search 
+{
+  "size":0,
+  "query": {
+    "term": {
+      "objects.type.keyword": {
+        "value": "report"
+      }
+    }
+  },
+  "aggs": {
+    "group_by_date": {
+      "terms": {
+        "script": {
+          "lang":"painless",
+          "inline": """def name=doc['objects.name.keyword'].value;def loc=/LOC-\[(.*?)\]',T/.matcher(doc['objects.name.keyword'].value);if (loc.find()){ def loc_str=loc.group(1).replace(" ","");ArrayList array=new ArrayList();String splitter=",";StringTokenizer tokenValue=new StringTokenizer(loc_str,splitter);while(tokenValue.hasMoreTokens()){array.add(tokenValue.nextToken());}if (array.size()>0){return array}}"""
+        },
+        "size":240,
+        "shard_size": 240
+      }
+    }
+  }
+}
+```
+
+
+
+```
+searchRequest
+	sourceBuilder:from,size
+		queryBuilders
+```
+
+```
+聚合多个字段，例如聚合类别和日期
+GET /myindex/_search 
+{
+  "size":0,
+  "aggs": {
+    "group_by_date": {
+      "terms": {
+        "script": "if(doc['objects.malware_types.keyword'].size()>0){return doc['objects.malware_types.keyword'].value+'####'+doc['objects.created'].value.toString().substring(0,10)}",
+        "size":240,
+        "shard_size": 240
+      }
+    }
+  }
+}
+```
+
+
+
+```
 elasticsearch painless
 ```
 

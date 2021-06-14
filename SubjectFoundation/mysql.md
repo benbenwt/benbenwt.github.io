@@ -1,3 +1,26 @@
+
+
+```
+批量insert
+for (int k = 1; k <= 10000; k++) {
+					pst.setLong(1, k * i);
+					pst.setLong(2, k * i);
+					pst.addBatch();
+				}
+pst.executeBatch();
+#prepareStatement使用batch插入15000条要200s。添加后两个参数，速度直接到达一秒。
+  conn = DriverManager.getConnection("jdbc:mysql://hbase2:3306/platform?useUnicode=true&characterEncoding=utf-8&useSSL=true&serverTimezone=UTC&rewriteBatchedStatements=true&useServerPrepStmts=true","root","root");
+```
+
+
+
+```
+清空自增id
+alter table 表名 auto_increment=数字
+```
+
+
+
 ```
 #pcap表
 CREATE TABLE pcap(

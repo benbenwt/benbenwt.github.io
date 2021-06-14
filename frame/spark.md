@@ -1,3 +1,18 @@
+```
+P17 sprk yanr部署模式
+
+```
+
+
+
+```
+下载scala包或在idea的project structure中指定自动下载，在setting的plugins中下载scala插件。
+创建maven项目，在project structure中添加scala。
+sprk3.0.0,scala-2.12
+```
+
+
+
 ##### RDD
 
 ```
