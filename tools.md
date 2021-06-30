@@ -1,9 +1,7 @@
 ```
-更改:1.摘要
-2.表1所示
-3.数据集
-4.表5
-5.MD5正则数量518
+Iaas，提供存储，计算，内存资源。
+Paas，提供部署运行软件的平台。
+Saas，提供软件服务。
 ```
 
 
@@ -12,19 +10,13 @@
 http://caiyun.fuligou.tk/
 ```
 
-
-
 ```
 hdfs :hive:May 22 20:40  copy14  copy 119
 ```
 
-
-
 ```
 group关闭后，无法重置offset
 ```
-
-
 
 ```
 kafka乱码
@@ -32,7 +24,6 @@ kafka乱码
 来源此处中文乱码：LOC-['u7231u5c14u5170', 'u7f8eu56fd']
 python的producer加入,json.dump(result,ensure_ascii=false)
 java的consumer用utf解码，并用StringEscapeUtil解码字符串.
-
 ```
 
 
@@ -103,23 +94,17 @@ hdfs延时，es不延时
 hdfs输入只能为一个文件夹？
 ```
 
-
-
 ```
 in:name React stars:>5000
  in:readme React
  in:description 
 ```
 
-
-
 ```
 #ti
 基于符号逻辑和统计推理方法
 Peer-To-Peer，RDF，OWL EL。Gray XMT  RDFS推理。
 ```
-
-
 
 ```
 固件：厂商官网
@@ -128,12 +113,6 @@ https://www.exploit-db.com/exploits/45909
 http://support.netgear.cn/doucument/More.asp?id=2251
 https://www.itdaan.com/so?q=NetGear%E5%A4%9A%E6%AC%BE%E8%B7%AF%E7%94%B1%E5%99%A8%E8%BF%9C%E7%A8%8B%E5%91%BD%E4%BB%A4%E6%B3%A8%E5%85%A5%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90+%E6%9B%B4%E6%96%B0%E8%A1%A5%E4%B8%81%E5%88%86%E6%9E%90+&page=8
 FirmTool是CNCERT自主研发一款固件脆弱性分析工具，主要用于工控和物联网固件的安全性检测，
-```
-
-
-
-```
-知乎
 ```
 
 
@@ -243,7 +222,12 @@ ida,jeb,ghidra
 
 
 
-##### 文献网站
+##### 信息网站
+
+```
+#keyword
+symbolic execution，malware analysis，threat intelligence，
+```
 
 ```
 知乎,图书馆(iee,知网),谷歌,sci-hub
@@ -259,6 +243,36 @@ github,kaggle,paperswithcode
 
 ```
 Fuzzers, Analysis, Backdoors, DoS, Exploits, Generic, Reconnaissance, Shellcode and Worms.
+```
+
+##### code查找
+
+```
+论文内容，搜索http,github等关键字
+google程序算法,例：knn in python，谷歌作者名进学术主页
+github搜索论文名，作者名，算法名
+paperswithcode
+arXiv网站
+Find Code for Research Papers插件
+Code Ocean: Professional tools for researches
+https://researchcode.com/
+https://www.semanticscholar.org/
+看雪论坛
+```
+
+### 论文记录
+
+##### 符号执行
+
+```
+Optimizing Symbolic Execution for Malware Behavior
+Classification
+生成系统调用依赖图计算相似性
+使用的工具：angr，radare2
+
+Mining control flow graph as API call-grams to detect portable executable malware
+
+Higher-Order Symbolic Execution via Contracts
 ```
 
 

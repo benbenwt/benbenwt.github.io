@@ -1,3 +1,11 @@
+| *compute the checksum of your file ...* |          *compare with*          |                  |                      |               |
+| :-------------------------------------: | :------------------------------: | :--------------: | -------------------- | ------------- |
+|                                         |             Windows              |      Linux       | Mac                  |               |
+|                  SHA-1                  |  certUtil -hashfile *file* SHA1  |  sha1sum *file*  | shasum -a 1 *file*   | *file*.sha1   |
+|                 SHA-256                 | certUtil -hashfile *file* SHA256 | sha256sum *file* | shasum -a 256 *file* | *file*.sha256 |
+|                 SHA-512                 | certUtil -hashfile *file* SHA512 | sha512sum *file* | shasum -a 512 *file* | *file*.sha512 |
+|                   MD5                   |  certUtil -hashfile *file* MD5   |  md5sum *file*   | md5 *file*           | *file*.md5    |
+
 # centos
 
 ### 软件安装
@@ -390,7 +398,26 @@ yum list iostat
 
 # ubuntu
 
+### vmware
+
+```
+无法复制文件
+卸载重装open-vm-tools
+sudo apt-get autoremove open-vm-tools
+sudo apt-get install open-vm-tools
+sudo apt-get install open-vm-tools-desktop
+使用vmware管理工具安装vmtools。
+```
+
+
+
 ### 系统
+
+##### 权限管理
+
+```
+vim /etc/sudoers
+```
 
 
 
@@ -684,6 +711,13 @@ sudo chmod -R 777 /home/sda1
 
 ### vultr搭建
 
+```
+#安装sshd服务。
+sudo apt install openssh-serve
+```
+
+
+
 vultr使用心得
 http://blog.51cto.com/13940125/2165848
 1服务器搭建
@@ -828,3 +862,13 @@ yum provides */libappindicator3.so.1
 ##### ssh problem
 
 配置ufw特定ip访问特定端口，总是配完了无法访问，是因为实际ip不是ipconfig的显示ip。可以查看登录记录，知道实际ip.
+
+没有apt命令
+
+```
+从正常机器上复制以下文件，即可使用apt，*表示正则，可用find命令查看对应文件。
+/usr/bin/apt
+/usr/lib//libapt-*
+教程：https://blog.csdn.net/w294954902/article/details/84998797
+```
+

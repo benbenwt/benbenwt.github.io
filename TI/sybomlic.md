@@ -1,3 +1,182 @@
+### 0b7ab5021e8fcf319d628e52e2121f82
+
+```
+fileread : /lib/i386-linux-gnu/libc.so.6, size=512
+process : execute a file ,Clone syscall, fork or vfork
+printf: .
+缓冲区溢出漏洞攻击植入
+设置自启动
+```
+
+
+
+### 基本元素
+
+```
+address
+block,node
+function
+state
+cfg
+```
+
+### 函数
+
+```
+functions=cfg.kb.functions
+addresses=[(addr,func.name) for addr,func in functions.items()]
+addresses
+#addr->func对象
+entry_func=cfg.kb.functions[4195789]
+```
+
+### NODE
+
+```
+cfg.model.nodes()
+G.nodes()
+```
+
+### 图
+
+```
+https://blog.csdn.net/wspba/article/details/75671573
+gspan
+
+连续的相同功函数合并
+能修改和展示
+如何收集内存数据
+那个库
+
+遍历它们，复制一个图出来。
+```
+
+
+
+### 数据集
+
+```
+microsoft 在kaggle举办的2015 malware classification，包含二进制文件。
+Microsoft Malware Classification Challenge (BIG 2015)
+ember数据集，不包含二进制文件，只有提取的信息。
+天池的新人赛，提供了二进制文件。
+```
+
+
+
+### Temp
+
+```
+
+除了api调用外额=外获得寄存器、内存信息，函数的传递参数,行为造成的后果，如改变注册表，防火墙，文件等。
+
+求解，路径剪枝，外部函数库
+生成图的策略，合并，丢弃
+图
+
+使用了wget如何获取到？寄存器字符串？
+api顺序是否重要？需要顺序判断api组合是否恶意，或者说顺序不重要，只会混淆结果。
+
+抛弃部分不达标路径，函数过少，循环过多等。
+合并相同函数-地址，合并多个图为一个
+每个路径一个tid，给一个index。
+```
+
+### 输入与输出
+
+```
+state.posix.dumps(0)
+state.posix.dumps(1)
+#求解标准输入，与state.posix.dumps(0)同义
+input_data = state1.posix.stdin.load(0, state.posix.stdin.size)
+state1.solver.eval(input_data, cast_to=bytes)
+```
+
+### 求解器
+
+```
+#solver
+state1.solver.eval(input_data, cast_to=bytes)
+
+#
+state.solver.add(x > y)
+state.solver.eval(x)
+```
+
+
+
+### keyword
+
+```
+自动化
+angr
+```
+
+
+
+### 相关组织网站
+
+```
+def con
+darpa
+```
+
+### Solver
+
+```
+manx
+min
+```
+
+### Simulation_manager
+
+```
+simgr通过stash管理状态，它将state分为如下几类。
+active
+deadended
+unsat
+unconstrained
+pruned
+
+state.active
+state.unsat
+```
+
+```
+simgr的exploration策略
+深度优先:将其他路径放入deferred stash中
+explorer:允许使用find和avoid规则
+MemoryWatcher:控制内存不超过阈值
+Loopseer:循环丢弃等待
+veritesting:合并关键点
+exploration策略可以用简单的address表示，或者用自定义函数控制返回true或false。通过find和avoid策略进行路径探测并求解值。
+
+simgr.use_technique(tech)
+angr.exploration_techniques
+```
+
+
+
+```
+#Techniques for Malware Analysis based
+To implement Symba ,a custom exploration technique based on constraint   creation has been  developed and applied to the manager.
+开发了自定义的路径探索策略（也可以是外部函数库策略，求解策略）
+给定关键函数名，揭示所有相关的路径和约束。通过过去祖先block地址，创建状态并执行。输出输入信息，路径信息，函数信息。
+寄存器，api序列，（网络，文件IO，内存，注册表）,
+```
+
+
+
+### Angr基本API
+
+>见自己的angr_learn.ipython
+
+```
+node.block.capstone.insns
+```
+
+
+
 ```
 #CFGENode __x86.get_pc_thunk.bx
 mov %eip,%eax
@@ -13,24 +192,13 @@ mov %eip,%eax
 
 
 ```
-pydot :File not found
-安装Graphviz库
-https://blog.csdn.net/somecare/article/details/88311874
+pydot :File not found安装Graphviz库https://blog.csdn.net/somecare/article/details/88311874
 ```
 
 
 
 ```
-#静态分析
-控制流分析，数据流分析，符号执行
-#动态分析
-Hook api调用分析
-#插装工具 pintools,
-
-#SMT约束求解器
-#符号执行平台
-
-KLEE,S2E,QSYM，ANGR
+#静态分析控制流分析，数据流分析，符号执行#动态分析Hook api调用分析#插装工具 pintools,#SMT约束求解器#符号执行平台KLEE,S2E,QSYM，ANGR
 ```
 
 | Name | Object      | IR     | Program Language | concolic execution |
@@ -43,15 +211,7 @@ KLEE,S2E,QSYM，ANGR
 
 
 ```
-#graph
-embedding,entity linking,class,
-#生成embedding algrothim
-Node2Vec,Metapath2Vec,HAN,DEEPWALK,TransE
-#应用
-link prediction(graph completion),correlation,community
-#keyworld
-#数据集
-Freebase,yago
+#graphembedding,entity linking,class,#生成embedding algrothimNode2Vec,Metapath2Vec,HAN,DEEPWALK,TransE#应用link prediction(graph completion),correlation,community#keyworld#数据集Freebase,yago
 ```
 
 

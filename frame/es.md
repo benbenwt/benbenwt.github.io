@@ -1,4 +1,27 @@
 ```
+#search_after
+https://blog.csdn.net/zzh920625/article/details/84593590
+https://www.elastic.co/guide/en/elasticsearch/reference/6.7/search-request-search-after.html
+GET twitter/_search
+{
+    "size": 10,
+    "query": {
+        "match" : {
+            "title" : "elasticsearch"
+        }
+    },
+    "search_after": [1000],
+    "sort": [
+        {"date": "asc"},
+        {"tie_breaker_id": "asc"}
+    ]
+}
+
+```
+
+
+
+```
 分页,临时解决如下：完全解决使用scroll和scroll-scan
 PUT policy_document/_settings
 {
@@ -399,6 +422,14 @@ POST /_aliases
 }
 ```
 
+### 安装
+
+```
+#docker安装
+https://www.elastic.co/guide/en/elasticsearch/reference/7.5/docker.html
+在宿主机上执行sysctl -w vm.max_map_count=262144命令，避免虚拟内存报错。
+```
+
 
 
 es 7.11
@@ -548,16 +579,17 @@ DELETE /haoke
  curl -X POST "localhost:9200/_bulk?pretty" -H "Content-Type: application/json;charset=UTF-8" --data-binary @5eb920947209f2ced78b15a4.json 
 ```
 
-
+### 安装配置kibana
 
 修改ip
 
 ```
 vim $ES_HOME/config/elasticsearch.yml
 hostname 0.0.0.0
-vim #KIBANA_HOME/config/kibana.yml
-server.host: "host2"
+vim KIBANA_HOME/config/kibana.yml
+server.host: "this_host_id"
 elasticsearch.hosts: ["http://hbase2:9200"]
+bin/kibana --allow-rooot
 ```
 
 

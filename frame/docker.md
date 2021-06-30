@@ -1,4 +1,3 @@
-```
 #清空所有
 #network,ports,volumes,depends,devices,sysctls,cap-add
 docker-compose up web
@@ -15,9 +14,91 @@ EXPOSE 8080
 CMD["nginx", "-g", "daemon off;"]
 #设定工作目录，随后的命令在此目录执行。若多次使用相对路径，会进行叠加，同cd。
 WORDIR
+
+# Platform_docker
+
+##### DockerFile例子
+
+```
+vim Dockerfile
+------------
+FROM nginx:latest
+RUN useradd -m platform\
+&&echo "copying webpages to nginx dir"
+RUN rm /etc/nginx/conf.d/default.conf
+COPY ./docker/nginx/platform.conf /etc/nginx/conf.d
+COPY --chown=platform:platform ./platform/webpages  /home/platform/webpages
+------------
+docker build -t platform:v1 `pwd`
+docker image ls
+docker run -p 8344:80 platform:v1
+curl localhost:8344
 ```
 
+platform-mysql
+
+```
+#建表脚本
+https://blog.csdn.net/10km/article/details/79046864
+COPY platform.sql  /docker-entrypoint-initdb.d
+```
+
+
+
+##### docker-compose例子
+
+```
+version: "2"
+services:
+  nginx:
+    image: platform-nginx
+    build:
+      context: .
+      dockerfile: ./docker/nginx/Dockerfile
+    ports:
+      - 8344:80
+    networks:
+      platformnet:
+        ipv4_address: 172.42.0.12
+networks:
+  platformnet:
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.42.0.0/24#docker-compose例子
+vim docker-compose.yml
+--------------------
+version:"3"
+
+services:
+  nginx:
+    image:platform-nginx
+    build:
+      context:.
+      dockerfile:./docker/nginx/Dockerfile
+    ports:
+      -8344:80
+    networks:
+      platformnet:
+        ipv4_address:172.42.0.12
+networks:
+  platformnet:
+    ipam:
+      driver:default
+      config:
+        -subnet:172.42.0.0/24
+-----------------------------
+docker-compose up
+#基础错误，yml格式:后要空格.
+```
+
+
+
+
+
 # Lisa_docker
+
+>使用版本docker 20.10.5,docker-compose 1.28.5
 
 ```
 #lisa-worker的内容,再将requirements.txt中ripe2改为1.5.3版本。
@@ -105,9 +186,34 @@ docker具有更少的抽象层，不需要模拟硬件guest os。
 
 # docker安装
 
-https://docs.docker.com/engine/install/ubuntu/，配置依赖及安装ce，cli等。
+doc:https://docs.docker.com/engine/install/ubuntu/。
 
 ```
+#安装步骤
+sudo apt-get remove docker docker-engine docker.io containerd runc
+sudo apt-get install \
+    apt-transport-https \
+    ca-certificates \
+    curl \
+    gnupg \
+    lsb-release
+    
+ #添加公钥
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
+
+#指定系统版本下载源
+echo \
+  "deb [arch=amd64 signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu \
+  $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+  apt-get update
+  
+  sudo apt-get install docker-ce docker-ce-cli containerd.io
+```
+
+
+
+```
+#源管理
 sudo yum install -y yum-utils \
   device-mapper-persistent-data \
   lvm2
@@ -124,7 +230,7 @@ sudo yum-config-manager \
 
 ##### 使用阿里云镜像加速下载
 
-https://cr.console.aliyun.com/cn-hangzhou/instances/mirrors
+阿里云控制台:https://cr.console.aliyun.com/cn-hangzhou/instances/mirrors
 
 ```
 vim /etc/docker/daemon.json
@@ -141,11 +247,22 @@ vim /etc/docker/daemon.json
 systemctl daemon-reload
 systemctl restart docker。
 
+### docker-compose安装
+
+```
+https://github.com/docker/compose
+到仓库下载编译好的二进制文件，放到/usr/bin即可。
+```
+
+
+
 # docker命令
 
 >docker  version,docker  run  hello-world测试是否安装成功
 
 ### 镜像命令
+
+
 
 ```
 docker info  系统信息，镜像和容器的数量
@@ -338,7 +455,7 @@ ARG webhost=locahost:4242，定义的ARG在build必须通过**--build-arg a_name
 
   MAINTAINER， 作者
 
-  RUN，构建需要命令
+  RUN，build时执行的命令
 
   ADD，添加镜像，如tomcat压缩包
 
@@ -348,11 +465,9 @@ ARG webhost=locahost:4242，定义的ARG在build必须通过**--build-arg a_name
 
   EXPOSE，保留端口配置
 
-  RUN
+  CMD,容器run时执行的命令
 
-  CMD,指定容器启动时的命令
-
-  ENTRYPOINT，会追加命令。
+  ENTRYPOINT，会追加之前输入的命令参数。
 
   ONBUILD,当构建一个被继承DockerFile时，运行ONBUILD命令。
 
@@ -420,7 +535,7 @@ ARG webhost=locahost:4242，定义的ARG在build必须通过**--build-arg a_name
 
   FROM java:8
 
-  COPPY  *.jar  /app.jar
+  COPY  *.jar  /app.jar
 
   CMD ["--server.port=8080"]
 
@@ -443,7 +558,7 @@ ARG webhost=locahost:4242，定义的ARG在build必须通过**--build-arg a_name
 ##### depends_on
 
 ```
-被依赖的镜像必须先启动，而且
+被依赖的镜像必须先启动，而
 ```
 
 
@@ -460,6 +575,16 @@ docker-compose up servername
 ```
 
 .dockerignore在docker-compose.yml的同级。ignore中的文件会被忽略，dockerfile无法执行对应COPY等操作。dockerfile中的COPY路劲必须是相对路径，以docker-compose的同级目录为基准。
+
+### 网络管理
+
+```
+docker network ls
+docker network inspect
+docker network rm <网卡id> 
+```
+
+
 
   ### docker swarm
 

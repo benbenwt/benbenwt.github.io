@@ -1,6 +1,9 @@
 ```
-#opencti架构
+统计
+```
 
+```
+#opencti架构
 ```
 
 
@@ -783,9 +786,9 @@ create table sample(md5 string,SHA256 string,sha1 string,size string,architectur
 #建表语句
 CREATE TABLE `category_tbl`
 (
-    `category_id` INT UNSIGNED AUTO_INCREMENT,
+    `category_id` BIGINT AUTO_INCREMENT,
     `category` VARCHAR(20) NOT NULL,
-    `value`  INT NOT NULL,
+    `value`  BIGINT NOT NULL,
     `time`  DATE,
     PRIMARY KEY(`category_id`)
 )ENGINE=InnoDB DEFAULT CHARSET=utf8
@@ -820,9 +823,9 @@ SELECT category_id categoryId,category,value,percent,time FROM `category_tbl` WH
 #建表语句
 CREATE TABLE `family_tbl`
 (
-    `family_id` INT UNSIGNED AUTO_INCREMENT,
+    `family_id` BIGINT  AUTO_INCREMENT,
     `family` VARCHAR(20) NOT NULL,
-    `value` INT NOT NULL,
+    `value` BIGINT NOT NULL,
     PRIMARY KEY(`family_id`)
 )ENGINE=InnoDB DEFAULT CHARSET=utf8;
 ```
@@ -832,9 +835,9 @@ CREATE TABLE `family_tbl`
  ```
 CREATE TABLE `architecture`
 (
-    `arch_id` INT UNSIGNED AUTO_INCREMENT,
+    `arch_id` BIGINT AUTO_INCREMENT,
     `architecture` VARCHAR(20) NOT NULL,
-    `value` INT NOT NULL,
+    `value` BIGINT NOT NULL,
     PRIMARY KEY(`arch_id`)
 )ENGINE=InnoDB DEFAULT CHARSET=utf8;
  ```
@@ -842,11 +845,11 @@ CREATE TABLE `architecture`
 **location**
 
 ```
-CRAEATE TABLE `location`
+CREATE TABLE `location`
 (
-	`location_id` INT UNSIGNED AUTO_INCREMENT,
+	`location_id` BIGINT  AUTO_INCREMENT,
 	 `location` VARCHAR(20) NOT NULL,
-	 `value` INT NOT NULL,
+	 `value` BIGINT NOT NULL,
 	 PRIMARY KEY(`location_id`)
 )ENGINE=InnoDB DEFAULT CHARSET=utf8
 

@@ -1,3 +1,22 @@
+### spark安装
+
+>spark-3.1.2-bin-hadoop3.2,默认we端口8080,绑定失败会用8081端口。
+
+````
+安装教程:http://spark.apache.org/docs/latest/
+````
+
+##### standalone模式
+
+```
+复制压缩包解压即可
+sbin/start-master.sh
+netstat -lntp
+curl localhost:8081
+```
+
+
+
 ```
 P17 sprk yanr部署模式
 
