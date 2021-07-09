@@ -409,6 +409,14 @@ sudo apt-get install open-vm-tools-desktop
 使用vmware管理工具安装vmtools。
 ```
 
+### shell
+
+```
+跳过请输入某个键的交互命令
+y|qbittorrent-nox
+yes|apt-get install test
+```
+
 
 
 ### 系统
@@ -495,6 +503,17 @@ ufw allow from ip to any port 端口号
 
 
 ### 文件管理
+
+##### 压缩
+
+```
+zip -r lisa.tar lisa
+unzip lisa.tar
+tar -zxvf lisa.tar
+tar -cvf lisa.tar lisa
+```
+
+
 
 ##### trash管理
 
@@ -628,6 +647,18 @@ tar
 ```
 
 ### 软件管理
+
+##### **apt常用命令**
+
+```
+#查看可用版本
+apt-cache search ffmpeg | grep Version
+apt-get install qbittorrent-nox=4.3
+```
+
+
+
+
 
 ##### apt
 

@@ -1,4 +1,53 @@
 ```
+关于hadoop和elasticsearch的使用场景
+es着力于搜索，它在聚合统计上支持很差，性能也很差。一般通过使用painless来完成聚合统计工作，因为它不支持join和中间结果存储、后续分析等。只能使用拼接key值的方法统计聚合字段。例如7.26号的新增人数有多少。
+```
+
+
+
+```
+hadoop慢的原因，在hive仓库中，数据分散在多个小文件中，每个几kb或更大，由于过大的全局统计，进行多次小文件IO，使得开销变大。
+```
+
+
+
+192.168.31.177
+
+```
+Apache Maven 3.6.1
+```
+
+| hostname | ip   | 服务                                         |
+| -------- | ---- | -------------------------------------------- |
+| hbase    | 187  | esto_mysql                                   |
+| hbase1   | 186  | nginx,cve                                    |
+| hbase2   | 185  | elasticsearch,mysql,lisa2                    |
+| lisa     | 184  | es_provider,lisa_provider,statistic_provider |
+
+```
+部署时需要修改的参数
+1前端代码中的跳转目标，修改为部署的宿主机目标。
+2nginx配置文件中的跳转目标，修改为正确目标
+3备份的超链接ip要修改
+```
+
+
+
+```
+部署环境有问题时，需要修改代码，在开发环境打包再上传，再运行，麻烦。
+1个jar提供一个功能，无法灵活的调试，.........jar包阻碍调试和修改，
+想要什么，让打包，上传，运行的过程透明，不手动。
+```
+
+
+
+```
+lisa建表语句，flask插入md5，前端的下载
+```
+
+
+
+```
 统计
 ```
 
@@ -58,7 +107,7 @@ SELECT category_id categoryId,category,value,time FROM category_tbl a WHERE a.ti
 | hostname | ip   | 服务                                                        |
 | -------- | ---- | ----------------------------------------------------------- |
 | hbase    | 187  | hdfs-mater,hive,dump_hive,dump_mysql,kafka,zookeeper        |
-| hbase1   | 186  | yarn-master,nginx                                           |
+| hbase1   | 186  | yarn-master,nginx,cve后端，pcap后端                         |
 | hbase2   | 185  | elastic,mysql,lisa2,grakn,dump_hdfs,dump_es                 |
 | lisa     | 184  | lisa1,es_provider,mapreduce,lisa_submit1,,dump_hdfs,dump_es |
 
@@ -418,7 +467,12 @@ check_one_service "lisa.web_api.tasks" "service docker start && cd /root/module/
 done
 ```
 
-
+| hostname | ip   | 服务                                         |
+| -------- | ---- | -------------------------------------------- |
+| hbase    | 187  | esto_mysql                                   |
+| hbase1   | 186  | nginx,cve                                    |
+| hbase2   | 185  | elasticsearch,mysql,lisa2                    |
+| lisa     | 184  | es_provider,lisa_provider,statistic_provider |
 
 | hostname | ip   | 服务                                                        |
 | -------- | ---- | ----------------------------------------------------------- |
@@ -813,6 +867,20 @@ SELECT category_id categoryId,category,value,percent,time FROM category_tbl a WH
 ```
 #获取最新的一天，其各个类别的累积数量。
 SELECT category_id categoryId,category,value,percent,time FROM `category_tbl` WHERE  time=(SELECT MAX(time) FROM `category_tbl`)
+```
+
+**PCAP**
+
+```
+CREATE TABLE `pcap`
+(
+    `id` BIGINT  AUTO_INCREMENT,
+    `filename` VARCHAR(20) NOT NULL,
+    `task_id` varchar(20) NOT NULL,
+    `date_done` datetime NOT NULL,
+    `md5` varchar(100) NOT NULL,
+     PRIMARY KEY(`id`)
+)ENGINE=InnoDB DEFAULT CHARSET=utf8;
 ```
 
 

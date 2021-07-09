@@ -1,3 +1,19 @@
+### flask
+
+```
+flask run  -p 8888 -h 0.0.0.0
+```
+
+
+
+### httpServer
+
+```
+python -m http.server 端口号
+```
+
+
+
 ```
 pip install ipykernel
 jupyter kernelspec list

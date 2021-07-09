@@ -4,8 +4,6 @@ Paas，提供部署运行软件的平台。
 Saas，提供软件服务。
 ```
 
-
-
 ```
 http://caiyun.fuligou.tk/
 ```
@@ -32,7 +30,7 @@ java的consumer用utf解码，并用StringEscapeUtil解码字符串.
 SELECT FROM_UNIXTIME(sm_time,'%Y') as years FROM sentiment GROUP BY years
 ```
 
-
+### qbittorrent-nox
 
 ```
 #qbittorrent
@@ -44,10 +42,14 @@ Python wrapper for qBittorrent Web API (for versions above 4.1, for version belo
 
 
 ```
+默认用户名和密码
+admin
+adminadmin
 #space不够
 权限问题，
-是使用qbittorrent 3.3,python-qbittorrent 0.3.1
-也可4.3.5与0.4.2
+是使用qbittorrent-nox 3.3.,python-qbittorrent 0.3.1
+也可qbittorrent-nox4.3.5与python-qbittorrent0.4.2
+ubuntu直接安装的为4.1.x,0.3.1
 #qbittorrent
 pip3 install python-qbittorrent
 yum -y install epel-release

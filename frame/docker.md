@@ -1,3 +1,39 @@
+```
+查看latest具体版本
+docker image inspect    rabbitmq:latest|grep -i version
+```
+
+```
+tail -f /dev/null
+```
+
+
+
+### lisa所有版本
+
+```
+docker 20.10.7
+docker-compose 1.28.5
+```
+
+##### workdir
+
+```
+对build阶段生效，对run阶段也生效，用于切换目录。
+```
+
+
+
+```
+文件夹复制
+COPY  文件 文件，指定的名字
+COPY  文件 文件夹，放到文件夹下
+COPY  文件夹 文件夹，直接将源文件夹下的零散文件放在目的文件夹
+COPY  文件夹/* 文件夹，同上
+```
+
+
+
 #清空所有
 #network,ports,volumes,depends,devices,sysctls,cap-add
 docker-compose up web
@@ -217,6 +253,7 @@ echo \
 sudo yum install -y yum-utils \
   device-mapper-persistent-data \
   lvm2
+  
 sudo yum-config-manager \
     --add-repo \
     http://mirrors.aliyun.com/docker-ce/linux/centos/docker-ce.repo

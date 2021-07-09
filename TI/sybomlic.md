@@ -1,3 +1,67 @@
+### 论文
+
+```
+#Forecasting Malware Capabilities From Cyber Attack Memory Images
+代码提供在此处：https://cyfi.ece.gatech.edu/.
+code:https://github.com/CyFI-Lab-Public/Forecast
+摘要:
+捕获恶意软件内存镜像，通过镜像进行后续符号执行。通过api序列、参数、数据流向确定能力，并根据数据流向计算每个能力出现的可能性。实现了识别7个能力的框架包，以及预测能力可能性。在符号执行时，维护符号执行值和实际值，通过其定义的方法计算DC，进而计算能力分支可能性。相比单独的内存取证，符号执行能获取到api的参数信息，例如strncpy参数中的url。
+
+样例：
+1使用DarkHotel样本作为示例，展示算法的功能,DakrHotel通过鱼叉攻击进行apt威胁。DarkHotel感染后删除自身的二进制，并与C&C服务器通信，将线程注入到Windows Explorer中，并过滤侦察数据。
+
+2关于如何确定能力，其记录api调用序列，并记录api之间的数据流向关系，特别是api参数流向。使用AveMaria作为示例，它code injection系统的Sucshost服务，从而窃取Firefox的cookie文件，也窃取屏幕信息。
+
+实验：
+在6727多个样本上进行了实验，包含274个家族。
+
+code:
+官网下载ubuntu18.04.5系统，clone提供的forecast项目到虚拟机。安装python3.7-dev环境，按照readme安装所需的依赖。
+1.Setup the virtual environment python3.7 -m venv venv
+2.Activate the virtual environment . ./venv/bin/activate
+3.Install custom cle pip install -e ../path/to/Forcast/cle
+4.Install custom angr pip install -e ../path/to/Forcast/angr
+5.Install simprocedures pip install -e ../path/to/Forcast/simprocedures
+6.Install forsee and dependencies pip install -e .[dev]
+#运行
+python forsee.py 
+循环控制，剪枝等
+```
+
+```
+#Technique for malware analysis
+```
+
+```
+#Optimize symbolic execution  for malware classification
+```
+
+
+
+```
+blogs->网络，文件IO
+连续block的相同函数，block划分策略
+遍历图
+顶会代码
+```
+
+### 栈例子
+
+```
+void fun(int a) {
+	int b;
+	char s;
+	gets(&s);
+	if(a == 0x1234){
+		puts(&s);
+	}
+}
+```
+
+![函数栈&EIP、EBP、ESP寄存器的作用](https://www.k2zone.cn/wp-content/uploads/2018/09/TIM%E6%88%AA%E5%9B%BE20180914001704.jpg)
+
+
+
 ### 0b7ab5021e8fcf319d628e52e2121f82
 
 ```
@@ -6,6 +70,37 @@ process : execute a file ,Clone syscall, fork or vfork
 printf: .
 缓冲区溢出漏洞攻击植入
 设置自启动
+
+获取execl函数的argv，argc得到sbin/linuxconf字符串
+```
+
+### HOOK
+
+```
+hook会替换原函数的功能，影响state或simgr进行模拟
+```
+
+### CLE
+
+```
+https://github.com/angr/cle/tree/master/cle/backends
+```
+
+
+
+### simproducers
+
+```
+angr/angr/procedures/
+https://docs.angr.io/extending-angr/simprocedures
+state.inspect.simprocedure
+```
+
+### Block
+
+```
+proj.factory.block(state.addr).capstone
+
 ```
 
 
@@ -62,11 +157,10 @@ ember数据集，不包含二进制文件，只有提取的信息。
 天池的新人赛，提供了二进制文件。
 ```
 
-
-
 ### Temp
 
 ```
+寄存器，内存（函数堆栈），函数参数
 
 除了api调用外额=外获得寄存器、内存信息，函数的传递参数,行为造成的后果，如改变注册表，防火墙，文件等。
 
@@ -97,7 +191,6 @@ state1.solver.eval(input_data, cast_to=bytes)
 ```
 #solver
 state1.solver.eval(input_data, cast_to=bytes)
-
 #
 state.solver.add(x > y)
 state.solver.eval(x)
@@ -140,6 +233,21 @@ pruned
 
 state.active
 state.unsat
+
+#state 迭代
+while True:
+ 	if len(rsb.successors)==2:
+        break
+    addr=state.block().addr
+    print('addr :',hex(addr),end=" ")
+    rsb=state.step()
+    state=rsb.successors[0]
+    
+#simgr 迭代
+while len(sim.active) == 2:
+    print('0 :',hex(sim.active[0].addr))
+    print('1 :',hex(sim.active[1].addr))
+    sim.step()
 ```
 
 ```
