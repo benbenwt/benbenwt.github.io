@@ -7,6 +7,13 @@ docker image inspect    rabbitmq:latest|grep -i version
 tail -f /dev/null
 ```
 
+### 删除none镜像
+
+```
+清空
+docker rmi $(docker images -a|grep none|awk '{print $3}')
+```
+
 
 
 ### lisa所有版本
@@ -27,7 +34,7 @@ docker-compose 1.28.5
 ```
 文件夹复制
 COPY  文件 文件，指定的名字
-COPY  文件 文件夹，放到文件夹下
+COPY  文件 文件夹，放到文件夹下,文件夹不存在则当作为名字。
 COPY  文件夹 文件夹，直接将源文件夹下的零散文件放在目的文件夹
 COPY  文件夹/* 文件夹，同上
 ```
@@ -466,23 +473,18 @@ curl localhost:9870
 >
   >开发者开发完毕，使用docker封装好环境和服务，使用者使用命令拉取和运行，不用关心运行环境。
 
+```
+#关于编译环境和发布环境
 ARG webhost=locahost:4242，定义的ARG在build必须通过**--build-arg a_name=a_value**形式指定。
-
---from=build 从build复制，build为基础环境的别名.如FROM  centos as build.多个from是为了编译环境和发布环境分离，使得最终的镜像只包含需要的部分。
-
+--from=build 从build复制，build为基础环境的别名.
+如FROM  centos as build.多个from是为了编译环境和发布环境分离，使得最终的镜像只包含需要的部分。
 或者在docker-compose中指定。
-
   dockerfile1例子：
-
   FROM centos
-
   VOLUME ["volume01","volume02"]
-
   CMD echo "---end---"
-
   CMD /bin/bash
-
-  
+```
 
   使用docker build -f dockerfile1 -t   weitao/centos .构建dockerfile文件。
 
