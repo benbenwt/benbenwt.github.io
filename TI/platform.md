@@ -1,4 +1,20 @@
 ```
+部署的时候需要注意的
+1前端的down_loadapi需要替换为宿主机ip，前端服务器ip也要更为宿主机ip。
+2es的max_result_window，插入cit的顺序，先用apt报告插入生成cti表。sysctl_max_heap
+3cve模块删除sqlite数据库保留stix——results文件夹否则报错。
+```
+
+navicate破解版:http://fankey.blog365.cn/database/129.html
+
+```
+threat-broad
+nonetype object is not subscriptable
+```
+
+
+
+```
 关于hadoop和elasticsearch的使用场景
 es着力于搜索，它在聚合统计上支持很差，性能也很差。一般通过使用painless来完成聚合统计工作，因为它不支持join和中间结果存储、后续分析等。只能使用拼接key值的方法统计聚合字段。例如7.26号的新增人数有多少。
 ```

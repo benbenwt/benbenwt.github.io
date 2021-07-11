@@ -1,4 +1,10 @@
 ```
+可能问题，result_window,sysctl_max_heap
+```
+
+
+
+```
 #search_after
 https://blog.csdn.net/zzh920625/article/details/84593590
 https://www.elastic.co/guide/en/elasticsearch/reference/6.7/search-request-search-after.html
