@@ -1,3 +1,18 @@
+### volume local dirver
+
+```
+在/var/lib/docker 目录下存储
+```
+
+
+
+```
+docker network ls
+docker network rm 
+```
+
+
+
 ```
 查看latest具体版本
 docker image inspect    rabbitmq:latest|grep -i version

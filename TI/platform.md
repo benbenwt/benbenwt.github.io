@@ -1,9 +1,58 @@
 ```
 部署的时候需要注意的
-1前端的down_loadapi需要替换为宿主机ip，前端服务器ip也要更为宿主机ip。
-2es的max_result_window，插入cit的顺序，先用apt报告插入生成cti表。sysctl_max_heap
-3cve模块删除sqlite数据库保留stix——results文件夹否则报错。
+清空data,只保留cti_server,threat-broadcast-master对应结构。
+
+1前端的down_loadapi需要替换为宿主机ip，前端宿主机服务器ip也要更为宿主机ip。
+2修改ulimit  1048570并重启.sysctl_max_heap.修改vm.max_map_count并重启
+2修改es的max_result_window
+docker 20.10.7  docker-compose 1.28.5
 ```
+
+### ulimit
+
+```
+too many open files
+blog：https://blog.csdn.net/qq_18298439/article/details/83896777
+调节宿主机的文件和进程限制
+lsof -p 进程id 查看进程使用的文件
+ulimit -a
+ulimit -n 4096
+vim /etc/security/limits.conf  
+* soft nofile 4096  
+* hard nofile 4096  
+
+#ulimit  -a，信息解释
+core file size          (blocks, -c) 0  #
+data seg size           (kbytes, -d) unlimited
+scheduling priority             (-e) 0
+file size               (blocks, -f) unlimited
+pending signals                 (-i) 31574
+max locked memory       (kbytes, -l) 64
+max memory size         (kbytes, -m) unlimited
+open files                      (-n) 10240  #打开文件数量，包括socker链接等。
+pipe size            (512 bytes, -p) 8
+POSIX message queues     (bytes, -q) 819200
+real-time priority              (-r) 0
+stack size              (kbytes, -s) 8192
+cpu time               (seconds, -t) unlimited
+max user processes              (-u) 31574
+virtual memory          (kbytes, -v) unlimited
+file locks                      (-x) unlimited
+```
+
+### vm.max_map_count
+
+```
+blog:https://blog.csdn.net/xcc_2269861428/article/details/100186654
+报错:max virtual memory areas vm.max_map_count [65530] is too low, increase to at least [262144]
+vim /etc/sysctl.conf
+vm.max_map_count=262144
+/sbin/sysctl -p 
+```
+
+
+
+
 
 navicate破解版:http://fankey.blog365.cn/database/129.html
 
