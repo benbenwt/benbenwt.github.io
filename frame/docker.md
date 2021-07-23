@@ -1,7 +1,27 @@
+
+
+
+
+### 删除所有容器和镜像
+
+```
+docker kill $(docker ps -a -q)
+docker rm $(docker ps -a -q)
+docker rmi -f $(docker images -q)
+```
+
+
+
 ### volume local dirver
 
 ```
 在/var/lib/docker 目录下存储
+```
+
+查看磁盘占用
+
+```
+docker system df -v
 ```
 
 
@@ -297,14 +317,13 @@ vim /etc/docker/daemon.json
 {
   "registry-mirrors": ["https://134lgcv1.mirror.aliyuncs.com"]
 }
-
+systemctl daemon-reload
+systemctl restart docker。
 ```
 
 
 
-重启服务：
-systemctl daemon-reload
-systemctl restart docker。
+
 
 ### docker-compose安装
 

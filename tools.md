@@ -9,7 +9,7 @@ http://caiyun.fuligou.tk/
 ```
 
 ```
-hdfs :hive:May 22 20:40  copy14  copy 119
+hdfs :hive:Ma*y 22 20:40  copy14  copy 119
 ```
 
 ```

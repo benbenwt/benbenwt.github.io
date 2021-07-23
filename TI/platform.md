@@ -1,11 +1,12 @@
 ```
-部署的时候需要注意的
+部署时需要修改的代码和配置：
 清空data,只保留cti_server,threat-broadcast-master对应结构。
 
 1前端的down_loadapi需要替换为宿主机ip，前端宿主机服务器ip也要更为宿主机ip。
-2修改ulimit  1048570并重启.sysctl_max_heap.修改vm.max_map_count并重启
-2修改es的max_result_window
+2修改ulimit  1048570并重启sysctl_max_heap.修改vm.max_map_count并重启
+2修改es的max_result_windows
 docker 20.10.7  docker-compose 1.28.5
+安装:https://docs.docker.com/engine/install/ubuntu/。
 ```
 
 ### ulimit
@@ -17,6 +18,8 @@ blog：https://blog.csdn.net/qq_18298439/article/details/83896777
 lsof -p 进程id 查看进程使用的文件
 ulimit -a
 ulimit -n 4096
+
+
 vim /etc/security/limits.conf  
 * soft nofile 4096  
 * hard nofile 4096  
@@ -50,7 +53,16 @@ vm.max_map_count=262144
 /sbin/sysctl -p 
 ```
 
+### 修改max_result_size
 
+```
+PUT policy_document/_settings
+{
+  "index":{
+    "max_result_window":1000000
+  }
+}
+```
 
 
 
@@ -1048,3 +1060,4 @@ SELECT category_id categoryId,category,value,time FROM category_tbl a WHERE a.ti
 
 3.25：统一中英文location
 
++

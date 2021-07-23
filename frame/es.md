@@ -22,14 +22,13 @@ GET twitter/_search
         {"tie_breaker_id": "asc"}
     ]
 }
-
 ```
 
 
 
 ```
 分页,临时解决如下：完全解决使用scroll和scroll-scan
-PUT policy_document/_settings
+PUT cti/_settings
 {
   "index":{
     "max_result_window":1000000
