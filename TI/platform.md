@@ -1,4 +1,10 @@
 ```
+若使用hadoop，则抽取的单个样本信息应存入hbase，因为hbase是数据库，而hive是数据仓库我们需要进行实时聚合统计的查询，hive不适合这种场景。那么此处使用hbase和mysql有什么区别呢。
+```
+
+
+
+```
 部署时需要修改的代码和配置：
 清空data,只保留cti_server,threat-broadcast-master对应结构。
 
