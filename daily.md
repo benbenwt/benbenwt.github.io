@@ -8,12 +8,15 @@
 210611:elasticsearch正则,备份代码，spark学习。
 210723：为docker-platform添加apt，pip源，不从网上拉取es，而是自己复制。
 20210726： task scheduling 相关论文
+20210804:docker uploadstix2，spark learn
+20210808：uploadstix2，论文
+20210809：论文
 ```
 
 ### 4:
 
 ```
-1  崔稿，导入stix，cve，专利
+1  导入stix，cve，专利
 2  框架，书籍
 3
 4

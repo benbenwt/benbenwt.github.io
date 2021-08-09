@@ -6,6 +6,13 @@
 安装教程:http://spark.apache.org/docs/latest/
 ````
 
+##### 本地模式
+
+```
+./bin/run-example SparkPi 10
+./bin/sprk-shell --master local[2]
+```
+
 ##### standalone模式
 
 ```
@@ -15,14 +22,29 @@ netstat -lntp
 curl localhost:8081
 ```
 
-
-
-```
-P17 sprk yanr部署模式
+##### yarn模式集群
 
 ```
+官网:http://spark.apache.org/docs/latest/running-on-yarn.html
+```
+
+```
+vim spark-en.sh
+export HADOOP_CONF_DIR=..../
+export YARN_CONF_DIR=..../
+./bin/spark-submit --class org.apache.spark.examples.SparkPi \
+    --master yarn \
+    --deploy-mode cluster \
+    --driver-memory 4g \
+    --executor-memory 2g \
+    --executor-cores 1 \
+    examples/jars/spark-examples*.jar \
+    10
+```
 
 
+
+### scala安装
 
 ```
 下载scala包或在idea的project structure中指定自动下载，在setting的plugins中下载scala插件。
