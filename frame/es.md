@@ -1,4 +1,16 @@
 ```
+
+```
+
+##### es bulk 错误
+
+```
+bulk通过换行符分割传输的多个数据，如果json数据中带有换行符就会导致报错，干扰正确的分割。
+```
+
+
+
+```
 可能问题，result_window,sysctl_max_heap
 ```
 
@@ -101,9 +113,11 @@ GET /gb/_mapping/tweet
 
 
 
+### 聚合查询
+
 ```
 #从name中统计malware_types分布
-GET /myindex/_search 
+GET /myindex/_search ,
 {
   "size":0,
   "query": {
@@ -291,6 +305,8 @@ elasticsearch 2中采用String类型，其分为analyzed_string和not_analyzed_s
 在es3中自动映射为text的字段，会被添加一个fidld域，其中有keyword字段可用于聚合查询。
 ```
 
+##### 查询type类型排行
+
 ```
 #查询type类型排行
 GET /myindex/_search
@@ -373,7 +389,7 @@ POST /myindex/_doc
 GET /myindex/_search?size=5&from=10000
 ```
 
-
+##### 过滤查询
 
 ```
 #查询type为malware的

@@ -1,7 +1,7 @@
 #### shell命令
 
 ```
-mysql -h -u -
+mysql -h localhost -u root -p root
 ```
 
 

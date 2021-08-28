@@ -1,3 +1,17 @@
+### python替换换行符
+
+```
+str.replace("\r","").replace("\n",""),必须两个都替换
+```
+
+#### matplot绘图
+
+```
+https://blog.csdn.net/qq_41262248/article/details/79839998
+```
+
+
+
 ### flask
 
 ```
@@ -10,6 +24,14 @@ flask run  -p 8888 -h 0.0.0.0
 
 ```
 python -m http.server 端口号
+```
+
+### subprocess
+
+```
+https://www.cnblogs.com/xiugeng/p/8874227.html
+import subprocess
+subprocess.Popen(['cd '], stdout=subprocess.PIPE, shell=True)
 ```
 
 
@@ -32,11 +54,32 @@ jupyter contrib nbextension install --user --skip-running-check
 
 ### Anaconda
 
+##### anaconda pip 错误
+
+```
+error : ImportError: cannot import name 'InvalidSchemeCombination' from 'pip._internal.exceptions'
+
+https://stackoverflow.com/questions/67446140/importerror-cannot-import-name-invalidschemecombination-from-pip-internal-e
+```
+
+
+
+##### 安装jupyter
+
+```
+https://www.cnblogs.com/fwl8888/p/9586211.html
+conda install jupyter notebook
+```
+
+
+
 ```
 切换jupyter python环境
 https://www.jianshu.com/p/b34866f7334a
 conda activate angr
 conda install ipykernel
+#安装内核
+python -m ipykernel install  --name your_env
 python -m ipykernel install --user --name your_env --display-name "your_display"
 ```
 
@@ -56,7 +99,7 @@ jupyter serverextension enable nb_conda
 2.jupyter nbextension enable --py widgetsnbextension
 ```
 
-
+### conda操作命令
 
 ```
 #安装
@@ -89,6 +132,7 @@ conda install --offline 包名
 到anaconda\Lib\site-packages\下创建tensorflow文件夹，放入tar包
 使用conda进入该目录，执行conda install --offline  -f 包名
 #删除环境
+
 conda remove -n env_name --all
 conda clean --all
 conda clean --packages --tarballs
@@ -102,6 +146,24 @@ conda list
 conda info
 #创建新环境用conda创建，不要用pycharm，会创建失败。
 ```
+
+##### 常用
+
+```
+conda remove -n env_name --all
+delete the envs directory.......
+conda create -n pytorch python=3.6
+conda activate tensorflow_2
+conda install jupyter notebook
+conda install ipykernel
+#安装内核
+python -m ipykernel install  --name your_env
+python -m ipykernel install --user --name your_env --display-name "your_display"
+
+
+```
+
+
 
 ```
 #.condarc配置,使用命令添加后仍无法下载。删除channels下的defaults，https改为http，添加后缀win-64
@@ -129,11 +191,18 @@ yum install zlib-devel bzip2-devel openssl-devel ncurses-devel sqlite-devel read
 make && make install
 ```
 
-
-
 ### pip
 
+##### 安装keras_contrib
+
 ```
+https://blog.csdn.net/qq_32863339/article/details/102791024
+```
+
+
+
+```
+python -m pip install --upgrade pip
 安装离线whl
 pip install 1.whl
 #read timeout
@@ -159,7 +228,7 @@ pip install -i https://pypi.tuna.tsinghua.edu.cn/simple pip -U
 pip install -i https://pypi.tuna.tsinghua.edu.cn/simple tensorflow
 pip install pythonModuleName -i https://mirrors.aliyun.com/pypi/simple
 pip install pythonModuleName --extra-index-url https://mirrors.aliyun.com/pypi/simple
-阿里的：http://m
+阿里的：https://mirrors.aliyun.com/pypi/simple
 豆瓣的：http://pypi.douban.com/simple/
 ```
 
@@ -210,6 +279,15 @@ python setup.py install
 
 
 
+##### 安装tensorflow
+
+```
+pip install --upgrade tensorflow
+ts官网:https://tensorflow.google.cn/install/pip
+```
+
+
+
 ### problem
 
 ##### pycountry不可使用
@@ -236,5 +314,21 @@ PyInstaller --clean temp2.spec
 
 ```
 删除.condarc
+```
+
+##### AttributeError: 'Tensor' object has no attribute '_keras_history' ****
+
+```
+https://blog.csdn.net/m0_49621298/article/details/115535976
+通过keras_contrib导入crf_losses，在使用y_pred,y_true计算损失值时，y_pred._keras_history[:2]报错，表示tensor无此属性。
+版本问题，使用 tensorflow-gpu==2.1.0，keras==2.3.1，keras-contrib==2.0.8主要是keras和tensorflow的版本可能过高。
+```
+
+##### load_weights报错AttributeError: ‘str‘ object has no attribute ‘decode‘
+
+```
+https://blog.csdn.net/canpian7/article/details/114883999
+pip install h5py==2.10 -i https://pypi.douban.com/simple
+然后从其Jupyter的内核即生效
 ```
 

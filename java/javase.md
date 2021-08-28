@@ -1066,6 +1066,8 @@ handler:拒绝策略
 
 # IO
 
+>![img](http://uploadfiles.nowcoder.com/images/20150328/138512_1427527478646_1.png)
+
 ```
 IO流用于向内存写入数据或从内存读出数据。
 IO流有四个顶级抽象父类，关于java的框架都基于这些类进行IO流的扩展。

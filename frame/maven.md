@@ -1,3 +1,15 @@
+### 更改maven源
+
+```
+https://blog.csdn.net/qq_21190847/article/details/105240049
+<mirror>
+    <id>nexus-aliyun</id>
+    <mirrorOf>central</mirrorOf>
+    <name>Nexus aliyun</name>
+    <url>http://maven.aliyun.com/nexus/content/groups/public</url>
+</mirror>
+```
+
 
 
 ### jar包管理
