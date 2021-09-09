@@ -1,3 +1,10 @@
+```
+temp:
+core native backendnlp parent
+```
+
+
+
 # git命令
 
 >本地仓库由三棵树构成，
@@ -107,6 +114,12 @@ git reset --hard origin/master  强行合并，本地的update覆盖掉。
 ```
 
 # problem
+
+##### Unable to access ‘https://github.com/**/**/‘: OpenSSL SSL_read: Connection was aborted, errno 10053
+
+```
+git config --global http.sslVerify false
+```
 
 ##### pull，push，fetch等操作卡住
 

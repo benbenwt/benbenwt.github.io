@@ -1,3 +1,39 @@
+```
+mysql有快照嘛
+```
+
+
+
+##### 从lisadb删除id_重复的
+
+>更改SUBSTRING_INDEX的第三个参数(1,2,3,4,5,6,7)，迭代完成任务
+>
+>
+
+```
+delete from celery_taskmeta where id in  
+(select  SUBSTRING_INDEX(SUBSTRING_INDEX(ids,',',1),',',-1) AS id from
+(select SUBSTRING_INDEX(id,',',-(num-1)) AS ids,num-1 as newnum from 
+ (select id,num from
+	(select GROUP_CONCAT(id) as id,id_ as id_,count(id_) as num from celery_taskmeta   where status='SUCCESS' group by id_   order by count(id_) desc) t1 where num >1) t2) t3 )
+```
+
+##### id_重复的需要删除的有多少条
+
+```
+(select  SUBSTRING_INDEX(SUBSTRING_INDEX(ids,',',1),',',-1) AS id,sum(newnum) from
+(select SUBSTRING_INDEX(id,',',-(num-1)) AS ids,num-1 as newnum from 
+ (select id,num from
+	(select GROUP_CONCAT(id) as id,id_ as id_,count(id_) as num from celery_taskmeta   where status='SUCCESS' group by id_   order by count(id_) desc) t1 where num >1) t2) t3 )
+```
+
+##### 填filename
+
+```
+```
+
+
+
 #### shell命令
 
 ```

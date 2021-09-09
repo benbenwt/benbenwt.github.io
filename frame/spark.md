@@ -1,3 +1,28 @@
+### 关于安装
+
+```
+从官网下载spark的压缩包，其不区分平台无需编译，说明是由java语言和scala编写的源码或字节码或jar包，然后由java虚拟机进行跨平台编译执行。
+进入bin目录，pyspark即可启动交互命令行和webui，其是由java编写的程序，带有web程序后端和html。
+```
+
+### spark提交远程jar包
+
+```
+pyspark --packages com.johnsnowlabs.nlp:spark-nlp_2.11:2.5.5
+此操作会去repo1.maven.org下载对应jar包和依赖。
+```
+
+### pysaprk
+
+```
+#本地编译器调试运行，以setHadoophome形式控制整个逻辑。
+spark和hadoop都以hdfs//或spark//接口形式接受请求和控制作业。
+这种情况hadoop或spark提供了执行环境，结果写出到本地。
+python负责编写逻辑，提交到服务端spark后，spark进行
+```
+
+
+
 ### spark安装
 
 >spark-3.1.2-bin-hadoop3.2,默认we端口8080,绑定失败会用8081端口。

@@ -1,3 +1,33 @@
+### CICFlowMeter
+
+```
+关注这几个类ReadPcapFileWorker,PacketReader,BasicFlow,FlowGenerator
+PacketReader负责从pcap读取信息。ReadPcapFileWorker负责将PacketReader读取的信息写入FlowGenerator中，FlowGenerator的currentFlows(HashTable<String,BasicFlow basicFlow>)负责存储多个BasicFlow。basicFlow负责统计单个流的属性。
+如果重写维度，要重写FlowFeature枚举的头部和DumpFlowBasedFeatures提取的维度信息。
+维度组成包的大小，时间，（max,min,mean,std）
+数据集网站:https://www.unb.ca/cic/datasets/ids-2017.html
+数据集及pcap下载连接:http://205.174.165.80/CICDataset/CIC-IDS-2017/Dataset/PCAPs/
+```
+
+
+
+### disspcap安装
+
+```
+https://disspcap.readthedocs.io/en/latest/installation.html#install-build-requirements
+PYPI网站
+```
+
+
+
+```
+ReadPcapFileWorker 读取pcap
+InsertCsvRow csv插入
+FlowGenerator j
+```
+
+
+
 ### wireshark分割
 
 ```

@@ -1,3 +1,11 @@
+#### selenium
+
+```
+驱动地址：http://chromedriver.storage.googleapis.com/index.html?path=92.0.4515.43/
+```
+
+
+
 ### python替换换行符
 
 ```
@@ -71,7 +79,7 @@ https://www.cnblogs.com/fwl8888/p/9586211.html
 conda install jupyter notebook
 ```
 
-
+##### 将python kernel安装到jupyter
 
 ```
 切换jupyter python环境
@@ -86,7 +94,7 @@ python -m ipykernel install --user --name your_env --display-name "your_display"
 
 
 ```
-#jupyter切换虚拟环境
+#jupyter切换虚拟环境,仅供
 conda install nb_conda
 conda install -c conda-forge nb_conda_kernels
 jupyter serverextension disable nb_conda
@@ -101,11 +109,16 @@ jupyter serverextension enable nb_conda
 
 ### conda操作命令
 
+##### 安装
+
 ```
-#安装
+参考官网
+```
 
+##### 创建新环境
+
+```
 #命令
-
 conda create -n lisa --clone base
 conda create -n pytorch python=3.6
 activate pytorch
@@ -184,12 +197,24 @@ show_channel_urls: true
 ### 编译安装python
 
 ```
+官网下载centos平台的压缩包，解压到目录。
+cd Python.x.x
 yum remove python3 python3.x
 #python依赖
 yum install zlib-devel bzip2-devel openssl-devel ncurses-devel sqlite-devel readline-devel tk-devel gcc make
 ./configure prefix=/usr/local/python3
 make && make install
 ```
+
+### pycharm
+
+##### 导出requiments
+
+```
+pip3.exe freeze > requirements.txt
+```
+
+
 
 ### pip
 
@@ -214,7 +239,7 @@ pip config unset global.index-url
 pip config list
 ```
 
-
+##### 使用源
 
 ```
 #使用清华源
@@ -330,5 +355,24 @@ https://blog.csdn.net/m0_49621298/article/details/115535976
 https://blog.csdn.net/canpian7/article/details/114883999
 pip install h5py==2.10 -i https://pypi.douban.com/simple
 然后从其Jupyter的内核即生效
+```
+
+#### requests库解码失败
+
+```
+python3.6.此代码在windows正常执行，centos7报错。
+response=requests.post('redqueen')
+print(response.text)
+#输出为乱码
+print(response.content.decode('utf-8'))
+#decode 解码失败，有无法识别字符
+
+观察response的headers如下：
+content-encoding: br
+content-type: text/html;charset=utf-8
+request的headers如下:
+accept-encoding: gzip, deflate, br
+
+可见是由于br压缩格式导致的，可将request的br去掉，不接受br格式即可。或使用python库解压缩br格式，然后再解码打印。
 ```
 

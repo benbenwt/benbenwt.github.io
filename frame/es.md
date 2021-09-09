@@ -1,6 +1,69 @@
 ```
+使用bulk批量api可以一次请求提交多个，缩短花费时间。
+
+关于readtimeout，在规定timeout时间内，无法发送完所有数据，es无法处理完发送给他的数据并返回正确信息，客户端直接抛出超时异常。
+花费时间有：1发送数据到服务端的花费，当数据很大时，占比也很大2服务器解析json，当json解析占用了很多内存，资源不足就会connection refused。
+对于大量数据可能会readtimeout，措施如下：
+1控制客户端发送批次的大小，每个批次指定文件数量或批次文件总大小。如100个文件或50M发送一次。实际上按照大小分批后就不会报错了，分批次保证了每次请求50M，在timeout时间内能传送完。
+2扩充服务端内存，网络带宽等。
+3针对可connection refused只能失败重传,分批次提交，并进行失败重传，注意重传覆盖数据是否影响功能。
 
 ```
+
+
+
+api document:https://www.elastic.co/guide/en/elasticsearch/reference/current/indices-get-mapping.html
+
+### python client
+
+
+
+##### 查询所有id
+
+```
+body = {
+        "_source":"false",
+        "query": {
+            "match_all": {}
+        }
+    }
+hits = es.search(index="cti", body=body, size=10000)['hits']['hits']
+```
+
+##### 删除
+
+```
+    # es.get(index="myindex", id=1)['_source']
+es.delete(index='indexName', doc_type='typeName', id='idValue')
+```
+
+
+
+##### problem
+
+###### 超时
+
+```
+  es.index(index="cti", id=md5, body=data, request_timeout=60)加上request_timeout
+```
+
+
+
+### curl指令
+
+```
+/cti/_mapping
+```
+
+
+
+```
+curl -X GET "172.18.65.185:9200/cti/_count"
+搜索id
+curl -X GET "172.18.65.185:9200/cti/_search/232daf111111111111"
+```
+
+
 
 ##### es bulk 错误
 
@@ -115,9 +178,41 @@ GET /gb/_mapping/tweet
 
 ### 聚合查询
 
+##### 统计malware组件没有malwaretypes的数量
+
+```
+GET /myindex/_search 
+{
+  "size":0,
+  "query": {
+    "term": {
+      "objects.type.keyword": {
+        "value": "malware"
+      }
+    }
+  },
+  "aggs": {
+    "group_by_date": {
+      "terms": {
+        "script": {
+          "lang":"painless",
+          "inline": """if (doc['objects.malware_types.keyword'].length==0){return 'other'+"####"+doc["objects.created"].value.toString();} """
+        },
+        "size":240,
+        "shard_size": 240
+      }
+    }
+  }
+}
+```
+
+
+
+##### 针对report组件进行统计
+
 ```
 #从name中统计malware_types分布
-GET /myindex/_search ,
+GET /myindex/_search 
 {
   "size":0,
   "query": {

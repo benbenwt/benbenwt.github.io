@@ -1,4 +1,46 @@
 ```
+多态的作用，你需要三个子类进行一些类似的动作，但是动作又有各自的实现。可以通过将父类赋值为不同子类来实现。
+```
+
+
+
+```
+批量插入es时，可能由于数据量过大、文件过大、其他原因导致插入中断，es会直接报异常不会返回错误的id，若后续操作依赖于es插入结果决策，则没办法。只能解决文件过大和数据量过大的问题，限制大小或修改配置允许大小，控制发送的数据量来避免错误。
+```
+
+
+
+```
+删除lisadb中重复id_，保留一个。
+删除es中无索引数据。
+分块插入并检测是否已经存在。
+```
+
+
+
+### 数量关系
+
+```
+四个模块的数量：malware模块,cve模块,pcap模块,apt模块 ,模块必须和list对应
+ok --->   malware模块=<malware 数量(malware组件数量（即动态分析，其他类别）+apt模块的malware（木马+....+蠕虫）) 
+ok --->   cve模块=<cve数量(cve模块+apt模块)
+
+
+
+爬取重复的是不进行提交析的，也不增加数量。若提交一个重复的，则默认不进行提交，但增加数量。避免malware模块超出malware 数量太多。
+
+
+其他恶意软件为未识别的，不就是malware模块数量?
+
+location
+category(malware,cve)
+统计malware组件无malware_types个数存入category(elasticsearch)，分类统计时（platform-statistic），别统计其他类别。
+architecture
+```
+
+
+
+```
 将dockerfile的每个版本写固定
 ```
 
@@ -133,12 +175,16 @@ hadoop慢的原因，在hive仓库中，数据分散在多个小文件中，每�
 Apache Maven 3.6.1
 ```
 
-| hostname | ip   | 服务                                         |
-| -------- | ---- | -------------------------------------------- |
-| hbase    | 187  | esto_mysql                                   |
-| hbase1   | 186  | nginx,cve                                    |
-| hbase2   | 185  | elasticsearch,mysql,lisa2                    |
-| lisa     | 184  | es_provider,lisa_provider,statistic_provider |
+python:pcapAnalyze,batchwork,,fournumber,threat-broadcast,
+
+java:esto_mysql,es_provider,lisa_provider,statistic_provider
+
+| hostname | ip   | 服务                                                  |
+| -------- | ---- | ----------------------------------------------------- |
+| hbase    | 187  | esto_mysql                                            |
+| hbase1   | 186  | nginx,pcapAnalyze,batchwork                           |
+| hbase2   | 185  | elasticsearch,mysql,lisa,threat-broadcast,fournumber, |
+| lisa     | 184  | es_provider,lisa_provider,statistic_provider          |
 
 ```
 部署时需要修改的参数
