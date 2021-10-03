@@ -1,3 +1,19 @@
+### 执行流程
+
+>https://blog.csdn.net/u010745505/article/details/81261019
+
+```
+注意：action操作才会触发sparkContext的runjob方法。然后进行stage和task的划，zau进行资源分配和任务调度。这个rdd上的过程是不可控的...，而mapreduce是可以通过mapreduce进行控制的，但mapreduce局限了表达方式。就算用rdd，rdd也只是用来传递数据和通信吧。实际上mapreduce和rdd控制的是
+1、Driver程序的代码运行到action操作，触发了SparkContext的runJob方法。 
+2、SparkContext调用DAGScheduler的runJob函数。 
+3、DAGScheduler把Job划分stage，然后把stage转化为相应的Tasks，把Tasks交给TaskScheduler。 
+4、通过TaskScheduler把Tasks添加到任务队列当中，交给SchedulerBackend进行资源分配和任务调度。 
+5、调度器给Task分配执行Executor，ExecutorBackend负责执行Task。
+
+```
+
+
+
 ### 关于安装
 
 ```

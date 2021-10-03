@@ -4,6 +4,14 @@
 驱动地址：http://chromedriver.storage.googleapis.com/index.html?path=92.0.4515.43/
 ```
 
+### python语法糖或常用函数
+
+```
+__call__   person（）
+__repr__
+__getitem__ person[0:3]
+```
+
 
 
 ### python替换换行符
@@ -158,6 +166,12 @@ conda config --show-sources
 conda list
 conda info
 #创建新环境用conda创建，不要用pycharm，会创建失败。
+
+  1）conda list 查看安装了哪些包。
+
+    2）conda env list 或 conda info -e 查看当前存在哪些虚拟环境
+
+    3）conda update conda 检查更新当前conda
 ```
 
 ##### 常用
@@ -206,7 +220,9 @@ yum install zlib-devel bzip2-devel openssl-devel ncurses-devel sqlite-devel read
 make && make install
 ```
 
-### pycharm
+
+
+### pip
 
 ##### 导出requiments
 
@@ -215,8 +231,6 @@ pip3.exe freeze > requirements.txt
 ```
 
 
-
-### pip
 
 ##### 安装keras_contrib
 
