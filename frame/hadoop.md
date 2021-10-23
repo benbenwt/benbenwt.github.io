@@ -1,3 +1,10 @@
+### 端口
+
+```
+namenode rpc  8020
+webui 9870
+```
+
 
 
 # hadoop服务器搭建

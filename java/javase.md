@@ -1503,3 +1503,10 @@ this.getClass().getClassLoader().getResourceAsStream("logback.xml");
 
 
 
+### 安装
+
+```
+下载压缩包，配置环境变量
+安装和管理：https://blog.csdn.net/u012707739/article/details/78489833
+```
+

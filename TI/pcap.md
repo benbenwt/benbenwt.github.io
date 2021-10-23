@@ -1,7 +1,41 @@
-### 115
+### 可捕获的恶意软件和pcap
 
 ```
-pcap到csv的代码，挑80个出来。
+find -name "*.pcap"  -size +3M
+./bcc3050e-a401-4aab-92f2-527ee522154d/capture.pcap
+./017835ca-787a-41e1-bc1e-d88c882b318b/capture.pcap
+./9954a0b1-138f-4e5b-96c6-c654d671555e/capture.pcap
+./27c2952b-b4ab-479f-b0d4-9188fbf10ed1/capture.pcap
+./f9f29621-fd75-4317-a603-d0275891af7c/capture.pcap
+./a8a86de5-ad53-473c-b66f-46a8e835995c/capture.pcap
+
+```
+
+
+
+```
+find -name "*.pcap"  -size +4M
+```
+
+
+
+##### 重启Pcap的web服务
+
+```
+#!/bin/bash
+export HADOOP_HOME=/root/module/hadoop-3.1.4
+export PATH=$PATH:$HADOOP_HOME/bin
+export PATH=$PATH:$HADOOP_HOME/sbin
+PATH=$PATH:/usr/local/bin:/usr/bin:/usr/local/sbin:/usr/sbin:/bin:/sbin
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib
+
+while :
+do
+(ps -aux|grep controller.py|grep -v 'grep'|awk  '{print $2}';  )|xargs kill -9
+(ps -aux|grep controller.py|grep -v 'grep'|awk  '{print $2}';  )
+nohup python controller.py  &
+sleep 1800
+done
 ```
 
 

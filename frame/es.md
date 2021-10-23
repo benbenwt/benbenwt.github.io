@@ -33,7 +33,7 @@ hits = es.search(index="cti", body=body, size=10000)['hits']['hits']
 ##### 删除
 
 ```
-    # es.get(index="myindex", id=1)['_source']
+   # es.get(index="myindex", id=1)['_source']
 es.delete(index='indexName', doc_type='typeName', id='idValue')
 ```
 
@@ -663,6 +663,7 @@ POST /myindex/user/1001/_update
 
 ```
 DELETE /myindex/user/1001
+DELETE  /cti_txt/_doc/999999999999999999
 ```
 
 
@@ -821,7 +822,7 @@ POST /myindex/user/_search
 
 
 
-index/type/document,field
+##### index/type/document,field
 
 ```
 elasticsearch -Des.insecure.allow.root=true

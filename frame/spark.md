@@ -1,3 +1,26 @@
+### 创建sparkcontext
+
+```
+SparkSession.builder.getOrCreate().sparkContext
+
+```
+
+从list创建rdd
+
+```
+ pairs = [(x, y) for x, y in zip(features, labels)]
+sc.parallelize(pairs)
+```
+
+### problem
+
+```
+Exception: Python in worker has different version 3.9 than that in driver 3.7, PySpark cannot run with different minor versions. Please check environment variables PYSPARK_PYTHON and PYSPARK_DRIVER_PYTHON are correctly set.
+worker,driver的python版本不匹配，但是两者不都是本机嘛。
+```
+
+
+
 ### 执行流程
 
 >https://blog.csdn.net/u010745505/article/details/81261019
@@ -51,7 +74,7 @@ python负责编写逻辑，提交到服务端spark后，spark进行
 
 ```
 ./bin/run-example SparkPi 10
-./bin/sprk-shell --master local[2]
+./bin/spark-shell --master local[2]
 ```
 
 ##### standalone模式

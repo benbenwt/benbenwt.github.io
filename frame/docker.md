@@ -1,16 +1,12 @@
-
-
-
-
-### 删除所有容器和镜像
+# docker网络
 
 ```
-docker kill $(docker ps -a -q)
-docker rm $(docker ps -a -q)
-docker rmi -f $(docker images -q)
+docker network create jenkins
 ```
 
 
+
+# docker管理
 
 ### volume local dirver
 
@@ -30,8 +26,6 @@ docker system df -v
 docker network ls
 docker network rm 
 ```
-
-
 
 ```
 查看latest具体版本
@@ -250,6 +244,15 @@ docker import - new_hangger_server < hangger_server.tar
 
 >docker各个容器互相独立，不会互相影响。但是他们都作为宿主机的一个进程存在，使用宿主机的ps指令可查看到很多相关进程并进行管理。
 
+### 常用
+
+```
+docker run   --name myhue -p 8888:8888  gethue/hue
+docker stop myhue
+```
+
+
+
 docker为什么出现
 开发-上线 两套环境，版本更新，环境不同，无法跨环境等导致运维考验大。环境配置麻烦。项目能否带着环境安装打包。
 ​实现，开发打包部署上线，一套流程做完。
@@ -264,28 +267,29 @@ docker具有更少的抽象层，不需要模拟硬件guest os。
 
 # docker安装
 
+进入docker docs，找到安装到linux
+
 doc:https://docs.docker.com/engine/install/ubuntu/。
 
 ```
 #安装步骤
 sudo apt-get remove docker docker-engine docker.io containerd runc
-sudo apt-get install \
-    apt-transport-https \
-    ca-certificates \
-    curl \
-    gnupg \
-    lsb-release
-    
- #添加公钥
-curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
 
-#指定系统版本下载源
-echo \
-  "deb [arch=amd64 signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu \
-  $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
-  apt-get update
-  
-  sudo apt-get install docker-ce docker-ce-cli containerd.io
+sudo yum install -y yum-utils
+
+sudo yum-config-manager \
+    --add-repo \
+    https://download.docker.com/linux/centos/docker-ce.repo
+    
+sudo yum install docker-ce docker-ce-cli containerd.io
+
+ yum list docker-ce --showduplicates | sort -r
+ 
+sudo systemctl start docker
+
+sudo docker run hello-world
+    
+
 ```
 
 
@@ -521,6 +525,10 @@ ARG webhost=locahost:4242，定义的ARG在build必须通过**--build-arg a_name
 ```
 
   使用docker build -f dockerfile1 -t   weitao/centos .构建dockerfile文件。
+
+```
+docker build -t myjenkins-blueocean:1.1 .
+```
 
   ##### 基本命令
 

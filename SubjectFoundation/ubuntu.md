@@ -16,8 +16,6 @@ echo 'deb http://mirrors.ustc.edu.cn/debian stable main contrib non-free' >>/etc
 echo 'deb http://mirrors.ustc.edu.cn/debian stable-updates main contrib non-free' >>/etc/apt/sources.list
 ```
 
-
-
 ### vmware
 
 ```
@@ -208,6 +206,7 @@ sudo ln -s /usr/local/bin/docker-compose /usr/bin/docker-compose
 find
 
 ```
+find -name "*.pcap"  -size +4M
 find -size -2kb
 向下取整
 find ./ -name '.py' -exec rm -rf {} ;

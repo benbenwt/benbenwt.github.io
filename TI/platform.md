@@ -1,3 +1,97 @@
+框架
+
+```
+数据库的功能：存储，查找，聚合统计，全文检索
+数据湖实际上只实现存储和查找功能。
+parquet 数据库：列式存储，当然，也是处理关系型数据的。
+apache Ozone 对象存储
+s3 存储：可存储任何数据，最大可达5TB，可用于网盘存储。
+COS 对象存储：可用于存储file文件，但是只提供存储和查找，无统计和检索功能。
+iceberg 表引擎
+flink 流处理
+presto 处理
+kylin 计算
+sqoop 数据转换工具
+
+如何实现的查找呢，三种：
+https://zhuanlan.zhihu.com/p/111822325
+1目录按规则命名
+2过滤列名
+3
+数据湖里存一下json，然后再处理，不用直接放到hdfs上，自己维护查找的索引。
+
+文件数据，非关系型（json数据），关系型数据，
+```
+
+cve
+
+```
+National Vulnerability Database (NVD)
+MITRE CVE LIST
+Vulnerability Database (VULDB)
+WhiteSource Vulnerability Database
+```
+
+
+
+##### 分布
+
+```
+malware,cve爬虫，malware沙箱，malware，cve，pcap后端。
+hbase1: pcap,cve和web后端
+hbase2:cve挖掘，malware挖掘，malware沙箱
+lisa：其他web后端
+```
+
+
+
+##### stix2要用python
+
+```
+malware-stix2
+pcap-stix2
+cve多种格式-stix2
+```
+
+
+
+### hadoop
+
+```
+hive，hbase只可处理结构化数据，和存储文件等，无法处理json，xml，html等。es处理可处理json。
+pcapFeature都是结构化的，图片，文本，malware等无需处理的只需存储的信息，是不是小文件不能呀。
+hadoop和web应用关系，hadoop是存储。
+
+```
+
+##### hbase+elasticsearch
+
+```
+hbase存储真实数据
+es存储hbase的rowkey，rowkey为自己需要实现检索的字段。
+
+存储功能
+搜索功能本质在干什么？搜索就是根据某个词，找到所有包含这个词的文档，也就是倒排索引。（目前需要hash，各种name，各种type，扩展不方便）
+聚合统计功能是针对结构化数据或json等按照一定规则统计。（目前需要恶意样本类型、时间，样本架构，时间地点，扩展比较方便）
+方案1，hbase只实现存储，存储完整json。es实现倒排索引，并实现聚合。倒排索引和聚合都只覆盖部分需要的字段，自己定义。
+```
+
+##### hbase,mysql,es
+
+```
+hbase只支持rowkey查询，无法像mysql或es那样进行字段筛选并搜索。支持按rowkey搜索，按单列统计。
+mysql可进行字段筛选，但是对字段内部或部分进行检索会使用like模糊查询，性能低下。都支持，但搜索性能低。
+es适合分词和全文检索，当然其效果取决于分词效果。都支持，但查询存储没有hbase
+```
+
+##### elasticsearch 2.x官方文档
+
+```
+es的大部分场景是：“一个常见的设置是使用其它数据库作为主要的数据存储，使用 Elasticsearch 做数据检索”（2.X官方文档里说的）。和RDBMS是辅助关系。
+```
+
+
+
 ##### 平台可展现部分
 
 ```

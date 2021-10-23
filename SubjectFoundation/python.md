@@ -1,3 +1,19 @@
+### pycurl
+
+```
+https://www.cnblogs.com/angle6-liu/p/12401217.html
+```
+
+
+
+### miniconda
+
+```
+https://blog.csdn.net/weixin_43141320/article/details/108343528
+```
+
+
+
 #### selenium
 
 ```
@@ -64,6 +80,12 @@ Jupyter notebook
 pip install jupyter_contrib_nbextensions
 jupyter contrib nbextension install --user
 jupyter contrib nbextension install --user --skip-running-check
+```
+
+### pycharm
+
+```
+控制台乱码:setting->editor->三个coding
 ```
 
 
@@ -223,6 +245,15 @@ make && make install
 
 
 ### pip
+
+##### 查看版本
+
+```
+pip list
+pip show 库名
+```
+
+
 
 ##### 导出requiments
 

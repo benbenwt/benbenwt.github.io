@@ -1,3 +1,138 @@
+```
+挖掘，可信，共享，推断，资产发现，资产加情报
+```
+
+
+
+```
+硕博论文集：ProQuest
+计算机相关：dblp
+```
+
+
+
+```
+威胁情报源的可信性评估，威胁情报内容的可信性评估，基于....
+```
+
+
+
+```
+问题：情报共享社区中的威胁情报质量参差不齐，只有高可信的情报才有价值。
+解决方案
+指标
+创新
+优点
+缺点
+```
+
+
+
+```
+特点
+理论部分都是自定义的评估方式，不同于直接用模型，自己的部分较多，本质是优化评估可信度的方式。实验部分可用仿真，但使用时又可以放到spark上。
+如何仿真的？一个并行的算法如何仿真？spark的呢？
+信息可信感知技术
+```
+
+
+
+### 谷歌学术
+
+```
+搜谷歌学术，进中文的那个谷歌搜索，点击搜索结果上的引号，赋值GB/T 标准的引用。
+```
+
+### elephas
+
+```
+一个是http，一个是用rdd返回的结果直接处理的。
+```
+
+### 正确版本
+
+```
+https://github.com/maxpumperla/elephas/issues/82
+https://github.com/maxpumperla/elephas/issues/146
+使用elephas==1.0.0版本,会自动安装其他依赖。
+spark
+java
+Python 3.7.9
+tensorflow==2.1.3
+pyspark==3.0.1
+```
+
+### spark
+
+```
+spark如何输出日志。
+可用print，或和flask等框架一样使用日志框架。
+如何使用flask服务的,post和get请求？
+开flask服务，提供post和get接口。然后用urllib处理拉取和更新请求。
+```
+
+
+
+测试此版本
+
+```
+tensorflow 2.1.0, pyspark 3.0.2, jdk-8u281 and python 3.7 and elephas 1.4.2
+```
+
+
+
+### 搜索关键词
+
+```
+选择advcanced search：全文搜索"apache spark" AND "deep learning"   ,   "apache spark" AND "name entity"
+```
+
+
+
+### github库
+
+```
+https://github.com/cerndb/dist-keras
+相关的可选库
+https://blog.csdn.net/weixin_33849942/article/details/91609549
+```
+
+
+
+### elephas
+
+```
+elephas
+"apache spark" AND "deep learning" 
+```
+
+##### 修改记录
+
+```
+AttributeError: 'Sequential' object has no attribute 'compiled_metrics'
+spark_model.py , line 47
+```
+
+```
+Caused by: java.io.EOFException
+	at java.io.DataInputStream.readInt(DataInputStream.java:392)
+	at org.apache.spark.api.python.PythonRunner$$anon$3.read(PythonRunner.scala:642)
+	... 29 more
+应该是序列化和反序列化的问题，如传递json文件，weights等。
+```
+
+
+
+##### spark
+
+```
+spark更多是一个方法的实现，文中都没有对其进行性能的调优，只是实现了功能。
+文章1：文本情感，集成了svm，lr，crf做分类，实验对比了单机和节点f1和速度。
+文章2：舆情情感：加了自己的数据处理和输入特征处理，用stacking加权集成rf,gbdt,xgboost,knn,svm，lr做次级学习器。实验对比了，TF-IDF,Word2vec等不同输入特征处理的f1，及不同stacking策略的不同节点速度。
+```
+
+
+
 bert-lstm-crf教程
 
 ```

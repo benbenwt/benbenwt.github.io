@@ -1,3 +1,10 @@
+
+
+```
+fuzzy测试
+固件，漏洞模糊测试。二进制爆破，sql，crsf
+```
+
 # AttifyOS
 
 ## firmadyne
