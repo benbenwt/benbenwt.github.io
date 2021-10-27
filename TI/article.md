@@ -1,5 +1,63 @@
+# Apache Spark DL Book
+
+### 1 setting up 
+
 ```
-挖掘，可信，共享，推断，资产发现，资产加情报
+jupyter notebook 配置 pyspark
+spark是运行在jvm中的，需要安装jdk。使用anaconda安装jupyter、pyspark。然后配置环境变量如下，运行sparknotebook会自动启动notebook，也可以不配置环境变量，在运行命令时指定即可。
+配置环境变量如下,vim ~/.bashrc:
+export PATH="/home/docker/minianaconda/bin:$PATH"
+function sparknotebook()
+{
+export SPARK_HOME=/home/docker/minianaconda
+export PYSPARK_PYTHON=python3
+export PYSPARK_DRIVER_PYTHON=jupyter
+export PYSPARK_DRIVER_PYTHON_OPTS="notebook"
+$SPARK_HOME/bin/pyspark
+}
+等价于在terminal运行命令时指定：
+$SPARK_HOME/bin/pyspark  SPARK_HOME=/home/docker/minianaconda PYSPARK_PYTHON=python3 ...省略
+```
+
+
+
+# 共享和可信度
+
+**A Reputation-based Approach using Consortium Blockchain  for Cyber Threat Intelligence Sharing**
+
+```
+问题：cti中包含企业隐私信息，如何确保不被窃取,避免个人身份泄露，进一步利用风险，名誉损失。应对拜占庭攻击，使用区块链。
+解决：分布式信誉系统，联盟区块链
+指标：吞吐量，达成共识效率
+优点：解决了拜占庭
+缺点：
+创新：分布式信誉
+文献：24-26
+```
+
+**Attribute Based Sharing in Cybersecurity**
+**Information Exchange Framework**
+
+```
+问题：避免个人身份泄露，进一步利用风险，名誉损失。共享组织可能访问隐私信息
+解决：使用基于属性的半信任控制访问。
+```
+
+**Distributed security framework**
+
+```
+MISP:open-source threat intelligence sharing platform
+```
+
+**Info-Trust: A Multi-Criteria and Adaptive Trustworthiness Calculation Mechanism for Information Sources**
+
+```
+```
+
+
+
+```
+挖掘，可信，共享，知识推断，资产发现，资产加情报，web自定义sql
 ```
 
 
@@ -7,6 +65,7 @@
 ```
 硕博论文集：ProQuest
 计算机相关：dblp
+论文集：arxiv
 ```
 
 
@@ -43,23 +102,10 @@
 搜谷歌学术，进中文的那个谷歌搜索，点击搜索结果上的引号，赋值GB/T 标准的引用。
 ```
 
-### elephas
+
 
 ```
 一个是http，一个是用rdd返回的结果直接处理的。
-```
-
-### 正确版本
-
-```
-https://github.com/maxpumperla/elephas/issues/82
-https://github.com/maxpumperla/elephas/issues/146
-使用elephas==1.0.0版本,会自动安装其他依赖。
-spark
-java
-Python 3.7.9
-tensorflow==2.1.3
-pyspark==3.0.1
 ```
 
 ### spark
@@ -97,9 +143,50 @@ https://github.com/cerndb/dist-keras
 https://blog.csdn.net/weixin_33849942/article/details/91609549
 ```
 
+# elephas+keras_bert
+
+正确运行版本:
+
+```
+keras_bert==0.83.0
+Keras==2.2.4
+seqeval==0.0.10
+keras_contrib==2.0.8
+matplotlib==3.3.1
+numpy==1.16.4
+Flask==1.1.2
+tensorflow==1.14.0
+```
 
 
-### elephas
+
+# elephas
+
+>要求keras 2.2.5,但为了统一，不再使用tensorflow.keras,tensorflow版本随意。
+>
+>keras-bert-keras2.2.5-tensorflow1
+
+### 正确版本
+
+```
+https://github.com/maxpumperla/elephas/issues/82
+https://github.com/maxpumperla/elephas/issues/146
+使用elephas==1.0.0版本,会自动安装其他依赖。
+spark 3.1.2
+java 1.8
+Python 3.7.9
+tensorflow==2.1.3
+pyspark==3.0.1
+keras==2.2.5
+```
+
+##### Implementing a Deep Learning Model for Intrusion Detection on Apache Spark Platform
+
+```
+两层lstm，展示了很多实验。有如下，不同层数（1，2，3），不同模型（mlp,rnn,lstm），不同集群configuration，排列组合共3*3*3=27种数据。还对比了有无smote采样，两分类和多分类。
+```
+
+
 
 ```
 elephas
@@ -111,6 +198,8 @@ elephas
 ```
 AttributeError: 'Sequential' object has no attribute 'compiled_metrics'
 spark_model.py , line 47
+
+metrics=model.metrics
 ```
 
 ```
@@ -130,17 +219,6 @@ spark更多是一个方法的实现，文中都没有对其进行性能的调优
 文章1：文本情感，集成了svm，lr，crf做分类，实验对比了单机和节点f1和速度。
 文章2：舆情情感：加了自己的数据处理和输入特征处理，用stacking加权集成rf,gbdt,xgboost,knn,svm，lr做次级学习器。实验对比了，TF-IDF,Word2vec等不同输入特征处理的f1，及不同stacking策略的不同节点速度。
 ```
-
-
-
-bert-lstm-crf教程
-
-```
-csdn教程:https://blog.csdn.net/jclian91/article/details/111728692
-github资源:https://github.com/percent4/keras_bert_sequence_labeling
-```
-
-
 
 ```
 表4  不同模型实验结果对比
@@ -193,13 +271,56 @@ http://pasa-bigdata.nju.edu.cn/links.html
 可选：在hadoop上实现es的功能，再并行化点东西。或不使用dl4j直接用简易的算法。
 ```
 
+# keras-bert错误更改
+
+##### AttributeError: module 'tensorflow' has no attribute 'name_scope' 
+
+```
+https://stackoverflow.com/questions/51724309/attributeerror-module-tensorflow-has-no-attribute-name-scope-with-keras
+pip install -I tensorflow
+pip install -I keras
+```
+
 
 
 ```
-AttributeError: module 'tensorflow' has no attribute 'placeholder'
+keras_bert==0.83.0
+Keras==2.2.4
+seqeval==0.0.10
+keras_contrib==2.0.8
+matplotlib==3.3.1
+numpy==1.16.4
+Flask==1.1.2
+tensorflow==1.14.0
+```
+
+```
+使用elephas==1.0.0版本,会自动安装其他依赖。
+spark 3.1.2
+java 1.8
+Python 3.7.9
+pyspark==3.0.1
+tensorflow==2.1.3
+keras==2.2.5
+```
+
+
+
+##### bert-lstm-crf教程
+
+```
+csdn教程:https://blog.csdn.net/jclian91/article/details/111728692
+github资源:https://github.com/percent4/keras_bert_sequence_labeling
+```
+
+##### AttributeError: module 'tensorflow' has no attribute 'placeholder'
+
+```
 修改tensorflow_backend文件,optimizers.py
 import tensorflow.compat.v1 as tf
 tf.disable_v2_behavior()
+
+
 ```
 
 
