@@ -1,6 +1,30 @@
+```
+free -h
+```
+
+
+
 # centos
 
 ### 软件安装
+
+##### 自动yes
+
+```
+https://blog.csdn.net/linyisonger/article/details/106469176
+
+# 一次
+echo yes|[命令] # 输入 yes
+echo y|[命令] # 输入 y
+# 多次
+yes yes|[命令] # 输入 yes
+yes y|[命令] # 输入 y
+
+# 例
+yes yes|docker exec -i gitlab gitlab-rake gitlab:backup:restore 
+# 效果如图 第二次询问自动执行
+
+```
 
 对于编译型语言，需要编译后进行安装。rpm是提供给redhat系列系统的，底层包管理工具，他会安装编译好的软件，但要手动安装所需依赖。dpkg是deb系列系统的包管理工具，同rpm。yum和apt则会自动安装编译后软件，并处理其所需依赖，分别用于centos和ubuntu。
 
@@ -77,6 +101,23 @@ pwd
 cat
 
 ### 网络
+
+##### ifconfig管理网卡和网络
+
+```
+sudo ifconfig ens33:0  192.169.0.100 up
+sudo ifconfig ens33:0  down
+```
+
+
+
+##### 网卡文件
+
+```
+cd /etc/sysconfig/network-scripts/
+```
+
+
 
 ##### ssh连接与ftp
 

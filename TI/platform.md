@@ -1,3 +1,200 @@
+```
+平台备份时间：20211122
+```
+
+
+
+```
+剔除冗余数据
+版本管理，但是有很多块。
+正常的：
+web的，挖掘的，数据中间工具。
+java的，python的
+
+单机的：
+docker的
+idea很多功能都没使用过-工具性质。
+```
+
+
+
+```
+需要存储的部分：
+1需要添加的代码：
+   1es_search整个image
+   2前端替换,nginx.conf修改
+   3estomysql,platformstatistic ，lisaprovider三个后端修改。cti_server修改，pcap修改。
+2需要导入的数据
+3docker，docker-compose文件,docker安装命令
+3整个平台完整的docker文件
+
+需要迁移的部分：
+安装docker以及docker-compose软件
+旧机器上的整个docker文件，包括data挂载目录的数据都要迁移。
+
+需要处理的部分：
+上文的需要存储的部分的1与2要完成
+
+基本流程：将旧机器的文件复制到新机器，在新机器安装docker以及docker-compose。构建对应的docker image。成功后添加需要处理的部分，使用构建的方法，不进入内部修改。
+
+docker 20.10.7
+docker-compose版本  docker-compose version 1.28.5
+两者的安装方式:
+docker:使用拷贝的文件，命令如下：sudo dpkg -i /path/to/package.deb。教程https://docs.docker.com/engine/install/ubuntu/
+docker-compose使用拷贝的文件即可，教程https://github.com/docker/compose
+
+```
+
+```
+docker-compose 版本修改为指定
+```
+
+```
+光盘放置的位置：
+1需要添加的代码,需要导入的数据,docker，docker-compose文件,docker安装命令。放置在外置光驱盒子中光盘。
+2整个平台完整的docker文件。放置在袋子中光盘。
+```
+
+
+
+```
+将原来机器的程序迁移到另一台机器上。
+更新程序部分，（前端，后端）。
+更新数据部分。
+```
+
+### 存储数据库json hive
+
+>apache drill
+>
+>apache impala 计算引擎
+>
+>apache kylin  存储数据库
+>
+>kudu 存储数据库
+>
+> hive get_json_object
+
+|               | 国内活跃度 | 支持json |
+| ------------- | ---------- | -------- |
+| apache drill  | 少         | 是       |
+| apache impala | 正常       | 是       |
+| apache kylin  | 正常       | ？否     |
+
+
+
+```
+https://blog.csdn.net/danpu0978/article/details/107275443
+impala:https://blog.csdn.net/vkingnew/article/details/109792607
+https://blog.csdn.net/weixin_39911113/article/details/78805272
+hive+hbase:https://www.zhihu.com/question/21677041?sort=created
+```
+
+```
+
+-----------------es_search：
+    将es_search文件复制到目录，添加该模块docker-compose，修改docker-compose将cves.db挂载到/usr/local/cvedb,docker-compose up启动服务。
+    
+-------------------前端：
+启动服务，docker cp将web文件复制到容器里边的新文件夹，修改nginx配置文件。将lisa的api代理过来，将download代理过来，将新的web作为root。
+
+pcap后端的读取r,rb
+
+-------------------estomysql,platformstatistic ，lisaprovider：
+将原来的备份，然后测试。最后修改docker文件。
+
+cti_server 后端
+
+##前端twocategory使用为other和vulnerability，后端提供三个值。
+
+
+```
+
+```
+malware组件不解析size
+名称都写hash
+```
+
+```
+需要用网络
+docker网络ip+
+```
+
+```
+配置服务失败的restart
+```
+
+
+
+```
+malware早于other
+虚拟机 后端写的other（更新过）   前端写的malware
+idea  后端写的malware   前端写的malware
+之前就是写的malware所以要更新
+```
+
+
+
+```
+pcap插入了三次？？
+java运行时指定参数或外部配置文件
+程序的日志管理
+```
+
+
+
+|               | 主键检索             | 非主键检索（全文检索） | 聚合统计                                 |
+| ------------- | -------------------- | ---------------------- | ---------------------------------------- |
+| mysql         | 能                   | 能，但默认情况性能低   | 能                                       |
+| hbase         | 能，能处理的数据量大 | 能，但默认情况性能低   | 能，能处理的数据量大                     |
+| elasticsearch | 能                   | 能，很适合             | 能，编写复杂，不适合大量数据、表的此场景 |
+
+```
+二级索引：https://www.jianshu.com/p/d20769abfa0e
+```
+
+
+
+```
+从package.json依赖中删除了
+//    "vue": "^2.5.2",
+//    "vue-router": "^3.0.1"
+```
+
+
+
+```
+Apriori算法
+```
+
+
+
+```
+对应的后端，前端，数据库都存在才行。
+差异：数据库不同，分块导入没有，founumber没有。elastictomysql，platform statistics更新。pcap模块没有特征。
+对应的后端，前端，数据库都存在才行。确保差异的东西，在这边测试通过，在那边也能工作，用docker测试吧。
+差异：数据库不同，分块导入没有，founumber没有。elastictomysql，platform statistics更新。
+后端：加sqlite版本的fournumber，sqlite版本的分模块导入。elastictomysql，platform statistics更新。
+前端：接口不要写错，不要写多了如（pcap特征）
+前后端衔接：nginx配置
+
+pcap多次插入
+
+```
+
+
+
+```
+report.vue
+search
+searchResult.vue
+```
+
+```
+es数据库，mysql数据库，jdk，python解释器，nginx服务器。一些系统依赖，如qbittorrent，disspcap,libpcap
+爬取，沙箱，web
+```
+
 框架
 
 ```
@@ -140,8 +337,6 @@ py代码整理：web后端，脚本（lisa相关脚本），其他模块（threa
 四个模块的数量：malware模块,cve模块,pcap模块,apt模块 ,模块必须和list对应
 ok --->   malware模块=<malware 数量(malware组件数量（即动态分析，其他类别）+apt模块的malware（木马+....+蠕虫）) 
 ok --->   cve模块=<cve数量(cve模块+apt模块)
-
-
 
 爬取重复的是不进行提交析的，也不增加数量。若提交一个重复的，则默认不进行提交，但增加数量。避免malware模块超出malware 数量太多。
 
@@ -556,7 +751,7 @@ s -mv "hdfs://hbase:9000/user/root/dump_hive_result/$(date -d last-day +%Y-%m-%d
 ```
 #centos crontab
 crontab -e
-serivce crond restart
+service crond restart
 
 ```
 
@@ -868,7 +1063,9 @@ missed heartbeats from client, timeout: 60s
 添加定时重启celery的功能，缓解这种情况。由于它不消费没有什么特征，服务也在跑，只能定时了。
 在宿主机执行此命令，启动新的consumer。
 在宿主机中杀死无用的消费者，发现自动创建新的消费者开始消费消息队列了。而且docker容器不会消失。但不知道何时阻塞，执行kill。设定定时半小时清除一次。
+杀死worker
 ps -ef |grep lisa.web_api.tasks|grep -v "grep"|awk '{print $2}'|xargs kill -9
+创建lisa worker
 sudo docker exec -it $DOCKER_ID /bin/bash -c 'cd /home/lisa && ./docker/worker/init.sh'
 ```
 

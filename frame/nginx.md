@@ -54,6 +54,23 @@ server{
 
 ### 使用
 
+##### rewrite改写路径
+
+>取出需要的值，然后用$访问，拼接为想要的路径
+
+```
+https://blog.csdn.net/AdminPwd/article/details/102680565
+location / {
+            if ( $request_uri  ~*  \.asp$){ #截取后缀asp的
+			rewrite ^/(.*)\.asp$ /$1.html last; #后缀为asp的替换成html
+			break;
+			}
+        }
+
+```
+
+
+
 ##### 反向代理
 
 https://blog.csdn.net/lwwl12/article/details/82219288  

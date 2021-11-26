@@ -2,6 +2,14 @@
 
 ```
 ctrl+alt+左箭头 回到之前查看的代码，审阅代码时使用
+psvm
+sout
+```
+
+jar包
+
+```
+project structure  module dependencies ，+加号导入
 ```
 
 

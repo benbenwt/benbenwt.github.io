@@ -1,3 +1,11 @@
+### jnetpcap安装
+
+```
+/usr/lib/jnetpcap-libpcap.so
+```
+
+
+
 ### 可捕获的恶意软件和pcap
 
 ```
@@ -8,16 +16,11 @@ find -name "*.pcap"  -size +3M
 ./27c2952b-b4ab-479f-b0d4-9188fbf10ed1/capture.pcap
 ./f9f29621-fd75-4317-a603-d0275891af7c/capture.pcap
 ./a8a86de5-ad53-473c-b66f-46a8e835995c/capture.pcap
-
 ```
-
-
 
 ```
 find -name "*.pcap"  -size +4M
 ```
-
-
 
 ##### 重启Pcap的web服务
 
@@ -60,15 +63,11 @@ https://disspcap.readthedocs.io/en/latest/installation.html#install-build-requir
 PYPI网站
 ```
 
-
-
 ```
 ReadPcapFileWorker 读取pcap
 InsertCsvRow csv插入
 FlowGenerator j
 ```
-
-
 
 ### wireshark分割
 
@@ -77,8 +76,6 @@ https://jingyan.baidu.com/article/63f2362854be2e0208ab3d20.html
 cd /pathtoWireshark
 editcap -c  分割份数  待分割文件目录\文件名.pcap 分割后存储的文件目录\文件名.pcap
 ```
-
-
 
 ### pcap恶意
 

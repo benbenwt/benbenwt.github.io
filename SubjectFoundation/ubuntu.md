@@ -1,3 +1,11 @@
+
+
+```
+cat /proc/cpuinfo
+```
+
+
+
 | *compute the checksum of your file ...* |          *compare with*          |                  |                      |               |
 | :-------------------------------------: | :------------------------------: | :--------------: | -------------------- | ------------- |
 |                                         |             Windows              |      Linux       | Mac                  |               |
@@ -16,11 +24,12 @@ echo 'deb http://mirrors.ustc.edu.cn/debian stable main contrib non-free' >>/etc
 echo 'deb http://mirrors.ustc.edu.cn/debian stable-updates main contrib non-free' >>/etc/apt/sources.list
 ```
 
-### vmware
+### vmware-tools
 
 ```
 无法复制文件
 卸载重装open-vm-tools
+sudo apt-get update
 sudo apt-get autoremove open-vm-tools
 sudo apt-get install open-vm-tools
 sudo apt-get install open-vm-tools-desktop
@@ -63,6 +72,15 @@ getconf 系统变量配置
 arch 架构
 
 ### 网络及服务
+
+```
+在eth160上创建网卡接口1，ip设为192.168.130.80
+ifconfig eth160:1 192.168.130.80 up
+#添加路由网关，让192.168.130.1可达
+route add default gw 192.168.130.1
+```
+
+
 
 ```
 ps -aux|grep qemu|awk '{print $2}'|xargs kill -9
@@ -112,16 +130,12 @@ ufw deny ip
 
 ufw allow from ip to any port 端口号
 
-
-
-
-
 ### 文件管理
 
 ##### 压缩
 
 ```
-zip -r lisa.tar lisa
+zip -r lisa.tar lisa  -x "/home/www/laowangblog.com/wp-content/cache/*"
 unzip lisa.tar
 tar -zxvf lisa.tar
 tar -cvf lisa.tar lisa

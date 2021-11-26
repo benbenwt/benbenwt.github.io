@@ -3,6 +3,21 @@ temp:
 core native backendnlp parent
 ```
 
+# git工作流程
+
+```
+分为工作目录，暂存区域，head区域，远程仓库。
+checkout创建新的工作目录分支
+rollback回归到特定分支的某一版本号，回滚本地部分。
+new branch创建新分支
+merge合并多个分支，会有冲突代码。
+git rebase -i  [startpoint]  [endpoint] ，合并多次的commit，避免push多次和解决多次冲突。将某一分支的变化提交到指定名称分支。
+```
+
+```
+git log，提交历史
+```
+
 
 
 # git命令

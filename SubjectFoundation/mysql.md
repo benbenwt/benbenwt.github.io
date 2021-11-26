@@ -45,11 +45,6 @@ mysql -h localhost -u root -p root
 ### 安装
 
 ```
-```
-
-
-
-```
 批量insert
 for (int k = 1; k <= 10000; k++) {
 					pst.setLong(1, k * i);
@@ -59,6 +54,7 @@ for (int k = 1; k <= 10000; k++) {
 pst.executeBatch();
 #prepareStatement使用batch插入15000条要200s。添加后两个参数，速度直接到达一秒。
   conn = DriverManager.getConnection("jdbc:mysql://hbase2:3306/platform?useUnicode=true&characterEncoding=utf-8&useSSL=true&serverTimezone=UTC&rewriteBatchedStatements=true&useServerPrepStmts=true","root","root");
+使用批量后，只传递一条语句，一次请求。将数据放在一起一次传递过去。
 ```
 
 

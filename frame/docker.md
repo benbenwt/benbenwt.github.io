@@ -1,10 +1,15 @@
+```
+docker构建一次镜像后，应该可以重复使用。当有更改部分时，才需要build。
+DockerFile编写时分层应该按照功能，基础的功能放在前边，需要修改的放到后边。比如构建一个nginx的基础镜像，然后在这个基础上再编写导入前端代码的dockerFile。
+```
+
+
+
 # docker网络
 
 ```
 docker network create jenkins
 ```
-
-
 
 # docker管理
 
@@ -321,13 +326,9 @@ vim /etc/docker/daemon.json
 {
   "registry-mirrors": ["https://134lgcv1.mirror.aliyuncs.com"]
 }
-systemctl daemon-reload
+systemctl daemon-reload。
 systemctl restart docker。
 ```
-
-
-
-
 
 ### docker-compose安装
 
@@ -661,8 +662,13 @@ docker-compose up servername
 
 ```
 docker network ls
-docker network inspect
+docker network inspect  <网卡id> 
 docker network rm <网卡id> 
+```
+
+```
+docker -p 4242:80 会将容器内端口映射到主机所有ip的4242端口上，也可以通过指定ip，限制其映射。如下：
+docker -p 192.168.0.5:4242:80,此时只有192.168.0.5:4242能访问容器的80端口服务。
 ```
 
 
@@ -689,3 +695,10 @@ docker system prune -a
 ##### no such file or directory
 
 打开.dockerignore，注释掉忽略的文件夹。
+
+##### 挂载目录没有权限访问
+
+```
+使用sudo chmod -R 777 ./data，允许所有人访问
+```
+

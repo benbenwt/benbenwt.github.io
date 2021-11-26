@@ -1,12 +1,184 @@
+# venv
+
+```
+pip install virtualenv或apt-get install virtualenv
+virtualenv venv
+指定python解释器
+virtualenv -p /usr/bin/python2.7 venv
+激活虚拟环境
+source venv/bin/activate
+退出虚拟环境
+deactivate
+```
+
+
+
+# FLASK
+
+### flask
+
+```
+flask run  -p 8888 -h 0.0.0.0
+```
+
+
+
+### flask sqlalchamy
+
+```
+SQLALCHEMY_DATABASE_URI = 'mysql+pymysql://root:root@172.42.0.102:3306/teacher' 
+SQLALCHEMY_BINDS = {
+    'lisa': 'mysql+pymysql://lisa:lisa@172.42.0.14:3306/lisadb',
+    'platform':'mysql+pymysql://root:root@172.42.0.102:3306/platform'
+}
+app=Flask(__name__)
+app.config['SQLALCHEMY_DATABASE_URI'] = SQLALCHEMY_DATABASE_URI
+app.config['SQLALCHEMY_BINDS'] = SQLALCHEMY_BINDS
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS']=False
+db = SQLAlchemy(app,engine_options={"pool_size":20})
+```
+
+```
+from app import db
+class Malware(db.Model):
+    __bind_key__ = "lisa"
+    __tablename__ = 'celery_taskmeta'
+    id = db.Column(db.Integer, primary_key=True)
+    task_id = db.Column(db.String(155))
+    status = db.Column(db.String(50))
+    result = db.Column(db.BINARY)
+    date_done = db.Column(db.DateTime)
+    traceback = db.Column(db.Text)
+    id_ = db.Column(db.String(155))
+```
+
+```
+malwareids = db.session.query(Malware.id_).all()
+malware = Malware(id_=md5, status='SUCCESS', traceback='importmodule')
+            db.session.add(malware)
+```
+
+### slqalchamy
+
+```
+# from sqlalchemy import create_engine
+# from sqlalchemy.orm import declarative_base, sessionmaker
+#
+# lisaEngine =create_engine('mysql+pymysql://lisa:lisa@172.18.65.185:33306/lisadb',
+#                       encoding='utf-8',pool_size=20) #可以加echo=True显示数据
+#
+#
+# lisaSessionClass=sessionmaker(bind=lisaEngine)
+# lisaSession=lisaSessionClass() # 生成session实例相当于cursor游标
+#
+#
+# platformEngine =create_engine('mysql+pymysql://root:root@172.18.65.185:3306/platform',
+#                       encoding='utf-8',pool_size=20) #可以加echo=True显示数据
+#
+# platformSessionClass=sessionmaker(bind=platformEngine)
+# platformSession=platformSessionClass() # 生成session实例相当于cursor游标
+
+```
+
+```
+Base=declarative_base()
+
+class Malware(Base):
+    __bind_key__="lisa"
+    __tablename__ = 'celery_taskmeta'
+    id = Column(Integer, primary_key=True)
+    task_id = Column(String(155))
+    status=Column(String(50))
+    result=Column(BINARY)
+    date_done = Column(DateTime)
+    traceback = Column(Text)
+    id_=Column(String(155))
+```
+
+```
+platformSession.session.add(pcap)
+platformSession.commit()
+pcapids = platformSession.query(Pcap.md5).all()
+```
+
+
+
+```
+说明
+python中时间日期格式化符号：
+
+%y 两位数的年份表示（00-99）
+%Y 四位数的年份表示（000-9999）
+%m 月份（01-12）
+%d 月内中的一天（0-31）
+%H 24小时制小时数（0-23）
+%I 12小时制小时数（01-12）
+%M 分钟数（00=59）
+%S 秒（00-59）
+%a 本地简化星期名称
+%A 本地完整星期名称
+%b 本地简化的月份名称
+%B 本地完整的月份名称
+%c 本地相应的日期表示和时间表示
+%j 年内的一天（001-366）
+%p 本地A.M.或P.M.的等价符
+%U 一年中的星期数（00-53）星期天为星期的开始
+%w 星期（0-6），星期天为星期的开始
+%W 一年中的星期数（00-53）星期一为星期的开始
+%x 本地相应的日期表示
+%X 本地相应的时间表示
+%Z 当前时区的名称
+%% %号本身
+```
+
+
+
+# pycharm调试快捷键
+
+```
+F7 ，下一步
+shift+F8，跳出此函数
+```
+
+```
+控制台乱码:setting->editor->三个coding
+```
+
+
+
+
+
 ### pycurl
 
 ```
 https://www.cnblogs.com/angle6-liu/p/12401217.html
 ```
 
+### sklearn
+
+```
+y_true = [0, 1, 2, 0, 1, 2,1, 2, 0, 1, 2]
+y_pred = [0, 2, 1, 0, 0, 0,1, 0, 1, 1, 2]
+p=metrics.precision_score(y_true, y_pred, average='macro')
+r=metrics.recall_score(y_true, y_pred, average='macro')
+f1=metrics.f1_score(y_true, y_pred, average='macro')
+a = metrics.accuracy_score(y_true, y_pred)
+
+print(f'macro: {p},{r},{f1},{a}')
+
+p = metrics.precision_score(y_true, y_pred, labels=[0],average='micro')
+r = metrics.recall_score(y_true, y_pred,labels=[0], average='micro')
+f1 = metrics.f1_score(y_true, y_pred,labels=[0], average='micro')
+a = metrics.accuracy_score(y_true, y_pred)
+
+print(f'micro: {p},{r},{f1},{a}')
+
+labels参数表示要使用的类别有哪些
+```
 
 
-### miniconda
+
+# miniconda
 
 ```
 https://blog.csdn.net/weixin_43141320/article/details/108343528
@@ -14,11 +186,13 @@ https://blog.csdn.net/weixin_43141320/article/details/108343528
 
 
 
-#### selenium
+# selenium
 
 ```
 驱动地址：http://chromedriver.storage.googleapis.com/index.html?path=92.0.4515.43/
 ```
+
+# PYTHON
 
 ### python语法糖或常用函数
 
@@ -40,14 +214,6 @@ str.replace("\r","").replace("\n",""),必须两个都替换
 
 ```
 https://blog.csdn.net/qq_41262248/article/details/79839998
-```
-
-
-
-### flask
-
-```
-flask run  -p 8888 -h 0.0.0.0
 ```
 
 
@@ -82,15 +248,11 @@ jupyter contrib nbextension install --user
 jupyter contrib nbextension install --user --skip-running-check
 ```
 
-### pycharm
-
-```
-控制台乱码:setting->editor->三个coding
-```
 
 
 
-### Anaconda
+
+# Anaconda
 
 ##### anaconda pip 错误
 
@@ -244,7 +406,7 @@ make && make install
 
 
 
-### pip
+# pip
 
 ##### 查看版本
 
@@ -259,6 +421,7 @@ pip show 库名
 
 ```
 pip3.exe freeze > requirements.txt
+pip3 freeze > requirements.txt
 ```
 
 

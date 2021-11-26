@@ -23,10 +23,7 @@ spark on angel的文档：https://www.bookstack.cn/read/angel-v3.0/apis-AngelCli
 可行性:
 angel做ps,spark进行同步的聚合和实现。
 angel learn，a start  demo learn
-
 ```
-
-
 
 ### 解决什么问题的
 
@@ -44,8 +41,6 @@ spark使用的意义
 
 saprk的计算是同步执行，等所有梯度计算完成。
 ps的架构是异步执行，梯度不用互相等待。且ps由ps负责参数，而不是类似spark的单个driver，缓解网络压力。
-
-
 ```
 
 ### MXNet

@@ -12,3 +12,7 @@
 使用jenkins构建一个java应用：https://www.jenkins.io/doc/tutorials/build-a-java-app-with-maven/
 ```
 
+```
+将文件复制到虚拟机上。
+```
+

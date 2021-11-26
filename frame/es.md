@@ -10,11 +10,9 @@
 
 ```
 
-
-
 api document:https://www.elastic.co/guide/en/elasticsearch/reference/current/indices-get-mapping.html
 
-### python client
+# python client
 
 
 
@@ -49,7 +47,55 @@ es.delete(index='indexName', doc_type='typeName', id='idValue')
 
 
 
-### curl指令
+# curl指令
+
+```
+https://www.cnblogs.com/shanhua-fu/p/10429417.html
+```
+
+##### 插入数据
+
+```
+curl -XPOST ‘http://localhost:9200/{index}/{type}/{id}’ -d'{“a”:”avalue”,”b”:”bvalue”}’
+```
+
+##### curl GET
+
+```
+#_doc类型字段不影响查询结果
+GET /customer/_doc/1
+
+curl -X GET "hbase2:9200/customer/_doc/1?pretty"
+
+curl -X PUT "localhost:9200/customer/_doc/1?pretty" -H 'Content-Type: application/json' -d'
+{
+  "name": "John Doe"
+}
+
+curl -X GET 10.44.99.102:9200/situation-event/_refresh
+
+
+```
+
+```
+curl -X POST "localhost:9200/_bulk?pretty" -H "Content-Type: application/json;charset=UTF-8" --data-binary @5eb920947209f2ced78b15a4.json 
+```
+
+##### curl PUT
+
+```
+PUT /customer/_doc/1
+{
+  "name": "John Doe"
+}
+curl -X PUT "localhost:9200/customer/_doc/1?pretty" -H 'Content-Type: application/json' -d'
+{
+  "name": "John Doe"
+}
+'
+```
+
+插入数据
 
 ```
 /cti/_mapping
@@ -71,13 +117,9 @@ curl -X GET "172.18.65.185:9200/cti/_search/232daf111111111111"
 bulk通过换行符分割传输的多个数据，如果json数据中带有换行符就会导致报错，干扰正确的分割。
 ```
 
-
-
 ```
 可能问题，result_window,sysctl_max_heap
 ```
-
-
 
 ```
 #search_after
@@ -115,7 +157,9 @@ PUT cti/_settings
 
 
 
-### es分析和分析器
+# es
+
+## es分析和分析器
 
 ```
 #倒排索引
@@ -156,7 +200,7 @@ GET /_analyze
 }
 ```
 
-### 映射
+## 映射
 
 >映射用于控制特定字段域的分析器类型、存储类型
 
@@ -176,7 +220,7 @@ GET /gb/_mapping/tweet
 
 
 
-### 聚合查询
+## 聚合查询
 
 ##### 统计malware组件没有malwaretypes的数量
 
@@ -211,7 +255,7 @@ GET /myindex/_search
 ##### 针对report组件进行统计
 
 ```
-#从name中统计malware_types分布
+#从oname中统计malware_types分布
 GET /myindex/_search 
 {
   "size":0,
@@ -240,7 +284,7 @@ GET /myindex/_search
 
 
 ```
-#从name中统计country分布
+#object name中统计country分布
 GET /myindex/_search 
 {
   "size":0,
@@ -403,7 +447,7 @@ elasticsearch 2中采用String类型，其分为analyzed_string和not_analyzed_s
 ##### 查询type类型排行
 
 ```
-#查询type类型排行
+#查询object type类型排行
 GET /myindex/_search
 {
   "size": 0,
@@ -538,7 +582,7 @@ POST /_aliases
 }
 ```
 
-### 安装
+## 安装
 
 ```
 #docker安装
@@ -598,77 +642,46 @@ vim /etc/security/limits.conf
 * hard nproc 4096
 ulimit -Sn/-Hn
 
-vim /etc/security/limits.d/90-nproc.conf
+vim /etc/security/limits.d/90-nproc.cnf
 * soft nproc 4096
 
 ```
 
+# kibana
 
+## 安装配置kibana
 
-```
-使用should查询并行的多个结果
-```
-
-
-
-GET
+修改ip
 
 ```
-#_doc类型字段不影响查询结果
-GET /customer/_doc/1
-
-curl -X GET "hbase2:9200/customer/_doc/1?pretty"
-```
-
-PUT
-
-```
-PUT /customer/_doc/1
-{
-  "name": "John Doe"
-}
-curl -X PUT "localhost:9200/customer/_doc/1?pretty" -H 'Content-Type: application/json' -d'
-{
-  "name": "John Doe"
-}
-'
-```
-
-插入数据
-
-POST /{索引}/{类型}/{id}
-
-```
-POST /haoke/user/1001
-{
-	"id":1001,
-	"name":"bob",
-	"age":20,
-	"sex":"man"
-}
-```
-
-更新数据
-
-```
-POST /myindex/user/1001/_update
-{
-	"doc":{
-	   "age":23
-	}
-}
-```
-
-删除数据
-
-```
-DELETE /myindex/user/1001
-DELETE  /cti_txt/_doc/999999999999999999
+vim $ES_HOME/config/elasticsearch.yml
+hostname 0.0.0.0
+vim KIBANA_HOME/config/kibana.yml
+server.host: "this_host_id"
+elasticsearch.hosts: ["http://hbase2:9200"]
+bin/kibana --allow-rooot
 ```
 
 
 
+```sh
+./bin/elasticsearch -d -p pid
+pkill -F pid
+```
 
+`git clone git://github.com/mobz/elasticsearch-head.git`
+
+## 启动
+
+```
+elasticsearch -allow-root
+```
+
+
+
+## 语句
+
+### 数据管理语句
 
 创建空索引
 
@@ -692,35 +705,91 @@ DELETE /haoke
 
 
 
-```
- curl -X POST "localhost:9200/_bulk?pretty" -H "Content-Type: application/json;charset=UTF-8" --data-binary @5eb920947209f2ced78b15a4.json 
-```
-
-### 安装配置kibana
-
-修改ip
+### 数据**处理**语句
 
 ```
-vim $ES_HOME/config/elasticsearch.yml
-hostname 0.0.0.0
-vim KIBANA_HOME/config/kibana.yml
-server.host: "this_host_id"
-elasticsearch.hosts: ["http://hbase2:9200"]
-bin/kibana --allow-rooot
+PUT /customer/_doc/1
+{
+  "name": "John Doe"
+}
+curl -X PUT "localhost:9200/customer/_doc/1?pretty" -H 'Content-Type: application/json' -d'
+{
+  "name": "John Doe"
+}
+'
+```
+
+#### 增
+
+```导入数据
+POST _reindex
+{
+  "source": {
+    "index": "myindex"
+  }
+  , "dest": {
+    "index": "cti"
+  }
+}
+
+```
+
+插入数据
+
+POST /{索引}/{类型}/{id}
+
+```
+POST /haoke/user/1001
+{
+	"id":1001,
+	"name":"bob",
+	"age":20,
+	"sex":"man"
+}
 ```
 
 
 
-```sh
-./bin/elasticsearch -d -p pid
-pkill -F pid
+#### 删
+
+```
+删除数据
+
+
+DELETE /myindex/user/1001
+DELETE  /cti_txt/_doc/999999999999999999
+
+
+
 ```
 
-`git clone git://github.com/mobz/elasticsearch-head.git`
+#### 改
 
-### search 搜索属性
+更新数据
 
+```
+POST /myindex/user/1001/_update
+{
+	"doc":{
+	   "age":23
+	}
+}
+```
 
+#### 查
+
+##### **列查询**
+
+###### 精确查询
+
+GET
+
+```
+#_doc类型字段不影响查询结果
+GET /customer/_doc/1
+
+curl -X GET "hbase2:9200/customer/_doc/1?pretty"
+```
 
 ```
 #搜索数据
@@ -734,35 +803,7 @@ updated:13114  total:13156  myindex:13156
 GET /cti/_search?q=_id=66d90772d57e5e72172186674fb79347
 ```
 
-```
-导入数据
-POST _reindex
-{
-  "source": {
-    "index": "myindex"
-  }
-  , "dest": {
-    "index": "cti"
-  }
-}
-```
-
-
-
-DSL搜索
-
-```
-POST /myindex/user/_search
-{
-	"query":{
-	  	"match":{#match是查询的一种，还有match_case等
-	  		"age": 20
-	  	}
-	}
-}
-```
-
-范围搜索
+###### 范围搜索
 
 ```
 POST /myindex/user/_search
@@ -785,6 +826,23 @@ POST /myindex/user/_search
 	}
 }
 ```
+
+DSL搜索
+
+```
+POST /myindex/user/_search
+{
+	"query":{
+	  	"match":{#match是查询的一种，还有match_case等
+	  		"age": 20
+	  	}
+	}
+}
+```
+
+
+
+##### **聚合统计**
 
 聚合
 
@@ -820,9 +878,9 @@ POST /myindex/user/_search
 }
 ```
 
+# 其他
 
-
-##### index/type/document,field
+index/type/document,**field**
 
 ```
 elasticsearch -Des.insecure.allow.root=true
@@ -848,12 +906,5 @@ rm -rf data
 
 _shards_percent_as_number" : 100.0
 
-```
-curl -X GET 10.44.99.102:9200/situation-event/_refresh
-```
 
-curl -X PUT "localhost:9200/customer/_doc/1?pretty" -H 'Content-Type: application/json' -d'
-{
-  "name": "John Doe"
-}
-'
+

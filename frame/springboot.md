@@ -1,3 +1,34 @@
+
+
+
+
+```
+异常页面，权限管理
+```
+
+
+
+
+
+```
+pageHelper使用后再在sql中使用LIMIT会报错，。
+```
+
+
+
+```
+空指针异常不指定谁为空指针，这种报错很麻烦。
+```
+
+
+
+### jar包外部配置文件
+
+```
+通过此种方式来指定配置文件，可以覆盖jar包内的配置文件。
+java  -jar  app.jar  --spring.config.location=application.yml
+```
+
 # spring boot
 
 >使用基本流程：
