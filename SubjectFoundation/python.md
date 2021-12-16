@@ -1,3 +1,44 @@
+### np和scipy matrix
+
+```
+https://blog.csdn.net/Scythe666/article/details/84623786
+```
+
+```
+ my_matrix = scipy.sparse.csr_matrix((2,2))
+ my_array = my_matrix.A
+ sA = sparse.csr_matrix(A)
+```
+
+
+
+### np
+
+```
+https://www.cnblogs.com/moon1992/p/4946717.html
+x=np.array[1,2,3,4]
+x[0:3:2]
+分号之间分别代表起始，终止，步长
+```
+
+
+
+### csv
+
+```
+f=open(os.path.join(base_directory,'attckDescription.csv'))
+csvWriter=csv.writer(f)
+csvWriter.writerow(['Text','Tacticid','techniqueid'])
+csvWriter.writerows(rowList)
+```
+
+```
+my_reader=csv.reader(fp,delimiter=',')
+for row in my_reader
+```
+
+
+
 # venv
 
 ```
@@ -9,6 +50,13 @@ virtualenv -p /usr/bin/python2.7 venv
 source venv/bin/activate
 退出虚拟环境
 deactivate
+```
+
+windows
+
+```
+cd  venv/Scripts
+activate
 ```
 
 
@@ -136,6 +184,13 @@ python中时间日期格式化符号：
 # pycharm调试快捷键
 
 ```
+浏览器能访问翻墙的网站，requests请求不到。
+用pycharm编写，import目录从项目根开始写，但是分开执行时，不能从根开始写。只能从当前py文件所处目录开始写。
+```
+
+
+
+```
 F7 ，下一步
 shift+F8，跳出此函数
 ```
@@ -189,7 +244,8 @@ https://blog.csdn.net/weixin_43141320/article/details/108343528
 # selenium
 
 ```
-驱动地址：http://chromedriver.storage.googleapis.com/index.html?path=92.0.4515.43/
+教程：https://www.jianshu.com/p/1531e12f8852
+驱动地址及版本选择：https://sites.google.com/a/chromium.org/chromedriver/downloads/version-selection
 ```
 
 # PYTHON
@@ -582,5 +638,15 @@ request的headers如下:
 accept-encoding: gzip, deflate, br
 
 可见是由于br压缩格式导致的，可将request的br去掉，不接受br格式即可。或使用python库解压缩br格式，然后再解码打印。
+```
+
+##### ImportError: DLL load failed while importing _sqlite3
+
+```
+https://www.sqlite.org/download.html，下好了移动到anaconda的DLLS目录
+```
+
+```
+http://www.nltk.org/nltk_data/，浏览器进入，然后点击"不安全"->"网站设置",允许自动下载和弹窗
 ```
 

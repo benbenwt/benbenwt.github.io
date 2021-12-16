@@ -1,5 +1,28 @@
 
 
+##### 人
+
+```
+uc berkley  ries labor  lon Stoica
+Eric Liang
+hao zhang 
+```
+
+
+
+```
+1切合ti的主题，填充其他组件。
+2有利于项目，丰富显示的界面，后边还能做其他研究。
+3国内无人做，有数据集，可快速做出来。
+
+```
+
+
+
+```
+其他网络（多标签分类），并行。
+```
+
 
 
 ```
@@ -276,6 +299,241 @@ dist-keras-:https://joerihermans.com/ramblings/distributed-deep-learning-part-1-
 训练速度：异步
 ```
 
+### spark传统
+
+```
+tfidf、聚类、knn分大类。
+小类筛选之后再聚类、knn。
+但是一个文章对应n个（n未知）tactic，n个technique。
+tf-idf、词向量等。
+```
+
+###### mapreduce knn,mlknn
+
+```
+基础示例:https://blog.csdn.net/qq_39009237/article/details/86346762
+```
+
+```
+knn时间复杂度：测试阶段，对于一个sample，计算邻居距离要O((n*D))的时间复杂度，n为训练样本数量，D为特征维度。计算完成后进行排序才能挑出最近邻居，需要O（n*log(n)）的时间复杂度。时间复杂度主要由循环计算和排序产生。
+训练阶段为O(1)。
+mlknn时间复杂度：测试阶段，对于一个sample，计算邻居距离要O((n*D))的时间复杂度，n为训练样本数量，D为特征维度。计算完成后进行排序才能挑出最近邻居，需要O（n*log(n)）的时间复杂度。时间复杂度主要由循环计算和排序产生。
+训练阶段为也需要计算最近邻居，故时间复杂度为O(label_num)+n*label_num*((n-1)*D)。
+```
+
+
+
+##### knn
+
+>java mulan多标签库及数据集：https://blog.csdn.net/ysk0825/article/details/78388937
+>
+>多标签数据集：http://mulan.sourceforge.net/index.html
+
+###### 数据集
+
+```
+gpu mlknn dataset:http://www.uco.es/kdis/mllresources/
+python MLKNN  dataset:http://mulan.sourceforge.net/datasets-mlc.html
+hMEKA datadset:ttp://waikato.github.io/meka/
+```
+
+###### 代码
+
+```
+knn_is github code:https://github.com/JMailloH/kNN_IS
+MLKNN python code:https://github.com/hinanmu/MLKNN
+spark knn:https://github.com/saurfang/spark-knn
+```
+
+
+
+###### temp
+
+```
+拆分tfidf的维度。
+```
+
+
+
+###### sklearn和github区别
+
+```
+sklearn先统一计算所有sample的neighbors，大小为1400*20,k=20
+然后遍历每个样本，填写后验概率，填写步骤如下。取出sample对应k个邻居，取出k个邻居的label，大小为20*14。计算每个label共多少个标签，填入后验概率个数加一。
+neighbors： 1400*20 ，   label_info[neighbors[instance], :] ： 20*14  ，label_info[neighbors[instance], :].sum(axis=0)  ： 1*14.
+for instance in range(self._num_instances):
+      deltas = label_info[neighbors[instance], :].sum(axis=0)
+           for label in range(self._num_labels):
+               if label_info[instance, label] == 1:
+                    c[label, deltas[0, label]] += 1
+                else:
+                    cn[label, deltas[0, label]] += 1
+速度变快是因为避免了for循环，避免了多次调用knn，使用sum(arix=0)矩阵运算代替了for循环。
+```
+
+```
+计算的后验也不一样，sklearn计算对于每个sample的每个label，其对应的邻居有多少个拥有此label，有则加一。github也是一样的计算方法，但是其使用的浮点数，可能由此产生了更高和结果，即损失和准确度表现更好。
+```
+
+
+
+###### mlknn
+
+```
+https://www.jianshu.com/p/040f5e43a7de
+https://github.com/ZesenChen/PyMLKNN
+https://github.com/hinanmu/MLKNN
+```
+
+
+
+###### bayes
+
+```
+https://blog.csdn.net/klqulei123/article/details/52781643
+```
+
+
+
+###### 多标签分类介绍
+
+```
+https://blog.csdn.net/weixin_33680199/article/details/112707210
+```
+
+
+
+###### 概念介绍
+
+```
+https://blog.csdn.net/xsdjj/article/details/83829822
+```
+
+```
+knn是一种计算与已标记的数据的距离的方式来分类，计算量巨大。是一种有监督方式
+```
+
+###### 评价指标
+
+```
+https://blog.csdn.net/clx55555/article/details/88925370
+
+```
+
+![在这里插入图片描述](https://img-blog.csdn.net/20181017113541666?watermark/2/text/aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L2NzZG5fNDc=/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70)
+
+```
+https://blog.csdn.net/Kodoo/article/details/49735187
+Hamming Loss(汉明损失)：该指标衡量预测所得标签与样本实际标签之间的不一致程度，即样本的预测标签集与世纪标签集之间的差距。这个值越小越好。
+使用不一致的label个数/总的label个数
+One-error(1-错误率)：该指标表示样本预测的隶属度最高的标签不属于其实际标签集的可能性。这个值越小越好。
+Coverage(覆盖率)：该指标表示在预测标签集的排序队列中，从隶属度最高的类别开始向下，平均需要跨越多少标签才能覆盖其实际标签集的所有标签。这个值越小越好。
+Ranking Loss(排序损失)：该指标表明了样本预测标签集中，预测正确的标签的隶属度低于预测错误的标签的隶属度的可能性。这个值越小越好。
+Average Precision(平均准确度)：该指标表示预测标签集的平均准确度。这个值越高越好。
+```
+
+
+
+###### 
+
+###### ml-knn多标签
+
+```
+https://blog.csdn.net/Kodoo/article/details/49905877
+此片博客使用详细的公式和语言介绍了mlknn过程。
+对于一个输入x，对于其某一个label，其概率选择如下，类似后验的选择：
+arg max (P(x有此标签)P(近邻中有n个邻居包含此标签|x有此标签),P(x有此标签)P(近邻中有n个邻居包含此标签|x有此标签))
+我们关心的是是否有此标签，若不适用后验的方式，就是最大似然估计。即，"近邻中有n个邻居包含此标签"作为直接的判断依据，观察为阳性就判定为癌症，观察为一般为正面就判定都为0.5概率。
+```
+
+
+
+```
+https://www.jianshu.com/p/040f5e43a7de?utm_campaign=maleskine&utm_content=note&utm_medium=seo_notes&utm_source=recommendation
+```
+
+
+
+##### knn文本分类
+
+```
+https://www.cnblogs.com/chenyaling/p/7461386.html
+```
+
+##### 文献
+
+###### Distributed nearest neighbor classification for large-scale multi-label data on spark
+
+```
+比较了几种索引方法的knn查询效率。
+```
+
+
+
+###### kNN-IS: An Iterative Spark-based design of the k-Nearest Neighbors classifier for big data 
+
+```
+code github:https://github.com/JMailloH/kNN_IS
+```
+
+
+
+###### Improved KNN Text Classification Algorithm with MapReduce Implementation
+
+```
+针对类别特有的高频词会被忽略的问题，提出了新的项，DF，来让这些类特有的词获得更高的权重。
+```
+
+###### 一种基于关联规则的 ＭＬＫＮＮ多标签分类算法
+
+```
+若标签之间有关联，则提取规则，并用于标签的预测。
+```
+
+###### Parallel Processing of Improved KNN Text Classification Algorithm Based on  Hadoop
+
+```
+过滤掉离中心较远的的点，减少计算量。
+```
+
+
+
+###### 基于 MPI 的 ML-kNN 算法并行
+
+```
+搜索空间可以拆分多个sample和多个label。
+```
+
+###### ML-kNN算法在大数据集上的高效应用
+
+```
+聚类再knn
+```
+
+
+
+### 数据并行
+
+```
+基于Spark的舆情情感大数据分析集成方法_戴宏亮
+基于Spark的车联网分布式组合深度学习入侵检测方法_俞建业
+```
+
+```
+8跑基本数据，对比单机
+8对比其他模型
+9增加贡献部分
+9对比基线并行（确认基线是谁）
+```
+
+```
+1同步方法 vs. 异步方法
+2参数平均法 vs. 更新式方法
+3中心化同步 vs. 分布式同步
+1怎么收集？2收集后计算规则？3中心化同步 vs. 分布式同步？
+平均与否，就是步长的区别，不平均步长是n，平均为1。
+```
+
 ### 基本概念
 
 ```
@@ -295,6 +553,88 @@ blog:https://blog.csdn.net/qq_19672707/article/details/94056538
 ```
 
 ### 文献
+
+>attck:https://attack.mitre.org/tactics/TA0006/
+
+```
+突然发现之前dl4j的bert是跑成功了的....只是数据给的少，所以没得结果。
+```
+
+```
+attck的描写内容可以提供一份或多份文档，还有attck仓库中的文档，不知道是否有重复部分。github和官网重复的，官网爬取的更全面。
+capec映射到attck的相关文档：https://capec.mitre.org/data/definitions/658.html
+
+```
+
+##### rcatt
+
+```
+colorama == 0.4.3
+flask == 1.1.2
+joblib == 0.14.1
+nltk == 3.4.5
+numpy == 1.17.4
+pandas == 0.25.3
+sklearn == 0.22
+stix2 == 1.2.1
+```
+
+```
+多标签分类。
+使用tf-idf和word2vec作为特征，使用sklearn的decision tree，extra tree classifiers，random forest，extra trees等。比较了所有的算法。
+```
+
+
+
+##### Automated Threat Report Classification Over Multi-Source Data
+
+```
+贡献：1tacticd的可信度传递到technique，2数据加权后进行svm的训练，自动调整偏移。使用指定的规则和生成的规则来分类kil_chain。使用tf-idf作为特征,k-nearest，svn，kmm作为分类器。
+```
+
+
+
+##### 数据处理
+
+```
+github网站的基本是工具，要删掉。
+2262，2261，1443，1363，1782，1368，1377，1108，1646，1527，1981
+```
+
+
+
+##### 多标签分类
+
+```
+tfidf、聚类、knn分大类。
+小类筛选之后再聚类、knn。
+但是一个文章对应n个（n未知）tactic，n个technique。
+tf-idf、词向量等。
+```
+
+
+
+```
+从给定的一篇文档中确认它包含的n个（n不确定）att&ck包含的ttp，类似于多标签分类。
+介绍：https://www.cnblogs.com/cxf-zzj/p/10049613.html
+binary  ...：多个二分类器
+classifi chain：
+csdn:https://blog.csdn.net/u011412768/article/details/109082838
+指标计算：https://zhuanlan.zhihu.com/p/51125423
+```
+
+##### pdfminer
+
+```
+https://pypi.org/project/pdfminer/
+```
+
+##### tf-idf
+
+```
+https://www.jianshu.com/p/68b0b3126e8c
+https://blog.csdn.net/BeforeEasy/article/details/104149815/
+```
 
 ##### Automatic and Accurate Extraction of Threat Actions  from Unstructured Text of CTI Sources
 
@@ -340,6 +680,7 @@ LexicalizedParser这种功能一般在sources.jar包中
 分句，然后提取依赖，然后筛选。
 att&ck描述一般是threat-actor怎么怎么样，主语最好替换以下。不一定是一句，可能是一个长度的窗口。只选需要的部分，满足动名词的部分。
 数据集格式，tactic  1->n technique   n<->n  (procedure,blogtxt)
+近义词
 ```
 
 ##### 问题
@@ -364,6 +705,7 @@ group -> technique
 
 关于enterprise和mobile：http://www.yidianzixun.com/article/0SBkITCh
 Enterprise 领域主要面向的平台为 Linux、MacOSI 和 WindowsATT&CK Matrix 的解读
+attck:https://attack.mitre.org/tactics/TA0006/
 ```
 
 
@@ -407,12 +749,6 @@ capec:https://capec.mitre.org/documents/documentation/CAPEC_Schema_Description_v
 
 ```
 直接标签标记需要的threat-action，提取threat-action时就不拿无用的threat-action（vo组合）
-```
-
-##### Automated Threat Report Classification Over Multi-Source Data
-
-```
-分步骤分别分类tactic，techique，action，偏移调整权重
 ```
 
 
@@ -545,17 +881,52 @@ gspan,apriori-based
 scan,dbscan
 ```
 
-
-
-### 数据并行
+##### Approximate Parallel High Utility Itemset Mining
 
 ```
-1同步方法 vs. 异步方法
-2参数平均法 vs. 更新式方法
-3中心化同步 vs. 分布式同步
-1怎么收集？2收集后计算规则？3中心化同步 vs. 分布式同步？
-平均与否，就是步长的区别，不平均步长是n，平均为1。
+相比于频繁项集的区别：频繁项集找到出现最多的组合，如果是文档，就是词的组合，这毫无意义...
 ```
+
+```
+tf-idf和此方法有相似性嘛
+```
+
+```
+https://blog.csdn.net/jiafgn/article/details/55670180
+高效用集挖掘，找到给定权重最高的，一次记录中可出现多次。
+```
+
+Basic HUI-Miner
+
+```
+first scan:
+calculate TWU
+second scan:
+filter too low TWU item,generate item-node List in TWU-ascending order.
+
+```
+
+PHUI-Miner
+
+```
+dividing the search space:
+
+generate data partion:
+inList:describe item should map to which node
+added:global generated node data Map
+output:this transaction`s output about node data Map,shoudl be add to added.
+for transaction in transaction_list:
+    for item in transaction:
+        nid=inList['item']['nid']
+        if nid not in added:
+            output={nid,transaction.subset}
+mining node data:
+
+```
+
+
+
+
 
 # elephas+keras_bert
 
@@ -1000,7 +1371,7 @@ word2vec,bert...?
 ann,bio...?如果需要，brat可以转
 ```
 
-# 1
+# dependency
 
 ```
 ROOT：要处理文本的语句
@@ -1180,5 +1551,20 @@ ba — 把字关系
 tclaus — 时间从句 （以后，积累）
 — semantic dependent
 cpm — 补语化成分（complementizer），一般指“的”引导的CP （振兴，的）
+```
+
+### spark的局限性
+
+```
+spark实现的是数据的多个并行节点的自主划分，但是施加的并行任务是相同的，都是同一个子问题。以Approximate Parallel High Utility Itemset Mining为例，本质做的还是数据并行，不过传统的数据并行是拆分多个样本，而此文是拆分一个样本为多个并行数据，然后用相同的子问题对不同的数据进行操作。对于数据不同，且子问题不同的划分，spark难以实现对应关系，也许可以通过partion id控制施加的操作。而且如果是机器学习方法，涉及到训练的迭代。
+同时，频繁的迭代对带宽和内存资源造成压力，影响性能。
+```
+
+```
+模型并行也有其局限性，会导致分块模型之间的大量通信，可能导致比单机更慢，而且依赖于特定模型无法通用。elephas只可以实现数据并行。
+```
+
+```
+For a network to be large enough: here's a rough guide. If the network takes 100ms or longer to perform one iteration (100ms per fit operation on each minibatch), distributed training should work well with good scalability. At 10ms per iteration, we might expect sub-linear scaling of performance vs. number of nodes. At around 1ms or below per iteration, the communication overhead may be too much: training on a cluster may be no faster (or perhaps even slower) than on a single machine. For the benefits of parallelism to outweigh the communication overhead, users should consider the ratio of network transfer time to computation time and ensure that the computation time is large enough to mask the additional overhead of distributed training.
 ```
 

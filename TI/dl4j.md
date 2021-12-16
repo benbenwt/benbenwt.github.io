@@ -1,3 +1,24 @@
+##### beta6版本
+
+```
+自己的生成的pb文件使用旧的和samediff都工作正常。
+SameDiff sd= TFGraphMapper.importGraph(f);
+SameDiff sd = SameDiff.importFrozenTF(f);
+
+fb文件可导入，工作失败，java.lang.NullPointerException
+```
+
+##### M1.1-1.0.0-SNAPSHOT
+
+```
+自己的生成的pb文件使用旧的和samediff都可导入，不可fit。新api直接无法导入
+Exception in thread "main" java.lang.UnsatisfiedLinkError: org.nd4j.nativeblas.Nd4jCpu$Environment.isUseMKLDNN()Z
+TensorflowFrameworkImporter tensorflowFrameworkImporter = new TensorflowFrameworkImporter();c创建报错...
+fb文件导入可以，无法工作。Samediff output op named mask did not have any ops associated with it.
+```
+
+
+
 ```
 samedif 实体
 input ：128个字对应的id ， label：类别对应的标签

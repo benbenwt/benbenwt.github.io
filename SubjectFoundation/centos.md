@@ -6,6 +6,23 @@ free -h
 
 # centos
 
+### gpu
+
+```
+lspci | grep -i vga
+```
+
+### cpu
+
+```
+https://blog.csdn.net/sflsgfs/article/details/9129307
+more /proc/cpuinfo | grep "model name"  
+grep "model name" /proc/cpuinfo  
+grep "CPU" /proc/cpuinfo  
+```
+
+
+
 ### 软件安装
 
 ##### 自动yes
@@ -99,6 +116,12 @@ sudo hwclock --systohc //非常重要，如果没有这一步的话，后面时�
 pwd
 
 cat
+
+### 图形界面
+
+##### gnome-shell
+
+卡住时找到pid杀死即可。系统会自动重启gnome，类似windows的explrer。
 
 ### 网络
 

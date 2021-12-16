@@ -12,7 +12,11 @@ mvn clean install -pl test-common -amd -rf test-module1
 
 
 
+强制更新
 
+```
+mvn clean install -e -U 
+```
 
 
 
