@@ -1,10 +1,18 @@
 ```
+202201
+03 DW13 ok
+03 DW20 ok
+04 DW23  ok
+04 DW26  ok
+04 DW29 ok
+04 DW32  ok
+04 DW35  ok
+04 DW40  ok
 202112
 01，多标签分类机器学习例子   ok
 01，多标签分类tf-idf例子  ok
 02，跑通rcAtt，可能版本sklearn，环境有问题，不对    ok
 02，跑通rcAtt，可能joblic,pickle,sklearn兼容问题...github issue里写了  ok
-
 10，tf-idf 处理csv,读csv，取tfidf       ok
 13,看ml-knn代码，MLKNN，evaluation两个点，结合理论看。 ok
 14,看ml-knn代码  ok
@@ -15,8 +23,17 @@
 15，mlknn跑ti的数据，评估效果  ok
 16，确定步骤及可操作部分   ok
 16,看文献              ok
-16,文献code实现，如何编写mapreduce
-17，文献code实现   
+16,文献code实现，如何编写mapreduce ok
+17，github上传之前的文章代码  ok
+17，文献code实现，先写knn部分，计算距离，排序 。  ok
+23,origin版本mlknn的train   ok
+27,cnn-lstm    ok
+27,格式,    ok
+27,修订内容，可升可降，整体上升或不动。CRF效果好  ok   
+29,正则的统计数据，代码看一下  ok
+31,绘制柱状图   ok
+31,参考文献  ok
+
 202111
 22预估的备份任务添加了docker及docker-compose部分，故超时。   ok timeout
 26docker构建软件园版本代码 ,挂载es logs，解决挂载目录权限问题。 ok

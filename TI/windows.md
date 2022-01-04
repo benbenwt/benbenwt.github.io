@@ -5,3 +5,9 @@
 在其他机器输入file://192.168.31.182/PUBG/，以共享PUBG文件夹为例子。
 ```
 
+### problem
+
+```
+在path中删除了此环境变量，影响python的调用。%USERPROFILE%\AppData\Local\Microsoft\WindowsApps
+```
+

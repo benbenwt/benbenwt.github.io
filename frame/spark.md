@@ -1,22 +1,70 @@
 ```
-异步数据并行每步迭代需要先从参数服务器获取参数，计算完
-梯度后还要将梯度值传回参数服务器。相比单机训练，异步数据并行需要额外的通信开
-销，因而无法达到线性加速比。假设工作者每步迭代平均耗时为𝑇�
-�
-，平均计算开销为𝑇�
+可进行数据的划分，不可以控制分布到哪台机器。
+不可进行任务的划分，结点只能施加相同的操作。对于前后依赖的操作，必须等前一个完成，这和（同时施加不相同的操作）不同。yarn能否控制任务分配的机器，是可以的，比如你的某台机器坏了，他会分配给其他机器。但是，你只能向集群这个整体提交作业，无法让yarn只给某个机器单独分配任务。一个map任务到底分为多少个结点任务，是由rdd分区数目决定的。那可以不使用rdd进行map嘛？不行，本来就是用来处理数据的，你没有rdd处理什么数据。这么说，我提交一个任务，分区为1，然后yarn分配是不是就完成了单个机器的分配。那如果跟在它后边再提交一个不依赖于它的任务，是不是就实现了同时执行不相同的任务呢。这样做消耗了哪些资源，时间如何？需要yarn的调度，节点的分发，manager管理等。时间主要花费在爬取，用map爬取会一直维持一个map任务。
+```
 
-平均通信耗时为𝑇
 
-，计算开销占比定义为： 
 
-通信开销占比定义为： 
+### 常用函数
 
 ```
+函数清单:https://blog.csdn.net/qq_32595075/article/details/79918644
+```
+
+##### 层级
+
+```
+mappartion从单个节点上的所有数据角度编写函数，每个分区调用一次。
+foreach从rdd的单个元素角度编写处理函数，每个元素调用一次。
+使用dataframe的select从整个rdd角度编写程序，整个rdd调用一次。
+```
+
+```
+broadcast 介绍:https://blog.csdn.net/weixin_42155006/article/details/118517464
+发送一个变量到每个节点， parameters = rdd.context.broadcast(parameters)，适用于变量大的情况。如果不使用,直接使用对应变量，对于同一个节点也不能复用。
+```
+
+
+
+##### map
+
+```
+在mapreduce中map对于每个Filesplit执行一次,Filesplit默认为一个key值执行一次。
+```
+
+##### flatmap
+
+```
+相比map，flatmap会将结果中所有数组展开，flat为一个统一的数组。
+```
+
+
+
+### DataFrame
+
+```
+创建规则化行列，之后才可以执行sql语句。
+```
+
+##### 创建dataframe的方法
+
+```
+https://blog.csdn.net/weixin_39198406/article/details/104916715
+dataframe的表现力有限，只适合部分的逻辑。对某些操作不方便，如非结构化数据，或有其他复杂的计算。它必须基于表进行操作，所以表达复杂的逻辑智能借助创建中间表来表示。
+```
+
+
 
 ### RDD
 
 ```
 rdd的缺点是，无法控制分布的细节。如，无法指定特定机器获取特定的数据，这些都有spark进行了高度封装，没有暴露给用户，用户只能像编写单机程序一样编写程序。
+```
+
+##### mappartion和foreach等
+
+```
+mappartion从单个节点上的所有数据角度编写函数，每个分区调用一次。foreach从rdd的单个元素角度编写处理函数，每个元素调用一次。使用dataframe的select从整个rdd角度编写程序，整个rdd调用一次，select如何在节点间迁移数据，是shuffle嘛。
 ```
 
 
@@ -49,6 +97,7 @@ sc.parallelize(pairs)
 ```
 Exception: Python in worker has different version 3.9 than that in driver 3.7, PySpark cannot run with different minor versions. Please check environment variables PYSPARK_PYTHON and PYSPARK_DRIVER_PYTHON are correctly set.
 worker,driver的python版本不匹配，但是两者不都是本机嘛。
+在环境变量中指定PYSPARK_PYTHON，PYSPARK_DRIVER_PYTHON，值设定唯python的位置.或在代码中使用config("PYSPARK_PYTHON","/anaconda/env/env_name/python")
 ```
 
 ### 执行流程
@@ -84,10 +133,16 @@ pyspark --packages com.johnsnowlabs.nlp:spark-nlp_2.11:2.5.5
 ### pysaprk
 
 ```
-#本地编译器调试运行，以setHadoophome形式控制整个逻辑。
-spark和hadoop都以hdfs//或spark//接口形式接受请求和控制作业。
-这种情况hadoop或spark提供了执行环境，结果写出到本地。
-python负责编写逻辑，提交到服务端spark后，spark进行
+sc = SparkSession.builder.master("local[1]").appName("myApp").config("spark.executor.memory", "5g").config(
+        "spark.driver.memory", "5g").config("spark.driver.maxResultSize", "0").getOrCreate().sparkContext
+sc.setLogLevel("INFO")
+```
+
+
+
+```
+1本地编译器调试运行，以setHadoophome形式控制整个逻辑。
+2spark和hadoop都以hdfs//或spark//接口形式接受请求和控制作业。这种情况hadoop或spark提供了执行环境，结果写出到本地。python负责编写逻辑，提交到服务端spark后，spark调用python的解释器运行对应的python程序。
 ```
 
 ##### 提交

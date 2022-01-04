@@ -1,15 +1,57 @@
-##### git工作暂存区reset
+### gitignore语法
+
+##### 写法
 
 ```
-https://www.liaoxuefeng.com/wiki/896043488029600/897889638509536
+https://www.cnblogs.com/xkfeng/p/7835055.html
+
+*.h5，忽略h5文件
+target/,忽略targe文件夹
 ```
 
 
 
+##### 基础示例
+
 ```
-temp:
-core native backendnlp parent
+/webpages/fontAwesome
+HELP.md
+target/
+!.mvn/wrapper/maven-wrapper.jar
+!**/src/main/**
+!**/src/test/**
+
+### STS ###
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings
+.springBeans
+.sts4-cache
+
+### IntelliJ IDEA ###
+.idea
+*.iws
+*.iml
+*.ipr
+
+### NetBeans ###
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbdist/
+/.nb-gradle/
+build/
+
+### VS Code ###
+.vscode/
+
 ```
+
+
+
+
 
 # git工作流程
 
@@ -24,6 +66,12 @@ git rebase -i  [startpoint]  [endpoint] ，合并多次的commit，避免push多
 
 ```
 git log，提交历史
+```
+
+### git工作暂存区reset
+
+```
+https://www.liaoxuefeng.com/wiki/896043488029600/897889638509536
 ```
 
 

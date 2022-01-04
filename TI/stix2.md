@@ -219,13 +219,43 @@ SDO
 - 
 
 - SRO
+
 - SCO
+
 - VO
+
 - 其他
 
   - import url
     stix api documents:https://docs.oasis-open.org/cti/stix/v2.1/cs01/stix-v2.1-cs01.html#_pcpvfz4ik6d6
     stix example:http://stixproject.github.io/documentation/idioms/file-hash-reputation/
-
   - stix 2.1 differs from stix2.0 in the following ways
     new objects:Grouping,infrastructure,Language-Content(internationnlization),Location,Malware-Analysis,Note,Opinion
+
+# sdo
+
+sdo主要组件
+
+```
+https://oasis-open.github.io/cti-documentation/stix/intro
+```
+
+```
+sdo包含threat-actor,location,vulnerability,attack pattern,
+```
+
+| [**Attack Pattern**](https://docs.oasis-open.org/cti/stix/v2.1/os/stix-v2.1-os.html#_axjijf603msy) | A type of TTP that describe ways that adversaries attempt to compromise targets. |
+| ------------------------------------------------------------ | ------------------------------------------------------------ |
+| [**Campaign**](https://docs.oasis-open.org/cti/stix/v2.1/os/stix-v2.1-os.html#_pcpvfz4ik6d6) | A grouping of adversarial behaviors that describes a set of malicious activities or attacks (sometimes called waves) that occur over a period of time against a specific set of targets. |
+| [**Course of Action**](https://docs.oasis-open.org/cti/stix/v2.1/os/stix-v2.1-os.html#_a925mpw39txn) | A recommendation from a producer of intelligence to a consumer on the actions that they might take in response to that intelligence. |
+| [**Grouping**](https://docs.oasis-open.org/cti/stix/v2.1/os/stix-v2.1-os.html#_t56pn7elv6u7) | Explicitly asserts that the referenced STIX Objects have a shared context, unlike a STIX Bundle (which explicitly conveys no context). |
+| [**Identity**](https://docs.oasis-open.org/cti/stix/v2.1/os/stix-v2.1-os.html#_wh296fiwpklp) | Actual individuals, organizations, or groups (e.g., ACME, Inc.) as well as classes of individuals, organizations, systems or groups (e.g., the finance sector). |
+| [**Indicator**](https://docs.oasis-open.org/cti/stix/v2.1/os/stix-v2.1-os.html#_muftrcpnf89v) | Contains a pattern that can be used to detect suspicious or malicious cyber activity. |
+| [**Infrastructure**](https://docs.oasis-open.org/cti/stix/v2.1/os/stix-v2.1-os.html#_jo3k1o6lr9) | Represents a type of TTP and describes any systems, software services and any associated physical or virtual resources intended to support some purpose (e.g., C2 servers used as part of an attack, device or server that are part of defence, database servers targeted by an attack, etc.). |
+| [**Intrusion Set**](https://docs.oasis-open.org/cti/stix/v2.1/os/stix-v2.1-os.html#_5ol9xlbbnrdn) | A grouped set of adversarial behaviors and resources with common properties that is believed to be orchestrated by a single organization. |
+| [**Location**](https://docs.oasis-open.org/cti/stix/v2.1/os/stix-v2.1-os.html#_th8nitr8jb4k) | Represents a geographic location.                            |
+| [**Malware**](https://docs.oasis-open.org/cti/stix/v2.1/os/stix-v2.1-os.html#_s5l7katgbp09) | A type of TTP that represents malicious code.                |
+
+
+
+# sco

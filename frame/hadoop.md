@@ -1150,6 +1150,13 @@ The above settings configure the upper limit of the physical RAM that Map and R
 
 ```
 
+##### stop-dfs.sh失效
+
+```
+需要通过pid来停止程序，但是pid存储在temp文件夹中，linux定期将其清理了，所以无法正常停止，可修改pid存储位置。修改hadoop-env.sh
+export HADOOP_PID_DIR=/usr/local/hadoop/pids/
+```
+
 
 
 spark解决

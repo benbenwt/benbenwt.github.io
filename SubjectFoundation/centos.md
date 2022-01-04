@@ -2,11 +2,7 @@
 free -h
 ```
 
-
-
-# centos
-
-### gpu
+gpu
 
 ```
 lspci | grep -i vga
@@ -19,6 +15,22 @@ https://blog.csdn.net/sflsgfs/article/details/9129307
 more /proc/cpuinfo | grep "model name"  
 grep "model name" /proc/cpuinfo  
 grep "CPU" /proc/cpuinfo  
+```
+
+### ssh
+
+```
+
+```
+
+
+
+### 环境变量
+
+##### 登录shell与非登录shell
+
+```
+非登录shell访问访问不到/etc/profile，将编写的sh脚本放到/etc/profile.d下面，可以让两者都能访问。
 ```
 
 

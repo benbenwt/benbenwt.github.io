@@ -1,4 +1,22 @@
+```
+这两个格式做参考
+https://kns.cnki.net/KXReader/Detail?invoice=li0QzkEP8kfU5L4iCsz4OSB1cjfFIOX5HtGtmTTQId3gUHepGBv4Vc6CIsYm6maB843OA0YYqJNwKeEvR6bRrtQESaYsiJyKfpcp06vyC5W4%2Bev%2Fk7wDf4r%2B9rE9up5Fs%2BZxt9%2FZ5WZHBoHZkUClifqrmKxX64o0XZNChE4QTKI%3D&DBCODE=CAPJ&FileName=JSJC20211216005&TABLEName=capjlast&nonce=EEF30EF0E97C4D6F8DB192FEF409F041&uid=&TIMESTAMP=1640329439125
+```
 
+
+
+|      | 文档 | 句子 | Token | 实体 |
+| ---- | ---- | ---- | ----- | ---- |
+| 训练 |      |      |       |      |
+| 验证 |      |      |       |      |
+| 测试 |      |      |       |      |
+
+
+
+```
+以"面向自动驾驶的交通场景语义分割"这篇文章为例子，
+2020-07-28收的稿件，2021-06-30-S1版发布的。S1一般在6月末或7月初发布，S2在12月末发布。也就是最晚22年12月发布。
+```
 
 ##### 人
 
@@ -135,6 +153,23 @@ big data,ensemble techniques
 
 
 # Apache Spark DL Book
+
+### spark的局限性
+
+```
+spark实现的是数据的多个并行节点的自主划分，但是施加的并行任务是相同的，都是同一个子问题。以Approximate Parallel High Utility Itemset Mining为例，本质做的还是数据并行，不过传统的数据并行是拆分多个样本，而此文是拆分一个样本为多个并行数据，然后用相同的子问题对不同的数据进行操作。对于数据不同，且子问题不同的划分，spark难以实现对应关系，也许可以通过partion id控制施加的操作。而且如果是机器学习方法，涉及到训练的迭代。
+同时，频繁的迭代对带宽和内存资源造成压力，影响性能。
+```
+
+```
+模型并行也有其局限性，会导致分块模型之间的大量通信，可能导致比单机更慢，而且依赖于特定模型无法通用。elephas只可以实现数据并行。
+```
+
+```
+For a network to be large enough: here's a rough guide. If the network takes 100ms or longer to perform one iteration (100ms per fit operation on each minibatch), distributed training should work well with good scalability. At 10ms per iteration, we might expect sub-linear scaling of performance vs. number of nodes. At around 1ms or below per iteration, the communication overhead may be too much: training on a cluster may be no faster (or perhaps even slower) than on a single machine. For the benefits of parallelism to outweigh the communication overhead, users should consider the ratio of network transfer time to computation time and ensure that the computation time is large enough to mask the additional overhead of distributed training.
+```
+
+
 
 ### 1 setting up 
 
@@ -399,6 +434,7 @@ https://blog.csdn.net/klqulei123/article/details/52781643
 
 ```
 https://blog.csdn.net/weixin_33680199/article/details/112707210
+https://blog.csdn.net/qq_38290475/article/details/104465795
 ```
 
 
@@ -432,14 +468,10 @@ Ranking Loss(排序损失)：该指标表明了样本预测标签集中，预测
 Average Precision(平均准确度)：该指标表示预测标签集的平均准确度。这个值越高越好。
 ```
 
-
-
-###### 
-
 ###### ml-knn多标签
 
 ```
-https://blog.csdn.net/Kodoo/article/details/49905877
+详细算法步骤解释：https://blog.csdn.net/Kodoo/article/details/49905877
 此片博客使用详细的公式和语言介绍了mlknn过程。
 对于一个输入x，对于其某一个label，其概率选择如下，类似后验的选择：
 arg max (P(x有此标签)P(近邻中有n个邻居包含此标签|x有此标签),P(x有此标签)P(近邻中有n个邻居包含此标签|x有此标签))
@@ -801,6 +833,8 @@ Deep neural network 99.19
 Random Forest 98.86
 Gradient Boosted Tree 97.92
 
+
+
 code repository：https://github.com/OsamaFaker/INTRUSION-DETECTION-BIG-DATA
 ```
 
@@ -1121,6 +1155,12 @@ http://pasa-bigdata.nju.edu.cn/links.html
 
 # keras-bert错误更改
 
+```
+cnn-lstm:https://www.jb51.net/article/189663.htm
+```
+
+
+
 ##### AttributeError: module 'tensorflow' has no attribute 'name_scope' 
 
 ```
@@ -1371,7 +1411,97 @@ word2vec,bert...?
 ann,bio...?如果需要，brat可以转
 ```
 
-# dependency
+# spark mlknn
+
+##### spar 相关函数
+
+```
+spark knn 代码示例:https://blog.csdn.net/fighting_one_piece/article/details/39056513
+dataframe：https://blog.csdn.net/xiaohu21/article/details/109431467
+dataframe:https://www.jianshu.com/p/f517471850a2
+```
+
+##### origion
+
+```
+原始情况每台机器上都必须要有对应的需要找近邻的样本。对于测试来说，就是所有节点都有test_dataset,对于训练就是所有都有train_dataset。当使用kdtree时，给定一个sample，通过分布式索引找到近邻所在节点，然后得到近邻index。本质上，节点间交流由分布式索引代替了。那lsh是如何处理的呢，它通过hash(x)处理之后的值，数据并行比对相似度，也要将test_data复制到所有节点。
+```
+
+##### kd-tree
+
+```
+百度百科:https://baike.baidu.com/item/kd-tree/2302515?fr=aladdin
+使用超平面划分数据点，类似二叉搜索树。可用于范围搜索和近邻搜索，对于高维数据，数据点数目N应当远远大于2的k次方，kd树才能在近邻搜索中发挥其作用，k为维度数目。不然大部分的点都会被查询到，不会比全体查询好到那里去。近似邻近查询
+```
+
+##### lsh
+
+```
+spark实现了min-hash和BucketedRandomProjectionLSH。
+```
+
+```
+设计了一种特殊的hash函数，使得2个相似度很高的数据以较高的概率映射成同一个hash值，而令2个相似度很低的数据以极低的概率映射成同一个hash值。我们把这样的函数，叫做LSH（局部敏感哈希）。LSH最根本的作用，就是能高效处理海量高维数据的最近邻问题，适合高维数据情况。
+算法详解:https://blog.csdn.net/guoziqing506/article/details/53019049
+代码详解:https://zhuanlan.zhihu.com/p/61200936
+```
+
+###### min-hash
+
+```
+```
+
+###### BucketedRandomProjectionLSH
+
+```
+```
+
+
+
+##### 版本
+
+```
+pyspark 3.0.3报错，使用pyspark3.1.2则正常，可能是python版本和pyspark不符。
+```
+
+##### 具体mapreduce
+
+```
+对于knn:
+测试阶段，对于一个sample，计算邻居距离要O((n*D))的时间复杂度，n为训练样本数量，D为特征维度。计算完成后进行排序才能挑出最近邻居，需要O（n*log(n)）的时间复杂度。时间复杂度主要由循环计算和排序产生。
+训练阶段为O(1)。
+```
+
+```
+对于mlknn：测试阶段，对于一个sample，计算邻居距离要O((n*D))的时间复杂度，n为训练样本数量，D为特征维度。计算完成后进行排序才能挑出最近邻居，需要O（n*log(n)）的时间复杂度。时间复杂度主要由循环计算和排序产生。
+训练阶段为也需要计算最近邻居，故时间复杂度为O(label_num)+n*label_num*((n-1)*D)。
+```
+
+```
+map: 相同操作,不同数据
+reduce:
+shuffle
+```
+
+##### 多标签分类
+
+```
+在多标签 研 究 中，主 要 有２类多标签分类算法：问题转化法和算法转化法。
+问题转化法是将多标签分类问题分解为多个单标签分类问题，再利用传统的单标签分类方法进行分类，简单易行，但这样就忽略了多标签数据集的所有特性。
+算法转化法是通过对传统的分类方法进行改进，使其能适用于多标签数据的分类。该类算法主要有 ＡｄａＢｏｏｓｔ算 法［８，９］、Ｃ４．５算 法［１０］、多 标 签 Ｋ近 邻 算 法 ＭＬＫＮＮ （Ｍｕｌｔｉ－Ｌａｂｅｌ Ｋ－Ｎｅａｒｅｓｔ Ｎｅｉｇｈｂｏｒ）［１１］和 反 向 传 播 多 标 签 学 习 ＢＰＭＬＬ
+（Ｂａｃｋ－Ｐｒｏｐａｇａｔｉｏｎｆｏｒ Ｍｕｌｔｉ－ＬａｂｅｌＬｅａｒｎｉｎｇ）算法［１２］等。
+```
+
+##### problem
+
+```
+```
+
+
+
+# tfidf
+
+### dependency
 
 ```
 ROOT：要处理文本的语句
@@ -1553,18 +1683,4 @@ tclaus — 时间从句 （以后，积累）
 cpm — 补语化成分（complementizer），一般指“的”引导的CP （振兴，的）
 ```
 
-### spark的局限性
-
-```
-spark实现的是数据的多个并行节点的自主划分，但是施加的并行任务是相同的，都是同一个子问题。以Approximate Parallel High Utility Itemset Mining为例，本质做的还是数据并行，不过传统的数据并行是拆分多个样本，而此文是拆分一个样本为多个并行数据，然后用相同的子问题对不同的数据进行操作。对于数据不同，且子问题不同的划分，spark难以实现对应关系，也许可以通过partion id控制施加的操作。而且如果是机器学习方法，涉及到训练的迭代。
-同时，频繁的迭代对带宽和内存资源造成压力，影响性能。
-```
-
-```
-模型并行也有其局限性，会导致分块模型之间的大量通信，可能导致比单机更慢，而且依赖于特定模型无法通用。elephas只可以实现数据并行。
-```
-
-```
-For a network to be large enough: here's a rough guide. If the network takes 100ms or longer to perform one iteration (100ms per fit operation on each minibatch), distributed training should work well with good scalability. At 10ms per iteration, we might expect sub-linear scaling of performance vs. number of nodes. At around 1ms or below per iteration, the communication overhead may be too much: training on a cluster may be no faster (or perhaps even slower) than on a single machine. For the benefits of parallelism to outweigh the communication overhead, users should consider the ratio of network transfer time to computation time and ensure that the computation time is large enough to mask the additional overhead of distributed training.
-```
-
+# 
