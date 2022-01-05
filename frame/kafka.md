@@ -1,5 +1,24 @@
 
 
+# 安装
+
+```
+解压复制到对应位置
+mkdir logs
+cd config
+vim server.properties
+
+broker.id=0
+#删除topic功能使能
+delete.topic.enable=true
+#kafka运行日志存放的路径
+log.dirs=/opt/module/kafka/data
+#配置连接Zookeeper集群地址
+zookeeper.connect=hadoop102:2181,hadoop103:2181,hadoop104:2181/kafka
+```
+
+
+
 # 背景
 
 >kafka是一种分布式的基于发布与订阅的消息队列。
@@ -87,6 +106,7 @@ bin/zookeeper-server-start.sh config/zookeeper.properties
 #设置kafka下的zookeeper.properties和server.properties
 bin/kafka-server-start.sh config/server.properties
 bin/kafka-server-stop.sh
+#创建topic
 bin/kafka-topics.sh --create --bootstrap-server hbase:9092 --replication-factor 1 --partitions 1 --topic test
 #查看所有topic
 bin/kafka-topics.sh --list --bootstrap-server hbase:9092

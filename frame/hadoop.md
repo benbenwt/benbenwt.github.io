@@ -5,7 +5,11 @@ namenode rpc  8020
 webui 9870
 ```
 
+# CONFIG
 
+```
+mapred.job.maps：一个job可以分配到map数量。这里的map数量和InputSplit的map数量不同，InputSplit控制map任务的数量，控制输入数据的读取来控制map任务数量。而此处的maps是指有多少个核心可用于map任务槽，用来同时执行map任务。
+```
 
 # hadoop服务器搭建
 
@@ -1155,6 +1159,12 @@ The above settings configure the upper limit of the physical RAM that Map and R
 ```
 需要通过pid来停止程序，但是pid存储在temp文件夹中，linux定期将其清理了，所以无法正常停止，可修改pid存储位置。修改hadoop-env.sh
 export HADOOP_PID_DIR=/usr/local/hadoop/pids/
+```
+
+##### safemode
+
+```
+bin/hadoop dfsadmin -safemode leave
 ```
 
 

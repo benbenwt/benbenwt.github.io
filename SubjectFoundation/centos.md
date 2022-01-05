@@ -25,6 +25,14 @@ grep "CPU" /proc/cpuinfo
 
 
 
+### 磁盘
+
+```
+df -h 查看磁盘容量
+```
+
+
+
 ### 环境变量
 
 ##### 登录shell与非登录shell
