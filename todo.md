@@ -10,9 +10,26 @@
 04 DW40  ok
 05 DW43  OK
 05 DW46 ok
-05 DW49 
-05 DW52 
-05 DW55 
+05 DW49 ok
+05 DW52  ok
+05 DW55  ok
+05 DW58  ok
+05 DW60  ok
+05 DW61  ok
+05 DW62  ok
+05 DW63  ok
+
+10 pcapFeature github分支保存好 ok
+10 pcapFeature classifyIotDevice 分支的功能修改，Flowgen只区分ip，不区分port。  ok
+10 修改统计指标，统计指标只区分ip，不区分port  don`t need
+10 选择设计需要的特征，写文档  Ok
+11 实现特征统计代码,构造测试数据，编写前6个。
+11 统计dns，协议有哪些，编写统计特征代码。
+
+12pca原理 :https://www.zhihu.com/question/38417101/answer/94338598   ok
+教程:https://blog.csdn.net/missionnn/article/details/121191490
+13 文章退修，格式修订，主要是文献格式等   ok
+14 基金表格，退修说明填写，全文检查英文缩写等
 202112
 01，多标签分类机器学习例子   ok
 01，多标签分类tf-idf例子  ok
@@ -24,6 +41,9 @@
 15,看pymlknn这个仓库的代码  ok
 15,slearn为什么较快 ok
 15，pymlknn和MLKNN的先验都计算的错误的。  ok
+
+
+4
 15，看较新的文献   ok
 15，mlknn跑ti的数据，评估效果  ok
 16，确定步骤及可操作部分   ok
