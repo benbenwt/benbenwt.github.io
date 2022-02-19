@@ -1034,11 +1034,11 @@ hdfs的存储文件夹
 
 # problem
 
-### source core-site.xml第一行未预期的错误,newline。
+##### source core-site.xml第一行未预期的错误,newline。
 
 不必理会
 
-### sbin/strat-dfs.sh报错
+##### sbin/strat-dfs.sh报错
 
 解决：对于start-dfs.sh和stop-dfs.sh文件，添加下列参数：
 

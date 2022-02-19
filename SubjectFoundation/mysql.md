@@ -37,7 +37,15 @@ delete from celery_taskmeta where id in
 #### shell命令
 
 ```
-mysql -h localhost -u root -p root
+#连接mysql,-p与密码之间不要加空格，加空格后无法识别正确的密码。
+mysql -h localhost -u root -p'root'
+#查看用户和允许的连接host
+use mysql
+select user, host from user;
+update user set host="%" where user="root";
+ flush privileges;
+#执行mysql文件
+source create_table.sql
 ```
 
 

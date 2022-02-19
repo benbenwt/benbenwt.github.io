@@ -29,7 +29,9 @@
 12pca原理 :https://www.zhihu.com/question/38417101/answer/94338598   ok
 教程:https://blog.csdn.net/missionnn/article/details/121191490
 13 文章退修，格式修订，主要是文献格式等   ok
-14 基金表格，退修说明填写，全文检查英文缩写等
+14 基金表格，退修说明填写，全文检查英文缩写等  ok
+14 数据清洗完成了统计了45个特征，pca帮助维度减少到了20个。一起做的无明确分工。
+
 202112
 01，多标签分类机器学习例子   ok
 01，多标签分类tf-idf例子  ok
