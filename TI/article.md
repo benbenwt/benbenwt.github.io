@@ -1521,10 +1521,45 @@ Flask==1.1.2
 ##### 添加部分
 
 ```
-实验部分使用其他网络跑一下（4什么网络？变种的）。
+实验部分使用其他网络跑一下（什么网络？ALBERT-BiGRU-CRF）。
 文字部分，与实验相关的进行重写。
-文字部分，无法单纯重写的，例如数据的预处理流程2（改变和添加预处理流程）、3正则表达式提取（换其他正则表达式）、1情报生成方法流程图（添加步骤），需要酌情修改内容并重写。可添加一些步骤。
+文字部分，无法单纯重写的，例如数据的预处理流程2（改变和添加预处理流程,使用其他分词器和标注工具，修改参考反恐的那一篇）、3正则表达式提取（换其他正则表达式）、1情报生成方法流程图（不使用正则了，全部用网络），需要酌情修改内容并重写。可添加一些步骤。
 图片重新绘制。
+https://link.springer.com/chapter/10.1007/978-3-030-60450-9_13介绍了预处理的技术（同义词替换）等。
+attention 资源： https://blog.csdn.net/u011523796/article/details/87542951
+bilstm-attention :https://blog.csdn.net/u013230189/article/details/110007826
+```
+
+##### ALBERT
+
+```
+bert4keras教程:https://bert4keras.spaces.ac.cn/guide/#_2
+bert4keras: https://github.com/bojone/bert4keras/pull/427
+
+错误：没有此属性self._token_unk_id
+它使用这一部分代码读取的vocab中的unk等标志的id，要求以[]形式包裹，例如[UNK]。将所有标志改为用[]包裹。
+for token in ['pad', 'unk', 'mask', 'start', 'end']:
+    try:
+        _token_id = token_dict[getattr(self, '_token_%s' % token)]
+        setattr(self, '_token_%s_id' % token, _token_id)
+    except:
+    	pass
+    	
+```
+
+
+
+##### Macbert
+
+```
+csdn 博客：https://blog.csdn.net/qq_27590277/article/details/115339832
+知乎:https://zhuanlan.zhihu.com/p/333202482
+文章名： Revisiting Pre-trained Models for Chinese Natural Language Processing
+
+源码：
+https://github.com/ymcui/MacBERT
+https://github.com/ymcui/Chinese-ELECTRA
+
 ```
 
 
