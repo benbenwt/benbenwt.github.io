@@ -1,27 +1,168 @@
-tools.jar
+### 刷题的遗忘的点
 
 ```
-
-```
-
-
-
-```
-# Configure logging for testing: optionally with log file
-log4j.rootLogger=INFO, stdout
-# log4j.rootLogger=WARN, stdout, logfile
-
-log4j.appender.stdout=org.apache.log4j.ConsoleAppender
-log4j.appender.stdout.layout=org.apache.log4j.PatternLayout
-log4j.appender.stdout.layout.ConversionPattern=%d %p [%c] - %m%n
-
-log4j.appender.logfile=org.apache.log4j.FileAppender
-log4j.appender.logfile.File=target/spring.log
-log4j.appender.logfile.layout=org.apache.log4j.PatternLayout
-log4j.appender.logfile.layout.ConversionPattern=%d %p [%c] - %m%n
+JAVA异常类,Throwable,Error,Exception，RuntimeException,IOException的继承关系
 ```
 
 
+
+# JVM
+
+### JVM的结构
+
+JVM = 类加载器 classloader + 执行引擎 execution engine + 运行时数据区域 runtime data area
+
+##### classloader
+
+###### 两种装载方式
+
+classloader两种装载class的方式：
+1.隐式：运行过程中，碰到new方式生成对象时，隐式调用classloader到JVM。
+2.显示：通过class.forname()动态加载。​
+
+###### 双亲委派模型（Parent Delegation Model）
+
+**工作过程**
+1当前ClassLoader首先从自己已经加载的类中查询此类是否已加载。若已经加载就返回加载的类。
+每个类加载器都有自己的加载缓存，当一个类被加载以后就会放入缓存。
+2当前classloader的缓存中没有找到时，委托父类加载器去加载，父类加载器采用同样的策略，直到找到或到达bootstrap classloader.
+3.当所有的父类加载器都没有加载时，再由当前的类加载器加载，并放入自己的缓存。​
+
+**优点**
+1为了安全性，避免用户的类动态替换java的核心类，比如String。同时避免了重复加载，因为相同的class文件被不同classloader加载是不同的两个类，相互转型会抛出classCaseException。
+
+**常用类加载器**
+Bootstrap class loader：所有类加载器的父类，当运行jvm时，她负责核心库的加载，如java.lang.*等。例如java.lang.Object就是由根类加载器加载的。此加载器不是由java编写的，而是c/c++写的。
+Extension class loader：这个加载器加载除了基本API之外的拓展类。
+AppClassLoader:加载应用程序和程序员自定义的类。​
+用户也可以自定义自己的类加载器，java提供了java.long.classloader.
+
+##### **执行引擎**
+
+执行字节码，或者执行本地方法。
+
+###### JIT Complier
+
+>JIT编译器是动态编译器的一种，相对的静态编译器则指C/C++编译器。
+
+对于重复执行较多的代码，JIT将其单独翻译为对应平台的机器码，以后调用直接执行即可，提高程序执行速度。但是编译程序和优化需要一定时间，并且占用一定内存，无法在程序刚启动时使用编译器。
+
+而java解释器则是一行一行将java字节码翻译为机器码，不可复用机器码，执行效率较低。
+
+##### runtime data area
+
+jvm运行期间，对内存空间的划分和分配。jvm将内存分为了6个区域来存储。程序员所写的程序都被加载到运行时数据区域中，不同类别存放在heap，java stack,native method stack,PC register ,method area.
+
+###### java stacks
+
+每个jvm线程都有自己私有的java虚拟栈，每个方法占用一个栈帧，这个栈帧和线程同时创建，他的生命周期和线程相同。
+每个java方法被执行时创建一个栈帧用于存储变量表，操作数，动态链接，方法出口等信息。每个方法被调用直至执行完成对应着再java stack中入栈和出战的过程。
+
+###### native method stack
+
+与虚拟机栈的作用相似，虚拟机栈执行java方法，而本地方法栈为虚拟机使用到的本地方法服务。
+本地方法：由其他语言编写，和处理器相关的机器代码。本地方法保存在动态链接库中，即dll中。
+
+###### PC regiters
+
+程序计数器保存当前线程执行到哪行（指令地址），以便线程之间切换。
+​每个线程都有自己的PC，以便完成不同线程切换。
+
+###### heap Memory
+
+所有线程共享的一块区域，用来存储对象实例和数组值。new的对象实例。
+
+jvm初始分配的内存由-Xms,-Xmx指定，默认值分别为物理内存的1/64和1/4。
+
+```
+堆被划分成两个不同的区域：新生代 ( Young )、老年代 ( Old )。新生代 ( Young ) 又被划分为三个区域：Eden、From Survivor、To Survivor。
+这样划分的目的是为了使 JVM 能够更好的管理堆内存中的对象，包括内存的分配以及回收。
+
+默认的，新生代 ( Young ) 与老年代 ( Old ) 的比例的值为 1:2 ( 该值可以通过参数 –XX:NewRatio 来指定 )，即：新生代 ( Young ) = 1/3 的堆空间大小。
+老年代 ( Old ) = 2/3 的堆空间大小。其中，新生代 ( Young ) 被细分为 Eden 和 两个 Survivor 区域，这两个 Survivor 区域分别被命名为 from 和 to，以示区分。
+默认的，Edem : from : to = 8 : 1 : 1 ( 可以通过参数 –XX:SurvivorRatio 来设定 )，即： Eden = 8/10 的新生代空间大小，from = to = 1/10 的新生代空间大小。
+JVM 每次只会使用 Eden 和其中的一块 Survivor 区域来为对象服务，所以无论什么时候，总是有一块 Survivor 区域是空闲着的。
+因此，新生代实际可用的内存空间为 9/10 ( 即90% )的新生代空间。
+```
+
+
+
+###### method area
+
+方法区是线程共享区域，用于存储每个类的结构信息。例如成员变量和方法数据，构造函数和普通函数字节码内容，还包括一些类，实例，接口初始化时用到的特殊方法。当开发人员在程序中通过class对象的getName，isInstance获取消息时，这些数据都来自方法区。
+在一定条件下也会被gc，这块区域对应Permanent  generation持久代。
+
+运行时常量池，其空间从方法区分配，存储类中常量，方法，域引用信息。
+
+### GC
+
+##### 为什么要gc
+
+当一个对象不可达，或一个对象没有任何引用指向它，他就没有必要存在，此时就可以被gc回收。
+
+
+
+##### 触发gc的情况
+
+非线程对象不被指向或超出作用域
+线程对象线程未启动或停止
+
+###### 改变对象引用，置为null或指向其他对象。
+
+Object x=new Object();//object1 
+   Object y=new Object();//object2 
+   x=y;//object1 变为垃圾 
+   x=y=null;//object2 变为垃圾
+
+###### 超出作用域
+
+if(i==0){ 
+      Object x=new Object();//object1 
+   }//括号结束后object1将无法被引用，变为垃圾 
+
+###### 类嵌套导致未完全释放
+
+class A{ 
+      A a; 
+   } 
+   A x= new A();//分配一个空间 
+   x.a= new A();//又分配了一个空间 
+   x=null;//将会产生两个垃圾 
+
+###### 线程中的垃圾
+
+class A implements Runnable{   
+     void run(){ 
+       //.... 
+     } 
+   } 
+   //main 
+   A x=new A();//object1 
+   x.start(); 
+   x=null;//等线程执行完后object1才被认定为垃圾 
+   这样看，确实在代码执行过程中会产生很多垃圾，不过不用担心，java可以有效地处理他们。
+
+##### Java垃圾回收机制算法
+
+ 1.标记-清除算法
+标记：标记出所有要回收的对象
+清除：回收被标记对象
+缺点：效率低，这两个操作效率都不高
+​​空间问题，形成大量不连续碎片空间。当以后需要分配较大的对象时，无法找到足够大的连续空间，触发gc。
+
+2.复制算法
+内存分为相等的两块，需要回收时，把存活的对象拷贝到另一半，清除当前的整个块，以保证空间连续性。
+缺点：代价高。
+现在一般分为三块，Eden和两块较小的Survivor。当回收时，将存活对象放到另一个Survivor中，清除当前Survivor和Eden.
+
+3.标记-整理算法
+标记：标记所有要回收的对象。
+整理:将存活对象向一段移动，然后直接清理到边界以外的内存空间
+
+4.分代收集算法
+分代：新生代，老生代
+新生代：存活少，使用复制算法。
+老生代：存活多，使用标记清除或标记整理算法。​
 
 
 
@@ -1103,6 +1244,28 @@ IO流有四个顶级抽象父类，关于java的框架都基于这些类进行IO
 BufferedReader和BufferWriter使用了自定义的缓冲区，一次读取8192字节，减少内存读写磁盘次数从而提升速度，和减少mysql网络请求次数原理相同。每次IO或网络请求会耗费时间建立连接、维护协议信息、磁盘寻址和读写
 ```
 
+```
+按照流是否直接与特定的地方（如磁盘、内存、设备等）相连，分为节点流和处理流两类。
+
+节点流：可以从或向一个特定的地方（节点）读写数据。如FileReader.
+处理流：是对一个已存在的流的连接和封装，通过所封装的流的功能调用实现数据读写。如BufferedReader.处理流的构造方法总是要带一个其他的流对象做参数。一个流对象经过其他流的多次包装，称为流的链接。
+JAVA常用的节点流：
+
+文 件 FileInputStream FileOutputStrean FileReader FileWriter 文件进行处理的节点流。
+字符串 StringReader StringWriter 对字符串进行处理的节点流。
+数 组 ByteArrayInputStream ByteArrayOutputStreamCharArrayReader CharArrayWriter 对数组进行处理的节点流（对应的不再是文件，而是内存中的一个数组）。
+管 道 PipedInputStream PipedOutputStream PipedReaderPipedWriter对管道进行处理的节点流。
+常用处理流（关闭处理流使用关闭里面的节点流）
+
+缓冲流：BufferedInputStrean BufferedOutputStream BufferedReader BufferedWriter  增加缓冲功能，避免频繁读写硬盘。
+转换流：InputStreamReader OutputStreamReader 实现字节流和字符流之间的转换。
+数据流 DataInputStream DataOutputStream  等-提供将基础数据类型写入到文件中，或者读取出来.
+流的关闭顺序
+一般情况下是：先打开的后关闭，后打开的先关闭
+另一种情况：看依赖关系，如果流a依赖流b，应该先关闭流a，再关闭流b。例如，处理流a依赖节点流b，应该先关闭处理流a，再关闭节点流b
+可以只关闭处理流，不用关闭节点流。处理流关闭的时候，会调用其处理的节点流的关闭方法。
+```
+
 
 
 ##### File
@@ -1119,150 +1282,7 @@ BufferedReader和BufferWriter使用了自定义的缓冲区，一次读取8192�
 
 >BufferedReader继承自Reader，提供高效字符读取,其定义了Reader,char,nChars,nextChar,ensureOpen(),read(),readline()。缓冲区的大小可以指定，否则使用默认大小。大多数情况下默认大小就够用的。 每次Reader的读取请求都会产生相应的对字符或字节流的读取请求，所以最好用BufferedReader包装那些read操作影响效率的Reader，比如FileReader和InputStreamReader。
 
-# JVM
 
-### JVM的结构
-
-JVM = 类加载器 classloader + 执行引擎 execution engine + 运行时数据区域 runtime data area
-
-##### classloader
-
-###### 两种装载方式
-
-classloader两种装载class的方式：
-1.隐式：运行过程中，碰到new方式生成对象时，隐式调用classloader到JVM。
-2.显示：通过class.forname()动态加载。​
-
-###### 双亲委派模型（Parent Delegation Model）
-
-**工作过程**
-1当前ClassLoader首先从自己已经加载的类中查询此类是否已加载。若已经加载就返回加载的类。
-每个类加载器都有自己的加载缓存，当一个类被加载以后就会放入缓存。
-2当前classloader的缓存中没有找到时，委托父类加载器去加载，父类加载器采用同样的策略，直到找到或到达bootstrap classloader.
-3.当所有的父类加载器都没有加载时，再由当前的类加载器加载，并放入自己的缓存。​
-
-**优点**
-1为了安全性，避免用户的类动态替换java的核心类，比如String。同时避免了重复加载，因为相同的class文件被不同classloader加载是不同的两个类，相互转型会抛出classCaseException。
-
-**常用类加载器**
-Bootstrap class loader：所有类加载器的父类，当运行jvm时，她负责核心库的加载，如java.lang.*等。例如java.lang.Object就是由根类加载器加载的。此加载器不是由java编写的，而是c/c++写的。
-Extension class loader：这个加载器加载除了基本API之外的拓展类。
-AppClassLoader:加载应用程序和程序员自定义的类。​
-用户也可以自定义自己的类加载器，java提供了java.long.classloader.
-
-##### **执行引擎**
-
-执行字节码，或者执行本地方法。
-
-###### JIT Complier
-
->JIT编译器是动态编译器的一种，相对的静态编译器则指C/C++编译器。
-
-对于重复执行较多的代码，JIT将其单独翻译为对应平台的机器码，以后调用直接执行即可，提高程序执行速度。但是编译程序和优化需要一定时间，并且占用一定内存，无法在程序刚启动时使用编译器。
-
-而java解释器则是一行一行将java字节码翻译为机器码，不可复用机器码，执行效率较低。
-
-##### runtime data area
-
-jvm运行期间，对内存空间的划分和分配。jvm将内存分为了6个区域来存储。程序员所写的程序都被加载到运行时数据区域中，不同类别存放在heap，java stack,native method stack,PC register ,method area.
-
-###### java stacks
-
-每个jvm线程都有自己私有的java虚拟栈，每个方法占用一个栈帧，这个栈帧和线程同时创建，他的生命周期和线程相同。
-每个java方法被执行时创建一个栈帧用于存储变量表，操作数，动态链接，方法出口等信息。每个方法被调用直至执行完成对应着再java stack中入栈和出战的过程。
-
-###### native method stack
-
-与虚拟机栈的作用相似，虚拟机栈执行java方法，而本地方法栈为虚拟机使用到的本地方法服务。
-本地方法：由其他语言编写，和处理器相关的机器代码。本地方法保存在动态链接库中，即dll中。
-
-###### PC regiters
-
-程序计数器保存当前线程执行到哪行（指令地址），以便线程之间切换。
-​每个线程都有自己的PC，以便完成不同线程切换。
-
-###### heap Memory
-
-所有线程共享的一块区域，用来存储对象实例和数组值。new的对象实例。
-
-jvm初始分配的内存由-Xms,-Xmx指定，默认值分别为物理内存的1/64和1/4。
-
-###### method area
-
-方法区是线程共享区域，用于存储每个类的结构信息。例如成员变量和方法数据，构造函数和普通函数字节码内容，还包括一些类，实例，接口初始化时用到的特殊方法。当开发人员在程序中通过class对象的getName，isInstance获取消息时，这些数据都来自方法区。
-在一定条件下也会被gc，这块区域对应Permanent  generation持久代。
-
-运行时常量池，其空间从方法区分配，存储类中常量，方法，域引用信息。
-
-### GC
-
-##### 为什么要gc
-
-当一个对象不可达，或一个对象没有任何引用指向它，他就没有必要存在，此时就可以被gc回收。
-
-
-
-##### 触发gc的情况
-
-非线程对象不被指向或超出作用域
-线程对象线程未启动或停止
-
-###### 改变对象引用，置为null或指向其他对象。
-
-Object x=new Object();//object1 
-   Object y=new Object();//object2 
-   x=y;//object1 变为垃圾 
-   x=y=null;//object2 变为垃圾
-
-###### 超出作用域
-
-if(i==0){ 
-      Object x=new Object();//object1 
-   }//括号结束后object1将无法被引用，变为垃圾 
-
-###### 类嵌套导致未完全释放
-
-class A{ 
-      A a; 
-   } 
-   A x= new A();//分配一个空间 
-   x.a= new A();//又分配了一个空间 
-   x=null;//将会产生两个垃圾 
-
-###### 线程中的垃圾
-
-class A implements Runnable{   
-     void run(){ 
-       //.... 
-     } 
-   } 
-   //main 
-   A x=new A();//object1 
-   x.start(); 
-   x=null;//等线程执行完后object1才被认定为垃圾 
-   这样看，确实在代码执行过程中会产生很多垃圾，不过不用担心，java可以有效地处理他们。
-
-##### Java垃圾回收机制算法
-
- 1.标记-清除算法
-标记：标记出所有要回收的对象
-清除：回收被标记对象
-缺点：效率低，这两个操作效率都不高
-​​空间问题，形成大量不连续碎片空间。当以后需要分配较大的对象时，无法找到足够大的连续空间，触发gc。
-
-2.复制算法
-内存分为相等的两块，需要回收时，把存活的对象拷贝到另一半，清除当前的整个块，以保证空间连续性。
-缺点：代价高。
-现在一般分为三块，Eden和两块较小的Survivor。当回收时，将存活对象放到另一个Survivor中，清除当前Survivor和Eden.
-
-3.标记-整理算法
-标记：标记所有要回收的对象。
-整理:将存活对象向一段移动，然后直接清理到边界以外的内存空间
-
-4.分代收集算法
-分代：新生代，老生代
-新生代：存活少，使用复制算法。
-老生代：存活多，使用标记清除或标记整理算法。​
 
 
 
