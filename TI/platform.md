@@ -2,8 +2,6 @@
 平台备份时间：20211122
 ```
 
-
-
 ```
 剔除冗余数据
 版本管理，但是有很多块。
@@ -16,14 +14,14 @@ docker的
 idea很多功能都没使用过-工具性质。
 ```
 
-
+### 20211124软件园迁移到两台新机器
 
 ```
 需要存储的部分：
 1需要添加的代码：
-   1es_search整个image
+   1es_search整个image，其中包括(es_search和fourNumberAndImport)
    2前端替换,nginx.conf修改
-   3estomysql,platformstatistic ，lisaprovider三个后端修改。cti_server修改，pcap修改。
+   3estomysql（漏掉了一个类型的英文，没有转换为中文，好像是keyboard）,platformstatistic （有一个无意义字段也统计了），lisaprovider（修改了什么？）三个后端修改。cti_server修改（pcap备份），pcap修改（计算哈希id，用rb读而不是r）。
 2需要导入的数据
 3docker，docker-compose文件,docker安装命令
 3整个平台完整的docker文件
@@ -42,7 +40,6 @@ docker-compose版本  docker-compose version 1.28.5
 两者的安装方式:
 docker:使用拷贝的文件，命令如下：sudo dpkg -i /path/to/package.deb。教程https://docs.docker.com/engine/install/ubuntu/
 docker-compose使用拷贝的文件即可，教程https://github.com/docker/compose
-
 ```
 
 ```
@@ -232,15 +229,6 @@ WhiteSource Vulnerability Database
 
 
 
-##### 分布
-
-```
-malware,cve爬虫，malware沙箱，malware，cve，pcap后端。
-hbase1: pcap,cve和web后端
-hbase2:cve挖掘，malware挖掘，malware沙箱
-lisa：其他web后端
-```
-
 
 
 ##### stix2要用python
@@ -402,7 +390,9 @@ docker 20.10.7  docker-compose 1.28.5
 安装:https://docs.docker.com/engine/install/ubuntu/。
 ```
 
-### ulimit
+### elasticsearch 安装的相关操作
+
+##### ulimit
 
 ```
 too many open files
@@ -436,7 +426,7 @@ virtual memory          (kbytes, -v) unlimited
 file locks                      (-x) unlimited
 ```
 
-### vm.max_map_count
+##### vm.max_map_count
 
 ```
 blog:https://blog.csdn.net/xcc_2269861428/article/details/100186654
@@ -446,7 +436,7 @@ vm.max_map_count=262144
 /sbin/sysctl -p 
 ```
 
-### 修改max_result_size
+##### 修改max_result_size
 
 ```
 PUT policy_document/_settings
@@ -457,7 +447,7 @@ PUT policy_document/_settings
 }
 ```
 
-
+### navicate破解版
 
 navicate破解版:http://fankey.blog365.cn/database/129.html
 
@@ -491,7 +481,18 @@ python:pcapAnalyze,batchwork,,fournumber,threat-broadcast,
 
 java:esto_mysql,es_provider,lisa_provider,statistic_provider
 
-### 服务分布
+### 服务在机器上的分布
+
+##### 分布
+
+```
+malware,cve爬虫，malware沙箱，malware，cve，pcap后端。
+hbase1: pcap,cve和web后端
+hbase2:cve挖掘，malware挖掘，malware沙箱
+lisa：其他web后端
+```
+
+
 
 | hostname | ip   | 服务                                                  |
 | -------- | ---- | ----------------------------------------------------- |
@@ -676,7 +677,7 @@ vim /etc/rc.d/rc.local
 提交的malware没写kafka
 ```
 
-### 版本
+### 平台使用的软件版本
 
 java8,hadoop2.10.x,3.1.1+,3.2.x,hbase2.3.x，hive
 
@@ -978,7 +979,7 @@ export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib
 
 
 
-### lisa
+### lisa 构建docker碰到的问题
 
 >重新build遇到的主要问题：
 >
@@ -1246,7 +1247,7 @@ hadoop fs -rm -r  ouput
 
 
 
-### hive和hbase
+### hive和hbase的sql语句
 
 ##### hive
 
@@ -1312,7 +1313,7 @@ create table sample(md5 string,SHA256 string,sha1 string,size string,architectur
 
 
 
-### 数据库
+### 平台的mysql数据库的建表语句、crud语句
 
 **category**
 
@@ -1459,7 +1460,7 @@ SELECT category_id categoryId,category,value,time FROM category_tbl a WHERE a.ti
 
 ### 备忘
 
-服务器密码:240711.wt
+服务器密码:240711.wt  111111
 
 3.25：统一中英文location
 

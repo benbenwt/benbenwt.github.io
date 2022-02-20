@@ -1,3 +1,7 @@
+
+
+
+
 ```
 这两个格式做参考
 https://kns.cnki.net/KXReader/Detail?invoice=li0QzkEP8kfU5L4iCsz4OSB1cjfFIOX5HtGtmTTQId3gUHepGBv4Vc6CIsYm6maB843OA0YYqJNwKeEvR6bRrtQESaYsiJyKfpcp06vyC5W4%2Bev%2Fk7wDf4r%2B9rE9up5Fs%2BZxt9%2FZ5WZHBoHZkUClifqrmKxX64o0XZNChE4QTKI%3D&DBCODE=CAPJ&FileName=JSJC20211216005&TABLEName=capjlast&nonce=EEF30EF0E97C4D6F8DB192FEF409F041&uid=&TIMESTAMP=1640329439125
@@ -18,7 +22,7 @@ https://kns.cnki.net/KXReader/Detail?invoice=li0QzkEP8kfU5L4iCsz4OSB1cjfFIOX5HtG
 2020-07-28收的稿件，2021-06-30-S1版发布的。S1一般在6月末或7月初发布，S2在12月末发布。也就是最晚22年12月发布。
 ```
 
-##### 人
+# 文献作者
 
 ```
 uc berkley  ries labor  lon Stoica
@@ -71,7 +75,7 @@ fp输出的为所有项的频次。对应于ti就是所有列的组合频次。
 
 
 
-### metrics
+# metrics
 
 ```
 https://blog.csdn.net/hahajinbu/article/details/78629130
@@ -1495,6 +1499,32 @@ shuffle
 ##### problem
 
 ```
+```
+
+# 论文
+
+### 论文1
+
+##### python库详细版本
+
+```
+keras_bert==0.83.0
+Keras==2.2.4
+seqeval==0.0.10
+matplotlib==3.3.1
+numpy==1.16.4
+Flask==1.1.2
+#tensorflow==1.12.0
+#keras_contrib==2.0.8
+```
+
+##### 添加部分
+
+```
+实验部分使用其他网络跑一下（4什么网络？变种的）。
+文字部分，与实验相关的进行重写。
+文字部分，无法单纯重写的，例如数据的预处理流程2（改变和添加预处理流程）、3正则表达式提取（换其他正则表达式）、1情报生成方法流程图（添加步骤），需要酌情修改内容并重写。可添加一些步骤。
+图片重新绘制。
 ```
 
 
