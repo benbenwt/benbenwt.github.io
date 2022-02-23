@@ -1,7 +1,14 @@
 ### 刷题的遗忘的点
 
+##### 异常类
+
 ```
 JAVA异常类,Throwable,Error,Exception，RuntimeException,IOException的继承关系
+```
+
+##### 访问修饰符
+
+```
 ```
 
 
@@ -920,7 +927,7 @@ exp2(?!exp1)​    匹配exp2后面不是exp1的位置
 
 other
 
-# long
+# lang
 
 ```
 #判断该类是否为某个类的父类
@@ -928,6 +935,16 @@ isAssignableFrom()
 #判断该示例是否为某个类的子类的实例
 instanceof()
 ```
+
+##### Integer
+
+```
+intValue()是把Integer对象类型变成int的基础数据类型；
+parseInt()是把String 变成int的基础数据类型；
+Valueof()是把String 转化成Integer对象类型；（现在JDK版本支持自动装箱拆箱了。）
+```
+
+
 
 ##### Clone
 

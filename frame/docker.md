@@ -7,7 +7,26 @@ DockerFile编写时分层应该按照功能，基础的功能放在前边，需�
 如果直接携带docker镜像，他只是作为一个固定镜像存在，如果需要更改，需要另外编写一个DockerFile，在它的基础上更改。
 ```
 
+# problem
 
+### File "docker/transport/unixconn.py", line 43, in connect FileNotFoundError: [Errno 2] No such file or directory
+
+```
+只要说urllib相关的错误，极有可能是没启动docker服务端，导致docker客户端发发送请求失败。
+```
+
+
+
+# dcoker离线镜像
+
+```
+#image
+docker save 0fdf2b4c26d3 > hangge_server.tar
+docker load < hangge_server.tar
+#container
+docker export f299f501774c > hangger_server.tar
+docker import - new_hangger_server < hangger_server.tar
+```
 
 # docker网络
 

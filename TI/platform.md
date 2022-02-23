@@ -494,12 +494,18 @@ lisa：其他web后端
 
 
 
-| hostname | ip   | 服务                                                  |
-| -------- | ---- | ----------------------------------------------------- |
-| hbase    | 187  | esto_mysql                                            |
-| hbase1   | 186  | nginx,pcapAnalyze,batchwork                           |
-| hbase2   | 185  | elasticsearch,mysql,lisa,threat-broadcast,fournumber, |
-| lisa     | 184  | es_provider,lisa_provider,statistic_provider          |
+```
+一个前端，两种后端，三个数据库，爬虫。
+```
+
+
+
+| hostname | ip   | 服务                                                         |
+| -------- | ---- | ------------------------------------------------------------ |
+| hbase    | 187  | esto_mysql                                                   |
+| hbase1   | 186  | nginx,pcapAnalyze,batchwork，python后端及nginx前端           |
+| hbase2   | 185  | elasticsearch,mysql,lisa,threat-broadcast,fournumber,数据库，沙箱，爬虫 |
+| lisa     | 184  | es_provider,lisa_provider,statistic_provider，java后端       |
 
 ```
 部署时需要修改的参数

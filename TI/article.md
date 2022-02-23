@@ -2,6 +2,8 @@
 
 
 
+
+
 ```
 这两个格式做参考
 https://kns.cnki.net/KXReader/Detail?invoice=li0QzkEP8kfU5L4iCsz4OSB1cjfFIOX5HtGtmTTQId3gUHepGBv4Vc6CIsYm6maB843OA0YYqJNwKeEvR6bRrtQESaYsiJyKfpcp06vyC5W4%2Bev%2Fk7wDf4r%2B9rE9up5Fs%2BZxt9%2FZ5WZHBoHZkUClifqrmKxX64o0XZNChE4QTKI%3D&DBCODE=CAPJ&FileName=JSJC20211216005&TABLEName=capjlast&nonce=EEF30EF0E97C4D6F8DB192FEF409F041&uid=&TIMESTAMP=1640329439125
@@ -1417,7 +1419,7 @@ ann,bio...?如果需要，brat可以转
 
 # spark mlknn
 
-##### spar 相关函数
+##### spark 相关函数
 
 ```
 spark knn 代码示例:https://blog.csdn.net/fighting_one_piece/article/details/39056513
@@ -1505,6 +1507,18 @@ shuffle
 
 ### 论文1
 
+### GRU
+
+```
+https://blog.csdn.net/sir_TI/article/details/106819038
+```
+
+### 按字母标记的标签转为按分词后的单词标记
+
+```
+
+```
+
 ##### python库详细版本
 
 ```
@@ -1518,6 +1532,21 @@ Flask==1.1.2
 #keras_contrib==2.0.8
 ```
 
+```
+整理一下evaluate用的指标
+跑一下albert-bigru
+```
+
+##### 过低
+
+```
+malware和software容易混淆，不要software了
+identity效果不好，可能由于threatActor的影响，去掉identity。
+只剩下threatactor，vulnerability_cve，malware，location
+```
+
+
+
 ##### 添加部分
 
 ```
@@ -1530,11 +1559,18 @@ attention 资源： https://blog.csdn.net/u011523796/article/details/87542951
 bilstm-attention :https://blog.csdn.net/u013230189/article/details/110007826
 ```
 
+##### robert
+
+```
+https://www.shangmayuan.com/a/7e6252aa87eb4006b28d71bc.html
+```
+
 ##### ALBERT
 
 ```
 bert4keras教程:https://bert4keras.spaces.ac.cn/guide/#_2
 bert4keras: https://github.com/bojone/bert4keras/pull/427
+chttps://blog.csdn.net/weixin_42691585/article/details/107424028
 
 错误：没有此属性self._token_unk_id
 它使用这一部分代码读取的vocab中的unk等标志的id，要求以[]形式包裹，例如[UNK]。将所有标志改为用[]包裹。
@@ -1544,10 +1580,24 @@ for token in ['pad', 'unk', 'mask', 'start', 'end']:
         setattr(self, '_token_%s_id' % token, _token_id)
     except:
     	pass
-    	
 ```
 
+##### temp
 
+```
+CRF
+BiGRU-CRF
+ALBERT-CRF
+WORD2VEC-BiGRU-CRF
+ALBERT-BiGRU-CRF
+```
+
+##### lstm、gru
+
+```
+https://blog.csdn.net/mpk_no1/article/details/72875185
+https://blog.csdn.net/weixin_42691585/article/details/107424028
+```
 
 ##### Macbert
 

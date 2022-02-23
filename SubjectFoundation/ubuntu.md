@@ -1,10 +1,8 @@
-
+### 系统哈希命令简表
 
 ```
 cat /proc/cpuinfo
 ```
-
-
 
 | *compute the checksum of your file ...* |          *compare with*          |                  |                      |               |
 | :-------------------------------------: | :------------------------------: | :--------------: | -------------------- | ------------- |
@@ -14,9 +12,9 @@ cat /proc/cpuinfo
 |                 SHA-512                 | certUtil -hashfile *file* SHA512 | sha512sum *file* | shasum -a 512 *file* | *file*.sha512 |
 |                   MD5                   |  certUtil -hashfile *file* MD5   |  md5sum *file*   | md5 *file*           | *file*.md5    |
 
-# ubuntu
 
-##### 换源
+
+### 换源
 
 ```
 RUN cp /etc/apt/sources.list /etc/apt/sources.list.bak  && \
@@ -73,11 +71,14 @@ arch 架构
 
 ### 网络及服务
 
+##### 添加网卡、网关
+
 ```
 在eth160上创建网卡接口1，ip设为192.168.130.80
 ifconfig eth160:1 192.168.130.80 up
 #添加路由网关，让192.168.130.1可达
 route add default gw 192.168.130.1
+#删除网关
 ```
 
 

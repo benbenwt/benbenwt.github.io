@@ -27,6 +27,7 @@ pageHelper使用后再在sql中使用LIMIT会报错，。
 ```
 通过此种方式来指定配置文件，可以覆盖jar包内的配置文件。
 java  -jar  app.jar  --spring.config.location=application.yml
+或直接在jar包的同级目录放置application.yml也可覆盖jar包内的配置文件。
 ```
 
 # spring boot

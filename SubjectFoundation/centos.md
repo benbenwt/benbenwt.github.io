@@ -17,11 +17,24 @@ grep "model name" /proc/cpuinfo
 grep "CPU" /proc/cpuinfo  
 ```
 
-### ssh
+### sshd
 
 ```
+查看状态：
 
+systemctl status sshd.service
+启动服务：
+
+systemctl start sshd.service
+重启服务：
+
+systemctl restart sshd.service
+开机自启：
+
+systemctl enable sshd.service
 ```
+
+
 
 
 
@@ -29,6 +42,13 @@ grep "CPU" /proc/cpuinfo
 
 ```
 df -h 查看磁盘容量
+```
+
+### 开机启动
+
+```
+vim /etc/rc.d/rc.local
+在其中追加shell命令，达到自启的目的。
 ```
 
 
@@ -139,9 +159,28 @@ cat
 
 ### 图形界面
 
+#### gnome
+
 ##### gnome-shell
 
-卡住时找到pid杀死即可。系统会自动重启gnome，类似windows的explrer。
+登录之后，桌面卡住时找到pid杀死即可。系统会自动重启gnome，类似windows的explorer。
+
+##### 开机时图形界面卡死
+
+```
+命令行手动startx，启动图形界面。确保开启了sshd自启，不然ssh都连接不上。
+```
+
+##### 开机进入命令行
+
+```
+开机进入命令行
+systemctl set-default multi-user.target
+开机进入图像界面
+systemctl set-default graphical.target
+```
+
+
 
 ### 网络
 

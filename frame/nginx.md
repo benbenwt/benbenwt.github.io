@@ -125,3 +125,11 @@ location @app {
 
 ### nginx.pid缺失等
 
+#### nginx.conf不生效
+
+```
+要写nginx.conf的绝对路径，不然没用
+```
+
+
+
