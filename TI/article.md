@@ -1512,6 +1512,7 @@ shuffle
 ```
 字母与单词
 滑动窗口
+数据增强
 albert模型大小，gru维数
 gru与albert消融
 ```
@@ -1535,12 +1536,9 @@ https://blog.csdn.net/sir_TI/article/details/106819038
 ```
 keras_bert==0.83.0
 Keras==2.2.4
-seqeval==0.0.10
-matplotlib==3.3.1
-numpy==1.16.4
-Flask==1.1.2
-#tensorflow==1.12.0
-#keras_contrib==2.0.8
+tensorflow-gpu==2.1.0
+keras_contrib==2.0.8
+bert4keras==0.10.9
 ```
 
 ```
