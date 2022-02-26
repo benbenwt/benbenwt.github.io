@@ -1507,25 +1507,60 @@ shuffle
 
 ### 论文1
 
-### 实验
+##### micro和macro
+
+```
+micro中每个样本重要性一样，这样导致样本数量多的类别决定了指标好坏。
+macro是每个类别平均，忽略每个类别的数量的差异。
+```
+
+
+
+##### 模型对比
+
+```
+CRF
+BiGRU-CRF
+ALBERT-CRF
+WORD2VEC-BiGRU-CRF
+ALBERT-BiGRU-CRF
+
+word_char  bert-bigru-crf
+字符类型  emb-bilstm-crf
+word类型 bert-bilstm-crf word2vec-bilstm-crf
+本文  charword-emb-bert-bilstmc-crf
+各部分消融
+```
+
+
+
+##### 字符与单词
+
+```
+https://www.baidu.com/
+```
+
+
+
+##### 实验
 
 ```
 字母与单词
 滑动窗口
 数据增强
-albert模型大小，gru维数
-gru与albert消融
+albert模型大小
 ```
 
 
 
-### GRU
+##### GRU
 
 ```
 https://blog.csdn.net/sir_TI/article/details/106819038
+https://zhuanlan.zhihu.com/p/55386469
 ```
 
-### 按字母标记的标签转为按分词后的单词标记
+##### 按字母标记的标签转为按分词后的单词标记
 
 ```
 
