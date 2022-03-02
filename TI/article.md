@@ -1622,6 +1622,21 @@ max_f1: 0.7757557905421154
 
 
 
+##### lstm
+
+```
+https://zhuanlan.zhihu.com/p/32085405
+https://www.jianshu.com/p/9dc9f41f0b29
+#bilstm
+https://www.jianshu.com/p/bfd87f1c5efc
+```
+
+##### crf
+
+```
+https://zhuanlan.zhihu.com/p/407762841
+```
+
 
 
 ##### trm
@@ -1642,6 +1657,7 @@ https://www.jianshu.com/p/9b87b945151e
 
 ```
 https://zhuanlan.zhihu.com/p/360290118
+https://www.researchgate.net/figure/Bi-LSTM-CRF-with-Word-Character-representation-Architecture_fig2_336798652
 ```
 
 
@@ -1672,7 +1688,11 @@ macro是每个类别平均，忽略每个类别的数量的差异。分别计算
 https://www.cnblogs.com/zywnnblog/p/15744237.html
 ```
 
+##### crf
 
+```
+https://www.cnblogs.com/callyblog/p/11284370.html
+```
 
 ##### 模型对比
 
@@ -1699,7 +1719,7 @@ word类型 bert-bilstm-crf word2vec-bilstm-crf
 ##### 字符与单词
 
 ```
-https://www.baidu.com/
+https://www.researchgate.net/figure/Bi-LSTM-CRF-with-Word-Character-representation-Architecture_fig2_336798652
 ```
 
 
@@ -1816,6 +1836,26 @@ csdn 博客：https://blog.csdn.net/qq_27590277/article/details/115339832
 https://github.com/ymcui/MacBERT
 https://github.com/ymcui/Chinese-ELECTRA
 
+```
+
+### 论文
+
+##### kaggle分类数据集及相关文献
+
+```
+https://www.kaggle.com/c/jigsaw-toxic-comment-classification-challenge/data
+#使用改进的bert进行多标签文本分类
+[7]: Building a Multi-label Text Classifier using BERT and TensorFlow
+[8]: Multi-label Text Classification using BERT – The Mighty Transformer
+```
+
+##### keras代码教程
+
+```
+https://medium.com/huggingface/multi-label-text-classification-using-bert-the-mighty-transformer-69714fa3fb3d
+https://github.com/kaushaltrivedi/bert-toxic-comments-multilabel/blob/master/toxic-bert-multilabel-classification.ipynb
+https://nbviewer.org/github/kaushaltrivedi/bert-toxic-comments-multilabel/blob/master/toxic-bert-multilabel-classification.ipynb
+https://www.kaggle.com/javaidnabi/toxic-comment-classification-using-bert/
 ```
 
 
