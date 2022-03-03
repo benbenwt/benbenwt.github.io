@@ -102,8 +102,6 @@ git submodule update --init --recursive
 git config --globalproxy http.proxy  'socks5://127.0.0.1:1080'
 ```
 
-
-
 ### 初始化及配置
 
 ```
