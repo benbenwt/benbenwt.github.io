@@ -1,13 +1,15 @@
 
 
-# 安装
+### 安装
 
 ```
-解压复制到对应位置
+#解压复制到对应位置
+#创建logs文件夹
 mkdir logs
+#允许删除topic，填写logs文件夹，指定zk集群地址。
 cd config
 vim server.properties
-
+#指定kafka的id，每台机器不一样。
 broker.id=0
 #删除topic功能使能
 delete.topic.enable=true
@@ -17,11 +19,51 @@ log.dirs=/opt/module/kafka/data
 zookeeper.connect=hadoop102:2181,hadoop103:2181,hadoop104:2181/kafka
 ```
 
+### 启动
+
+```
+#启动独立的zookeeper
+zkServer.sh start
+zkCli.sh -server localhost：2181
+#指定config启动kafka
+kafka-server-start.sh     conf/server.properties
+```
+
+### 管理
+
+##### 查看zookeeper结点
+
+```
+#查看zookeeper结点
+ls /
+get /zk_test
+set /zk_test name
+delete /zk_test
+```
+
+##### 创建topic
+
+```
+#创建topic
+bin/kafka-topics.sh --create --bootstrap-server hbase:9092 --replication-factor 1 --partitions 1 --topic test
+```
+
+##### 查看所有topic
+
+```
+#查看所有topic
+bin/kafka-topics.sh --list --bootstrap-server hbase:9092
+test
+bin/kafka-topics.sh --delete --zookeeper localhost:2181 --topic test
+bin/kafka-console-producer.sh --broker-list hbase:9092 --topic 
+bin/kafka-console-consumer.sh --bootstrap-server hbase:9092 --topic test --from-beginning
+```
 
 
-# 背景
 
->kafka是一种分布式的基于发布与订阅的消息队列。
+# 理论知识
+
+>kafka是高吞吐量的开源流处理平台，可以作为一种分布式的基于发布与订阅的消息队列，但消息队列的部分功能需要自己编写，如失败重试动作，同步异步任务等，与rabbitmq有区别。
 
 ## 异步处理
 
@@ -59,6 +101,11 @@ kafka是基于发布订阅模式的消费者拉取。
 
 kafka由多个broker构成，每个broker由topic和partion构成，一个topic可以有多个partion，由partion编号进行区分。每个topic的partion有多个，分布在不同机器上，他们有一个leader，当leader无法服务后，由其他机器上的follower代理。
 
+```
+消费者通过指定topic 进行消费， partion可以将topic中的数据分开存储。
+offset针对特定topic，特定partion，特定消费者group。Zookeerper中保存这每个topic下的每个partition在每个group中消费的offset 。
+```
+
 ### 消费者消费消息
 
 #### consumer group
@@ -69,8 +116,6 @@ kafka由多个broker构成，每个broker由topic和partion构成，一个topic�
 conda install --channel https://conda.anaconda.org/conda-forge kafka-python
 ```
 
-
-
 ##### 版本
 
 >kafka 2.4.1 zookeeper 3.5.9
@@ -80,41 +125,6 @@ kibana 5601,es 9200
 ```
 
 
-
-##### standalone
-
-```
-#启动独立的zookeeper
-zkServer.sh start
-zkCli.sh -server localhost：2181
-```
-
-```
-#查看zookeeper结点
-ls /
-get /zk_test
-set /zk_test name
-delete /zk_test
-
-C:\Users\guo\Desktop\lab\Result\stix2\VirusShare_ELF_20200405_part8\598bbee58a81eec6d30326d207a260b9.json
-C:\Users\guo\Desktop\lab\Result\stix2\VirusShare_ELF_20200405_part8\0598aea3e4e081d8ce1cda8649f8b0ec.json
-```
-
-```
-#使用默认的zookeeper，若已用独立的zookeeper，不要启动此选项。
-bin/zookeeper-server-start.sh config/zookeeper.properties
-#设置kafka下的zookeeper.properties和server.properties
-bin/kafka-server-start.sh config/server.properties
-bin/kafka-server-stop.sh
-#创建topic
-bin/kafka-topics.sh --create --bootstrap-server hbase:9092 --replication-factor 1 --partitions 1 --topic test
-#查看所有topic
-bin/kafka-topics.sh --list --bootstrap-server hbase:9092
-test
-bin/kafka-topics.sh --delete --zookeeper localhost:2181 --topic test
-bin/kafka-console-producer.sh --broker-list hbase:9092 --topic 
-bin/kafka-console-consumer.sh --bootstrap-server hbase:9092 --topic test --from-beginning
-```
 
 ### problem
 

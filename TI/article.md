@@ -1,9 +1,3 @@
-
-
-
-
-
-
 ```
 这两个格式做参考
 https://kns.cnki.net/KXReader/Detail?invoice=li0QzkEP8kfU5L4iCsz4OSB1cjfFIOX5HtGtmTTQId3gUHepGBv4Vc6CIsYm6maB843OA0YYqJNwKeEvR6bRrtQESaYsiJyKfpcp06vyC5W4%2Bev%2Fk7wDf4r%2B9rE9up5Fs%2BZxt9%2FZ5WZHBoHZkUClifqrmKxX64o0XZNChE4QTKI%3D&DBCODE=CAPJ&FileName=JSJC20211216005&TABLEName=capjlast&nonce=EEF30EF0E97C4D6F8DB192FEF409F041&uid=&TIMESTAMP=1640329439125
@@ -1838,7 +1832,21 @@ https://github.com/ymcui/Chinese-ELECTRA
 
 ```
 
-### 论文
+### 论文elephas
+
+##### 实验部分
+
+```
+1不同模型精度对比，训练时间、测试时间
+3不同数据量不同模型，测试时间
+3不同结点数量，本模型测试时间
+4不同配置，本模型测试时间
+
+```
+
+
+
+### 论文mlknn
 
 ##### kaggle分类数据集及相关文献
 

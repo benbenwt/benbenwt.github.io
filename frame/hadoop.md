@@ -277,6 +277,51 @@ export JAVA_HOME=/usr/lib/jvm/java-1.8.0-openjdk-1.8.0.181-7.b13.el7.x86_64
 </configuration>
 ```
 
+为了在网页界面可以操作文件夹，需要配置代理用户及staticuser。完整的配置文件如下。
+
+```
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" href="configuration.xsl"?>
+
+<configuration>
+	<!-- 指定NameNode的地址 -->
+    <property>
+        <name>fs.defaultFS</name>
+        <value>hdfs://hadoop102:8020</value>
+</property>
+<!-- 指定hadoop数据的存储目录 -->
+    <property>
+        <name>hadoop.tmp.dir</name>
+        <value>/opt/module/hadoop-3.1.3/data</value>
+</property>
+
+<!-- 配置HDFS网页登录使用的静态用户为atguigu -->
+    <property>
+        <name>hadoop.http.staticuser.user</name>
+        <value>atguigu</value>
+</property>
+
+<!-- 配置该atguigu(superUser)允许通过代理访问的主机节点 -->
+    <property>
+        <name>hadoop.proxyuser.atguigu.hosts</name>
+        <value>*</value>
+</property>
+<!-- 配置该atguigu(superUser)允许通过代理用户所属组 -->
+    <property>
+        <name>hadoop.proxyuser.atguigu.groups</name>
+        <value>*</value>
+</property>
+<!-- 配置该atguigu(superUser)允许通过代理的用户-->
+    <property>
+        <name>hadoop.proxyuser.atguigu.users</name>
+        <value>*</value>
+</property>
+</configuration>
+
+```
+
+
+
 3hdfs-site.xml:
 
 ```

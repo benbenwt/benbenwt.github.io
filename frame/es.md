@@ -159,7 +159,9 @@ PUT cti/_settings
 
 # es
 
-## es分析和分析器
+### painless脚本
+
+### es分析和分析器
 
 ```
 #倒排索引
@@ -200,7 +202,7 @@ GET /_analyze
 }
 ```
 
-## 映射
+### 映射
 
 >映射用于控制特定字段域的分析器类型、存储类型
 
@@ -220,7 +222,7 @@ GET /gb/_mapping/tweet
 
 
 
-## 聚合查询
+### 聚合查询
 
 ##### 统计malware组件没有malwaretypes的数量
 
