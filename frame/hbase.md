@@ -1,4 +1,4 @@
-# 安装
+# 安装与启动
 
 >修改hbase默认ssh端口
 >
@@ -9,6 +9,12 @@
 http://hbase.apache.org/book.html#quickstart
 
 1下载安装包解压，在conf/hbase-env.sh中设置jdk路径
+
+```
+在hbase-site.xml中指定zk的请求地址，在regionserver中填写regionserver服务器ip。
+```
+
+
 
 2快捷启动：运行bin/start-hbase.sh,访问http://localhost:16010
 
@@ -327,25 +333,99 @@ pom
 
 
 
-# hbase shell
+# hbase shell 命令
 
 >http://hbase.apache.org/book.html#quickstart
 
-./bin/hbase shell启动shell
+### 连接
 
-基本操作
+```
+./bin/hbase shell启动shell
+```
+
+### DDL
+
+##### 建表
 
 ```
 create 'test', 'cf'
+#展示表
 list 'test'
+#展示表结构
 describe 'test'
-put 'test', 'row1', 'cf:a', 'value1'
-scan 'test'
-get 'test', 'row1'
-disable 'test'
-drop 'test'
+desc 'test
 
 ```
+
+##### 改表
+
+```
+#删除表
+disable 'student'
+drop 'student'
+#清空表
+truncate 'stu'
+#增加列
+alter 'stu2',NAME=>'f1',VERSIONS=>4
+#删除列
+alter 'stu2', NAME => 'cf1',METHOD => 'delete'
+alter 'stu2', 'delete' => 'f1'
+```
+
+### DML
+
+##### 增删改查
+
+```
+#插入数据
+put 'test', 'row_key', 'cf:a', 'value1'
+#查看所有数据
+scan 'test'
+#查询分页
+scan  'stu2',{COLUMNS => 'cf1:age', LIMMIT 10, STARTROW => 'xx'}
+#查询单个数据
+get 'test', 'row_key'
+
+```
+
+##### 主键查询
+
+```
+get 'test', 'row_key'
+#按照行键过滤
+scan ‘表名’, FILTER=>“RowFilter(=,‘binary:行健值’)”
+scan ‘test’, FILTER=>“RowFilter(=,‘binary:01’)”
+
+#过滤行键前缀过滤
+scan ‘表名’, FILTER => “PrefixFilter (‘行健前缀’)”
+
+
+#按照索引范围过滤
+scan 'tableName',{STARTROW=>'startRow',ENDROW=>'endRow'}
+
+```
+
+##### 非主键查询
+
+```
+https://blog.csdn.net/weixin_43980049/article/details/90377435
+#查询出某个表内列值包含指定字符串的记录,相当于where查询
+scan '表名', FILTER=>"ValueFilter(=,'substring:列值')"
+scan 'test', FILTER=>"ValueFilter(=,'substring:bob')"
+```
+
+```
+#查找列簇的名字等于此字符的，注意是列簇的名字，不是列簇对应的值，也不是列的名字。
+scan 'test1',FILTER=>"FamilyFilter(=,'substring:c')"
+#找到有name属性的记录
+scan 'test',FILTER=>"FamilyFilter(=,'substring:name')"
+```
+
+
+
+主键聚合
+
+非主键聚合
 
 # 常用端口
 
@@ -358,6 +438,16 @@ drop 'test'
 2181 zookeeper  
 
 3888 zooo
+
+# 理论知识
+
+##### timestamp
+
+```
+同一条数据有多个版本，用时间戳后缀作为区分。
+```
+
+
 
 # 与关系型数据库基本结构对比
 
@@ -385,5 +475,13 @@ drop 'test'
 
 ```
 hadoop dfsamin -safemode leave
+```
+
+##### org.apache.hadoop.hbase.PleaseHoldException: Master is initializing
+
+```
+直接报zk中的数据全删了
+deleteall /hbase
+再把hbase在hdfs的文件全删了。
 ```
 

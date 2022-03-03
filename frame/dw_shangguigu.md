@@ -13,3 +13,6 @@ zookeeper,kafka,flume,sqoop,superset
 | 186  | flume_file_kafka                           |
 | 185  | mysql_platform,mysql_lisa,flume_kafka_hdfs |
 
+软件版本
+
+![软件版本](..\resources\images\image-20220103163534955.png)

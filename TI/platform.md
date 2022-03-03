@@ -14,6 +14,14 @@ docker的
 idea很多功能都没使用过-工具性质。
 ```
 
+### ssh端口
+
+```
+52542
+```
+
+
+
 ### 20211124软件园迁移到两台新机器
 
 ```
@@ -486,10 +494,10 @@ java:esto_mysql,es_provider,lisa_provider,statistic_provider
 ##### 分布
 
 ```
-malware,cve爬虫，malware沙箱，malware，cve，pcap后端。
-hbase1: pcap,cve和web后端
-hbase2:cve挖掘，malware挖掘，malware沙箱
-lisa：其他web后端
+一个前端，两种后端，三个数据库，2爬虫，1沙箱。
+hbase1: ngignx前端，pcap的python后端
+hbase2:cve爬虫，malware爬虫，malware沙箱，mysql数据库。
+lisa：其他java的后端
 ```
 
 

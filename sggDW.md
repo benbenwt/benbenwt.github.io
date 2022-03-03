@@ -1,5 +1,3 @@
-
-
 ##### temp
 
 ```
@@ -8,10 +6,9 @@
 
 ##### version
 
-![image-20220103163534955](resources\images\image-20220103163534955.png)
+
 
 ##### problem
 
-```
-```
+
 

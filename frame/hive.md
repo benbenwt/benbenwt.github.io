@@ -1,22 +1,119 @@
 
 
-### HIVEsql
+# HIVE的语法
 
-##### 表
+### DDL数据定义语言
+
+##### 建表语句
 
 ```
- drop table if exists test;
-create table test(id int);
-insert into test(id) values(1);
+create table test(id int,name nchar(4));
+```
+
+##### 删表语句
+
+```
+drop table if exists test;
+```
+
+##### 清空表格数据，保留表格结构
+
+```
 truncate table sample;
-#hive java api:https://cwiki.apache.org/confluence/display/Hive/HiveServer2+Clients
+```
+
+##### 修改表结构
+
+```
+ALTER TABLE test_table ADD COLUMNS (new_col INT);
+ALTER TABLE invites ADD COLUMNS (new_col2 INT COMMENT 'a comment');
+ALTER TABLE test REPLACE COLUMNS(id BIGINT, name STRING);
+#改表名称
+ALTER TABLE events RENAME TO new_events;
+#为表添加主键
+
 ```
 
 
 
+### DML数据操作语言
+
+>https://www.cnblogs.com/starzy/p/11441131.html
+
+##### 设置主键
+
+```
+https://www.cnblogs.com/sabertobih/p/14031047.html#gallery-1
+```
+
+##### 查询
+
+```
+select * from   sample where architecture="x86";
+```
+
+##### 聚合统计
+
+```
+#加入count后，比只使用*慢了很多，用了22s。使用*查询所有列，0.3s查出了1045行数据。
+select count(*)  from   sample where architecture="x86";
+#改成architecture后仍然很慢，1045条统计了半天。
+select count(architecture)  from   sample where architecture="x86";
+```
 
 
-# HIVE服务器搭建
+
+##### 插入数据
+
+```
+#插入很慢，25s左右，和聚合统计一样慢。
+insert into sample(architecture) values("test_arch");
+```
+
+##### 删除数据
+
+##### 修改数据
+
+### DCL数据控制语言
+
+>(GRANT，REVOKE，COMMIT，ROLLBACK)
+
+### JAVA API
+
+#hive java api:https://cwiki.apache.org/confluence/display/Hive/HiveServer2+Clients
+
+### 
+
+# 仓库规范
+
+### 分区分桶外部表
+
+### 分层
+
+```
+当仓库分为多层，有的达到5层，如果源头输入新的数据，从第一层到最后一层需要多久？其耗费的时间说明，这种结构只适用于离线。那么即席查询的意思就是开发离线模型的demo，用于演示，而不是“实时查询”，因为它的“即席”是建立在数据已经从源头流入最后一层的基础上的，也就是已经处理完成了，这并不实时。
+```
+
+### json格式
+
+```
+json格式要实现主键查询，非主键查询，所有键的聚合。实际上查询的功能应该由hbase来做。
+```
+
+# hive自动映射到hbase
+
+```
+https://blog.csdn.net/weixin_44694973/article/details/98845551
+hadoop.hive.hbase.HBbaseStorageHandler
+```
+
+```
+CREATE TABLE cctable (key int, value string) STORED BY 'org.apache.hadoop.hive.hbase.HBaseStorageHandler' WITH SERDEPROPERTIES ("hbase.columns.mapping" = ":key,cf:val") TBLPROPERTIES ("hbase.table.name" = "cc");
+```
+
+
+
+# HIVE服务搭建
 
 ### 安装mysql
 
@@ -63,6 +160,8 @@ ALTER USER USER() IDENTIFIED BY 'root';#重置密码
 
 ### 相关操作
 
+>配置失败时，如果需要重新从0开始安装，按照此步骤卸载清除mysql，再重新执行搭建步骤。
+
 删除mysql设置及文件重新初始化
 
 >主要删除/var/lib/mysql,/etc/my.cnf,/var/log/mysqld.log
@@ -89,6 +188,15 @@ mysql -uroot -ppassword
 mysql-connector-java-5.1.37
 
 mysql-5.7.28.el7.x86_64rmp-bundle.tar
+
+hive删了重来
+
+```
+rm -rf   /root/module/apache-hive-3.1.2-bin
+cp -r /root/software/apache-hive-3.1.2-bin /root/module
+```
+
+
 
 ### 安装hive
 
@@ -179,9 +287,9 @@ CREATE TABLE test(id string);
 
 ### beeline2连接
 
->https://cwiki.apache.org/confluence/display/Hive/GettingStarted#GettingStarted-RunningHiveServer2andBeeline.1
+> https://cwiki.apache.org/confluence/display/Hive/GettingStarted#GettingStarted-RunningHiveServer2andBeeline.1
 >
->user:root,password:root
+> user:root,password:root
 
 jdbc端口:10000
 
@@ -204,16 +312,14 @@ web端口:10002
 添加高可用，不然报一个tez相关的警告，影响启动.
 
 ```
-#hive-site.xml
+vim hive-site.xml
 <property>
     <name>hive.server2.active.passive.ha.enable</name>
     <value>true</value>
 </property>
 </configuration>
-```
 
-```
-#开启hiveserver2服务
+#开启hiveserver2服务,启动后jps可以看到hive的进程
 nohup hiveserver2 1>/dev/null 2>/dev/null &
 #beeline连接
 beeline -u jdbc:hive2://localhost:10000/default -n root -w root
@@ -230,14 +336,7 @@ show tables;
 
 
 
-### 相关操作
 
-删了重来
-
-```
-rm -rf   /root/module/apache-hive-3.1.2-bin
-cp -r /root/software/apache-hive-3.1.2-bin /root/module
-```
 
 ### problem
 
@@ -251,7 +350,6 @@ cp -r /root/software/apache-hive-3.1.2-bin /root/module
 #HBASE_HOME
 export HBASE_HOME=/root/module/hbase-2.3.3
 export PATH=$PATH:$HBASE_HOME/bin
-
 ```
 
 ##### Exception in thread "main" java.lang.NoSuchMethodError: com.google.common.base.Preconditions.checkArgument(ZLjava/lang/String;Ljava/lang/Object;)V

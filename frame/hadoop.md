@@ -1,4 +1,4 @@
-### 相关组件版本
+# 相关组件版本
 
 ```
 hadoop3.1.1
@@ -12,7 +12,7 @@ flume 1.9.0
 
 
 
-### 端口
+# 端口
 
 ```
 namenode rpc  8020
@@ -930,6 +930,17 @@ public class SelfPartitioner extends Partitioner<Text, Text> {
 }
 ```
 
+# 常用命令
+
+### 文件管理
+
+```
+#查看损坏缺失的文件
+hdfs fsck /
+#删除损坏缺失的文件
+hadoop fsck -delete
+```
+
 
 
 # 基本操作
@@ -1078,6 +1089,13 @@ hdfs的存储文件夹
 
 
 # problem
+
+##### There are 25866 missing blocks. The following files may be corrupted:
+
+```
+```
+
+
 
 ##### source core-site.xml第一行未预期的错误,newline。
 
@@ -1228,7 +1246,7 @@ bin/hadoop dfsadmin -safemode leave
 
 
 
-spark解决
+##### spark解决
 
 ```
 yarn.nodemanager.resource.memory-mb 

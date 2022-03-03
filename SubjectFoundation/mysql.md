@@ -4,6 +4,29 @@ mysql有快照嘛
 
 
 
+### DDL
+
+constraint用于防止非法信息进入
+
+##### 指定外键
+
+```
+CREATE TABLE Orders
+(
+Id_O int NOT NULL PRIMARY KEY,
+OrderNo int NOT NULL,
+Id_P int FOREIGN KEY REFERENCES Persons(Id_P)
+)
+```
+
+
+
+### DML
+
+### DCL
+
+### platform相关sql
+
 ##### 从lisadb删除id_重复的
 
 >更改SUBSTRING_INDEX的第三个参数(1,2,3,4,5,6,7)，迭代完成任务
@@ -27,14 +50,11 @@ delete from celery_taskmeta where id in
 	(select GROUP_CONCAT(id) as id,id_ as id_,count(id_) as num from celery_taskmeta   where status='SUCCESS' group by id_   order by count(id_) desc) t1 where num >1) t2) t3 )
 ```
 
-##### 填filename
-
-```
-```
 
 
 
-#### shell命令
+
+### shell命令
 
 ```
 #连接mysql,-p与密码之间不要加空格，加空格后无法识别正确的密码。
@@ -138,7 +158,9 @@ CREATE TABLE `dept`(
 PRIMARY KEY(`dept_no`)
 )ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
-### Java MySQL数据类型对照
+### 理论部分
+
+##### Java MySQL数据类型对照
 
 | **类型名称**  | **显示长度** | **数据库类型**            | **JAVA类型**             | **JDBC类型索引(int)** | **描述** |
 | ------------- | ------------ | ------------------------- | ------------------------ | --------------------- | -------- |

@@ -32,11 +32,14 @@ bin/zkServer.sh status
 ### 管理
 
 ```
+zookeeper-client -server localhost:2181
 #查看zookeeper结点
 ls /
 get /zk_test
 set /zk_test name
 delete /zk_test
+deleteall 
+rmr 
 ```
 
 
@@ -50,13 +53,19 @@ ZooKeeper目标是封装好易出错且复杂的关键服务，直接提供给�
 
 ##### zk如何保证数据一致性
 
+###### 集群结点信息
+
+```
+存储了集群结点信息,如hbase的regionserver结点存储在zk中的/hbase/meta-regionserver中，如果将其删除，则hbase-master就不知道自己有哪些regionserver在线。
+```
+
+
+
 ```
 https://www.cnblogs.com/tkzL/p/12916116.html
 保证数据一致性的核心协议是ZAB(ZooKeeper Atomic Broadcast)协议
 写请求发送到follower，follower发送请求到leader，leader发起Proposal，广播给所有follower，半数follower同意后，再提交写请求，follower执行成功并返回给客户端。
 ```
-
-
 
 ##### 分布式独享锁
 

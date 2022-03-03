@@ -26,6 +26,29 @@ https://www.cnblogs.com/zhaolizhe/p/6923501.html
 
 7自动化信息采集及监控（收集系统/应用状态信息，CPU,Mem，Disk，Net,Apache,MySQL）
 
+# 集群管理脚本
+
+hadoop
+
+```
+```
+
+
+
+zookeeper
+
+```
+```
+
+
+
+管理所有组件的脚本
+
+```
+```
+
+
+
 # 其他软件的命令
 
 ### VIM
@@ -36,9 +59,7 @@ https://www.cnblogs.com/zhaolizhe/p/6923501.html
 
 
 
-
-
-# 脚本
+# 脚本语法
 
 >指定shell解析器 #! /bin/bash
 >
