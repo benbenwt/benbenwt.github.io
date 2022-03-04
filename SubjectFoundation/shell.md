@@ -57,6 +57,21 @@ zookeeper
 
 /  或者 ？
 
+# problem
+
+##### 环境变量和lib
+
+如果无法访问到常规的环境变量，要在sh脚本头部export
+
+```
+#!/bin/bash
+export HADOOP_HOME=/root/module/hadoop-3.1.4
+export PATH=$PATH:$HADOOP_HOME/bin
+export PATH=$PATH:$HADOOP_HOME/sbin
+PATH=$PATH:/usr/local/bin:/usr/bin:/usr/local/sbin:/usr/sbin:/bin:/sbin
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib
+```
+
 
 
 # 脚本语法

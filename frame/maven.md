@@ -1,3 +1,9 @@
+### 中心仓库
+
+```
+https://search.maven.org/search?q=springboot
+```
+
 ### 安装
 
 ```

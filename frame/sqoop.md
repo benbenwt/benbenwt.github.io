@@ -37,3 +37,20 @@ bin/sqoop import \
 
 ```
 
+```
+import_data(){
+$sqoop import \
+--connect jdbc:mysql://hbase:3306/$APP \
+--username root \
+--password root \
+--target-dir /origin_data/$APP/db/$1/$do_date \
+--delete-target-dir \
+--query "$2 and  \$CONDITIONS" \
+--num-mappers 1 \
+--fields-terminated-by '\t' \
+--compress \
+--compression-codec lzop \
+--null-string '\\N' \
+--null-non-string '\\N'
+```
+

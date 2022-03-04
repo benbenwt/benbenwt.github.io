@@ -7,11 +7,11 @@ zookeeper,kafka,flume,sqoop,superset
 
 
 
-| 机器 | 服务                                       |
-| ---- | ------------------------------------------ |
-| 187  | hive,mysql_hive,flume_file_kafka           |
-| 186  | flume_file_kafka                           |
-| 185  | mysql_platform,mysql_lisa,flume_kafka_hdfs |
+| 机器       | 服务                                       | 教程机器 |
+| ---------- | ------------------------------------------ | -------- |
+| 187,hbase  | hive,mysql_hive,flume_file_kafka           | 102      |
+| 186,hbase1 | flume_file_kafka                           | 103      |
+| 185,hbase2 | mysql_platform,mysql_lisa,flume_kafka_hdfs | 104      |
 
 软件版本
 

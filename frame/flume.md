@@ -13,7 +13,8 @@ export JAVA_HOME=/opt/module/jdk1.8.0_212
 ##### 启动flume
 
 ```
-bin/flume-ng agent --name a1 --conf-file conf/file-flume-kafka.conf &
+bin/flume-ng agent --name a1 --conf-file conf/file-flume-kafka.conf  &
+nohup /root/module/flume/bin/flume-ng agent --conf-file /root/module/flume/conf/file-flume-kafka.conf --name a1 -Dflume.root.logger=INFO,LOGFILE > /root/module/flume/log1.txt 2>&1 &
 ```
 
 
