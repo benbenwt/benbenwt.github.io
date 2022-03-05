@@ -13,6 +13,11 @@ conda create -n superset python==3.7
 conda activate superset
 pip install --upgrade setuptools pip -i https://pypi.douban.com/simple/
 pip install apache-superset -i https://pypi.douban.com/simple/
+#这几个库版本不正确，需要重新安装
+pip install markupsafe==2.0.1
+pip install WTForms==2.3.3
+pip install sqlalchemy==1.3.24
+#初始化数据库
 superset db upgrade
 export FLASK_APP=superset
 superset fab create-admin
@@ -30,7 +35,7 @@ ps -ef | awk '/superset/ && !/awk/{print $2}' | xargs kill -9
 
 ##### problem
 
-显示缺少模块，或者缺少模块里的函数
+###### 显示缺少模块，或者缺少模块里的函数
 
 ```
 markupsafe==2.0.1

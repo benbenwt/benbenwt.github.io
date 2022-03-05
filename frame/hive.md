@@ -125,13 +125,14 @@ create function test_explode_json_array_from_hdfs1 as 'com.atguigu.gmall.hive.ud
 ```
 
 ```
-create function test_explode_json_array_from_hdfs1 as 'com.atguigu.gmall.hive.udtf.ExplodeJSONArray' using jar 'hdfs://hbase:8020/user/hive/jars/gmall-udtf-1.0-SNAPSHOT.jar';
+create function explode_json_array  as 'com.atguigu.gmall.hive.udtf.ExplodeJSONArray' using jar 'hdfs://hbase:9000/user/hive/jars/gmall-udtf-1.0-SNAPSHOT.jar';
+
 ```
 
 ##### 删除函数
 
 ```
-show functions like '*month*'
+show functions like '*explode*'
 desc function add_months;
 desc function extended add_months;
 drop [temporary] function [if exists] [dbname.]function_name;
