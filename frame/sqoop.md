@@ -19,7 +19,7 @@ cp mysql-connector-java-5.1.48.jar /opt/module/sqoop/lib/
  bin/sqoop list-databases --connect jdbc:mysql://hadoop102:3306/ --username root --password 000000
 ```
 
-##### 使用
+### 使用
 
 ```
 bin/sqoop import \
@@ -54,3 +54,10 @@ $sqoop import \
 --null-non-string '\\N'
 ```
 
+### 理论知识
+
+>读取MySQL的表数据，使用hive sql(mapreduce)放入hive的hdfs中。
+>
+>flume:读取file放入kafka，读取kafka放入hdfs
+>
+>json：json处理完成后在内存中，可放入的有file文件系统，hdfs，kafka，elasticsearch。

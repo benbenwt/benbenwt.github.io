@@ -485,3 +485,11 @@ sed '1a xxx' 1.txt，在第一行添加
 sed '3c afafa' 1.txt,替换第3整行
 
 sed  '3,7s//jin/xxx/g ' 1.txt
+
+##### 正则表达式
+
+```
+~表示对后边的正则表达式进行匹配，匹配就输出1，否则输出0。例子：
+if [[ "$SERVICE" =~ ^(help|version|orcfiledump|rcfilecat|schemaTool|cleardanglingscratchdir|metastore|beeline|llapstatus|llap)$ ]] ; then
+```
+
