@@ -184,6 +184,14 @@ systemctl set-default graphical.target
 
 ### 网络
 
+##### 查看端口占用
+
+```
+lsof -i:8080
+```
+
+
+
 ##### ifconfig管理网卡和网络
 
 ```

@@ -44,6 +44,32 @@ ALTER TABLE events RENAME TO new_events;
 
 ```
 
+##### 创建视图
+
+```
+create view dim_sku_info_view
+as
+select
+    id,
+    price,
+    sku_name,
+    sku_desc,
+    weight,
+    is_sale,
+    spu_id,
+    spu_name,
+    category3_id,
+    category3_name,
+    category2_id,
+    category2_name,
+    category1_id,
+    category1_name,
+    tm_id,
+    tm_name,
+    create_time
+from dim_sku_info;
+```
+
 
 
 ### DML数据操作语言
@@ -276,6 +302,15 @@ CREATE [EXTERNAL] TABLE <table_name>
 ```
 json格式要实现主键查询，非主键查询，所有键的聚合。实际上查询的功能应该由hbase来做。
 ```
+
+# 常用端口
+
+```
+hive.metastore.uri=thrift://hadoop102:9083
+web port 10002
+```
+
+
 
 # hive自动映射到hbase
 
@@ -1056,6 +1091,38 @@ show tables;
 ```
 
 
+
+
+
+### metastore服务
+
+>https://www.itcast.cn/news/20190829/12032894477.shtml
+
+##### 内嵌模式
+
+>使用hive自带的Derby数据库存储元数据
+
+#####  本地模式
+
+>配置了mysql，但是依赖于hive的服务无法远程访问metastore
+
+##### **远程模式**
+
+>配置了mysql，可通过hive.metastore.uris远程访问metastore
+
+```
+#修改配置文件
+<property>
+    <name>hive.metastore.uris</name>
+    <value>thrift://node-1:9083</value>
+</property>
+```
+
+```
+#启动metastore服务
+nohup /export/servers/hive/bin/hive --service metastore &
+nohup /export/servers/hive/bin/hive --service hiveserver2 &
+```
 
 
 

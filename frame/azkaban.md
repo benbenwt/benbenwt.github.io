@@ -92,3 +92,11 @@ nodes:
 将两者打包到同一个zip下，在azkaban创建project时upload即可。
 ```
 
+### 使用效果
+
+![azkaban](..\resources\images\azkaban.png)
+
+```
+它可以从整体的角度监控shell任务的执行情况，获取执行的日志，执行到了哪一个流程，并以图形化的方式直观展示。编写好shell脚本后，通过web页面就可以远程管理任务的执行。
+```
+
