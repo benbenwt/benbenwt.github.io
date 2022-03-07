@@ -1,48 +1,4 @@
-# HIVE SQL
-
-### 根据列查询
-
-```
-select chinese+math，name from students where b_year=1998;
-```
-
-### 连表查询
-
-```
-select students.name, class.teacher, students.math
-from students,
-     class
-where students.class = class.class
-```
-
-```
-JOIN
-LEFT OUTER JOIN
-RIGHT OUTER JOIN
-FULL OUTER JOIN
-```
-
-### sql优化
-
-##### 查看执行计划
-
-```
-explain select * from dwd_action_log;
-#加入extended展示计划更详细
-explain extended select * from dwd_action_log;
-```
-
-```
-Fetch Operator
-TableScan
-Select Operator
-limit: -1
-ListSink
-```
-
-
-
-# HIVE基础语法
+# HIVE SQL基础语法
 
 >hive(hdfs)+hive sql(mr)
 >
@@ -207,6 +163,49 @@ drop [temporary] function [if exists] [dbname.]function_name;
 ```
 
 
+
+# HIVE SQL 练习
+
+>https://www.gairuo.com/p/hive-sql-tutorial
+>
+>更多练习：https://www.gairuo.com/p/hive-sql-case
+
+### 聚合查询
+
+##### 指定商品带来的复购
+
+>运营人员上架了一种专门用来拉新的商品，这些商品不管从需求还是价格都具有吸引力，目标是刺激用户快速下单这些商品，完成拉新。接下来，就要分析这些用户成为新用户后是否再有购买，形成复购的情况。
+
+数据表位于 `dwd.order_detail`：
+
+| p_day    | uid    | order_id   | create_time             | sku_id |
+| -------- | ------ | ---------- | ----------------------- | ------ |
+| 20190410 | 23424  | 3325264322 | 2019-04-10 14:55:37.300 | 1111   |
+| 20190513 | 454121 | 9725372353 | 2019-05-13 13:54:17.300 | 23421  |
+| 20190511 | 4234   | 5345433525 | 2019-05-11 10:15:31.300 | 21322  |
+| 20190315 | 32546  | 5354378679 | 2019-03-15 08:01:41.667 | 14325  |
+| 20190515 | 2525   | 6436438692 | 2019-05-15 19:05:55.000 | 1111   |
+
+```
+各字段说明：
+
+p_day：hive 库以日期分片，下单日期
+uid：用户的注册 id
+order_id：下单订单号
+create_time：订单创建时间，不重复
+sku_id：商品 ID，其中 1111 是拉新的活动商品
+数据表是一个以订单-商品为粒度的流水表。
+```
+
+
+
+##### 按周订单数及用户数
+
+#####  按 UTM 串统计访问情况
+
+#####  用户留存数据
+
+### sql优化
 
 # 仓库规范
 
@@ -419,7 +418,7 @@ BINARY — 字节序列
 
 >https://www.gairuo.com/p/hive-sql-operators
 
-##### 数值运算符
+##### 算术运算符
 
 | 操作符 | 描述                                               | 示例         |
 | ------ | -------------------------------------------------- | ------------ |
@@ -429,12 +428,91 @@ BINARY — 字节序列
 | /      | 相除：用右边的操作数除以左边的操作数。             | b / a 得 2   |
 | %      | 取余：用右边的操作数除以左边的操作数，并返回余数。 | b % a 得 0   |
 
+以下运算符支持对操作数的各种常见算术运算。 所有返回数字类型； 如果任何操作数为NULL，则结果也为 NULL。
+
+| **Operator** | **Operand types** | **Description**                                              |
+| ------------ | ----------------- | ------------------------------------------------------------ |
+| A + B        | All number types  | Gives the result of adding A and B. The type of the result is the same as the common parent(in the type hierarchy) of the types of the operands. For example since every integer is a float, therefore float is a containing type of integer so the + operator on a float and an int will result in a float. |
+| A - B        | All number types  | Gives the result of subtracting B from A. The type of the result is the same as the common parent(in the type hierarchy) of the types of the operands. |
+| A * B        | All number types  | Gives the result of multiplying A and B. The type of the result is the same as the common parent(in the type hierarchy) of the types of the operands. Note that if the multiplication causing overflow, you will have to cast one of the operators to a type higher in the type hierarchy. |
+| A / B        | All number types  | Gives the result of dividing A by B. The result is a double type in most cases. When A and B are both integers, the result is a double type except when the [hive.compat](https://cwiki.apache.org/confluence/display/Hive/Configuration+Properties#ConfigurationProperties-hive.compat) configuration parameter is set to "0.13" or "latest" in which case the result is a decimal type. |
+| A DIV B      | Integer types     | Gives the integer part resulting from dividing A by B. E.g 17 div 3 results in 5. |
+| A % B        | All number types  | Gives the reminder resulting from dividing A by B. The type of the result is the same as the common parent(in the type hierarchy) of the types of the operands. |
+| A & B        | All number types  | Gives the result of bitwise AND of A and B. The type of the result is the same as the common parent(in the type hierarchy) of the types of the operands. |
+| A \| B       | All number types  | Gives the result of bitwise OR of A and B. The type of the result is the same as the common parent(in the type hierarchy) of the types of the operands. |
+| A ^ B        | All number types  | Gives the result of bitwise XOR of A and B. The type of the result is the same as the common parent(in the type hierarchy) of the types of the operands. |
+| ~A           | All number types  | Gives the result of bitwise NOT of A. The type of the result is the same as the type of A. |
+
 ```
 可以对列值进行计算
 select chinese+math from students
 ```
 
 ##### 关系运算符
+
+以下运算符比较传递的操作数，并根据操作数之间的比较是否成立来生成TRUE或FALSE值。
+
+| **操作**                 | **操作数类型**                   | **说明**                                                     |
+| ------------------------ | -------------------------------- | ------------------------------------------------------------ |
+| A = B                    | All primitive types 所有原始类型 | 如果表达式A等于表达式B，则为TRUE，否则为FALSE。              |
+| A == B                   | All primitive types              | = 运算符的同义词。                                           |
+| A <=> B                  | All primitive types              | 对于非空操作数，使用EQUAL（=）运算符返回相同的结果，但如果两个均为NULL，则返回TRUE，如果其中之一为NULL，则返回FALSE。(As of version [0.9.0](https://issues.apache.org/jira/browse/HIVE-2810).) |
+| A <> B                   | All primitive types              | NULL if A or B is NULL, TRUE if expression A is NOT equal to expression B, otherwise FALSE. |
+| A != B                   | All primitive types              | Synonym for the <> operator.                                 |
+| A < B                    | All primitive types              | NULL if A or B is NULL, TRUE if expression A is less than expression B, otherwise FALSE. |
+| A <= B                   | All primitive types              | NULL if A or B is NULL, TRUE if expression A is less than or equal to expression B, otherwise FALSE. |
+| A > B                    | All primitive types              | NULL if A or B is NULL, TRUE if expression A is greater than expression B, otherwise FALSE. |
+| A >= B                   | All primitive types              | NULL if A or B is NULL, TRUE if expression A is greater than or equal to expression B, otherwise FALSE. |
+| A [NOT] BETWEEN B AND C  | All primitive types              | NULL if A, B or C is NULL, TRUE if A is greater than or equal to B AND A less than or equal to C, otherwise FALSE. This can be inverted by using the NOT keyword. (As of version [0.9.0](https://issues.apache.org/jira/browse/HIVE-2005).) |
+| A IS NULL                | All types                        | TRUE if expression A evaluates to NULL, otherwise FALSE.     |
+| A IS NOT NULL            | All types                        | FALSE if expression A evaluates to NULL, otherwise TRUE.     |
+| A IS [NOT] (TRUE\|FALSE) | Boolean types                    | Evaluates to TRUE only if A mets the condition. (since:[3.0.0](https://issues.apache.org/jira/browse/HIVE-13583) ) Note: NULL is UNKNOWN, and because of that (UNKNOWN IS TRUE) and (UNKNOWN IS FALSE) both evaluates to FALSE. |
+| A [NOT] LIKE B           | strings                          | NULL if A or B is NULL, TRUE if string A matches the SQL simple regular expression B, otherwise FALSE. The comparison is done character by character. The _ character in B matches any character in A (similar to . in posix regular expressions) while the % character in B matches an arbitrary number of characters in A (similar to .* in posix regular expressions). For example, 'foobar' like 'foo' evaluates to FALSE whereas 'foobar' like 'foo_ _ _' evaluates to TRUE and so does 'foobar' like 'foo%'. |
+| A RLIKE B                | strings                          | NULL if A or B is NULL, TRUE if any (possibly empty) substring of A matches the Java regular expression B, otherwise FALSE. For example, 'foobar' RLIKE 'foo' evaluates to TRUE and so does 'foobar' RLIKE '^f.*r$'. |
+| A REGEXP B               | strings                          | Same as RLIKE.                                               |
+
+##### 逻辑运算符
+
+以下运算符为创建逻辑表达式提供支持。 它们都根据操作数的布尔值返回布尔值TRUE，FALSE或NULL。 NULL表现为“未知”标志，因此，如果结果取决于未知状态，则结果本身是未知的。
+
+| **Operator**               | **Operand types** | **Description**                                              |
+| -------------------------- | ----------------- | ------------------------------------------------------------ |
+| A AND B                    | boolean           | TRUE if both A and B are TRUE, otherwise FALSE. NULL if A or B is NULL. |
+| A OR B                     | boolean           | TRUE if either A or B or both are TRUE, FALSE OR NULL is NULL, otherwise FALSE. |
+| NOT A                      | boolean           | TRUE if A is FALSE or NULL if A is NULL. Otherwise FALSE.    |
+| ! A                        | boolean           | Same as NOT A.                                               |
+| A IN (val1, val2, ...)     | boolean           | TRUE if A is equal to any of the values. As of Hive 0.13 [subqueries](https://cwiki.apache.org/confluence/display/Hive/LanguageManual+SubQueries) are supported in IN statements. |
+| A NOT IN (val1, val2, ...) | boolean           | TRUE if A is not equal to any of the values. As of Hive 0.13 [subqueries](https://cwiki.apache.org/confluence/display/Hive/LanguageManual+SubQueries) are supported in NOT IN statements. |
+| [NOT] EXISTS (subquery)    |                   | TRUE if the the subquery returns at least one row. Supported as of [Hive 0.13](https://cwiki.apache.org/confluence/display/Hive/LanguageManual+SubQueries). |
+
+##### 字符串运算符
+
+| **Operator** | **Operand types** | **Description**                                              |
+| ------------ | ----------------- | ------------------------------------------------------------ |
+| A \|\| B     | strings           | Concatenates the operands - shorthand for `concat(A,B)` . Supported as of [Hive 2.2.0](https://issues.apache.org/jira/browse/HIVE-14580). |
+
+##### 复杂类型构造函数
+
+| Constructor Function | Operands                          | Description                                                  |
+| -------------------- | --------------------------------- | ------------------------------------------------------------ |
+| Constructor Function | Operands                          | Description                                                  |
+| map                  | (key1, value1, key2, value2, ...) | Creates a map with the given key/value pairs.                |
+| struct               | (val1, val2, val3, ...)           | Creates a struct with the given field values. Struct field names will be col1, col2, .... |
+| named_struct         | (name1, val1, name2, val2, ...)   | Creates a struct with the given field names and values. (As of Hive [0.8.0](https://issues.apache.org/jira/browse/HIVE-1360).) |
+| array                | (val1, val2, ...)                 | Creates an array with the given elements.                    |
+| create_union         | (tag, val1, val2, ...)            | Creates a union type with the value that is being pointed to by the tag parameter. |
+
+##### 复杂类型的运算符
+
+| **Operator** | **Operand types**                   | **Description**                                              |
+| ------------ | ----------------------------------- | ------------------------------------------------------------ |
+| A[n]         | A is an Array and n is an int       | Returns the nth element in the array A. The first element has index 0. For example, if A is an array comprising of ['foo', 'bar'] then A[0] returns 'foo' and A[1] returns 'bar'. |
+| M[key]       | M is a Map<K, V> and key has type K | Returns the value corresponding to the key in the map. For example, if M is a map comprising of {'f' -> 'foo', 'b' -> 'bar', 'all' -> 'foobar'} then M['all'] returns 'foobar'. |
+| S.x          | S is a struct                       | Returns the x field of S. For example for the struct foobar {int foo, int bar}, foobar.foo returns the integer stored in the foo field of the struct. |
+
+
+
+
 
 
 
@@ -658,12 +736,234 @@ class|avg_age|
 '''
 ```
 
-##### 语句的执行顺序
+### 语句的执行顺序
 
 ```
+在 hive 和 mysql 中都可以通过 explain+sql 语句，来查看执行顺序。对于一条标准 sql 语句，它的书写顺序是这样的：
+select … from … where … group by … having … order by … limit …
+（1）mysql 语句执行顺序：
+from... where...group by... having.... select ... order by... limit …
+（2）hive 语句执行顺序：
+FROM —> WHERE —> GROUP BY—> 聚合函数 —> HAVING—> SELECT —> ORDER BY —> LIMIT
+```
+
+```
+hive 基于 MapReduce 程序，它的执行顺序决定了 hive 语句的执行顺序，Map 阶段：
+
+执行 from 加载，进行表的查找与加载
+执行 where 过滤，进行条件过滤与筛选
+执行 select 查询：进行输出项的筛选
+执行 group by 分组：描述了分组后需要计算的函数
+map 端文件合并：map 端本地溢出写文件的合并操作，每个 map 最终形成一个临时文件。
+然后按列映射到对应的 reduceReduce 阶段：
+
+group by：对map端发送过来的数据进行分组并进行计算。
+select：最后过滤列用于输出结果
+limit：排序后进行结果输出到HDFS文件
+```
+
+###### 优化要点
+
+```
+根据执行顺序，我们平时编写时需要记住以下几点：
+
+使用分区剪裁、列剪裁，分区一定要加
+少用 COUNT DISTINCT，group by 代替 distinct
+是否存在多对多的关联
+连接表时使用相同的关键词，这样只会产生一个 job
+减少每个阶段的数据量，只选出需要的，在 join 表前就进行过滤
+大表放后面
+谓词下推：where 谓词逻辑都尽可能提前执行，减少下游处理的数据量
+sort by 代替 order by
 ```
 
 
+
+### 多表查询
+
+##### where
+
+```
+select students.name, class.teacher, students.math
+from students,
+     class
+where students.class = class.class
+```
+
+##### join
+
+| 连接方式   | 逻辑说明                                         |
+| ---------- | ------------------------------------------------ |
+| JOIN       | 即 INNER JOIN                                    |
+| INNER JOIN | 将两个表公共都有的部分组成新表                   |
+| FULL JOIN  | 包含左右两表的所有行， 对应左右表没有的都为 Null |
+| LEFT JOIN  | 左表的全集及右表有的值，无值则为 Null            |
+| RIGHT JOIN | 与 LEFT JOIN 相反                                |
+
+![sql-join](..\resources\images\sql-join.png)
+
+```
+JOIN
+LEFT OUTER JOIN
+RIGHT OUTER JOIN
+FULL OUTER JOIN
+```
+
+###### semi join
+
+>Semi Join，也叫半连接。Semi-join从一个表中返回的行与另一个表中数据行进行不完全联接查询（查找到匹配的数据行就返回，不再继续查找）。
+
+###### cross join
+
+>CROSS JOIN 会让左右表排列组合，产生笛卡尔积，效果如图示：
+
+![cross-join](..\resources\images\cross-join.jpg)
+
+##### UNION 数据拼接
+
+```
+将学生和老师名单拼接在一起：
+select class, teacher as name from class
+union
+select class,name as name from students
+```
+
+###### UNION ALL
+
+UNION ALL 允许重复内容，会如实保留。
+
+##### with as 临时中间表
+
+```
+-- with table_name as(子查询语句) 其他sql
+with temp as (
+    select * from xxx
+)
+select * from temp;
+```
+
+### 窗口函数
+
+>窗口函数和 Group By 聚合函数区别在于：窗口函数仅仅只会将结果附加到当前的结果上，它不会对已有的行或列做任何修改。而 Group By 的做法完全不同：对于各个 Group 它仅仅会保留一行聚合结果。
+
+```
+SELECT
+    id,
+    avg(chinese) over()
+FROM
+    students
+    id|avg(chinese) over()|
+--|-------------------|
+ 1|  79.33333333333333|
+ 2|  79.33333333333333|
+ 3|  79.33333333333333|
+ 4|  79.33333333333333|
+ 5|  79.33333333333333|
+ 6|  79.33333333333333|
+ 7|  79.33333333333333|
+ 8|  79.33333333333333|
+ 9|  79.33333333333333|
+'''
+```
+
+###### partition by 子句
+
+```
+如果我们按班级对语文求平均数呢？这就要使用 partition by 语句，partition by 的作用和 group by 是类似，用于分组，在 over() 中使用。
+
+SELECT
+    id,
+    avg(chinese) over(PARTITION by class) as avg_class
+FROM
+    students
+'''
+id|avg_class|
+--|---------|
+ 1|     82.5|
+ 3|     82.5|
+ 6|     82.5|
+ 8|     82.5|
+ 2|     84.0|
+ 4|     84.0|
+ 7|     84.0|
+ 5|     66.0|
+ 9|     66.0|
+'''
+就是按班级分组，计算出每班的平均语文成绩，最后显示在对应同学的后边。avg_class 列的意义为当前行同学 ID 所在班的语文平均成绩。
+```
+
+```
+在每个窗口（分组）内，如果我们想按每个人的语文成绩排序，可以使用 order by 子句，这里我们用 RANK() 指定序号，同样的分数是相同的序号：
+
+SELECT
+    id,
+    class,
+    chinese,
+    RANK() over(PARTITION by class ORDER by chinese DESC) as odr
+FROM
+    students
+'''
+id|class|chinese|odr|
+--|-----|-------|---|
+ 6|    1|     99|  1|
+ 8|    1|     99|  1|
+ 1|    1|     77|  3|
+ 3|    1|     55|  4|
+ 2|    2|     99|  1|
+ 4|    2|     87|  2|
+ 7|    2|     66|  3|
+ 5|    3|     66|  1|
+ 9|    3|     66|  1|
+'''
+```
+
+```
+当 order by 与聚合函数一起使用时，会形成顺序聚合，如 sum 聚合与 order by 结合使用时，就实现类似于累计和的效果：
+
+SELECT
+    id,
+    class,
+    sum(id) over(PARTITION by class ORDER by id DESC) as sums
+FROM
+    students
+'''
+id|class|sums|
+--|-----|----|
+ 8|    1|   8|
+ 6|    1|  14|
+ 3|    1|  17|
+ 1|    1|  18|
+ 7|    2|   7|
+ 4|    2|  11|
+ 2|    2|  13|
+ 9|    3|   9|
+ 5|    3|  14|
+'''
+```
+
+### hive专用窗口函数
+
+### Hive SQL 函数介绍
+
+>日期函数，类型转换函数，集合函数，数学函数，表生成函数（UDTF）
+
+### sql优化
+
+查看执行计划
+
+```
+explain select * from dwd_action_log;
+#加入extended展示计划更详细
+explain extended select * from dwd_action_log;
+```
+
+```
+Fetch Operator
+TableScan
+Select Operator
+limit: -1
+ListSink
+```
 
 
 
