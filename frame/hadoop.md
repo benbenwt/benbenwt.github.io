@@ -1088,6 +1088,38 @@ hdfs的存储文件夹
 
 
 
+# 理论知识
+
+>https://github.com/CheckChe0803/BigData-Interview
+
+### HDFS架构
+
+### Yarn架构
+
+### MapReduce架构
+
+### Yarn调度MapReduce
+
+hdfs写流程
+
+hdfs读流程
+
+hdfs创建一个文件的流程
+
+hadoop1.x和hadoop2.x的区别
+
+hadoop1.x的缺点
+
+hadoop HA介绍
+
+hadoop 的常用配置文件有哪些，自己实际改过哪些？
+
+小文件过多有什么危害，如何避免？
+
+启动hadoop集群会分别启动哪些进程，各自的作用
+
+讲一下环形缓冲区的概念
+
 # problem
 
 ##### There are 25866 missing blocks. The following files may be corrupted:
