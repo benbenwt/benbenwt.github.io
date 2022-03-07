@@ -1,4 +1,4 @@
-### 安装
+# 安装
 
 ```
 sudo yum install -y gcc gcc-c++ libffi-devel python-devel python-pip python-wheel python-setuptools openssl-devel cyrus-sasl-devel openldap-devel
@@ -6,7 +6,7 @@ sudo yum install -y gcc gcc-c++ libffi-devel python-devel python-pip python-whee
 
 
 
-##### 安装anaconda创建python环境
+### 安装anaconda创建python环境
 
 ```
 conda create -n superset python==3.7
@@ -24,7 +24,7 @@ superset fab create-admin
 superset init
 ```
 
-##### 配置gunicorn
+### 配置gunicorn
 
 ```
 pip install gunicorn -i https://pypi.douban.com/simple/
@@ -33,7 +33,7 @@ gunicorn --workers 5 --timeout 120 --bind hadoop102:8787  "superset.app:create_a
 ps -ef | awk '/superset/ && !/awk/{print $2}' | xargs kill -9
 ```
 
-##### problem
+### problem
 
 ###### 显示缺少模块，或者缺少模块里的函数
 
@@ -45,7 +45,7 @@ sqlalchemy==1.3.24
 
 
 
-### 使用
+# superset使用
 
 ```
 创建datasource，创建table，创建dashboard，创建table并保存到dashboard。

@@ -1,4 +1,4 @@
-### 安装
+# 安装
 
 ```
 https://www.cnblogs.com/zkwarrior/p/14845260.html
@@ -9,7 +9,7 @@ https://community.hitachivantara.com/docs/DOC-1009855
 #到sourceforge下载解压就行，店家spoon.bat启动即可
 ```
 
-### 使用
+# kettle使用
 
 ```
 初次使用注意的几点，在输出组件中指定好两个表join的键值，并指定好映射关系和是否更新。在输入组件中查找需要的键值。然后保存运行即可，本质是一个零代码平台，用于数据迁移的。

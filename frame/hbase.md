@@ -112,12 +112,34 @@ hbase-site.xml
 
 ```
 
-启动
+### 启动
+
+```
+hbase-daemons.sh start master
+hbase-daemons.sh start regionserver
+```
+
+
 
 ```
 start-hbase.sh
 jps
 ```
+
+
+
+## 关闭
+
+```
+hbase-daemons.sh stop master
+stop-hbase.sh
+
+hbase-daemons.sh stop regionserver
+stop-hbase.sh
+
+```
+
+
 
 # java连接hbase
 
@@ -469,7 +491,7 @@ scan 'test',FILTER=>"FamilyFilter(=,'substring:name')"
 
 [org.apache.hadoop.hbase.client.RpcRetryingCallerImpl] - Call exception, tries=6, retries=16, started=14301 ms ago, cancelled=false, msg=Call to hbase2/172.18.65.188:16020 failed on connection exception: org.apache.hbase.thirdparty.io.netty.channel.AbstractChannel$AnnotatedConnectException: Connection refused: no further information: hbase2/172.18.65.188:16020, details=row 'test' on table 'hbase:meta' at region=hbase:meta,,1.1588230740, hostname=hbase2,16020,1613512234805, seqNum=-1, see https://s.apache.org/timeout
 
-### problem
+# problem
 
 ##### org.apache.hbase.thirdparty.io.netty.channel.AbstractChannel$AnnotatedConnectException
 
@@ -483,5 +505,11 @@ hadoop dfsamin -safemode leave
 直接报zk中的数据全删了
 deleteall /hbase
 再把hbase在hdfs的文件全删了。
+```
+
+##### address already in use
+
+```
+在hbase-env.sh里面设置HBASE_MANAGES_ZK 改成false 默认是true，先手动启动zookeeper，然后再启动hbase
 ```
 

@@ -726,7 +726,7 @@ pom.xml
 
 # MapReduce更多功能
 
-### 命令
+### 杀死yarn任务
 
 ```
 yarn application -list

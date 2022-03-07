@@ -1,6 +1,48 @@
+# HIVE SQL
+
+### 根据列查询
+
+```
+select chinese+math，name from students where b_year=1998;
+```
+
+### 连表查询
+
+```
+select students.name, class.teacher, students.math
+from students,
+     class
+where students.class = class.class
+```
+
+```
+JOIN
+LEFT OUTER JOIN
+RIGHT OUTER JOIN
+FULL OUTER JOIN
+```
+
+### sql优化
+
+##### 查看执行计划
+
+```
+explain select * from dwd_action_log;
+#加入extended展示计划更详细
+explain extended select * from dwd_action_log;
+```
+
+```
+Fetch Operator
+TableScan
+Select Operator
+limit: -1
+ListSink
+```
 
 
-# HIVE的语法
+
+# HIVE基础语法
 
 >hive(hdfs)+hive sql(mr)
 >
@@ -194,6 +236,8 @@ hadoop jar /path/to/jar/hadoop-lzo-cdh4-0.4.15-gplextras.jar com.hadoop.compress
 ### 分区
 
 >https://zhuanlan.zhihu.com/p/65442409
+>
+>分区列（Partition columns）是虚拟列，使用分区列显著加快分析速度。常用的有DATE
 
 ```
 分区是指将hive的hdfs文件进行切分，
@@ -257,6 +301,8 @@ insert into table1 select 普通字段 分区字段 from table2
 ### 分桶
 
 >对Hive(Inceptor)表分桶可以将表中记录按分桶键的哈希值分散进多个文件中，这些小文件称为桶。
+>
+>每个分区中的数据又可以基于表的某一列的散列函数的值被划分为桶,如对id进行hash分桶。
 
 ##### 分桶语法
 
@@ -325,11 +371,299 @@ CREATE TABLE cctable (key int, value string) STORED BY 'org.apache.hadoop.hive.h
 
 # 理论知识
 
-### hive 环境变量
+### 基本类型
+
+###### 数值型
 
 ```
-如何读取的hbase/conf/core-site.xml
+TINYINT—1 byte integer（1 个字节的整形型）
+SMALLINT—2 byte integer（2 个字节的整形型）
+INT—4 byte integer（4 个字节的整形型）
+BIGINT—8 byte integer（8 个字节的整形型）
+
+FLOAT—single precision（单精度）
+DOUBLE—Double precision（双精度）
 ```
+
+###### 字符型
+
+```
+STRING — 指定字符集中的字符序列
+VARCHAR — 指定字符集中具有最大长度的字符序列
+CHAR — 指定字符集中具有最大长度的字符序列
+```
+
+###### 布尔型
+
+```
+BOOLEAN—TRUE/FALSE（只有真/假两个种取值）
+```
+
+###### 日期时间型
+
+```
+TIMESTAMP — 没有时区的日期和时间 ("LocalDateTime" 语意)
+TIMESTAMP WITH LOCAL TIME ZONE — 精度到纳秒的时间点 ("Instant" 语意)
+DATE — 一个日期
+```
+
+###### 二进制型
+
+```
+BINARY — 字节序列
+```
+
+
+
+### 运算符
+
+>https://www.gairuo.com/p/hive-sql-operators
+
+##### 数值运算符
+
+| 操作符 | 描述                                               | 示例         |
+| ------ | -------------------------------------------------- | ------------ |
+| +      | 相加：将符号两边的数值加起来。                     | a + b 得 30  |
+| -      | 相减：从最边的操作数中减去右边的操作数。           | a - b 得 -10 |
+| *      | 相乘：将两边的操作数相乘。                         | a * b 得 200 |
+| /      | 相除：用右边的操作数除以左边的操作数。             | b / a 得 2   |
+| %      | 取余：用右边的操作数除以左边的操作数，并返回余数。 | b % a 得 0   |
+
+```
+可以对列值进行计算
+select chinese+math from students
+```
+
+##### 关系运算符
+
+
+
+### 关键字
+
+##### DISTINCT
+
+```
+我们取到某列数据后发现有重复的内容，但需求可能是需要知道有几个不重复的内容。Select 里 DISTINCT 可用于对数据进行去重。
+1distinct 必须放在开头
+2如果值中有 NULL，会保留一个 NULL
+3如果有多个列，则对这几个列组合去重
+```
+
+##### CASE
+
+```
+select c_1,
+       CASE
+           WHEN condition1 THEN result1
+           WHEN condition2 THEN result2
+           WHEN conditionN THEN resultN
+           ELSE result_else
+           END as c_name
+from tab_name
+-由 CASE 开始 END 结束
+-最好起一个别名（as c_name，c_name 为别名），不然此列没有可读性名称
+-WHEN 和 THEN 成对出现，WHEN 后边为条件，可以使用表中的所有字段，THEN 后为最终输出的值
+-ELSE 为兜底逻辑，直接给出值，ELSE 可以没有
+-没有被条件覆盖的值为 null
+```
+
+##### order by
+
+```
+order by (CASE
+              WHEN b_year < 1990 THEN math+20
+              ELSE math
+    END) DESC
+ascending desending 
+```
+
+```
+#用序号代表字段
+SELECT item_id, uesr_id
+         ^^^^        ^^^^
+          1           2
+FROM tab
+ORDER BY 1;
+```
+
+#####  sort by
+
+>hive支持,reduce局部排序，比order by性能消耗少。
+
+##### distribute by
+
+>distribute 意为分发、分配。
+>
+>特别的，因为distribute by 通常和sort by 一起用，所以当distribute by 遇上 sort by时，distribute by要放在前面，这个不难理解，因为要先通过 distribute by 将待处理的数据从map端做分发，这样，sort by 这个擅长局部排序的才能去放开的干活。
+
+```
+FROM records
+SELECT year, temperature
+DISTRIBUTE BY year
+SORT BY year DESC, temperature DESC
+```
+
+##### cluster by
+
+>- order by：全部数据进行全局排序，只会启动一个 reducer
+>- sort by：局部排序，会根据数据量大小启动一到多个 reducer
+>- distribute by：控制 map 结果的分发 
+>- cluster by：如果 distribute by 和 sort by 的列相同可以用 cluster by 简写
+
+```
+# cluster by = distribute by + sort by 
+#但是cluster by 指定的列只能是降序，不能指定 asc 和 desc,例如：
+select * from students cluster by b_year
+等价于：
+select * from students distribute by b_year sort by b_year
+```
+
+##### sum
+
+```
+#可以将 case 语句用在 sum 函数中，实现分段统计：
+select sum(case when math > 80 then 1 else 0 end)  as 大于90,
+       sum(case when math < 60 then 1 else 0 end)  as 小于60,
+       sum(case when math <= 80 then 1 else 0 end) as 小于等于80
+from students
+#将要统计的分类映射为 1，不统计的为 0，sum 相加就是最终要统计的分类。
+select
+    sum(case when gender = "男" then 1 else 0 end) as boy_qty,
+    sum(case when gender = "女" then 1 else 0 end) as girl_qty
+from students
+```
+
+##### where
+
+```
+SELECT column, another_column, etc
+FROM mytable
+WHERE condition
+    AND/OR another_condition
+    AND/OR another_condition;
+-WHERE 子句仅用于提取满足指定条件的那些记录
+-条件子句可以是单个逻辑也可以是由 and or 组成的复杂条件表达式
+-WHERE 子句不仅在 SELECT 语句中使用，还在 UPDATE，DELETE 语句等中使用
+```
+
+以下 Where 子句中的逻辑操作符号,包括数值，列表，字符
+
+| 操作                   | 条件说明           | SQL 样例                   |
+| ---------------------- | ------------------ | -------------------------- |
+| =, !=, <>, < <=, >, >= | 数字及逻辑         | class != 3; math > 80      |
+| IS NULL                | 值为 NULL          | name IS NULL               |
+| IS NOT NULL            | 值不为 NULL        | name IS NOT NULL           |
+| BETWEEN … AND …        | 包含两端的数字范围 | math BETWEEN 60 AND 80     |
+| NOT BETWEEN … AND …    | 上述的不包含       | math NOT BETWEEN 60 AND 80 |
+| IN (…)                 | 内容在指定的列表中 | class IN (1,2)             |
+| NOT IN (…)             | 不在指定的列表中   | class NOT IN (1,2)         |
+| LIKE …                 | 按内容搜索匹配     | name LIKE "张%"            |
+| NOT LIKE …             | 不匹配此规则       | name NOT LIKE "张%"        |
+
+```
+-!= 和 <> 都是不等于
+-判断是空字符串为 a = ''
+-LIKE 可以用 % 和 _ 通配符等进行匹配
+-In 不能滥用，in 里面只能有几个（如枚举），不能有几千几万几十万个，容易卡死系统。更好的办法是不用 in ，使用 join 处理
+```
+
+##### AND, OR 和 NOT 逻辑连接
+
+| 符号 | 逻辑             | 举例                           |
+| ---- | ---------------- | ------------------------------ |
+| AND  | 和，全部为真     | b_year > 2000 and math > 80    |
+| OR   | 或，只要一个为真 | b_year = 2010 and chinese > 80 |
+| NOT  | 非，与逻辑值相反 | not gender == '男'             |
+
+##### LIMIT 和 OFFSET 限制结果数量
+
+>- limit Y： 从头取 Y 个数据
+>- limit X, Y ：跳过 X 个数据，读取 Y 个数据
+>- limit Y offset X ：跳过 X 个数据，选取 Y 个数据
+
+```
+select name, math
+from students
+order by math desc
+limit 3, 4
+-- 以上从第 3 条（不含）开始取 4 条。
+-- 取3条，从第 5 个开始
+select name from students limit 3 offset 4
+-- 取4条，从第 4 个开始
+select name from students limit 3, 4
+```
+
+##### 常用聚合统计函数
+
+>分组依据的列直接可以输出，非分组列需要聚合计算才能输出。
+
+| 函数              | 功能描述 | 其他                                          |
+| ----------------- | -------- | --------------------------------------------- |
+| count()           | 条数     | 不计 null 值                                  |
+| sum()             | 求和     | True 按 1 处理，False 按 0 处理，忽略 null 值 |
+| max()             | 最大值   | 时间字段代表最近最晚的时间                    |
+| min()             | 最小值   | 时间字段代表最早的时间                        |
+| avg()             | 平均值   | 忽略 null 值, sum 除以非空值的计数 count      |
+| collect_list(col) |          | 返回具有重复项的对象列表（array）             |
+| collect_set(col)  |          | 返回去除了重复元素的一组对象（array）         |
+
+
+
+```
+count() 经常与 DISTINCT 组合使用，表示去重后的总数量：
+-- 有几个班：3
+select count(distinct class) as class_qty from students
+-- 有几个性别：2
+select count(distinct gender) as gender_qty from students
+```
+
+```
+select (case
+            when b_year >= 2000 then '00后'
+            when b_year >= 1990 then '90后'
+            else '其他'
+    end)         as gap,
+       avg(math) as avg_math
+from students
+group by (case
+              when b_year >= 2000 then '00后'
+              when b_year >= 1990 then '90后'
+              else '其他'
+    end)
+'''
+gap|avg_math|
+---+--------+
+00后|    73.0|
+90后|    55.0|
+其他|    77.4|
+'''
+以上按年龄分组再进行聚合。
+```
+
+##### HAVING
+
+```
+#HAVING 可以在聚合后对聚合的结果进行条件筛选，因为聚合后的字段不是数据表里的真实字段。
+select class as class, -- 班级
+       avg(2020 - b_year) as avg_age -- 平均年龄
+from students
+group by class
+having avg_age > 30
+order by avg_age
+'''
+class|avg_age|
+-----+-------+
+    3|   31.5|
+    1|   39.5|
+'''
+```
+
+##### 语句的执行顺序
+
+```
+```
+
+
 
 
 

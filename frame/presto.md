@@ -1,6 +1,8 @@
 ### 理论
 
 >presto是分布式sql查询引擎，支持多数据源，包括hive、redis、mysql等。
+>
+>如果向快速查询hive仓库，或者和其他源合并查询，可以使用presto。
 
 ### 安装
 
