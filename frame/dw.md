@@ -1,5 +1,5 @@
 ```
-八股文(java,框架,javaweb)，项目（数仓，web）
+八股文(java,框架,javaweb)，项目（数仓（电商场景，TI），web）
 ```
 
 ```

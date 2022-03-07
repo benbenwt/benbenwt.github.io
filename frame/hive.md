@@ -965,7 +965,11 @@ limit: -1
 ListSink
 ```
 
+### hive函数
 
+### 触发器
+
+### 存储过程
 
 # SGG_DW教程
 
