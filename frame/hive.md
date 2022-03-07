@@ -221,6 +221,18 @@ sku_id：商品 ID，其中 1111 是拉新的活动商品
 >
 >ADS Application Data Store
 
+### 范式理论
+
+```
+第一范式，属性不可分割
+第二范式，不可存在部分依赖。如（学号，班级）->姓名，其中姓名部分依赖于学号，班级是多余的主键。
+第三范式，不可存在传递依赖。如学号->班级->班主任。
+关系建模符合第三范式，能减少冗余数据，避免数据不一致。
+维度建模使用事实表和维度表，可以不符合范式，容忍冗余数据，是为了提高查询效率，避免太多join操作。
+```
+
+
+
 ### lzo压缩
 
 >https://cwiki.apache.org/confluence/display/Hive/LanguageManual+LZO
@@ -969,7 +981,48 @@ ListSink
 
 ### 触发器
 
+```
+一种特殊的存储过程，存储过程一般通过定义的名字直接调用，而触发器是通过增、删、改进行触发执行的。会在事件发生时自动强制执行。
+常见触发器：after（for）或 instead of 用于 insert、update、delete事件。
+```
+
+```
+create trigger 触发器的名字   on 操作表
+　　for|after      instead of
+　　update|insert|delete
+　　as
+
+　　SQL语句
+#举例，
+create trigger tr_delete on work
+    for
+    insert
+    as
+delete * from work where id=(select id from inserted);
+创建了这个触发器，当我对表work进行insert操作完后，会自动执行delete * from work where id=(select id from inserted);将刚插入的数据删除（inserted这个是临时表并且只会存储最后一次操作的数据）；
+```
+
+
+
 ### 存储过程
+
+>hive没有存储过程
+>
+>存储过程（Stored Procedure）是在大型[数据库系统](https://baike.baidu.com/item/数据库系统/215176)中，一组为了完成特定功能的SQL 语句集，它存储在数据库中，一次[编译](https://baike.baidu.com/item/编译/1258343)后永久有效，用户通过指定存储过程的名字并给出参数（如果该存储过程带有参数）来执行它。存储过程是数据库中的一个重要对象。在数据量特别庞大的情况下利用存储过程能达到倍速的效率提升。
+
+```
+CREATE PROCEDURE order_tot_amt
+@o_id int,
+@p_tot int output
+AS
+SELECT @p_tot = sum(Unitprice*Quantity)
+FROM orderdetails
+WHERE orderid=@o_id
+GO
+该例子是建立一个简单的存储过程order_tot_amt,这个存储过程根据用户输入的订单ID号码(@o_id),由订单明细表 (orderdetails)中计算该订单销售总额[单价(Unitprice)*数量(Quantity)],这一金额通过@p_tot这一参数输出给调用这一存储过程的程序。
+```
+
+
 
 # SGG_DW教程
 
