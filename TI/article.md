@@ -1623,12 +1623,31 @@ https://zhuanlan.zhihu.com/p/32085405
 https://www.jianshu.com/p/9dc9f41f0b29
 #bilstm
 https://www.jianshu.com/p/bfd87f1c5efc
+https://www.cnblogs.com/bonelee/p/12106075.html
+https://zhuanlan.zhihu.com/p/105827761
 ```
+
+```
+#关于维度的介绍
+https://zhuanlan.zhihu.com/p/105827761
+注意区分矩阵乘法、哈达玛积、向量内积。
+权重矩阵都是n*(n+m)，偏置向量长度为n。输入x为n*1,隐藏状态h为m*1,两者进行拼接为(n+m)*1。
+细胞状态计算和隐藏状态计算是点积运算。
+```
+
+
 
 ##### crf
 
 ```
 https://zhuanlan.zhihu.com/p/407762841
+```
+
+##### 时间复杂度
+
+```
+https://blog.csdn.net/qq_38237214/article/details/119750561.
+https://www.cnblogs.com/picassooo/p/13504533.html
 ```
 
 
@@ -1817,6 +1836,7 @@ ALBERT-BiGRU-CRF
 ```
 https://blog.csdn.net/mpk_no1/article/details/72875185
 https://blog.csdn.net/weixin_42691585/article/details/107424028
+https://zhuanlan.zhihu.com/p/27418415
 ```
 
 ##### Macbert
@@ -1830,6 +1850,14 @@ csdn 博客：https://blog.csdn.net/qq_27590277/article/details/115339832
 https://github.com/ymcui/MacBERT
 https://github.com/ymcui/Chinese-ELECTRA
 
+```
+
+##### 时间复杂度计算
+
+```
+对于行列为a*b，b*c的矩阵进行矩阵相乘，时间复杂度为a*b*c
+对于行列为a*b，a*b的矩阵进行哈达玛积，时间复杂度为a*b
+对于长度为a的两个向量进行内积计算，时间复杂度为a的平方。
 ```
 
 ### 论文elephas
