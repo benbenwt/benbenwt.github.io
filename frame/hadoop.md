@@ -1233,7 +1233,7 @@ map输出为kv键值对，需要交给对应reduce处理，必须进行排序和
 
 ```
 
-![mapshuffle](..\resources\images\mapshuffle.png)
+![mapshuffle](../resources/images/mapshuffle.png)
 
 ###### partion
 
@@ -1243,7 +1243,7 @@ map输出为kv键值对，需要交给对应reduce处理，必须进行排序和
 
 ###### collector
 
-![collector](..\resources\images\collector.png)
+![collector](../resources/images/collector.png)
 
 >Map输出的结果由collector处理，每个map任务将键值对输出到内存中的环形缓冲区。
 >
@@ -1269,7 +1269,7 @@ partion都放入一个文件中，还需要构建index索引，知道每个parti
 当触发spill时，环形缓冲区取kvindex和buffer取空闲区域的中点作为起点，再背向增长index下标。
 ```
 
-![spill_kvbuffer](..\resources\images\spill_kvbuffer.png)
+![spill_kvbuffer](../resources/images/spill_kvbuffer.png)
 
 ###### **Merge**
 
@@ -1308,7 +1308,7 @@ Reduce任务通过HTTP向各个Map任务拖取它所需要的数据。当一个m
 原文链接：https://blog.csdn.net/qq_26442553/article/details/78699759
 ```
 
-![yarn](..\resources\images\yarn.png)
+![yarn](../resources/images/yarn.png)
 
 ### hdfs写流程
 
@@ -1344,7 +1344,7 @@ Configuration configuration = new Configuration();
 
 ### hadoop1.x和hadoop2.x的区别
 
-![hadoop1](..\resources\images\hadoop1.jpg)
+![hadoop1](../resources/images/hadoop1.jpg)
 
 ##### hadoop1.x的缺点
 

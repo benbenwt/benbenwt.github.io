@@ -849,7 +849,7 @@ FULL OUTER JOIN
 
 >CROSS JOIN 会让左右表排列组合，产生笛卡尔积，效果如图示：
 
-![cross-join](..\resources\images\cross-join.jpg)
+![cross-join](../resources/images/cross-join.jpg)
 
 ##### UNION 数据拼接
 

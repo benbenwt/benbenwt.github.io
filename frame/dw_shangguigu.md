@@ -1425,6 +1425,6 @@ zookeeper,kafka,flume,sqoop,superset
 
 # 软件版本
 
-![软件版本](..\resources\images\image-20220103163534955.png)
+![软件版本](../resources/images/image-20220103163534955.png)
 
 ##### 
