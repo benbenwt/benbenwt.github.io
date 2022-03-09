@@ -3,7 +3,11 @@
 03 DW 66-
 03 DW 67
 09 八股hdfs,yarn，mr
-
+09 dwd层，dws层，dwt层，ads层
+10 每一层的sql模板
+11 kettle场景
+12 superset对应ads
+13 文本相关
 
 202202
 19 检查vsphere平台  ok
