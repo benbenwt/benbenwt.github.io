@@ -66,6 +66,10 @@ dataframe的表现力有限，只适合部分的逻辑。对某些操作不方�
 
 ### RDD
 
+>RDD中操作分为Transformation,Action。对于Transformation是累积的，当有Action执行时才会执行累积的Transformation。Action常见的有collect，map，reduce，groupby等。
+>map是对一个数组的单个对象重复调用map函数内容。
+>reduce是将多个对象递归调用，最终归约为一个值。
+
 ```
 rdd的缺点是，无法控制分布的细节。如，无法指定特定机器获取特定的数据，这些都有spark进行了高度封装，没有暴露给用户，用户只能像编写单机程序一样编写程序。
 ```
@@ -265,11 +269,12 @@ sprk3.0.0,scala-2.12
 
 
 
-##### RDD
+
+
+# 理论知识
+
+### spark运行原理，从提交一个jar到最后返回结果，整个过程
 
 ```
-RDD中操作分为Transformation,Action。对于Transformation是累积的，当有Action执行时才会执行累积的Transformation。Action常见的有collect，map，reduce，groupby等。
-map是对一个数组的单个对象重复调用map函数内容。
-reduce是将多个对象递归调用，最终归约为一个值。
 ```
 

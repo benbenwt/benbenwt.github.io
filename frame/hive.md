@@ -368,22 +368,6 @@ CREATE [EXTERNAL] TABLE <table_name>
     [TBLPROPERTIES ('<property_name>'='<property_value>', ...)];
 ```
 
-
-
-
-
-### 外部表
-
->https://blog.csdn.net/qq_36743482/article/details/78393678
->
->使用external修饰的即为外部表，内部表数据由hive自身管理，外部表数据由hdfs管理。
->
->内部表数据存储的位置是hive.metastore.warehouse.dir。外部表数据的存储位置由自己制定（如果没有LOCATION，Hive将在HDFS上的/user/hive/warehouse文件夹下以外部表的表名创建一个文件夹，并将属于这个表的数据存放在这里）；
->
->删除内部表会直接删除元数据（metadata）及存储数据；删除外部表仅仅会删除元数据，HDFS上的文件并不会被删除；
->
->对内部表的修改会将修改直接同步给元数据，而对外部表的表结构和分区进行修改，则需要修复（MSCK REPAIR TABLE table_name;）
-
 ### 分层
 
 ```
@@ -416,7 +400,7 @@ hadoop.hive.hbase.HBbaseStorageHandler
 CREATE TABLE cctable (key int, value string) STORED BY 'org.apache.hadoop.hive.hbase.HBaseStorageHandler' WITH SERDEPROPERTIES ("hbase.columns.mapping" = ":key,cf:val") TBLPROPERTIES ("hbase.table.name" = "cc");
 ```
 
-# 理论知识
+# HIVE SQL理论知识
 
 ### 基本类型
 
@@ -1056,6 +1040,113 @@ FROM orderdetails
 WHERE orderid=@o_id
 GO
 该例子是建立一个简单的存储过程order_tot_amt,这个存储过程根据用户输入的订单ID号码(@o_id),由订单明细表 (orderdetails)中计算该订单销售总额[单价(Unitprice)*数量(Quantity)],这一金额通过@p_tot这一参数输出给调用这一存储过程的程序。
+```
+
+
+
+# HIVE 理论知识
+
+### 外部表内部表
+
+>https://blog.csdn.net/qq_36743482/article/details/78393678
+>
+>使用external修饰的即为外部表，内部表数据由hive自身管理，外部表数据由hdfs管理。
+>
+>内部表数据存储的位置是hive.metastore.warehouse.dir。外部表数据的存储位置由自己制定（如果没有LOCATION，Hive将在HDFS上的/user/hive/warehouse文件夹下以外部表的表名创建一个文件夹，并将属于这个表的数据存放在这里）；
+>
+>删除内部表会直接删除元数据（metadata）及存储数据；删除外部表仅仅会删除元数据，HDFS上的文件并不会被删除；
+>
+>对内部表的修改会将修改直接同步给元数据，而对外部表的表结构和分区进行修改，则需要修复（MSCK REPAIR TABLE table_name;）
+
+### hive四种排序方式的区别
+
+```
+order by order by 是要对输出的结果进行全局排序，这就意味着只有一个reducer才能实现（多个reducer无法保证全局有序）但是当数据量过大的时候，效率就很低。如果在严格模式下（hive.mapred.mode=strict）,则必须配合limit使用
+
+sort by sort by 不是全局排序，只是在进入到reducer之前完成排序，只保证了每个reducer中数据按照指定字段的有序性，是局部排序。配置mapred.reduce.tasks=[nums]可以对输出的数据执行归并排序。可以配合limit使用，提高性能
+
+distribute by distribute by 指的是按照指定的字段划分到不同的输出reduce文件中，和sort by一起使用时需要注意， distribute by必须放在前面
+
+cluster by
+
+cluster by 可以看做是一个特殊的distribute by+sort by，它具备二者的功能，但是只能实现倒序排序的方式,不能指定排序规则为asc 或者desc
+```
+
+### metastore服务
+
+>https://www.itcast.cn/news/20190829/12032894477.shtml
+
+##### 内嵌模式
+
+>使用hive自带的Derby数据库存储元数据
+
+#####  本地模式
+
+>配置了mysql，但是依赖于hive的服务无法远程访问metastore
+
+##### **远程模式**
+
+>配置了mysql，可通过hive.metastore.uris远程访问metastore,例如使用kylin进行访问。
+
+```
+#修改配置文件
+<property>
+    <name>hive.metastore.uris</name>
+    <value>thrift://node-1:9083</value>
+</property>
+```
+
+```
+#启动metastore服务
+nohup /export/servers/hive/bin/hive --service metastore &
+nohup /export/servers/hive/bin/hive --service hiveserver2 &
+```
+
+### hive中join都有哪些
+
+见HIVE SQL理论 join一章中
+
+### Impala 和 hive 的查询有哪些区别
+
+>
+
+```
+Impala是基于Hive的大数据实时分析查询引擎，直接使用Hive的元数据库Metadata,意味着impala元数据都存储在Hive的metastore中。并且impala兼容Hive的sql解析，实现了Hive的SQL语义的子集，功能还在不断的完善中。
+```
+
+### HIVE UDF
+
+```
+一般分为UDAF（用户自定义聚合函数）和UDTF（用户自定义表生成函数）
+Hive有两个不同的接口编写UDF程序。一个是基础的UDF接口，一个是复杂的GenericUDF接口。
+org.apache.hadoop.hive.ql. exec.UDF 基础UDF的函数读取和返回基本类型，即Hadoop和Hive的基本类型。如，Text、IntWritable、LongWritable、DoubleWritable等。
+org.apache.hadoop.hive.ql.udf.generic.GenericUDF 复杂的GenericUDF可以处理Map、List、Set类型。
+```
+
+### Hive Sql 是怎样解析成MR job的
+
+##### group by
+
+```
+将group by的字段作为map的输出key和reduce的key，实现聚合操作。
+```
+
+##### SQL转化为MapReduce的过程
+
+>https://www.cnblogs.com/Dhouse/p/7132476.html
+
+```
+1Antlr定义SQL的语法规则，完成SQL词法，语法解析，将SQL转化为抽象语法树AST Tree
+2遍历AST Tree，抽象出查询的基本组成单元QueryBlock
+3遍历QueryBlock，翻译为执行操作树OperatorTree
+4逻辑层优化器进行OperatorTree变换，合并不必要的ReduceSinkOperator，减少shuffle数据量
+5遍历OperatorTree，翻译为MapReduce任务
+6物理层优化器进行MapReduce任务的变换，生成最终的执行计划
+SQL转化为MapReduce的过程
+抽象语法树AST Tree:具有层级目录的树，不依赖于语言细节，抽象表示源代码。借助AST可以进行优化等功能。
+QueryBlock：三元组：输入源，计算过程，输出.
+OperatorTree：...
+ReduceSinkOperator：...
 ```
 
 

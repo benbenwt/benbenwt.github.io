@@ -1344,26 +1344,39 @@ Configuration configuration = new Configuration();
 
 ### hadoop1.x和hadoop2.x的区别
 
+![hadoop1](..\resources\images\hadoop1.jpg)
+
+##### hadoop1.x的缺点
+
+>1. JobTracker存在单点故障的隐患
+>2. 任务调度和资源管理全部是JobTracker来完成,单点负担过重
+>3. TaskTracker以Map/Reduce数量表示资源太过简单
+>4. TaskTracker 分Map Slot 和 Reduce Slot, 如果任务只需要map任务可能会造成资源浪费
 
 
-### hadoop1.x的缺点
-
-### hadoop HA介绍
 
 ### hadoop 的常用配置文件有哪些，自己实际改过哪些？
+
+```
+hadoop-env.sh: 用于定义hadoop运行环境相关的配置信息，比如配置JAVA_HOME环境变量、为hadoop的JVM指定特定的选项、指定日志文件所在的目录路径以及master和slave文件的位置等；
+
+core-site.xml: 用于定义系统级别的参数，如HDFS URL、Hadoop的临时目录以及用于rack-aware集群中的配置文件的配置等，此中的参数定义会覆盖core-default.xml文件中的默认配置；
+
+hdfs-site.xml: HDFS的相关设定，如文件副本的个数、块大小及是否使用强制权限等，此中的参数定义会覆盖hdfs-default.xml文件中的默认配置；
+
+mapred-site.xml：HDFS的相关设定，如reduce任务的默认个数、任务所能够使用内存的默认上下限等，此中的参数定义会覆盖mapred-default.xml文件中的默认配置；
+```
+
+
 
 ### 小文件过多有什么危害，如何避免？
 
 ```
-维护文件需要存储它的元信息，如存储路径、备份信息、划分块信息。
+NameNode内存中需要存储文件的元信息，如存储路径、备份信息、划分块信息，压垮NameNode的内存。
+每个元数据对象约占150byte，所以如果有1千万个小文件，每个文件占用一个block，则NameNode大约需要2G空间。如果存储1亿个文件，则NameNode需要20G空间.
+显而易见的解决这个问题的方法就是合并小文件,可以选择在客户端上传时执行一定的策略先合并,或者是使用Hadoop的CombineFileInputFormat<K,V>实现小文件的合并
 harfile压缩小文件
 ```
-
-
-
-### 启动hadoop集群会分别启动哪些进程，各自的作用
-
-### 讲一下环形缓冲区的概念
 
 # problem
 
