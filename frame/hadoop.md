@@ -1296,13 +1296,55 @@ Reduce任务通过HTTP向各个Map任务拖取它所需要的数据。当一个m
 
 ### Yarn调度MapReduce
 
+```
+粗略的过程：
+1yarnruner申请资源
+2等待队列调度，启动AM
+3AM申请运行的Container，在其他机器创建容器。
+4拉取运行所需的jar包、数据、container资源配置文件
+5启动程序，运行java程序或python等。
+6申请reduce容器，拉取资源并运行。
+下图比较详细
+原文链接：https://blog.csdn.net/qq_26442553/article/details/78699759
+```
+
+![yarn](..\resources\images\yarn.png)
+
 ### hdfs写流程
+
+```
+1Client调用DistributedFileSystem与NameNode进行远程调用，便于NameNode维护edits元数据信息。
+2通过FSDataOutputStream向DataNode写入数据，先写入FSDataOutputStream的buffer，再划分为package，使用socket发送到一组pipline的DataNode节点上，确保所有DataNode都收到此package。如果失败了，则删除失败的DataNode，构建新的pipline，并重新发送。
+3等待DataNode反向确认ack，调用close，调用DistributedFileSystem complete方法。
+```
+
+```
+Configuration configuration = new Configuration();
+        fileSystem = FileSystem.get(new URI("hdfs://192.168.107.141:9000"), configuration, "root");
+```
 
 ### hdfs读流程
 
+```
+1Client调用DistributedFileSystem与NameNode进行远程调用，获取block元数据信息。NameNode 返回存储的每个块的 DataNode 列表；
+2Client 将连接到列表中最近的 DataNode；Client 开始从 DataNode 并行读取数据；
+3旦 Client 获得了所有必须的 block，它就会将这些 block 组合起来形成一个文件。
+```
+
+
+
 ### hdfs创建一个文件的流程
 
+```
+1通过ClientProtocol协议向RpcServer发起创建文件的RPC请求。
+2RpcServer调用FSNamesystem中的相关方法以创建目录
+3FSNamesystem调用FSDirectory中的相关方法在目录树中创建目标文件，并通过日志系统备份文件系统的修改。
+4最后，RpcServer将RPC响应返回给客户端。
+```
+
 ### hadoop1.x和hadoop2.x的区别
+
+
 
 ### hadoop1.x的缺点
 
@@ -1311,6 +1353,13 @@ Reduce任务通过HTTP向各个Map任务拖取它所需要的数据。当一个m
 ### hadoop 的常用配置文件有哪些，自己实际改过哪些？
 
 ### 小文件过多有什么危害，如何避免？
+
+```
+维护文件需要存储它的元信息，如存储路径、备份信息、划分块信息。
+harfile压缩小文件
+```
+
+
 
 ### 启动hadoop集群会分别启动哪些进程，各自的作用
 
