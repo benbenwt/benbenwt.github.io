@@ -1498,6 +1498,12 @@ shuffle
 
 ### 论文1
 
+```
+https://blog.csdn.net/ziigea/article/details/106112082
+```
+
+
+
 ##### result
 
 ###### charWord_bert_without_dropout
@@ -1648,6 +1654,9 @@ https://zhuanlan.zhihu.com/p/407762841
 ```
 https://blog.csdn.net/qq_38237214/article/details/119750561.
 https://www.cnblogs.com/picassooo/p/13504533.html
+bert 时间复杂度：https://zhuanlan.zhihu.com/p/132554155
+bert 参数量：https://zhuanlan.zhihu.com/p/144582114
+bert 参数形状：https://www.cnblogs.com/kouin/p/13427243.html
 ```
 
 
@@ -1662,6 +1671,7 @@ https://blog.csdn.net/pipisorry/article/details/84951508
 
 ```
 https://www.jianshu.com/p/9b87b945151e
+bert 参数形状：https://www.cnblogs.com/kouin/p/13427243.html
 ```
 
 
@@ -1680,7 +1690,7 @@ https://www.researchgate.net/figure/Bi-LSTM-CRF-with-Word-Character-representati
 ```
 https://blog.csdn.net/c9Yv2cf9I06K2A9E/article/details/109830870
 如下图所示，首先 BPE 的方法无法表示完整词的信息以及更细粒度的字符级别的信息，如下图左边所示，第一层和第三层的内容都没有被表示出来，
-
+bert：详解
 ```
 
 ![charbert](..\resources\images\charbert.png)

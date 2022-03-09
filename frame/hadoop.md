@@ -1076,7 +1076,7 @@ hdfs的存储文件夹
 | 10000 | hive.server2.thrift.port                                     |
 | 9083  | hive.metastore.uris                                          |
 
-### 基本分工
+### 基本分工lstm
 
 1，平台。搭建平台，集群调优
 
@@ -1090,35 +1090,231 @@ hdfs的存储文件夹
 
 # 理论知识
 
->https://github.com/CheckChe0803/BigData-Interview
+>github面经：https://github.com/CheckChe0803/BigData-Interview
+>
+>IBM技术社区：https://developer.ibm.com/?q=deeplearning
+>
+>github参考此文章：http://matt33.com/2018/07/15/hdfs-architecture-learn/#HDFS-2-0-%E7%9A%84-HA-%E5%AE%9E%E7%8E%B0
 
 ### HDFS架构
 
+##### NameNode
+
+>dfs.namenode.name.dir控制存储元数据位置 在current目录下
+>
+>edits_inprocess标记的就是当前的edits，说明fsimage已经加载到了它之前的一个版本。
+
+```
+NameNode,文件系统的管理节点，管理文件系统的命名空间，维护文件系统树及整棵树内所有的文件和目录。这些信息以两个文件的形式永久保存在本地磁盘上：命名空间镜像文件（fsimage）和编辑日志文件（edit logs）
+```
+
+```
+fsimage-它是namenode启动时对整个文件系统命名空间的快照
+edit logs-他是namenode启动后，对文件系统命名空间的改动序列。
+每次启动时，NameNode拉取fsimage和edit logs并合并，得到新的fsimage。将新的fsimage存入fsimage，在后续有更改命名空间时，先修改edit logs，再执行修改操作。以此循环往复。NameNode什么时候改动edit logs，当DataNode触发写操作时，会与NameNode通信，告知block信息和放置位置。
+但是，在生产环境中，NameNode一般不重启，所以fsimage越来越旧，edit logs越来越大，如果发生挂掉的情况，fsimage过于陈旧，借助edit logs重启需要花费很多时间。
+```
+
+##### Secondary NameNode
+
+```
+Secondary NameNode用于解决fsimage过旧的问题，它定时拉取、合并NameNode的edit logs到fsimage中，再把新的fsimage推送给NameNode。NameNode如果重启，则使用新的fsimage，减少启动时间。
+```
+
+##### 实现NameNode容错
+
+```
+容错：容许namenode挂掉，即fsimage和edit logs所在机器无法工作了。
+1多写入一份持久状态，存储在远程的网络文件系统。
+2运行辅助NameNode，此NameNode定期合并、存储fsimage，但是由于是定期，难免丢失部分数据。
+```
+
+##### 块缓存
+
+```
+频繁访问的文件，其对应的块放在datanode的堆外缓存中。
+```
+
+##### hdfs高可用性
+
+```
+1.Active NameNode 和 Standby NameNode：两台 NameNode 形成互备，一台处于 Active 状态，为主 NameNode，另外一台处于 Standby 状态，为备 NameNode，只有主 NameNode 才能对外提供读写服务；
+2.共享存储系统：共享存储系统是实现 NameNode 的高可用最为关键的部分，共享存储系统保存了 NameNode 在运行过程中所产生的 HDFS 的元数据。主 NameNode 和备 NameNode 通过共享存储系统实现元数据同步。在进行主备切换的时候，新的主 NameNode 在确认元数据完全同步之后才能继续对外提供服务。
+3.DataNode 节点：因为主 NameNode 和备 NameNode 需要共享 HDFS 的数据块和 DataNode 之间的映射关系，为了使故障切换能够快速进行，DataNode 会同时向主 NameNode 和备 NameNode 上报数据块的位置信息。
+4.Zookeeper 集群：为主备切换控制器提供主备选举支持；
+5.ZKFailoverController（主备切换控制器，FC）：ZKFailoverController 作为独立的进程运行，对 NameNode 的主备切换进行总体控制。ZKFailoverController 能及时检测到 NameNode 的健康状况，在主 NameNode 故障时借助 Zookeeper 实现自动的主备选举和切换（当然 NameNode 目前也支持不依赖于 Zookeeper 的手动主备切换）；
+```
+
+
+
 ### Yarn架构
+
+##### resourceManager
+
+>RM是全局资源管理器，负责整个系统的资源管理和分配，主要包括两个组件。
+>
+>1调度器：Scheduler
+>
+>2应用程序管理器：Applications Manager，ASM。
+
+##### 调度器
+
+```
+调度器仅根据各个应用程序的资源需求进行资源分配，而资源分配单位用一个抽象概念 资源容器(Resource Container，也即 Container)，Container 是一个动态资源分配单位，它将内存、CPU、磁盘、网络等资源封装在一起，从而限定每个任务使用的资源量。
+此外，该调度器是一个可插拔的组件，用户可根据自己的需求设计新的调度器，YARN 提供了多种直接可用的调度器，比如 Fair Scheduler 和 Capacity Schedule 等。
+```
+
+##### 应用程序管理器
+
+```
+负责管理所有应用程序，包括提交、于RM协商、监控Application Master的状态并在失败时重启它。
+```
+
+##### NodeManager
+
+NM是每个结点上运行的资源和任务管理器，负责向RM汇报本节点container资源情况和应用运行状况；另一方面，接受来自AM的启动/停止请求。
+
+##### ApplicationMaster（AM）
+
+```
+每个提交的作业都有一个AM，主要功能有：
+1，与RM协商资源，获得container
+2，将得到的任务分配给内部的任务
+3，与NM通信处理启动/停止请求
+4，监控任务运行状态，失败时申请资源并重启。
+```
+
+##### Container
+
+```
+是资源的抽象，包括CPU、内存、磁盘、网络等，当 AM 向 RM 申请资源时，RM 为 AM 返回的资源便是用 Container 表示的。 YARN 会为每个任务分配一个 Container 且该任务只能使用该 Container 中描述的资源。
+```
+
+
+
+
 
 ### MapReduce架构
 
+>很详细：https://blog.csdn.net/u014374284/article/details/49205885
+
+##### Map
+
+```
+1.input,根据输入文件计算input split，每个输入分片对应一个map任务。
+2.input,读取input split数据，操作后写入<key,value>中。
+map任务执行
+3.partion，计算map结果发送到哪个reduce端。partion数等于reducer数，一般用hashPartion。
+4.spill，分为sort阶段和combine阶段。分区数据经过排序写入环形内存缓冲区，在达到阈值后守护线程将数据溢出到分区文件。
+  sort，在写入环形缓冲区之前，对数据排序<key,value,partion>格式排序，即先排partion，后排key。
+  combine(可选). 在溢出文件之前,提前开始combine,相当于本地化的reduce操作
+5.merge.spill结果有很多输出结果，但最终输出只有一个,故有一个merge操作会合并所有的本地文件,并且该文件会有一个对应的索引文件.
+```
+
+##### Reduce
+
+```
+1.copy ,拉取数据,reduce启动数据copy线程(默认5个),通过Http请求对应节点的map task输出文件,copy的数据也会先放到内部缓冲区.之后再溢写,类似map端操作
+2.merge,合并多个copy的多个map端的数据.在一个reduce端先将多个map端的数据溢写到本地磁盘,之后再将多个文件合并成一个文件. 数据经过 内存->磁盘 , 磁盘->磁盘的过程.
+3.output,merge阶段最后会生成一个文件,将此文件转移到内存中,shuffle阶段结束
+4.reduce,开始执行reduce任务,最后结果保留在hdfs上.
+```
+
+##### shuffle
+
+```
+map输出为kv键值对，需要交给对应reduce处理，必须进行排序和分割，这个整体过程统称为Shuffle。分为map shuffle和reduce shuffle。
+```
+
+##### Map shuffle
+
+```
+在Map端的shuffle过程是对Map的结果进行分区、排序、分割，然后将属于同一划分（分区）的输出合并在一起并写在磁盘上，最终得到一个分区有序的文件，分区有序的含义是map输出的键值对按分区进行排列，具有相同partition值的键值对存储在一起，每个分区里面的键值对又按key值进行升序排列（默认）
+
+```
+
+![mapshuffle](..\resources\images\mapshuffle.png)
+
+###### partion
+
+```
+对于map输出的每一个键值对，系统都会给定一个partition，partition值默认是通过计算key的hash值后对Reduce task的数量取模获得。如果一个键值对的partition值为1，意味着这个键值对会交给第一个Reducer处理。
+```
+
+###### collector
+
+![collector](..\resources\images\collector.png)
+
+>Map输出的结果由collector处理，每个map任务将键值对输出到内存中的环形缓冲区。
+>
+>环形缓冲区是字节数组Kvbuffer，分别存储buffer和kvmeta，两者的index对向增长，类似环形队列。
+>
+>Kvbuffer的容量都是有限的，当内存中数据到达设定阈值时，需要放入磁盘即spill（溢出），默认大小为100m。当然，最终数据没有达到阈值，最后步骤还是要写入磁盘。
+>
+>io.sort.mb，默认100M，Kvbuffer的容量。
+>
+>io.sort.spill.percent，默认是0.8，控制spill百分比。
+
+###### sort
+
+```
+当Spill触发后，SortAndSpill先把Kvbuffer中的数据按照partition值和key两个关键字升序排序，移动的只是索引数据，排序结果是Kvmeta中数据按照partition为单位聚集在一起，同一partition内的按照key有序。
+```
+
+###### spill
+
+```
+Spill线程为这次Spill过程创建一个磁盘文件，根据kvmeta的分区、key排序结果，将数据写入磁盘文件中，直到把所有数据写入。一个partion在文件中对应的数据也叫段segment。这个过程如果配置了combiner会进行combine，相当于map端的reduce，可以减少spill数据量，但是只适用于那种Reduce的输入key/value与输出key/value类型完全一致，且不影响最终结果的场景。比如累加，最大值等。
+partion都放入一个文件中，还需要构建index索引，知道每个partion的起始位置，此索引一般放入内存，放不下再写入磁盘，默认1M空间。
+当触发spill时，环形缓冲区取kvindex和buffer取空闲区域的中点作为起点，再背向增长index下标。
+```
+
+![spill_kvbuffer](..\resources\images\spill_kvbuffer.png)
+
+###### **Merge**
+
+```
+一台机器可能进行了多次溢写，因为环形缓冲区只有100M,当需要merge时，全盘扫描找到spill文件和其对应索引。将索引读入内存，然后为merge创建一个磁盘文件和磁盘索引文件，将同一分区的多个溢写的segment合并为一个，并构建索引。
+```
+
+##### Reduce shuffle
+
+###### copy
+
+```
+Reduce任务通过HTTP向各个Map任务拖取它所需要的数据。当一个map任务结束后，通知其对应的TaskTracker，TaskTracker进而通知JobTracker，所以JobTracker能记录Map输出和TaskTracker的映射关系。Reduce会定期向JobTracker获取Map的输出位置，一旦拿到输出位置，Reduce任务就会从此输出对应的TaskTracker上复制输出到本地，而不会等到所有的Map任务结束。
+```
+
+###### merge sort
+
+```
+合并排序，将拉取的数据放入内存，如果未达到阈值，在内存中直接合并排序。如果超过，溢写到磁盘。当全部拉取完毕，将磁盘读出，进行磁盘合并排序。
+一般Reduce是一边copy一边sort，即copy和sort两个阶段是重叠而不是完全分开的。最终Reduce shuffle过程会输出一个整体有序的数据块。
+```
+
+
+
 ### Yarn调度MapReduce
 
-hdfs写流程
+### hdfs写流程
 
-hdfs读流程
+### hdfs读流程
 
-hdfs创建一个文件的流程
+### hdfs创建一个文件的流程
 
-hadoop1.x和hadoop2.x的区别
+### hadoop1.x和hadoop2.x的区别
 
-hadoop1.x的缺点
+### hadoop1.x的缺点
 
-hadoop HA介绍
+### hadoop HA介绍
 
-hadoop 的常用配置文件有哪些，自己实际改过哪些？
+### hadoop 的常用配置文件有哪些，自己实际改过哪些？
 
-小文件过多有什么危害，如何避免？
+### 小文件过多有什么危害，如何避免？
 
-启动hadoop集群会分别启动哪些进程，各自的作用
+### 启动hadoop集群会分别启动哪些进程，各自的作用
 
-讲一下环形缓冲区的概念
+### 讲一下环形缓冲区的概念
 
 # problem
 

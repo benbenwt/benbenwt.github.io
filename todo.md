@@ -2,6 +2,8 @@
 202203
 03 DW 66-
 03 DW 67
+09 八股hdfs,yarn，mr
+
 
 202202
 19 检查vsphere平台  ok
