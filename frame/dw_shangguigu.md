@@ -847,7 +847,21 @@ TBLPROPERTIES ("parquet.compression"="lzo");
 
 ###### ods_log
 
->-n 如果
+>-n 如果字符串长度不为0，为真
+>
+>-z:长度为0，为真
+>
+>%F表示格式化为年月日
+>
+>load data inpath "/origin_data/$APP/log/topic_log/$do_date"  into table   gmall.ods_log  partion(dt='$do_date') 载入hive表
+>
+>hive -e "$sql"  执行sql
+>
+>hive  -service hiveserver2
+>
+>hive -service metastore
+>
+>
 
 ```
 #!/bin/bash
@@ -871,11 +885,502 @@ hive -e "$sql"
 
 hadoop jar /opt/module/hadoop-3.1.3/share/hadoop/common/hadoop-lzo-0.4.20.jar com.hadoop.compression.lzo.DistributedLzoIndexer /warehouse/$APP/ods/ods_log/dt=$do_date
 
+#执行
+hdfs_to_ods_log.sh 2020-06-14
+```
+
+###### ods_db
+
+>ods层都是load data语句，没啥好解释的。然后hive -e执行sql语句就行了。
+
+```
+#!/bin/bash
+
+APP=gmall
+
+if [ -n "$2" ] ;then
+   do_date=$2
+else 
+   echo "请传入日期参数"
+   exit
+fi 
+
+ods_order_info=" 
+load data inpath '/origin_data/$APP/db/order_info/$do_date' OVERWRITE into table ${APP}.ods_order_info partition(dt='$do_date');"
+
+ods_order_detail="
+load data inpath '/origin_data/$APP/db/order_detail/$do_date' OVERWRITE into table ${APP}.ods_order_detail partition(dt='$do_date');"
+
+ods_sku_info="
+load data inpath '/origin_data/$APP/db/sku_info/$do_date' OVERWRITE into table ${APP}.ods_sku_info partition(dt='$do_date');"
+
+ods_user_info="
+load data inpath '/origin_data/$APP/db/user_info/$do_date' OVERWRITE into table ${APP}.ods_user_info partition(dt='$do_date');"
+
+ods_payment_info="
+load data inpath '/origin_data/$APP/db/payment_info/$do_date' OVERWRITE into table ${APP}.ods_payment_info partition(dt='$do_date');"
+
+ods_base_category1="
+load data inpath '/origin_data/$APP/db/base_category1/$do_date' OVERWRITE into table ${APP}.ods_base_category1 partition(dt='$do_date');"
+
+ods_base_category2="
+load data inpath '/origin_data/$APP/db/base_category2/$do_date' OVERWRITE into table ${APP}.ods_base_category2 partition(dt='$do_date');"
+
+ods_base_category3="
+load data inpath '/origin_data/$APP/db/base_category3/$do_date' OVERWRITE into table ${APP}.ods_base_category3 partition(dt='$do_date'); "
+
+ods_base_trademark="
+load data inpath '/origin_data/$APP/db/base_trademark/$do_date' OVERWRITE into table ${APP}.ods_base_trademark partition(dt='$do_date'); "
+
+ods_activity_info="
+load data inpath '/origin_data/$APP/db/activity_info/$do_date' OVERWRITE into table ${APP}.ods_activity_info partition(dt='$do_date'); "
+
+ods_cart_info="
+load data inpath '/origin_data/$APP/db/cart_info/$do_date' OVERWRITE into table ${APP}.ods_cart_info partition(dt='$do_date'); "
+
+ods_comment_info="
+load data inpath '/origin_data/$APP/db/comment_info/$do_date' OVERWRITE into table ${APP}.ods_comment_info partition(dt='$do_date'); "
+
+ods_coupon_info="
+load data inpath '/origin_data/$APP/db/coupon_info/$do_date' OVERWRITE into table ${APP}.ods_coupon_info partition(dt='$do_date'); "
+
+ods_coupon_use="
+load data inpath '/origin_data/$APP/db/coupon_use/$do_date' OVERWRITE into table ${APP}.ods_coupon_use partition(dt='$do_date'); "
+
+ods_favor_info="
+load data inpath '/origin_data/$APP/db/favor_info/$do_date' OVERWRITE into table ${APP}.ods_favor_info partition(dt='$do_date'); "
+
+ods_order_refund_info="
+load data inpath '/origin_data/$APP/db/order_refund_info/$do_date' OVERWRITE into table ${APP}.ods_order_refund_info partition(dt='$do_date'); "
+
+ods_order_status_log="
+load data inpath '/origin_data/$APP/db/order_status_log/$do_date' OVERWRITE into table ${APP}.ods_order_status_log partition(dt='$do_date'); "
+
+ods_spu_info="
+load data inpath '/origin_data/$APP/db/spu_info/$do_date' OVERWRITE into table ${APP}.ods_spu_info partition(dt='$do_date'); "
+
+ods_activity_rule="
+load data inpath '/origin_data/$APP/db/activity_rule/$do_date' OVERWRITE into table ${APP}.ods_activity_rule partition(dt='$do_date');" 
+
+ods_base_dic="
+load data inpath '/origin_data/$APP/db/base_dic/$do_date' OVERWRITE into table ${APP}.ods_base_dic partition(dt='$do_date'); "
+
+ods_order_detail_activity="
+load data inpath '/origin_data/$APP/db/order_detail_activity/$do_date' OVERWRITE into table ${APP}.ods_order_detail_activity partition(dt='$do_date'); "
+
+ods_order_detail_coupon="
+load data inpath '/origin_data/$APP/db/order_detail_coupon/$do_date' OVERWRITE into table ${APP}.ods_order_detail_coupon partition(dt='$do_date'); "
+
+ods_refund_payment="
+load data inpath '/origin_data/$APP/db/refund_payment/$do_date' OVERWRITE into table ${APP}.ods_refund_payment partition(dt='$do_date'); "
+
+ods_sku_attr_value="
+load data inpath '/origin_data/$APP/db/sku_attr_value/$do_date' OVERWRITE into table ${APP}.ods_sku_attr_value partition(dt='$do_date'); "
+
+ods_sku_sale_attr_value="
+load data inpath '/origin_data/$APP/db/sku_sale_attr_value/$do_date' OVERWRITE into table ${APP}.ods_sku_sale_attr_value partition(dt='$do_date'); "
+
+ods_base_province=" 
+load data inpath '/origin_data/$APP/db/base_province/$do_date' OVERWRITE into table ${APP}.ods_base_province;"
+
+ods_base_region="
+load data inpath '/origin_data/$APP/db/base_region/$do_date' OVERWRITE into table ${APP}.ods_base_region;"
+
+case $1 in
+    "ods_order_info"){
+        hive -e "$ods_order_info"
+    };;
+    "ods_order_detail"){
+        hive -e "$ods_order_detail"
+    };;
+    "ods_sku_info"){
+        hive -e "$ods_sku_info"
+    };;
+    "ods_user_info"){
+        hive -e "$ods_user_info"
+    };;
+    "ods_payment_info"){
+        hive -e "$ods_payment_info"
+    };;
+    "ods_base_category1"){
+        hive -e "$ods_base_category1"
+    };;
+    "ods_base_category2"){
+        hive -e "$ods_base_category2"
+    };;
+    "ods_base_category3"){
+        hive -e "$ods_base_category3"
+    };;
+    "ods_base_trademark"){
+        hive -e "$ods_base_trademark"
+    };;
+    "ods_activity_info"){
+        hive -e "$ods_activity_info"
+    };;
+    "ods_cart_info"){
+        hive -e "$ods_cart_info"
+    };;
+    "ods_comment_info"){
+        hive -e "$ods_comment_info"
+    };;
+    "ods_coupon_info"){
+        hive -e "$ods_coupon_info"
+    };;
+    "ods_coupon_use"){
+        hive -e "$ods_coupon_use"
+    };;
+    "ods_favor_info"){
+        hive -e "$ods_favor_info"
+    };;
+    "ods_order_refund_info"){
+        hive -e "$ods_order_refund_info"
+    };;
+    "ods_order_status_log"){
+        hive -e "$ods_order_status_log"
+    };;
+    "ods_spu_info"){
+        hive -e "$ods_spu_info"
+    };;
+    "ods_activity_rule"){
+        hive -e "$ods_activity_rule"
+    };;
+    "ods_base_dic"){
+        hive -e "$ods_base_dic"
+    };;
+    "ods_order_detail_activity"){
+        hive -e "$ods_order_detail_activity"
+    };;
+    "ods_order_detail_coupon"){
+        hive -e "$ods_order_detail_coupon"
+    };;
+    "ods_refund_payment"){
+        hive -e "$ods_refund_payment"
+    };;
+    "ods_sku_attr_value"){
+        hive -e "$ods_sku_attr_value"
+    };;
+    "ods_sku_sale_attr_value"){
+        hive -e "$ods_sku_sale_attr_value"
+    };;
+    "ods_base_province"){
+        hive -e "$ods_base_province"
+    };;
+    "ods_base_region"){
+        hive -e "$ods_base_region"
+    };;
+    "all"){
+        hive -e "$ods_order_info$ods_order_detail$ods_sku_info$ods_user_info$ods_payment_info$ods_base_category1$ods_base_category2$ods_base_category3$ods_base_trademark$ods_activity_info$ods_cart_info$ods_comment_info$ods_coupon_info$ods_coupon_use$ods_favor_info$ods_order_refund_info$ods_order_status_log$ods_spu_info$ods_activity_rule$ods_base_dic$ods_order_detail_activity$ods_order_detail_coupon$ods_refund_payment$ods_sku_attr_value$ods_sku_sale_attr_value$ods_base_province$ods_base_region"
+    };;
+esac
+
+
+#执行shell
+hdfs_to_ods_db_init.sh all 2020-06-14
 ```
 
 
 
 ##### DIM
+
+>DIM层信息是从ODS清洗过来的，但是一般情况下DIM表是手动导入的，他是设计者规定的一些信息。
+>
+>编写sql，然后case选择，最后hive -e 执行。
+>
+>基本的清洗语句为：
+>
+> insert overwrite gmall.dim_user_info partition(dt='9999-99-99')
+>
+>select id,name  
+>
+>from gmall.ods_user_info
+>
+>where dt="";
+>
+>这是是常用的select、insert组合语句。两表的列名也一样，故不用指定插入哪些列。
+>
+>
+>
+>#使用with as临时表语句和left join
+>
+>with  spu as
+>
+>()
+>
+>insert overwrite table gmall.test
+>
+>select id,name form
+>
+>gmall.test1
+>
+>left join  test2
+>
+>with as创建的临时表可用于后边的select语句，如语句中的sku临时表。
+>
+>left join语句以sku为基础连接category1、2、3，spu，连接商标，连接sku属性和属性值
+>
+>
+>
+>#join（inner join）和left join使用场景
+>
+>
+
+
+
+
+
+
+
+```
+#!/bin/bash
+
+APP=gmall
+
+if [ -n "$2" ] ;then
+   do_date=$2
+else 
+   echo "请传入日期参数"
+   exit
+fi 
+
+dim_user_info="
+set hive.input.format=org.apache.hadoop.hive.ql.io.HiveInputFormat;
+insert overwrite table ${APP}.dim_user_info partition(dt='9999-99-99')
+select
+    id,
+    login_name,
+    nick_name,
+    md5(name),
+    md5(phone_num),
+    md5(email),
+    user_level,
+    birthday,
+    gender,
+    create_time,
+    operate_time,
+    '$do_date',
+    '9999-99-99'
+from ${APP}.ods_user_info
+where dt='$do_date';
+"
+
+dim_sku_info="
+set hive.input.format=org.apache.hadoop.hive.ql.io.HiveInputFormat;
+with
+sku as
+(
+    select
+        id,
+        price,
+        sku_name,
+        sku_desc,
+        weight,
+        is_sale,
+        spu_id,
+        category3_id,
+        tm_id,
+        create_time
+    from ${APP}.ods_sku_info
+    where dt='$do_date'
+),
+spu as
+(
+    select
+        id,
+        spu_name
+    from ${APP}.ods_spu_info
+    where dt='$do_date'
+),
+c3 as
+(
+    select
+        id,
+        name,
+        category2_id
+    from ${APP}.ods_base_category3
+    where dt='$do_date'
+),
+c2 as
+(
+    select
+        id,
+        name,
+        category1_id
+    from ${APP}.ods_base_category2
+    where dt='$do_date'
+),
+c1 as
+(
+    select
+        id,
+        name
+    from ${APP}.ods_base_category1
+    where dt='$do_date'
+),
+tm as
+(
+    select
+        id,
+        tm_name
+    from ${APP}.ods_base_trademark
+    where dt='$do_date'
+),
+attr as
+(
+    select
+        sku_id,
+        collect_set(named_struct('attr_id',attr_id,'value_id',value_id,'attr_name',attr_name,'value_name',value_name)) attrs
+    from ${APP}.ods_sku_attr_value
+    where dt='$do_date'
+    group by sku_id
+),
+sale_attr as
+(
+    select
+        sku_id,
+        collect_set(named_struct('sale_attr_id',sale_attr_id,'sale_attr_value_id',sale_attr_value_id,'sale_attr_name',sale_attr_name,'sale_attr_value_name',sale_attr_value_name)) sale_attrs
+    from ${APP}.ods_sku_sale_attr_value
+    where dt='$do_date'
+    group by sku_id
+)
+
+insert overwrite table ${APP}.dim_sku_info partition(dt='$do_date')
+select
+    sku.id,
+    sku.price,
+    sku.sku_name,
+    sku.sku_desc,
+    sku.weight,
+    sku.is_sale,
+    sku.spu_id,
+    spu.spu_name,
+    sku.category3_id,
+    c3.name,
+    c3.category2_id,
+    c2.name,
+    c2.category1_id,
+    c1.name,
+    sku.tm_id,
+    tm.tm_name,
+    attr.attrs,
+    sale_attr.sale_attrs,
+    sku.create_time
+from sku
+left join spu on sku.spu_id=spu.id
+left join c3 on sku.category3_id=c3.id
+left join c2 on c3.category2_id=c2.id
+left join c1 on c2.category1_id=c1.id
+left join tm on sku.tm_id=tm.id
+left join attr on sku.id=attr.sku_id
+left join sale_attr on sku.id=sale_attr.sku_id;
+"
+
+dim_base_province="
+set hive.input.format=org.apache.hadoop.hive.ql.io.HiveInputFormat;
+insert overwrite table ${APP}.dim_base_province
+select
+    bp.id,
+    bp.name,
+    bp.area_code,
+    bp.iso_code,
+    bp.iso_3166_2,
+    bp.region_id,
+    br.region_name
+from ${APP}.ods_base_province bp
+join ${APP}.ods_base_region br on bp.region_id = br.id;
+"
+
+dim_coupon_info="
+set hive.input.format=org.apache.hadoop.hive.ql.io.HiveInputFormat;
+insert overwrite table ${APP}.dim_coupon_info partition(dt='$do_date')
+select
+    id,
+    coupon_name,
+    coupon_type,
+    condition_amount,
+    condition_num,
+    activity_id,
+    benefit_amount,
+    benefit_discount,
+    create_time,
+    range_type,
+    limit_num,
+    taken_count,
+    start_time,
+    end_time,
+    operate_time,
+    expire_time
+from ${APP}.ods_coupon_info
+where dt='$do_date';
+"
+
+dim_activity_rule_info="
+set hive.input.format=org.apache.hadoop.hive.ql.io.HiveInputFormat;
+insert overwrite table ${APP}.dim_activity_rule_info partition(dt='$do_date')
+select
+    ar.id,
+    ar.activity_id,
+    ai.activity_name,
+    ar.activity_type,
+    ai.start_time,
+    ai.end_time,
+    ai.create_time,
+    ar.condition_amount,
+    ar.condition_num,
+    ar.benefit_amount,
+    ar.benefit_discount,
+    ar.benefit_level
+from
+(
+    select
+        id,
+        activity_id,
+        activity_type,
+        condition_amount,
+        condition_num,
+        benefit_amount,
+        benefit_discount,
+        benefit_level
+    from ${APP}.ods_activity_rule
+    where dt='$do_date'
+)ar
+left join
+(
+    select
+        id,
+        activity_name,
+        start_time,
+        end_time,
+        create_time
+    from ${APP}.ods_activity_info
+    where dt='$do_date'
+)ai
+on ar.activity_id=ai.id;
+"
+
+case $1 in
+"dim_user_info"){
+    hive -e "$dim_user_info"
+};;
+"dim_sku_info"){
+    hive -e "$dim_sku_info"
+};;
+"dim_base_province"){
+    hive -e "$dim_base_province"
+};;
+"dim_coupon_info"){
+    hive -e "$dim_coupon_info"
+};;
+"dim_activity_rule_info"){
+    hive -e "$dim_activity_rule_info"
+};;
+"all"){
+    hive -e "$dim_user_info$dim_sku_info$dim_coupon_info$dim_activity_rule_info$dim_base_province"
+};;
+esac
+#ods_to_dim_db_init.sh all 2020-06-14
+```
+
+
 
 ##### DWD
 

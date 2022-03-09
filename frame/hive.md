@@ -832,7 +832,7 @@ where students.class = class.class
 | LEFT JOIN  | 左表的全集及右表有的值，无值则为 Null            |
 | RIGHT JOIN | 与 LEFT JOIN 相反                                |
 
-![sql-join](..\resources\images\sql-join.png)
+![sql-join](../resources/images/sql-join.png)
 
 ```
 JOIN
