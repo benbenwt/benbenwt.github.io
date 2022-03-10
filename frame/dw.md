@@ -3,7 +3,7 @@
 ```
 
 ```
-辅助组件(zookeeper，kafka)，数据采集迁移框架(flume，logtash，sqoop,kettle)，数仓(hadoop,hive)，查询分析框架(spark,kylin,presto,phoenix)，可视化框架(superset)，整体流程控制(azkaban)
+辅助组件(zookeeper，kafka)，数据采集迁移框架(flume，logtash，sqoop,kettle)，数仓(hadoop,hive)，查询分析框架(spark,kylin,presto,phoenix)，可视化框架(superset)，整体流程控制(azkaban)，数据库（es，mysql）
 ```
 
 ```

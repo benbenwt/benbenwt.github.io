@@ -1166,9 +1166,15 @@ Secondary NameNode用于解决fsimage过旧的问题，它定时拉取、合并N
 
 ##### 应用程序管理器
 
+>应用程序管理器是任务调度的核心，与mr执行过程密切相关。包括jobtracker、tasktracker。
+>
+>https://blog.csdn.net/weixin_30736301/article/details/98025380
+
 ```
 负责管理所有应用程序，包括提交、于RM协商、监控Application Master的状态并在失败时重启它。
 ```
+
+
 
 ##### NodeManager
 
@@ -1197,6 +1203,12 @@ NM是每个结点上运行的资源和任务管理器，负责向RM汇报本节�
 ### MapReduce架构
 
 >很详细：https://blog.csdn.net/u014374284/article/details/49205885
+>
+>为什么对于很简单的json解析任务，mr任务执行很慢，hive sql使用mapreduce引擎时也是同理：
+>
+>主要时间花费在网络传输、磁盘读写、计算花费，具体如下。map阶段和reduce前的shuffle阶段都需要拉取其他节点的数据，这是网络传输。map开始时要读磁盘数据，shuffle阶段要写磁盘、reduce要读磁盘，这是磁盘读写。shuffle阶段要partion、key排序，要merge sort，reduce也需要merge不同节点的输出，这是计算花费。
+>
+>MapTask：当所有节点的Application都获取到Container资源，拉取资源进行map操作。拉取什么资源，怎么划分，map函数都是一样的。随后进行map-shuffle-reduce.
 
 ##### Map
 
