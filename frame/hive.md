@@ -997,7 +997,19 @@ limit: -1
 ListSink
 ```
 
-### hive函数
+### hive UDF函数
+
+##### get_json_object
+
+```
+```
+
+##### explode_json
+
+```
+```
+
+
 
 ### 触发器
 

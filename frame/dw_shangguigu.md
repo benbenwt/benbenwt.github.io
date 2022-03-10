@@ -44,6 +44,8 @@ sku,stock keep unit ,库存量单位，不可分割的最小单位，涉及到�
 >设计原则，设计技巧
 >
 >最重要的几个主题：用户，商品，活动，优惠，时间，地区
+>
+>画一个数据流向图，会比较清除，也就是presto框架所说的仓库依赖，它通过执行的sql解析仓库依赖。
 
 |                | **时间** | **用户** | **地区** | **商品** | **优惠券** | **活动** | **度量值**                      |
 | -------------- | -------- | -------- | -------- | -------- | ---------- | -------- | ------------------------------- |
@@ -1088,7 +1090,7 @@ hdfs_to_ods_db_init.sh all 2020-06-14
 >
 >基本的清洗语句为：
 >
-> insert overwrite gmall.dim_user_info partition(dt='9999-99-99')
+>insert overwrite gmall.dim_user_info partition(dt='9999-99-99')
 >
 >select id,name  
 >
@@ -1122,13 +1124,7 @@ hdfs_to_ods_db_init.sh all 2020-06-14
 >
 >#join（inner join）和left join使用场景
 >
->
-
-
-
-
-
-
+>join保存两个表都存在的行，left join以左表为基础，会保留左表所有的行。
 
 ```
 #!/bin/bash
@@ -1384,6 +1380,125 @@ esac
 
 ##### DWD
 
+>日志信息json的结构：公共字段（地区，手机品牌，渠道，是否新增，手机型号，设备id，会员id，app版本），动作数组（目标类型，时间），曝光数组（对象，类型，顺序，位置），页面信息（持续时间，目标id），错误信息
+>
+>即基本信息（公共字段），进入了什么页面（页面信息），执行了什么操作（操作目标），曝光数组（页面有哪些东西，曝光了什么）
+>
+>DWD主要分为：启动日志，页面日志，动作日志，曝光日志，错误日志
+>
+>学习自定义UDF函数如何编写
+
+###### get_josn_object
+
+```
+获取json并解析为对象，不可解析复杂json（带数组的）
+```
+
+###### DWD sql例子
+
+>get_josn_object解析后过滤有start字段的，并查询出对应日期的所需字段写入DWD即可
+
+```
+insert overwrite table dwd_start_log partition(dt='2020-06-14')
+select
+    get_json_object(line,'$.common.ar'),
+    get_json_object(line,'$.common.ba'),
+    get_json_object(line,'$.common.ch'),
+    get_json_object(line,'$.common.is_new'),
+    get_json_object(line,'$.common.md'),
+    get_json_object(line,'$.common.mid'),
+    get_json_object(line,'$.common.os'),
+    get_json_object(line,'$.common.uid'),
+    get_json_object(line,'$.common.vc'),
+    get_json_object(line,'$.start.entry'),
+    get_json_object(line,'$.start.loading_time'),
+    get_json_object(line,'$.start.open_ad_id'),
+    get_json_object(line,'$.start.open_ad_ms'),
+    get_json_object(line,'$.start.open_ad_skip_ms'),
+    get_json_object(line,'$.ts')
+from ods_log
+where dt='2020-06-14'
+and get_json_object(line,'$.start') is not null;
+
+```
+
+###### lateral view 
+
+>默认的explode函数是处理map结构的。
+>
+>lateral view首先为原始表的每行调用UDTF，UTDF会把一行拆分成一或者多行，lateral view再把结果组合，产生一个支持别名表的虚拟表。
+>
+>如下语句表示将displays拆成多行，并组成一个名为tmp的表，列名为display。
+
+```
+lateral view explode_json_array(get_json_object(line,'$.displays')) tmp as display
+```
+
+###### dwd_order_detail
+
+>需要连接多个表，如ods_order_detail、ods_order_info、ods_order_detail_activity、ods_order_detail_coupon
+
+```
+insert overwrite table dwd_order_detail partition(dt)
+select
+    od.id,
+    od.order_id,
+    oi.user_id,
+    od.sku_id,
+    oi.province_id,
+    oda.activity_id,
+    oda.activity_rule_id,
+    odc.coupon_id,
+    od.create_time,
+    od.source_type,
+    od.source_id,
+    od.sku_num,
+    od.order_price*od.sku_num,
+    od.split_activity_amount,
+    od.split_coupon_amount,
+    od.split_final_amount,
+    date_format(create_time,'yyyy-MM-dd')
+from
+(
+    select
+        *
+    from ods_order_detail
+    where dt='2020-06-14'
+)od
+left join
+(
+    select
+        id,
+        user_id,
+        province_id
+    from ods_order_info
+    where dt='2020-06-14'
+)oi
+on od.order_id=oi.id
+left join
+(
+    select
+        order_detail_id,
+        activity_id,
+        activity_rule_id
+    from ods_order_detail_activity
+    where dt='2020-06-14'
+)oda
+on od.id=oda.order_detail_id
+left join
+(
+    select
+        order_detail_id,
+        coupon_id
+    from ods_order_detail_coupon
+    where dt='2020-06-14'
+)odc
+on od.id=odc.order_detail_id;
+
+```
+
+
+
 ##### DWS
 
 ##### DWT
@@ -1401,6 +1516,8 @@ esac
 ### superset图表
 
 >活动的分析信息、优惠券的分析信息、订单在省份维度上的分析、订单在spu（商品）上的分析、订单的总体分析、用户的点击路径分析、商品的回购力度分析、用户行为在1、7、30天的分析（）、用户变动信息（回归、离开）、用户停留时间（不同创建日期）、用户1、7、30天总信息分析（下单、上限、）、用户浏览商品信息
+>
+>superset+presto：https://www.cnblogs.com/luweiseu/p/9493134.html
 
 ### 采集脚本
 
