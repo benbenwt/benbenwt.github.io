@@ -1,3 +1,9 @@
+工作的cve站点
+
+```
+redqueen,绿盟，奇安信，360
+```
+
 ```
 服务器cpu，16块
 Intel Xeon Gold 5117 @ 2.00GHz
@@ -574,13 +580,70 @@ PUT policy_document/_settings
 }
 ```
 
+### qibttorrent
 
+>可用的其他开源BT下载器
+>
+>Deluge2.03
+>libTorrent0.13.6
+>qbittorrent
+
+##### qbittorrent-nox
 
 ```
-Deluge2.03
-libTorrent0.13.6
-qbittorrent
+#qbittorrent
 ```
+
+###### 安装
+
+```
+windows到此处下载qbittorrent并安装：https://www.qbittorrent.org/download.php
+linux使用yum安装：
+yum -y install epel-release
+yum install qbittorrent-nox.x86_64
+#查看可用version
+yum --showduplicates list qbittorrent-nox | expand
+yum install <package name>-<version info>
+```
+
+###### 启动
+
+```
+qbittorrent-nox
+```
+
+###### python-qbittorrent
+
+```
+#查看web服务是否打开
+localhost:8080
+默认用户名和密码:admin,adminadmin
+#安装
+pip3 install python-qbittorrent
+vim test.py
+#按照此教程编写python-qbittorrent代码（https://www.thepythoncode.com/article/download-torrent-files-in-python）
+```
+
+###### problem
+
+```
+#space不够
+权限问题
+```
+
+##### python api与qbittorrent兼容性
+
+```
+Python wrapper for qBittorrent Web API (for versions above 4.1, for version below and above v3.1.x please use 0.3.1 version).
+ubuntu直接安装使用4.1.x,0.3.1
+```
+
+###### 确定兼容的版本
+
+| qbittorrent          | python-qbittorrent       |
+| -------------------- | ------------------------ |
+| qbittorrent-nox 3.3. | python-qbittorrent 0.3.1 |
+| qbittorrent-nox4.3.5 | python-qbittorrent0.4.2  |
 
 
 
@@ -839,7 +902,7 @@ crontab  -e
 /user/root/stix/$(date -d last-day +%Y-%m-%d)
 ```
 
-
+### 重启脚本
 
 ```
 java -jar D:\DevInstall\IdeaProjects\dump_hdfs\target\dump_hdfs-1.0-SNAPSHOT.jar "C:\\Users\\guo\\Desktop\\dump_hdfs" "hdfs://hbase:9000/"
@@ -884,6 +947,8 @@ check_one_service "mapreduce_start-1.0-SNAPSHOT.jar"    "nohup java11 -jar  /roo
 check_one_service "dump_mysql_jar.jar"  "nohup java11 -jar /root/software/dump_mysql_jar.jar &"
 done
 ```
+
+hbase1
 
 ```
 #hbase1
@@ -943,6 +1008,8 @@ check_one_service "grakn" "nohup grakn server start &"
 check_one_service "lisa.web_api.tasks" "service docker start && cd /root/module/lisa_/lisa/ && nohup docker-compose up --scale worker=5 &"
 done
 ```
+
+lisa
 
 ```
 #lisa

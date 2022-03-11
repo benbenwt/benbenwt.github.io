@@ -36,35 +36,6 @@ java的consumer用utf解码，并用StringEscapeUtil解码字符串.
 SELECT FROM_UNIXTIME(sm_time,'%Y') as years FROM sentiment GROUP BY years
 ```
 
-### qbittorrent-nox
-
-```
-#qbittorrent
-https://www.thepythoncode.com/article/download-torrent-files-in-python
-https://www.qbittorrent.org/download.php
-Python wrapper for qBittorrent Web API (for versions above 4.1, for version below and above v3.1.x please use 0.3.1 version).
-```
-
-
-
-```
-默认用户名和密码
-admin
-adminadmin
-#space不够
-权限问题，
-是使用qbittorrent-nox 3.3.,python-qbittorrent 0.3.1
-也可qbittorrent-nox4.3.5与python-qbittorrent0.4.2
-ubuntu直接安装的为4.1.x,0.3.1
-#qbittorrent
-pip3 install python-qbittorrent
-yum -y install epel-release
-yum install qbittorrent-nox.x86_64
-#version
-yum --showduplicates list PACKAGE | expand
-yum install <package name>-<version info>
-```
-
 
 
 ```
