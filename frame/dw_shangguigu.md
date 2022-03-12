@@ -45,7 +45,11 @@ sku,stock keep unit ,库存量单位，不可分割的最小单位，涉及到�
 >
 >最重要的几个主题：用户，商品，活动，优惠，时间，地区
 >
->画一个数据流向图，会比较清除，也就是presto框架所说的仓库依赖，它通过执行的sql解析仓库依赖。
+>画一个数据流向图，会比较清除，也就是atlas框架所说的仓库血缘关系，它通过执行的sql解析仓库依赖。
+>
+>学习一个数仓项目的基本目标：
+>
+>知道数据采集，数据仓库设计（整体的血缘关系（构思），每层这么设计的原因，每层设计成什么样了，每个表这么设计的原因，每个表设计成什么样了），etl（sql怎么写的，kettle怎么用），superset（分析了哪些指标，使用了什么图形）
 
 |                | **时间** | **用户** | **地区** | **商品** | **优惠券** | **活动** | **度量值**                      |
 | -------------- | -------- | -------- | -------- | -------- | ---------- | -------- | ------------------------------- |
@@ -1376,6 +1380,153 @@ esac
 #ods_to_dim_db_init.sh all 2020-06-14
 ```
 
+###### 拉链表
+
+```
+为每一条信息记录开始时间，和生效的结束时间。当该条信息被修改时，该条信息作废，将失效时间设为当前时间。并创建新记录，该记录失效时间设置为9999-99-99。
+如何实现：每天根据全量表的创建时间和操作时间的到改天的用户变化表，将该表与之前的拉链表合并得到新的拉链表。
+为什么有全量表了，还创建拉链表。全量表不保留历史的信息，比如我修改了自己的昵称，那么旧的昵称就丢失了，只知道在该天修改了昵称。如果再次进行修改昵称的操作，前一次的修改时间都丢失了，只知道最后一次操作的时间。而我们需要知道每一天，每个用户是什么状态，又不可能为每天都维护一个表，所以使用拉链表，将用户信息按照修改的不同阶段进行信息保留。
+如果要池逊某一天的用户状态，使用此where语句where dt>=2022-0311 and dt <=2022-03-11。
+```
+
+###### 拉链表首日装载
+
+```
+insert overwrite table dim_user_info partition(dt='9999-99-99')
+select
+    id,
+    login_name,
+    nick_name,
+    md5(name),
+    md5(phone_num),
+    md5(email),
+    user_level,
+    birthday,
+    gender,
+    create_time,
+    operate_time,
+    '2020-06-14',
+    '9999-99-99'
+from ods_user_info
+where dt='2020-06-14';
+```
+
+###### 挑选出每天的用户变化表并与原来的拉链表拼接
+
+>nvl函数：当参数1为null时，返回参数2.否则直接返回参数1.
+
+```
+#挑选出每天的用户变化表
+#与原来的拉链表拼接
+#修改过期信息的失效日期
+with
+tmp as
+(
+    select
+        old.id old_id,
+        old.login_name old_login_name,
+        old.nick_name old_nick_name,
+        old.name old_name,
+        old.phone_num old_phone_num,
+        old.email old_email,
+        old.user_level old_user_level,
+        old.birthday old_birthday,
+        old.gender old_gender,
+        old.create_time old_create_time,
+        old.operate_time old_operate_time,
+        old.start_date old_start_date,
+        old.end_date old_end_date,
+        new.id new_id,
+        new.login_name new_login_name,
+        new.nick_name new_nick_name,
+        new.name new_name,
+        new.phone_num new_phone_num,
+        new.email new_email,
+        new.user_level new_user_level,
+        new.birthday new_birthday,
+        new.gender new_gender,
+        new.create_time new_create_time,
+        new.operate_time new_operate_time,
+        new.start_date new_start_date,
+        new.end_date new_end_date
+    from
+    (
+        select
+            id,
+            login_name,
+            nick_name,
+            name,
+            phone_num,
+            email,
+            user_level,
+            birthday,
+            gender,
+            create_time,
+            operate_time,
+            start_date,
+            end_date
+        from dim_user_info
+        where dt='9999-99-99'
+    )old
+    full outer join
+    (
+        select
+            id,
+            login_name,
+            nick_name,
+            md5(name) name,
+            md5(phone_num) phone_num,
+            md5(email) email,
+            user_level,
+            birthday,
+            gender,
+            create_time,
+            operate_time,
+            '2020-06-15' start_date,
+            '9999-99-99' end_date
+        from ods_user_info
+        where dt='2020-06-15'
+    )new
+    on old.id=new.id
+)
+insert overwrite table dim_user_info partition(dt)
+select
+    nvl(new_id,old_id),
+    nvl(new_login_name,old_login_name),
+    nvl(new_nick_name,old_nick_name),
+    nvl(new_name,old_name),
+    nvl(new_phone_num,old_phone_num),
+    nvl(new_email,old_email),
+    nvl(new_user_level,old_user_level),
+    nvl(new_birthday,old_birthday),
+    nvl(new_gender,old_gender),
+    nvl(new_create_time,old_create_time),
+    nvl(new_operate_time,old_operate_time),
+    nvl(new_start_date,old_start_date),
+    nvl(new_end_date,old_end_date),
+    nvl(new_end_date,old_end_date) dt
+from tmp
+union all
+select
+    old_id,
+    old_login_name,
+    old_nick_name,
+    old_name,
+    old_phone_num,
+    old_email,
+    old_user_level,
+    old_birthday,
+    old_gender,
+    old_create_time,
+    old_operate_time,
+    old_start_date,
+    cast(date_add('2020-06-15',-1) as string),
+    cast(date_add('2020-06-15',-1) as string) dt
+from tmp
+where new_id is not null and old_id is not null;
+
+```
+
 
 
 ##### DWD
@@ -1501,9 +1652,95 @@ on od.id=odc.order_detail_id;
 
 ##### DWS
 
+###### date_format
+
+```
+date_format('2020-06-14','yyyy-MM')
+```
+
+###### date_add
+
+```
+date_add('2020-06-14',-1)
+```
+
+###### next_day
+
+```
+#取下一个周一
+next_day('2020-06-14','MO')
+#取当前周的周一
+date_add(next_day('2020-06-14','MO'),-7)
+```
+
+###### last_day
+
+```
+#当月最后一天
+select last_day('2020-06-14')
+```
+
+###### 复杂数据类型
+
+```
+#map结构数据定义
+map<string,string>
+#array结构数据定义
+array<string>
+#struct结构数据定义
+struct<id:int,name:string,age:int>
+#struct和array嵌套定义
+array<struct<id:int,name:string,age:int>>
+```
+
+
+
 ##### DWT
 
+###### dwt_visitor_topic
+
+>
+
+```
+DROP TABLE IF EXISTS dwt_visitor_topic;
+CREATE EXTERNAL TABLE dwt_visitor_topic
+(
+    `mid_id` STRING COMMENT '设备id',
+    `brand` STRING COMMENT '手机品牌',
+    `model` STRING COMMENT '手机型号',
+    `channel` ARRAY<STRING> COMMENT '渠道',
+    `os` ARRAY<STRING> COMMENT '操作系统',
+    `area_code` ARRAY<STRING> COMMENT '地区ID',
+    `version_code` ARRAY<STRING> COMMENT '应用版本',
+    `visit_date_first` STRING  COMMENT '首次访问时间',
+    `visit_date_last` STRING  COMMENT '末次访问时间',
+    `visit_last_1d_count` BIGINT COMMENT '最近1日访问次数',
+    `visit_last_1d_day_count` BIGINT COMMENT '最近1日访问天数',
+    `visit_last_7d_count` BIGINT COMMENT '最近7日访问次数',
+    `visit_last_7d_day_count` BIGINT COMMENT '最近7日访问天数',
+    `visit_last_30d_count` BIGINT COMMENT '最近30日访问次数',
+    `visit_last_30d_day_count` BIGINT COMMENT '最近30日访问天数',
+    `visit_count` BIGINT COMMENT '累积访问次数',
+    `visit_day_count` BIGINT COMMENT '累积访问天数'
+) COMMENT '设备主题宽表'
+PARTITIONED BY (`dt` STRING)
+STORED AS PARQUET
+LOCATION '/warehouse/gmall/dwt/dwt_visitor_topic'
+TBLPROPERTIES ("parquet.compression"="lzo");
+
+```
+
+
+
 ##### ADS
+
+>一个topic，一个topic的看吧，设计的时候也是这样，想要什么topic，设计对应的ods，dwd，dws，dwt。
+>
+>用户，活动，优惠券，订单，商品
+
+###### ads_user_total数据流向
+
+
 
 ##### azkaban
 

@@ -385,6 +385,7 @@ json格式要实现主键查询，非主键查询，所有键的聚合。实际�
 ```
 hive.metastore.uri=thrift://hadoop102:9083
 web port 10002
+
 ```
 
 

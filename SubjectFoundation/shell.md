@@ -72,6 +72,44 @@ PATH=$PATH:/usr/local/bin:/usr/bin:/usr/local/sbin:/usr/sbin:/bin:/sbin
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib
 ```
 
+# 进阶语法
+
+### 自动交互输入
+
+```
+vim 1.sh
+
+#!/bin/expect
+set timeout 30
+spawn /opt/module/atlas/hook-bin/import-hive.sh
+expect "Enter username for atlas :"
+send "admin\r"
+expect "password"
+send "admin\r"
+interact
+
+./1.sh
+这个脚本会自动输入用户名和密码
+```
+
+### bin/expect
+
+```
+vim 2.sh
+
+#!/bin/sh
+for i in seq 0 100
+do
+python2 /opt/module/atlas/bin/atlas_stop.py
+python2 /opt/module/atlas/bin/atlas_start.py
+sleep 5
+/opt/module/atlas/1.sh
+echo $i
+done
+
+/bin/expect语法受限，如果需要使用其他语法，新建一个/bin/sh的脚本，调用bin/expect脚本即可。
+```
+
 
 
 # 脚本语法
