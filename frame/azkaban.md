@@ -81,9 +81,9 @@ bin/start-web.sh
 ### 创建新项目
 
 ```
-创建azkaban.project，写入如下内容
+#创建azkaban.project，写入如下内容
 azkaban-flow-version: 2.0
-创建basic.flow文件，写入如下内容
+#创建basic.flow文件，写入如下内容
 nodes:
   - name: jobA
     type: command
@@ -92,9 +92,89 @@ nodes:
 将两者打包到同一个zip下，在azkaban创建project时upload即可。
 ```
 
+###### gmall例子
+
+>一级节点nodes
+>
+>后续有name，type，config-commond构成，指定任务名称，任务类型，任务的命令。使用depends_on控制任务的依赖关系。dt为可以通过azkaban输入指定的变量，在每次execute flow时可以指定。
+
+```
+nodes:
+  - name: mysql_to_hdfs
+    type: command
+    config:
+     command: /home/atguigu/bin/mysql_to_hdfs.sh all ${dt}
+    
+  - name: hdfs_to_ods_log
+    type: command
+    config:
+     command: /home/atguigu/bin/hdfs_to_ods_log.sh ${dt}
+     
+  - name: hdfs_to_ods_db
+    type: command
+    dependsOn: 
+     - mysql_to_hdfs
+    config: 
+     command: /home/atguigu/bin/hdfs_to_ods_db.sh all ${dt}
+  
+  - name: ods_to_dim_db
+    type: command
+    dependsOn: 
+     - hdfs_to_ods_db
+    config: 
+     command: /home/atguigu/bin/ods_to_dim_db.sh all ${dt}
+
+  - name: ods_to_dwd_log
+    type: command
+    dependsOn: 
+     - hdfs_to_ods_log
+    config: 
+     command: /home/atguigu/bin/ods_to_dwd_log.sh all ${dt}
+    
+  - name: ods_to_dwd_db
+    type: command
+    dependsOn: 
+     - hdfs_to_ods_db
+    config: 
+     command: /home/atguigu/bin/ods_to_dwd_db.sh all ${dt}
+    
+  - name: dwd_to_dws
+    type: command
+    dependsOn:
+     - ods_to_dim_db
+     - ods_to_dwd_log
+     - ods_to_dwd_db
+    config:
+     command: /home/atguigu/bin/dwd_to_dws.sh all ${dt}
+    
+  - name: dws_to_dwt
+    type: command
+    dependsOn:
+     - dwd_to_dws
+    config:
+     command: /home/atguigu/bin/dws_to_dwt.sh all ${dt}
+    
+  - name: dwt_to_ads
+    type: command
+    dependsOn: 
+     - dws_to_dwt
+    config:
+     command: /home/atguigu/bin/dwt_to_ads.sh all ${dt}
+     
+  - name: hdfs_to_mysql
+    type: command
+    dependsOn:
+     - dwt_to_ads
+    config:
+      command: /home/atguigu/bin/hdfs_to_mysql.sh all
+
+```
+
+
+
 ### 使用效果
 
-![azkaban](..\resources\images\azkaban.png)
+![azkaban_show](../resources/images/azkaban_show.png)
 
 ```
 它可以从整体的角度监控shell任务的执行情况，获取执行的日志，执行到了哪一个流程，并以图形化的方式直观展示。编写好shell脚本后，通过web页面就可以远程管理任务的执行。

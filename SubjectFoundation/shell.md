@@ -98,7 +98,7 @@ interact
 vim 2.sh
 
 #!/bin/sh
-for i in seq 0 100
+for i in $(seq 1 1000)
 do
 python2 /opt/module/atlas/bin/atlas_stop.py
 python2 /opt/module/atlas/bin/atlas_start.py

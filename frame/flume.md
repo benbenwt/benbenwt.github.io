@@ -47,6 +47,12 @@ a1.sources.r1.channels = c1
 
 ##### 编写kafka-hdfs配置文件
 
+>hdfs.roolInterval=3600,flume在hdfs创建的文件时间超过3600时，使用新的文件装后续数据。
+>
+>hdfs.roolSize=134217728，文件达到128M时滚动生成新文件
+>
+>hdfs.rollCount =0
+
 ```
 ## 组件
 a1.sources=r1
