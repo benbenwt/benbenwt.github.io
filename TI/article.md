@@ -1879,7 +1879,8 @@ https://github.com/ymcui/Chinese-ELECTRA
 3不同数据量不同模型，测试时间
 3不同结点数量，本模型测试时间
 4不同配置，本模型测试时间
-
+5treereduce和allreduce：https://www.cnblogs.com/jeasonit/p/10533748.html，对比网络传输时间
+6任务的调度，每个节点花费多久时间，谁拖后腿（treereduce可以直接开始reduce那些计算好的节点）。
 ```
 
 

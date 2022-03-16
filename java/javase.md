@@ -1484,6 +1484,24 @@ Connection提供了事务处理的方法，通过调用setAutoCommit(false)可�
 
 # 待整理
 
+### 转义字符串
+
+```
+kafka乱码
+来源此处中文乱码：LOC-['u7231u5c14u5170', 'u7f8eu56fd']
+python的producer加入,json.dump(result,ensure_ascii=false)
+java的consumer用utf解码，并用StringEscapeUtil解码字符串.
+```
+
+```
+\t \n 分别代表缩进与空格，添加\进行转义。
+区分\t \n到底代表\t \n还是代表转义后的缩进与空格，取决于该字符串是否进行转义。在python中，在字符串前添加r前缀，表示此字符串不进行字符串转义。
+```
+
+
+
+### 类型
+
 | 类型       | byte | short | int  | long | float | double | char | boolean |
 | ---------- | ---- | ----- | ---- | ---- | ----- | ------ | ---- | ------- |
 | 长度(字节) | 1    | 2     | 4    | 8    | 4     | 8      | 4    | 8       |

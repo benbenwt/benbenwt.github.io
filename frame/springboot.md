@@ -22,6 +22,17 @@ pageHelper使用后再在sql中使用LIMIT会报错，。
 
 
 
+### 常见错误码
+
+```
+404
+500
+405
+400
+```
+
+
+
 ### jar包外部配置文件
 
 ```
@@ -43,6 +54,22 @@ java  -jar  app.jar  --spring.config.location=application.yml
 >4通过注解开启相关功能
 >
 >5运行主启动类
+
+
+
+### 日志管理
+
+##### 修改application.yml
+
+```
+#修改日志级别为debug
+logging:
+  level:
+    root: debug
+
+```
+
+
 
 
 
@@ -99,6 +126,33 @@ springboot默认会扫描与启动类同级的文件夹。
 ### application配置文件
 
 >配置好启动类后，我们还需要为特定的服务设置配置文件
+
+##### 读取环境变量
+
+```
+配置环境变量后，记得重启IDEA，因为IDEA在启动时才会读取环境变量。可在Run Configuration中查看可用的环境变量。
+#使用如下形式配置环境变量,其中bak_url为默认url，跟在环境变量的冒号后边表示当环境变量不存在时，url的值取bak_url。
+spring:
+
+  datasource:
+    type: org.apache.commons.dbcp2.BasicDataSource
+    username: root
+    password: root
+    bak_url: jdbc:mysql://172.18.65.185:3306/platform?useUnicode=true&characterEncoding=utf-8&useSSL=true&serverTimezone=UTC
+    url: ${platform_mysql_url:${spring.datasource.bak_url}}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    dbcp2:
+      min-idle: 10
+      initial-size: 10
+      max-total: 300
+      max-wait-millis: 10000
+      default-auto-commit: true
+
+
+
+```
+
+
 
 ##### yml文件
 

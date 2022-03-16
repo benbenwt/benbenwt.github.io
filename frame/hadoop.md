@@ -930,69 +930,6 @@ public class SelfPartitioner extends Partitioner<Text, Text> {
 }
 ```
 
-# 常用命令
-
-### 文件管理
-
-```
-#查看损坏缺失的文件
-hdfs fsck /
-#删除损坏缺失的文件
-hadoop fsck -delete
-```
-
-
-
-# 基本操作
-
-### hdfs
-
-```
-
-hdfs dfs -put filename  hdsf_path
-hdfs dfs -mkdir directoryname
-hdfs dfs -rm -r directoryname
-hdfs dfs -ls 
-hadoop fs -ls
-```
-
-
-
-### mapreduce
-
-合并多个文件
-
-```
-CombineTextInputFormat.setMaxInputSplitSize(job,20971520);
-job.setInputFormatClass(CombineTextInputFormat.class);
-```
-
-读取多行，使用自定义或NLine，不能两全。
-
-希望多个文件公用mapper，一个文件一次map取完（NLine可能？）。
-
-key为从文件头处的偏移量
-
-文件数目，文件读写数目，mapper数目，分片尺寸，map数目
-
-默认格式：文件数=文件读写数目=分片数目=mapper数目  map数目=行数
-
-WhomeFileInputFormat：文件数=文件读写数目=分片数目=mapper数目   map数目等于=控制行数
-
-setMaxInputSplitSize:文件数=读写数  mapper数目= 分片数=根据分片尺寸，按照规则所得    map数目=行数
-
-设置最大分片尺寸，控制mapper数量。
-
-使用默认inputformat,mapper执行多少次，map执行次数等于行数
-
-setup，cleanup每个mapper只执行一次。
-
-一个maptask对应一个分片。通过LineInputFormat，NLineInputFormat控制分片数量。
-
-通过重写InputFormat类，实现自己的类。重写RecordReader中的NextKeyValue控制map一次读取的行数。
-
-
-
 # 其他
 
 ### 大数据之源
@@ -1389,6 +1326,235 @@ NameNode内存中需要存储文件的元信息，如存储路径、备份信息
 显而易见的解决这个问题的方法就是合并小文件,可以选择在客户端上传时执行一定的策略先合并,或者是使用Hadoop的CombineFileInputFormat<K,V>实现小文件的合并
 harfile压缩小文件
 ```
+
+# mapreduce用法
+
+### map
+
+##### 配置文件
+
+```
+mapred.tasks
+inputsplitsize
+```
+
+
+
+##### 读写整个文件的RecorderReader
+
+```
+public class WholeRecordReader extends RecordReader<Text, Text> {
+    FileSplit split;
+    Configuration configuration;
+    Text k;
+    Text v;
+    boolean isProgress;
+    @Override
+    public void initialize(InputSplit inputSplit, TaskAttemptContext taskAttemptContext) throws IOException, InterruptedException {
+        this.split=(FileSplit)inputSplit;
+        this.configuration=taskAttemptContext.getConfiguration();
+        k=new Text();
+        v=new Text();
+        isProgress=true;
+    }
+
+    @Override
+    public boolean nextKeyValue() throws IOException, InterruptedException {
+        if(isProgress)
+        {
+            Path path=split.getPath();
+            FileSystem fileSystem=path.getFileSystem(configuration);
+            InputStream inputStream=fileSystem.open(path);
+            BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream));
+            StringBuffer json=new StringBuffer();
+            String tem="";
+            while(true){
+                tem = bufferedReader.readLine();
+                if (tem != null) {
+                    json.append(tem);
+                } else break;
+            }
+            v.set(json.toString());
+            k.set(path.toString());
+            isProgress=false;
+            return true;
+        }
+        return false;
+    }
+
+    @Override
+    public Text getCurrentKey() throws IOException, InterruptedException {
+
+        return k;
+    }
+
+    @Override
+    public Text getCurrentValue() throws IOException, InterruptedException {
+        return v;
+    }
+
+    @Override
+    public float getProgress() throws IOException, InterruptedException {
+        return 0;
+    }
+
+    @Override
+    public void close() throws IOException {
+
+    }
+}
+
+```
+
+### map shuffle
+
+##### 配置文件
+
+```
+```
+
+
+
+### reduce
+
+### join
+
+# hdfs用法
+
+### java api
+
+##### 读写文件
+
+>与java io一样
+
+```
+#创建输出流
+Configuration configuration = new Configuration();
+configuration.set("dfs.replication", "2");
+FileSystem fs = FileSystem.get(new URI("hdfs://hadoop102:8020"), configuration, "atguigu");
+
+#从hdfs读出文件
+fs.copyToLocalFile(false, new Path("/xiyou/huaguoshan/sunwukong.txt"), new Path("d:/sunwukong2.txt"), true);
+
+#从本地磁盘写入hdfs
+fs.copyFromLocalFile(new Path("d:/sunwukong.txt"), new Path("/xiyou/huaguoshan"));
+#或使用IOUtils，直接在输入流和输出流之间拷贝
+
+#更名和移动
+fs.rename(new Path("/xiyou/huaguoshan/sunwukong.txt"), new Path("/xiyou/huaguoshan/meihouwang.txt"));
+
+#删除文件和目录
+fs.delete(new Path("/xiyou"), true);
+	
+#遍历hdfs目录
+RemoteIterator<LocatedFileStatus> listFiles = fs.listFiles(new Path("/"), true);
+
+	while (listFiles.hasNext()) {
+		LocatedFileStatus fileStatus = listFiles.next();
+
+		System.out.println("========" + fileStatus.getPath() + "=========");
+		System.out.println(fileStatus.getPermission());
+		System.out.println(fileStatus.getOwner());
+		System.out.println(fileStatus.getGroup());
+		System.out.println(fileStatus.getLen());
+		System.out.println(fileStatus.getModificationTime());
+		System.out.println(fileStatus.getReplication());
+		System.out.println(fileStatus.getBlockSize());
+		System.out.println(fileStatus.getPath().getName());
+
+		// 获取块信息
+		BlockLocation[] blockLocations = fileStatus.getBlockLocations();
+		System.out.println(Arrays.toString(blockLocations));
+	}
+```
+
+### shell
+
+##### 基本文件操作
+
+>hadoop fs:可以操作任何文件系统，不局限于dfs
+>
+>hadoop dfs,hdfs dfs：局限于dfs文件系统
+
+```
+#写文件
+hadoop fs  -moveFromLocal ./1.txt /temp
+hadoop fs -copyFromLocal weiguo.txt /sanguo
+hadoop fs -put ./wuguo.txt /sanguo
+hadoop fs -appendToFile liubei.txt /sanguo/shuguo.txt
+#读文件
+hadoop fs -copyToLocal /sanguo/shuguo.txt ./
+hadoop fs -get /sanguo/shuguo.txt ./shuguo2.txt
+#管理文件夹、文件夹权限
+hadoop fs /temp
+hadoop fs -cat /1.txt
+hadoop fs -chmod 777 ./1.txt
+hadoop fs -cp ./1.txt ./temp
+hadoop fs -mv ./1.txt ./temp
+hadoop fs -tail /jinguo/shuguo.txt
+hadoop fs -rm -r /sanguo
+#统计文件夹大小
+hadoop fs -du  -h /jinguo
+hadoop fs -du -s -h /jinguo
+#设置副本数
+hadoop fs -setrep 10 /jinguo/shuguo.txt
+```
+
+### 常用命令
+
+##### 文件管理
+
+```
+#查看损坏缺失的文件
+hdfs fsck /
+#删除损坏缺失的文件
+hadoop fsck -delete
+```
+
+##### hdfs
+
+```
+hdfs dfs -put filename  hdsf_path
+hdfs dfs -mkdir directoryname
+hdfs dfs -rm -r directoryname
+hdfs dfs -ls 
+hadoop fs -ls
+```
+
+
+
+##### mapreduce
+
+合并多个文件
+
+```
+CombineTextInputFormat.setMaxInputSplitSize(job,20971520);
+job.setInputFormatClass(CombineTextInputFormat.class);
+```
+
+读取多行，使用自定义或NLine，不能两全。
+
+希望多个文件公用mapper，一个文件一次map取完（NLine可能？）。
+
+key为从文件头处的偏移量
+
+文件数目，文件读写数目，mapper数目，分片尺寸，map数目
+
+默认格式：文件数=文件读写数目=分片数目=mapper数目  map数目=行数
+
+WhomeFileInputFormat：文件数=文件读写数目=分片数目=mapper数目   map数目等于=控制行数
+
+setMaxInputSplitSize:文件数=读写数  mapper数目= 分片数=根据分片尺寸，按照规则所得    map数目=行数
+
+设置最大分片尺寸，控制mapper数量。
+
+使用默认inputformat,mapper执行多少次，map执行次数等于行数
+
+setup，cleanup每个mapper只执行一次。
+
+一个maptask对应一个分片。通过LineInputFormat，NLineInputFormat控制分片数量。
+
+通过重写InputFormat类，实现自己的类。重写RecordReader中的NextKeyValue控制map一次读取的行数。
 
 # problem
 

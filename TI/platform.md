@@ -1,4 +1,15 @@
-工作的cve站点
+### mineMalware
+
+```
+获取种子
+下载压缩包   下载完成的压缩包表
+解压样本     解压完成的样本表
+提交         提交完成的样本表
+```
+
+
+
+### 工作的cve站点
 
 ```
 redqueen,绿盟，奇安信，360
@@ -582,7 +593,7 @@ PUT policy_document/_settings
 
 ### qibttorrent
 
->可用的其他开源BT下载器
+>可用的其他开源BT下载器:
 >
 >Deluge2.03
 >libTorrent0.13.6
@@ -635,7 +646,7 @@ vim test.py
 
 ```
 Python wrapper for qBittorrent Web API (for versions above 4.1, for version below and above v3.1.x please use 0.3.1 version).
-ubuntu直接安装使用4.1.x,0.3.1
+ubuntu直接安装使用3.3.16,0.3.1
 ```
 
 ###### 确定兼容的版本

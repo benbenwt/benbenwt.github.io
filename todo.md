@@ -8,6 +8,10 @@
 11 kettle场景
 12 superset对应ads
 13 文本相关
+15 前端搜索框，后端环境变量,前端代码变动sampleList、cve页面的分页buildList空值。后端cve生成stix时，用cve.title填充stix的description，es_provider添加cve和ip的搜索，解决空值和统计错误问题。
+vt爬虫
+16 每个机器的启动脚本，及总体的ssh启动脚本。
+
 
 202202
 19 检查vsphere平台  ok

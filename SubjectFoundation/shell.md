@@ -51,6 +51,24 @@ zookeeper
 
 # 其他软件的命令
 
+### curl
+
+##### 请求tornado的例子
+
+>请求体-d使用&和等号连接，POST必须大写
+
+```
+curl   -X POST -d 'type=ip&content=192.168.122.178' "http://1:8001/search"
+```
+
+##### windows下必须注意参数顺序
+
+```
+curl   -X POST  "http://172.18.65.190:8001/search" -H 'Content-Type: application/json' -d '{"type"="ip","content":"192.168.122.178"}'
+```
+
+
+
 ### VIM
 
 ##### 查找
