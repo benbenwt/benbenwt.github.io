@@ -10,8 +10,6 @@ kafka_2.12-2.1.1
 flume 1.9.0
 ```
 
-
-
 # 端口
 
 ```
@@ -22,7 +20,7 @@ webui 9870
 # CONFIG
 
 ```
-mapred.job.maps：一个job可以分配到map数量。这里的map数量和InputSplit的map数量不同，InputSplit控制map任务的数量，控制输入数据的读取来控制map任务数量。而此处的maps是指有多少个核心可用于map任务槽，用来同时执行map任务。
+mapred.job.maps：一个job可以分配到map数量。这里的map数量和InputSplit控制能的map数量相同，用户不同直接设置此参数，由InputSplit决定，可通过设置mapred.min.split.sizej。InputSplit控制mapTask任务的数量，RecordReader控制输入数据的读取来控制map函数调用次数。而此处的maps是指有多少个核心可用于map任务槽，用来同时执行map任务。
 ```
 
 # hadoop服务器搭建
@@ -1101,6 +1099,24 @@ Secondary NameNode用于解决fsimage过旧的问题，它定时拉取、合并N
 此外，该调度器是一个可插拔的组件，用户可根据自己的需求设计新的调度器，YARN 提供了多种直接可用的调度器，比如 Fair Scheduler 和 Capacity Schedule 等。
 ```
 
+###### FIFO 
+
+```
+队列式，先来后到，阻塞严重。
+```
+
+###### Fair Scheduler
+
+```
+谁来了都要执行，从已经在用的资源中那一部分给新来的使用。需要停用之前的应用，迁移应用和资源，可能花费较多的时间。
+```
+
+###### Capacity Sechedule
+
+```
+资源按照不同使用capacity的要求进行预留，大容量的不可以使用小容量的，小的来了之后直接使用预留的。容易造成资源浪费。
+```
+
 ##### 应用程序管理器
 
 >应用程序管理器是任务调度的核心，与mr执行过程密切相关。包括jobtracker、tasktracker。
@@ -1120,9 +1136,9 @@ NM是每个结点上运行的资源和任务管理器，负责向RM汇报本节�
 ##### ApplicationMaster（AM）
 
 ```
-每个提交的作业都有一个AM，主要功能有：
+每个提交的作业都有一个AM，在获得第一个container后，在对应节点创建启动AM，主要功能有：
 1，与RM协商资源，获得container
-2，将得到的任务分配给内部的任务
+2，将得到的任务分配给内部的任务，切分后，分配个不同节点。
 3，与NM通信处理启动/停止请求
 4，监控任务运行状态，失败时申请资源并重启。
 ```
@@ -1133,7 +1149,17 @@ NM是每个结点上运行的资源和任务管理器，负责向RM汇报本节�
 是资源的抽象，包括CPU、内存、磁盘、网络等，当 AM 向 RM 申请资源时，RM 为 AM 返回的资源便是用 Container 表示的。 YARN 会为每个任务分配一个 Container 且该任务只能使用该 Container 中描述的资源。
 ```
 
+##### Jobtracker
 
+```
+每个提交的整个任务都有一个jobtracker，其也管理tasktracker
+```
+
+##### TaskTracker
+
+```
+每个maptask任务对应一个tasktracker
+```
 
 
 
@@ -1327,20 +1353,183 @@ NameNode内存中需要存储文件的元信息，如存储路径、备份信息
 harfile压缩小文件
 ```
 
+# yarn用法
+
+### application
+
+```
+#查看application
+yarn application -list
+yarn application -list -appStates FINISHED
+#查看尝试运行的任务，及状态
+yarn applicationattempt -list application_1612577921195_0001
+yarn applicationattempt -status appattempt_1612577921195_0001_000001
+#杀死
+yarn application -kill application_164661545125154
+#查看日志
+yarn logs -applicationId application_1612577921195_0001
+```
+
+### container
+
+```
+yarn container -list appattempt_1612577921195_0001_000001
+yarn container -status container_1612577921195_0001_01_000001
+```
+
+### node
+
+```
+yarn node -list -all
+#查看队列
+ yarn queue -status default
+```
+
+### scheduler
+
+##### 添加队列
+
+```
+#添加多队列后执行此命令刷新
+yarn rmadmin -refreshQueues
+#指定队列提交
+hadoop jar share/hadoop/mapreduce/hadoop-mapreduce-examples-3.1.3.jar wordcount -D mapreduce.job.queuename=hive /input /output
+#java api设置
+ conf.set("mapreduce.job.queuename","hive");
+```
+
+##### 配置优先级
+
+```
+#开启
+<property>
+    <name>yarn.cluster.max-application-priority</name>
+    <value>5</value>
+</property>
+#分发配置文件后重启yarn
+#指定优先级
+hadoop jar /opt/module/hadoop-3.1.3/share/hadoop/mapreduce/hadoop-mapreduce-examples-3.1.3.jar pi  -D mapreduce.job.priority=5 5 2000000
+#修改已提交的任务优先级
+yarn application -appID application_1611133087930_0009 -updatePriority 5
+```
+
+
+
+### 配置文件
+
+```
+#增加队列，指定多队列
+<property>
+    <name>yarn.scheduler.capacity.root.queues</name>
+    <value>default,hive</value>
+    <description>
+      The queues at the this level (root is the root queue).
+    </description>
+</property>
+```
+
+```
+<!-- 降低default队列资源额定容量为40%，默认100% -->
+<property>
+    <name>yarn.scheduler.capacity.root.default.capacity</name>
+    <value>40</value>
+</property>
+
+<!-- 降低default队列资源最大容量为60%，默认100% -->
+<property>
+    <name>yarn.scheduler.capacity.root.default.maximum-capacity</name>
+    <value>60</value>
+</property>
+```
+
+```
+#为hive 队列添加必须属性
+<property>
+    <name>yarn.scheduler.capacity.root.hive.capacity</name>
+    <value>60</value>
+</property>
+
+<!-- 用户最多可以使用队列多少资源，1表示 -->
+<property>
+    <name>yarn.scheduler.capacity.root.hive.user-limit-factor</name>
+    <value>1</value>
+</property>
+
+<!-- 指定hive队列的资源最大容量 -->
+<property>
+    <name>yarn.scheduler.capacity.root.hive.maximum-capacity</name>
+    <value>80</value>
+</property>
+
+<!-- 启动hive队列 -->
+<property>
+    <name>yarn.scheduler.capacity.root.hive.state</name>
+    <value>RUNNING</value>
+</property>
+```
+
+```
+<!-- 哪些用户有权向队列提交作业 -->
+<property>
+    <name>yarn.scheduler.capacity.root.hive.acl_submit_applications</name>
+    <value>*</value>
+</property>
+
+<!-- 哪些用户有权操作队列，管理员权限（查看/杀死） -->
+<property>
+    <name>yarn.scheduler.capacity.root.hive.acl_administer_queue</name>
+    <value>*</value>
+</property>
+
+<!-- 哪些用户有权配置提交任务优先级 -->
+<property>
+    <name>yarn.scheduler.capacity.root.hive.acl_application_max_priority</name>
+    <value>*</value>
+</property>
+```
+
+```
+<!-- 任务的超时时间设置：yarn application -appId appId -updateLifetime Timeout
+参考资料：https://blog.cloudera.com/enforcing-application-lifetime-slas-yarn/ -->
+
+<!-- 如果application指定了超时时间，则提交到该队列的application能够指定的最大超时时间不能超过该值。 
+-->
+<property>
+    <name>yarn.scheduler.capacity.root.hive.maximum-application-lifetime</name>
+    <value>-1</value>
+</property>
+
+<!-- 如果application没指定超时时间，则用default-application-lifetime作为默认值 -->
+<property>
+    <name>yarn.scheduler.capacity.root.hive.default-application-lifetime</name>
+    <value>-1</value>
+</property>
+```
+
+
+
 # mapreduce用法
 
 ### map
 
+>#时间=计算时间+网络时间+磁盘io时间，此处讨论计算时间，其包括Maptask初始化、销毁时间，和真实的计算时间，目的就是缩小两者之和，maptask越多，初始化时间越多，计算时间并行度越高，真实计算时间越少。
+>计算出整个集群的插槽数，占用的越多，并行度越高，但是要留出部分资源给系统和集群自身使用。
+>MapTask数量在合理范围内越多，并行度越高。但是，对于每个Maptask，其执行时间不能过短，如果是极小的文件，只执行几秒，初始化和销毁却需要更多时间，那么更多的MapTask反而降低速度。那如果MapTask数量超过slot呢，这就是我之前ti的json文件的情况，每个文件都会初始化一个maptask，前边执行完了会销毁掉maptask，再为后边的json文件创建新的maptask，而不是一直利用同一个slot上的maptask调用map函数。
+
 ##### 配置文件
 
 ```
-mapred.tasks
-inputsplitsize
+mapred.map.tasks  不可以直接设置此参数，通过split size决定
+mapred.min.split.size 决定每个Input Split的最小值，可以修改这个参数，并改变map task的数量。
 ```
 
+##### InputFormat
 
+>FileInputFormat,TextInputFormat,CombineTextInputFormat
 
-##### 读写整个文件的RecorderReader
+##### RecorderReader
+
+###### 读写整个文件的RecorderReader
 
 ```
 public class WholeRecordReader extends RecordReader<Text, Text> {
@@ -1406,16 +1595,83 @@ public class WholeRecordReader extends RecordReader<Text, Text> {
 
 ```
 
+##### ti json文件
+
+```
+对于100个小文件，三台16核的机器，48个slot，maptask过多的情况就是一个文件一个maptask，过少就是1个处理所有，中等就是5、6等，每台处理20个文件。无论怎么设置，maptask的初始化时间占比都很大，因为100个文件单机本来就只需要1s来处理。本质就是maptask初始化时间、maptask执行时间无法适配，对于一个job，其总时间是1s，无论如何调度，都是让并行时间比单机长。所以干脆就一个maptask，不超过128M，直接一个maptask处理。
+```
+
+##### map join
+
+```
+map join用于处理小表，在hive中需要将小表放在左侧，map端会缓存小表，在map阶段完成连接，可reduce join避免数据倾斜，让数据在reduce端分布不均匀。map join就是在map端读取对应列，直接拼接好，用制表符输出到文件。而reduce join是将所需的信息，按照连接键作为key，并将value扩充为一样结构的，没有的字段写空字符串或空，然后统一交给reduce处理。
+```
+
 ### map shuffle
+
+>partion sort,key sort,combiner,spill
+
+##### partion  sort
+
+>默认partin sort是用key对分区数取余,就映射到了不同分区.
+
+###### 自定义分区
+
+```
+继承Partion<Text,FlowBean>类，改写getPartion即可，其默认为(key.hashCode() & Integer.MAX_VALUE)%numReduceTasks,在job中setPartion,并设置正确分区数目。
+```
+
+##### sort
+
+###### 自定义bean大小比较
+
+```
+修改自定义类的compareTo方法，可规定大小定义，返回1，0控制大小。这个bean设置为k，进一步影响partion sort和key sort。
+```
+
+##### combiner
+
+```
+类似于reduce，他是在map端的局部reduce。
+```
+
+##### spill
+
+```
+当环形缓冲区满后，执行spill操作，通过配置文件控制百分比。
+```
 
 ##### 配置文件
 
 ```
+#缓冲区设置，因为是磁盘io，并且和sort密切相关，设置环形缓冲区大小和比例。
+io.sort.mb，默认100M，Kvbuffer的容量。
+io.sort.spill.percent，默认是0.8，控制spill百分比。
+```
+
+### reduce
+
+>mapred.reduce.tasksg个数
+
+##### output
+
+###### 自定义outputformat
+
+```
+继承outputRecordReader，重写构造函数和write函数，创建outputformat。
 ```
 
 
 
-### reduce
+##### 配置文件
+
+```
+mapred.reduce.tasks 决定reduce并行度，默认为1。
+reduce task 数量根据（nodes*mapred.tasktracker.reduce.tasks.maximum）决定, mapred.tasktracker.reduce.tasks.maximum的数量一般为各节点cpu core数量，即同时计算的slot数量。reduce越多并行度越高，分区越多，输出文件个数越多。
+
+```
+
+
 
 ### join
 

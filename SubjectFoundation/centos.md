@@ -184,13 +184,32 @@ systemctl set-default graphical.target
 
 ### 网络
 
+##### 查看网卡
+
+```
+netstat -i
+```
+
 ##### 查看端口占用
 
 ```
 lsof -i:8080
 ```
 
+###### netstat -lnpt
 
+>*PS:centos7默认没有 netstat 命令，需要安装 net-tools 工具，yum install -y net-tools*
+
+```
+#检查端口被哪个进程占用,其中l代表展示listen的端口，p代表展示对应的process，t代表tcp（使用u就只查看udp），n代表not resolve names，不懂什么意思。
+netstat -lnpt |grep 5672
+#查看进程的详细信息
+ps 6832
+#中止进程
+kill -9 6832
+```
+
+##### 配置网络
 
 ##### ifconfig管理网卡和网络
 
@@ -309,37 +328,7 @@ firewall-cmd --permanent --remove-port=8080/tcp
 firewall-cmd --list-all 
 ```
 
-##### netstat -lnpt
 
-
-
-*PS:centos7默认没有 netstat 命令，需要安装 net-tools 工具，yum install -y net-tools*
-
- 
-
- 
-
-6、检查端口被哪个进程占用
-
-**netstat -lnpt |grep 5672**
-
-![img](https://img2018.cnblogs.com/blog/1336432/201903/1336432-20190302104128381-1210567174.png)
-
- 
-
-7、查看进程的详细信息
-
-**ps 6832**
-
-![img](https://img2018.cnblogs.com/blog/1336432/201903/1336432-20190302104342651-779103690.png)
-
- 
-
-8、中止进程
-
-**kill -9 6832**
-
-##### 配置网络
 
 
 
@@ -367,7 +356,29 @@ rsync     -rvl  /tmp   root@hbae:/tmp
 
 复制到所有节点相同目录下。
 
+### 服务进程
+
+```
+#
+ps -aux|grep "hadoop"
+#e表示所有进程，f表示完整信息
+ps -ef|grep "hadoop"
+```
+
+
+
 ### 文件
+
+##### 查看磁盘和文件夹
+
+```
+#disk free，磁盘
+df -h
+#disk usage，文件目录
+du -h
+```
+
+
 
 ```
 1、 统计当前文件夹下文件的个数
@@ -428,6 +439,29 @@ read_dir $1
 hostnamectl查看信息
 /etc/hostname修改主机名
 systemctl restart systemd-hostnamed重启服务或重启电脑
+```
+
+##### tar解压缩
+
+```
+tar
+-c: 建立压缩档案,在解压的包后面使用，-c /解压的文件名
+-x：解压
+-t：查看内容
+-r：向压缩归档文件末尾追加文件
+-u：更新原压缩包中的文件
+
+这五个是独立的命令，压缩解压都要用到其中一个，可以和别的命令连用但只能用其中一个。下面的参数是根据需要在压缩或解压档案时可选的。
+
+-z：有gzip属性的
+-j：有bz2属性的
+-Z：有compress属性的
+-v：显示所有过程
+-O：将文件解开到标准输出
+
+下面的参数-f是必须的
+
+-f: 使用档案名字，切记，这个参数是最后一个参数，后面只能接档案名。
 ```
 
 
