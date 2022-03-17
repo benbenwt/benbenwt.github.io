@@ -1882,6 +1882,29 @@ https://github.com/ymcui/Chinese-ELECTRA
 
 >deep forest改为多标签文本，参考那篇北理工，1修改最后一层，提出深度森林多标签模型2并行，提升效率。参考南京大学那篇。 对于TI的数据集可以剔除部分标签，比如样本较少的类别，等等，让效果更好、更有说服力。
 
+##### deepforest
+
+>详细解读：https://www.jianshu.com/p/886fe6dd277f
+>
+>详解对比：https://blog.csdn.net/weixin_43595430/article/details/105369697
+>
+>特点：使用较少的超参数，模型的复杂程度可根据情况自动调整，默认参数效果往往也不错。比较适合并行，和cpu计算。
+>
+>DNN的缺点，调参难度大，超参数多，需要较大数据集，难以解释黑盒，需要设计网络结构，GBDT效果更好。
+>
+>实际效果占用内存大，效果比深度学习差。多粒度扫描内存要求高，需要48G，级联森林需要20G。参数量很大，级森林提升小。在小数据量上比深度学习鲁棒性更好。
+
+
+
+###### 网址资源
+
+```
+sklearn 随机森林:https://blog.csdn.net/qq_48314528/article/details/119718702
+spark随机森林：https://blog.csdn.net/minemine999/article/details/80698526
+```
+
+
+
 ##### 实验部分
 
 ```

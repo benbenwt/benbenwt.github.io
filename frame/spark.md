@@ -25,6 +25,12 @@ sc.setLogLevel("INFO")
 pip安装pyspark的依赖，测试是否安装成功。
 ```
 
+### 变量广播
+
+>哪些变量需要手动广播？哪些会自动传递过去，在任意节点都可以使用？
+>
+>自定义函数，变量，数据
+
 ### 提交
 
 >关于提交参数:
@@ -373,7 +379,7 @@ sprk3.0.0,scala-2.12
             <version>3.2.2</version>
         </dependency>
 </dependencies>
-#在idea的project structure的Global Libraries中导入scala-sdk-2.12.11
+#在idea的project structure的Global Libraries中导入scala-sdk-2.12.11，并在setting->plugins中搜索scala，按装此插件
 ```
 
 ##### RDD
