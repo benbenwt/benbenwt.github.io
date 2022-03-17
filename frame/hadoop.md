@@ -1679,6 +1679,25 @@ reduce task 数量根据（nodes*mapred.tasktracker.reduce.tasks.maximum）决�
 
 ### java api
 
+##### 开发依赖pom
+
+>hadoop-common,hadoop-client
+
+```
+<dependency>
+            <groupId>org.apache.hadoop</groupId>
+            <artifactId>hadoop-common</artifactId>
+            <version>3.1.4</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.hadoop</groupId>
+            <artifactId>hadoop-client</artifactId>
+            <version>3.1.4</version>
+        </dependency>
+```
+
+
+
 ##### 读写文件
 
 >与java io一样

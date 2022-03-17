@@ -18,6 +18,13 @@ sc.setLogLevel("INFO")
 2spark和hadoop都以hdfs//或spark//接口形式接受请求和控制作业。这种情况hadoop或spark提供了执行环境，结果写出到本地。python负责编写逻辑，提交到服务端spark后，spark调用python的解释器运行对应的python程序。
 ```
 
+### 配置使用环境
+
+```
+下载spark压缩包解压到本地，配置spark的环境变量。
+pip安装pyspark的依赖，测试是否安装成功。
+```
+
 ### 提交
 
 >关于提交参数:
@@ -55,8 +62,6 @@ pyspark --packages com.johnsnowlabs.nlp:spark-nlp_2.11:2.5.5
 此操作会去repo1.maven.org下载对应jar包和依赖。
 ```
 
-
-
 ### spark-submit .sh
 
 ```
@@ -74,7 +79,7 @@ spark-submit
 SparkSession.builder.getOrCreate().sparkContext
 ```
 
-从list创建rdd
+### 从list创建rdd
 
 ```
 pairs = [(x, y) for x, y in zip(features, labels)]
@@ -130,8 +135,6 @@ foreach从rdd的单个元素角度编写处理函数，每个元素调用一次�
 broadcast 介绍:https://blog.csdn.net/weixin_42155006/article/details/118517464
 发送一个变量到每个节点， parameters = rdd.context.broadcast(parameters)，适用于变量大的情况。如果不使用,直接使用对应变量，对于同一个节点也不能复用。
 ```
-
-
 
 ##### map
 
@@ -297,9 +300,9 @@ export YARN_CONF_DIR=..../
 vim spark-defaults.conf
 spark.yarn.historyServer.address=linux1:18080
 spark.history.ui.port=18080
+
+sbin/start-history-server.sh
 ```
-
-
 
 ### hive配置spark引擎
 
@@ -322,6 +325,91 @@ sprk3.0.0,scala-2.12
 
 # 理论知识
 
+### spark运行架构
+
+>spark框架采用标准的master-slave的结构，Driver即master，Executor即slave。
+>
+>其核心组件包括Driver、Executor
+
+##### Driver
+
+```
+1将用户程序转化为job
+2在Executor之间调度任务
+3跟踪Executor的执行情况
+4通过UI展示查询运行情况
+```
+
+
+
+##### Executor
+
+```
+是集群工作节点中的一个JVM进程，负责在Spark作业中运行具体任务，任务彼此之间相互独立。Executor负责执行任务并返回给驱动进程，通过自身的Block Manager为RDD提供内存式存储，RDD是直接缓存在Executor进程内的。
+```
+
+##### Master&Worker
+
+>spark自带的资源管理器，类似于rm和nm。
+
+### Spark核心编程
+
+##### 开发依赖pom
+
+>scala的编译依赖，spark_core对应的scala版本。
+
+```
+ <dependencies>
+        <!-- https://mvnrepository.com/artifact/org.apache.spark/spark-core -->
+        <dependency>
+            <groupId>org.apache.spark</groupId>
+            <artifactId>spark-core_2.12</artifactId>
+            <version>3.1.2</version>
+        </dependency>
+        <!-- https://mvnrepository.com/artifact/net.alchim31.maven/scala-maven-plugin -->
+        <dependency>
+            <groupId>net.alchim31.maven</groupId>
+            <artifactId>scala-maven-plugin</artifactId>
+            <version>3.2.2</version>
+        </dependency>
+</dependencies>
+#在idea的project structure的Global Libraries中导入scala-sdk-2.12.11
+```
+
+##### RDD
+
+>Resilient distributed Dataset,弹性分布式数据集，他代表一个弹性的、不可变的、可分区的、里边的元素可并行计算的集合。 他是计算逻辑的封装，当需要新的操作时，只能再创建新的RDD，不可修改。
+
+###### getPartion函数
+
+```
+分区列表，用于执行任务是并行计算
+```
+
+
+
+###### compute函数
+
+```
+使用分区函数对每一个分区进行计算
+```
+
+###### getDependencies
+
+```
+当需要将多个计算模型组合时，就需要将多个RDD建立依赖关系
+```
+
+###### partioner
+
+```
+为KV类型数据时，通过设定分区器自定义数据的分区
+```
+
+
+
+
+
 ### 执行流程
 
 >https://blog.csdn.net/u010745505/article/details/81261019
@@ -335,14 +423,54 @@ sprk3.0.0,scala-2.12
 5、调度器给Task分配执行Executor，ExecutorBackend负责执行Task。
 ```
 
-
-
 ### spark运行原理，从提交一个jar到最后返回结果，整个过程
 
 ```
+Driver项rm申请资源，rm分配资源后在合适的机器上启动AM，AM再申请资源启动Executor，Excutor注册到Driver，Driver开始执行，划分任务并分发。
 ```
 
 # spark用法
+
+### spark java api
+
+##### RDD创建
+
+>makeRdd底层调用了parallize
+
+```
+#从集合创建
+val sparkConf=new SparkConf().setMaster("local[4]").setAppName("RDDLearn")
+val sparkContext=new SparkContext(sparkConf)
+val rdd1=sparkContext.parallelize(List(1,2,3,4))
+val rdd2=sparkContext.makeRDD(List(1,2,3,4))
+rdd1.collect().foreach(println)
+rdd2.collect().foreach(println)
+sparkContext.stop()
+```
+
+```
+#从文件创建
+val rdd:RDD[String]=sparkContext.textFile("input")
+```
+
+##### RDD并行度与分区
+
+```
+#设定partion数量为4
+spark.text.makeRDD(List(1,2,3,4),4)
+```
+
+```
+#分区源码
+def positions(length: Long, numSlices: Int): Iterator[(Int, Int)] = {
+ (0 until numSlices).iterator.map { i =>
+ val start = ((i * length) / numSlices).toInt
+ val end = (((i + 1) * length) / numSlices).toInt
+ (start, end)
+ }
+```
+
+##### RDD转换算子
 
 ### spark sql
 
@@ -376,4 +504,3 @@ application-jar ，打包好的jar，此url全局可见，比如hdfs。
 application-arguments，jar包该类main方法所需要的参数
 ```
 
-### spark java api

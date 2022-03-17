@@ -360,6 +360,8 @@ py代码整理：web后端，脚本（lisa相关脚本），其他模块（threa
 
 ### 数量关系
 
+>右边统计的twonumber只能比左边四个从业务数据库查的数字大，而不能比他小。
+
 ```
 四个模块的数量：malware模块,cve模块,pcap模块,apt模块 ,模块必须和list对应
 ok --->   malware模块=<malware 数量(malware组件数量（即动态分析，其他类别）+apt模块的malware（木马+....+蠕虫）) 
