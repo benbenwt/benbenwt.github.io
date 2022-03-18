@@ -978,5 +978,18 @@ rm -rf data
 
 _shards_percent_as_number" : 100.0
 
+# elasticsearch深度分页
 
+>elasticsearch可以使用form，size进行分页操作，但是elasticsearch默认情况下，不允许使用from，size对10000条以后的数据进行分页。因为elasticsearch这种情况下，elasticsearch的查询效率很慢。
 
+### 解决办法
+
+##### scroll函数
+
+### 分页原理
+
+##### 主键索引
+
+### mysql分页和elasticsearch分页
+
+B+树索引
