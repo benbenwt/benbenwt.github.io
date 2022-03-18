@@ -437,7 +437,11 @@ Driver项rm申请资源，rm分配资源后在合适的机器上启动AM，AM再
 
 # spark用法
 
-### spark java api
+### spark scala api
+
+##### mapartion的使用
+
+>https://blog.csdn.net/dujunjiehaha/article/details/81625418
 
 ##### RDD创建
 

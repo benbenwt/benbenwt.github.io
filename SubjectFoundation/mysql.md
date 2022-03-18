@@ -25,7 +25,32 @@ Id_P int FOREIGN KEY REFERENCES Persons(Id_P)
 
 ### DCL
 
+
+
 ### platform相关sql
+
+##### 时区问题
+
+>utc世界协调时间，比北京时间
+>
+>CST的含义比较多，有很多歧义，可代表中国标准时间，美国时间等。
+
+```
+show variables like "%time_zone"
+set global time_zone = '+8:00';
+#永久修改
+vim /etc/my.conf
+```
+
+```
+#查看数据库和系统时间
+select now();
+select sysdate();
+```
+
+
+
+
 
 ##### 从lisadb删除id_重复的
 

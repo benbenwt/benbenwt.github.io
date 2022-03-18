@@ -15,7 +15,7 @@ vt爬虫
 17 spark用法及理论，spark-core pdf
 17 spark用法及理论，spark-core pdf
 17 hive sql项目用法
-
+18 lisa文件乱码，apt的批量读取
 
 202202
 19 检查vsphere平台  ok

@@ -125,6 +125,8 @@ http://mirror.centos.org/centos/7/os/x86_64/Packages/
 
 ### 常用命令
 
+##### 时间设定
+
 ```
 #系统时间
 date 
@@ -149,6 +151,22 @@ sudo date -s hh:mm:ss //修改时间
 
 sudo hwclock --systohc //非常重要，如果没有这一步的话，后面时间还是不准
 
+```
+
+### 修改时区
+
+>###### https://www.jianshu.com/p/b67f3f3c6926
+
+```
+timedatectl list-timezones |grep Shanghai    #查找中国时区的完整名称
+timedatectl set-timezone Asia/Shanghai    #其他时区以此类推
+timedatectl status
+#设定时间
+timedatectl set-time 15:58:30
+#或者直接手动创建软链接
+ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
+
+#暴力方法，直接复制文件到localtime
 ```
 
 

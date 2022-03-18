@@ -896,6 +896,60 @@ POST /myindex/user/_search
 
 java api
 
+# 主键查询大量数据
+
+>默认的window_size=1000，不能超过此数值。否则应使用scroll。es不太适合分页操作，本质是不适合大量主键查询、和深页查询（基于主键查询，再排序）。因为其构建的是基于列的分片存储，对于主键没有像mysql一样的索引，只能靠排序来进行分页。其主要面临大量查询时的内存问题，以及分页时间问题。
+>
+>es的几个限制条件：
+>
+>1.单次不能查询超过10000条
+>
+>2.from、size不可以查询超过10000的深页
+>
+>3如果我想获取全部数据，
+>
+>4如果我想获得满足特定条件的全部数据，其大于10000条。
+>
+>
+
+##### 关于es内存
+
+>https://zhuanlan.zhihu.com/p/99718374
+
+```
+只将需要搜索的字段放入es，这样可以减少数据量，如果你的数据量比filesystem cache还小，那么相当于你的所有数据都在内存而不是磁盘，这种情况下速度最快，磁盘中放的数据越多，效果越差。
+```
+
+
+
+python scroll
+
+```
+https://kb.objectrocket.com/elasticsearch/elasticsearch-and-scroll-in-python-953#:~:text=There%20are%20three%20different%20ways%20to%20scroll%20Elasticsearch,scroll%20%28%29%20method.%20Scrolling%20Elasticsearch%20documents%20in%20Python
+```
+
+# 理论知识
+
+### 基本架构
+
+##### shard
+
+```
+相当于master
+```
+
+##### coordinate ndoe
+
+```
+相当于
+```
+
+### 性能
+
+##### 全量读写
+
+##### 深度分页
+
 # 其他
 
 index/type/document,**field**

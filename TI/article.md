@@ -1888,6 +1888,10 @@ https://github.com/ymcui/Chinese-ELECTRA
 >
 >详解对比：https://blog.csdn.net/weixin_43595430/article/details/105369697
 >
+>源码：https://blog.csdn.net/andy_shenzl/article/details/106904699
+>
+>源码：https://zhuanlan.zhihu.com/p/26591548
+>
 >特点：使用较少的超参数，模型的复杂程度可根据情况自动调整，默认参数效果往往也不错。比较适合并行，和cpu计算。
 >
 >DNN的缺点，调参难度大，超参数多，需要较大数据集，难以解释黑盒，需要设计网络结构，GBDT效果更好。

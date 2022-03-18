@@ -1,3 +1,21 @@
+### js注入
+
+>return str.replace(/[<>"&\/`']/g, '');
+>
+>使用replace替换掉关键字符，或使用encode编码改变符号，组织js注入。
+
+```
+https://blog.csdn.net/BigBoy_Coder/article/details/105924021
+```
+
+如何发送请求的呢，奇怪，没用ajax、$.get等方式。
+
+```
+使用window.navigate进行跳转的，它建了一个iframe独立的内嵌页面，然后刷新这个页面，和服务器上的某个接口通信。
+```
+
+
+
 ### function写法的不同
 
 funtion  function_name(param){} ,不会自动执行，通过按键或函数调用。

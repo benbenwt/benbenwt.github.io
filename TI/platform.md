@@ -9,6 +9,21 @@
 下载压缩包   下载完成的压缩包表
 解压样本     解压完成的样本表
 提交         提交完成的样本表
+https://www.cnblogs.com/bonelee/p/9154644.html
+```
+
+
+
+### 工作的恶意软件站点
+
+```
+https://bazaar.abuse.ch/browse/
+http://github
+https://www.virustotal.com/gui/home/search
+https://www.malware-traffic-analysis.net/2021/05/24/index2.html
+微步云沙箱，可下载样本：https://s.threatbook.cn/
+https://app.any.run/
+总结：https://bbs.pediy.com/thread-265627.htm
 ```
 
 
@@ -539,17 +554,17 @@ lisa：其他java的后端
 
 
 ```
-一个前端，两种后端，三个数据库，爬虫。
+一个前端，两种后端，三个数据库，3个爬虫。
 ```
 
 
 
 | hostname | ip   | 服务                                                         |
 | -------- | ---- | ------------------------------------------------------------ |
-| hbase    | 187  | esto_mysql                                                   |
-| hbase1   | 186  | nginx,pcapAnalyze,batchwork，python后端及nginx前端           |
-| hbase2   | 185  | elasticsearch,mysql,lisa,threat-broadcast,fournumber,数据库，沙箱，爬虫 |
-| lisa     | 184  | es_provider,lisa_provider,statistic_provider，java后端       |
+| hbase    | 187  |                                                              |
+| hbase1   | 186  | nginx服务,pcapAnalyze后端（包括cve和pcap后端） [nginx前端、python后端] |
+| hbase2   | 185  | elasticsearch,mysql,lisa,threat-broadcast（cve爬虫）-[两个数据库、cve爬虫、沙箱动态分析] |
+| lisa     | 184  | es_provider,lisa_provider,statistic_provider，java后端,esto_mysql  -[es搜索后端、沙箱后端、图形统计后端] |
 
 ```
 部署时需要修改的参数
