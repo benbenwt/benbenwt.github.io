@@ -819,6 +819,20 @@ updated:13114  total:13156  myindex:13156
 GET /cti/_search?q=_id=66d90772d57e5e72172186674fb79347
 ```
 
+```
+POST /cti/_search
+{
+    "size": "20",
+	"query":{
+	  	"match":{
+	  		"objects.type": "indicator"
+	  	}
+	}
+}
+```
+
+
+
 ###### 范围搜索
 
 ```
@@ -832,8 +846,8 @@ POST /myindex/user/_search
 						"gt": 30
 							} 
 						}
-	  					}
-	  		“must":{
+	  					},
+	  		"must":{
 	  			"match":{
 	  				"sex":"man"
 	  			}
@@ -846,10 +860,11 @@ POST /myindex/user/_search
 DSL搜索
 
 ```
+#match是查询的一种，还有match_case等
 POST /myindex/user/_search
 {
 	"query":{
-	  	"match":{#match是查询的一种，还有match_case等
+	  	"match":{
 	  		"age": 20
 	  	}
 	}
@@ -879,13 +894,14 @@ POST /myindex/user/_search
 两组bool-must-match,bool-filter-range
 
 ```
+POST /myindex/user/_search
 {
 "query": {
 	"bool": {
 		"must": [
-			{``
+			{
 				"match": {
-					"objects.pattern": test"
+					"objects.pattern": "test"
 							}
 				}
 					]
@@ -946,6 +962,8 @@ https://kb.objectrocket.com/elasticsearch/elasticsearch-and-scroll-in-python-953
 
 ### 性能
 
+### 适用场景及优缺点
+
 ##### 全量读写
 
 ##### 深度分页
@@ -980,16 +998,220 @@ _shards_percent_as_number" : 100.0
 
 # elasticsearch深度分页
 
->elasticsearch可以使用form，size进行分页操作，但是elasticsearch默认情况下，不允许使用from，size对10000条以后的数据进行分页。因为elasticsearch这种情况下，elasticsearch的查询效率很慢。
+>大量查询问题：elasticsearch在默认情况下，不允许单词请求窗口大于10000，因为在这种情况下，elasticsearch的查询效率很慢，占用内存很大。
+>
+>分页问题：elasticsearch可以使用form，size进行分页操作，但是elasticsearch默认情况下，不允许使用from，size对10000条以后的数据进行分页。因为在这种情况下，elasticsearch的查询效率很慢，占用内存很大。
 
 ### 解决办法
 
-##### scroll函数
+##### 解决大量查询问题
 
-### 分页原理
+>相比于深度分页问题，此问题虽然导致大量数据的请求，但是不对结果做顺序要求，一般使用sroll_scan。注意scan返回的是一个迭代器，可以进行迭代取值。
 
-##### 主键索引
+###### sroll_scan
+
+```
+#scroll_scan,其中size是指每个shard上size为50，最终为shard_num*size。scroll_scan不保证结果顺序。
+POST ip:port/my_index/my_type/_search?search_type=scan&scroll=1m&size=50
+{
+    "query": { "match_all": {}}
+}
+```
+
+```
+#python
+es = Elasticsearch(['ip:9200'])
+def scroll_scan():
+    search_body = {
+        "query": {
+            "ids": {
+                "values": ["f7a5dcd376be777c6593a29b8ebd411a","494d9a5e25b9e1d3eedb7a2341aa49ad"]
+            }
+        }
+    }
+
+    page = helpers.scan(
+        client=es,
+        query=search_body,
+        scroll='5m',
+        index="cti",
+        request_timeout=5
+        # search_type ='scan',
+    )
+
+    result_list=[item["_source"]for item in page]
+
+    # i=0
+    # for item in page:
+    #     print(i)
+    #     i+=1
+    #     result_list.append(item["_source"])
+    print(len(result_list))
+    print(result_list)
+    # print("page_len:", len(page))
+```
+
+
+
+##### 解决深度分页问题
+
+>深度分页要求结果的有序性，要达到和from，size一样的效果，一般使用scroll函数或search_after函数。scroll函数用于非实时场景，如批量导出，因为它是一份历史快照，无法得到最新的数据变化。而search_after是根据上一页的最后一条数据确定下一页的位置，并且在这个过程中，数据的变化会反映到游标上，但是其无法进行跳页请求。
+
+###### scroll函数
+
+```
+#第一次请求，获取到scroll_id和第一批数据
+BoolQueryBuilder mustQuery = QueryBuilders.boolQuery();
+        //设置查询条件
+        mustQuery.must(QueryBuilders.matchQuery("sex","男"));
+        mustQuery.must(QueryBuilders.matchQuery("city","杭州市"));
+        SearchResponse rep =  client.prepareSearch()
+                .setIndices(index) // 索引
+                .setTypes(type)  //类型
+                .setQuery(mustQuery)
+                .setScroll(TimeValue.timeValueMinutes(2))  //设置游标有效期
+                .setSize(100)  //每页的大小
+                .execute()
+                .actionGet();
+                
+#后续循环使用scroll_id进行请求，直到返回地hits为空。           
+SearchResponse rep1 = client.prepareSearchScroll(scrollId)  //设置游标
+                    .setScroll(TimeValue.timeValueMinutes(2))  //设置游标有效期
+                    .execute()
+                    .actionGet();
+
+```
+
+```
+#python
+es = Elasticsearch(['ip:9200'])
+def scroll():
+    search_body={
+        "size":10000,
+        "query":{
+            "match_all":{}
+        }
+    }
+
+    page = es.search(
+        index="cti1",
+        # search_type ='scan',
+        body=search_body,
+        scroll='5m',
+    )
+    print("page_len:",len(page["hits"]["hits"]))
+    scroll_id=page['_scroll_id']
+    print("scroll_id:"+scroll_id)
+    page["hits"] = "empty"
+    print(json.dumps(page,indent=4))
+
+    while(True):
+        print("---------------------------")
+        page=es.scroll(
+            scroll_id=scroll_id,
+            scroll='5m'
+        )
+        hits_len=len(page["hits"]["hits"])
+        print("scroll lenght:",hits_len)
+        if hits_len<10000:
+            print("hits_len ==0,break")
+            break
+        scroll_id=page['_scroll_id']
+        print("scroll_id:"+scroll_id)
+        page["hits"]="empty"
+        print(json.dumps(page, indent=4))
+
+```
+
+###### search_after函数
+
+>search_after是根据上一页的最后一条数据确定下一页的位置，并且在这个过程中，数据的变化会反映到游标上，但是其无法进行跳页请求。
+
+```
+GET test_dev/_search
+{
+  "query": {
+    "bool": {
+      "filter": [
+        {
+          "term": {
+            "age": 28
+          }
+        }
+      ]
+    }
+  },
+  "size": 10,
+  "from": 0,
+  "search_after": [
+    1541495312521,
+    "d0xH6GYBBtbwbQSP0j1A"
+  ],
+  "sort": [
+    {
+      "timestamp": {
+        "order": "desc"
+      },
+      "_id": {
+        "order": "desc"
+      }
+    }
+  ]
+}
+```
+
+### 查询和分页原理
+
+##### ES的基本结构
+
+```
+ES集群中的节点主要分为Coordinate、DataNode，Cordinate负责接受来自用户Client的操作请求，并分发任务给DataNode，汇总DataNode的结果并进行排序等操作，最后返回给Client。在DataNode上分布着ES分片，分片是ES的最小级别工作单元，它只保存了索引中所有数据的一部分。
+```
+
+##### ES的查询过程
+
+```
+	ES的查询过程分为两阶段，称为Query Then Fetch。Query就是通过倒排索引查询满足条件的doc_id,Fetch就是根据得到的doc_id从各个节点获取对应文档。
+#Query阶段
+	Query阶段，当Coordinate接收到来自Client的查询请求时，它将查询广播到每一个DataNode上的分片。每个DataNode的分片对本地的Filesystem Cache、磁盘上的数据执行搜索，并得到一个结果列表。
+#Query 查询
+	通常，分片对Filesystem Cache中的数据进行搜索，如果所需要的数据不在Filesystem Cache中，就需要从磁盘中加载到Filesystem Cache，所以Filesystem Cache能否覆盖需要查询的数据，极大的影响查询效率。
+#Query结果列表
+	Query阶段的结果列表包括文档的ID和排序值，排序值即分数，是在本地分片上计算的TF-IDF分数。结果列表的大小由筛选条件决定，例如使用{from 100 ，size 50}，那么每个分片要的结果列表150条数据，如果使用{size 50},那么每个节点结果列表包含50条数据。这些数据会传递给Coordinate,完成Query阶段。
+#Fetch阶段
+	Fetch阶段，协调节点对收到的各个节点信息进行排序，选择需要查询的文档。并使用doc_id、shard标识到对应的DataNode的shard取回信息，最终经过汇总排序，返回给Client。
+```
+
+​	可见，from size查询方法对服务器的内存要求较高，比较容易OOM，特别是深度分页的情况，from+size决定了查询的数据量。当然，直接查询大量数据也会造成同样的压力，所以需要使用其他方式避免es的分片上的大量数据查询。
+
+##### scroll原理
+
+```
+scroll通过为当前ES的数据和索引创建一份快照，然后使用scroll_id来对这个快照进行持续性的遍历，避免每来一个请求都要去各个节点查询和排序。
+```
+
+##### ES适用场景
+
+```
+适合全文检索，由给定字段查询所在文档，数据量大时需要特定api。适合灵活的节点水平扩展。
+不适合深度分页，因为其跳页实现繁琐。不适合数据频繁的修改，其修改本质是删除加插入操作形成的，高频率的数据增删容易触发段合并，即数据的重新组装。不适合事务操作，没有关系型数据库的事务和锁，难以应对一致性要求较高的场景。
+```
 
 ### mysql分页和elasticsearch分页
 
-B+树索引
+​	为什么mysql处理深度分页的能力比es强，不需要非常大的内存支持。虽然mysql随着深度加深，查询时间也会上身，但是没有es的剧烈，对于10000数据量级的很容易处理，而es的深度分页被限制在10000条数据。
+
+```
+	ES的设计是为了方便集群节点的水平扩展，所以以shard为基本工作单元存储和管理数据，但是这增加了Coordinate和DataNode中shard沟通的成本，以及shard本地计算的成本，如上文所示。所以，对于同样的查询语句，如上文的from，size，ES相比mysql工作量上升了节点个数的倍数，而且ES为了加速查询适用内存索引，所以对内存提出了更高的要求。
+```
+
+### 相关连接
+
+```
+elasticserach详解长文：https://www.cnblogs.com/Leo_wl/p/16006513.html#_label0
+深入分片：https://www.jianshu.com/p/cc06f9adbe82
+mysql与es对比：https://blog.csdn.net/adparking/article/details/109773492
+ES如何正确深度分页：https://www.cnblogs.com/you-you-111/p/5849945.html
+es线程池:https://www.iteye.com/blog/rockelixir-1890867
+```
+

@@ -15,7 +15,10 @@ vt爬虫
 17 spark用法及理论，spark-core pdf
 17 spark用法及理论，spark-core pdf
 17 hive sql项目用法
-18 lisa文件乱码，apt的批量读取
+18 项目时间，绘制项目示意图，准备恶意样本
+19 architecture只取前3个，去除导航栏的导入威胁情报选项，springboot单元测试。
+19  log4j日志，读取application.yml错误。
+18 lisa文件乱码，apt的批量读取。这个blob时celery写入的，可能使用了独特的编码方式，没法解码。
 
 202202
 19 检查vsphere平台  ok
