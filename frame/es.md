@@ -996,7 +996,10 @@ rm -rf data
 
 _shards_percent_as_number" : 100.0
 
-# elasticsearch深度分页
+
+
+@[TOC](Elasticsearch大量查询和深度分页)
+# Elasticsearch深度分页
 
 >大量查询问题：elasticsearch在默认情况下，不允许单词请求窗口大于10000，因为在这种情况下，elasticsearch的查询效率很慢，占用内存很大。
 >
@@ -1010,7 +1013,7 @@ _shards_percent_as_number" : 100.0
 
 ###### sroll_scan
 
-```
+```python
 #scroll_scan,其中size是指每个shard上size为50，最终为shard_num*size。scroll_scan不保证结果顺序。
 POST ip:port/my_index/my_type/_search?search_type=scan&scroll=1m&size=50
 {
@@ -1018,7 +1021,7 @@ POST ip:port/my_index/my_type/_search?search_type=scan&scroll=1m&size=50
 }
 ```
 
-```
+```python
 #python
 es = Elasticsearch(['ip:9200'])
 def scroll_scan():
@@ -1059,7 +1062,7 @@ def scroll_scan():
 
 ###### scroll函数
 
-```
+```java
 #第一次请求，获取到scroll_id和第一批数据
 BoolQueryBuilder mustQuery = QueryBuilders.boolQuery();
         //设置查询条件
@@ -1082,7 +1085,7 @@ SearchResponse rep1 = client.prepareSearchScroll(scrollId)  //设置游标
 
 ```
 
-```
+```python
 #python
 es = Elasticsearch(['ip:9200'])
 def scroll():
@@ -1127,7 +1130,7 @@ def scroll():
 
 >search_after是根据上一页的最后一条数据确定下一页的位置，并且在这个过程中，数据的变化会反映到游标上，但是其无法进行跳页请求。
 
-```
+```curl
 GET test_dev/_search
 {
   "query": {
@@ -1182,7 +1185,7 @@ ES集群中的节点主要分为Coordinate、DataNode，Cordinate负责接受来
 	Fetch阶段，协调节点对收到的各个节点信息进行排序，选择需要查询的文档。并使用doc_id、shard标识到对应的DataNode的shard取回信息，最终经过汇总排序，返回给Client。
 ```
 
-​	可见，from size查询方法对服务器的内存要求较高，比较容易OOM，特别是深度分页的情况，from+size决定了查询的数据量。当然，直接查询大量数据也会造成同样的压力，所以需要使用其他方式避免es的分片上的大量数据查询。
+	可见，from size查询方法对服务器的内存要求较高，比较容易OOM，特别是深度分页的情况，from+size决定了查询的数据量。当然，直接查询大量数据也会造成同样的压力，所以需要使用其他方式避免es的分片上的大量数据查询。
 
 ##### scroll原理
 
@@ -1199,7 +1202,7 @@ scroll通过为当前ES的数据和索引创建一份快照，然后使用scroll
 
 ### mysql分页和elasticsearch分页
 
-​	为什么mysql处理深度分页的能力比es强，不需要非常大的内存支持。虽然mysql随着深度加深，查询时间也会上身，但是没有es的剧烈，对于10000数据量级的很容易处理，而es的深度分页被限制在10000条数据。
+	为什么mysql处理深度分页的能力比es强，不需要非常大的内存支持。虽然mysql随着深度加深，查询时间也会上身，但是没有es的剧烈，对于10000数据量级的很容易处理，而es的深度分页被限制在10000条数据。
 
 ```
 	ES的设计是为了方便集群节点的水平扩展，所以以shard为基本工作单元存储和管理数据，但是这增加了Coordinate和DataNode中shard沟通的成本，以及shard本地计算的成本，如上文所示。所以，对于同样的查询语句，如上文的from，size，ES相比mysql工作量上升了节点个数的倍数，而且ES为了加速查询适用内存索引，所以对内存提出了更高的要求。
@@ -1214,4 +1217,3 @@ mysql与es对比：https://blog.csdn.net/adparking/article/details/109773492
 ES如何正确深度分页：https://www.cnblogs.com/you-you-111/p/5849945.html
 es线程池:https://www.iteye.com/blog/rockelixir-1890867
 ```
-
