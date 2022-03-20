@@ -1,5 +1,6 @@
 
 
+
 ```
 使用bulk批量api可以一次请求提交多个，缩短花费时间。
 
@@ -998,8 +999,9 @@ _shards_percent_as_number" : 100.0
 
 
 
-@[TOC](Elasticsearch大量查询和深度分页)
-# Elasticsearch深度分页
+
+
+# Elasticsearch大量查询和深度分页
 
 >大量查询问题：elasticsearch在默认情况下，不允许单词请求窗口大于10000，因为在这种情况下，elasticsearch的查询效率很慢，占用内存很大。
 >
@@ -1167,53 +1169,42 @@ GET test_dev/_search
 
 ##### ES的基本结构
 
-```
-ES集群中的节点主要分为Coordinate、DataNode，Cordinate负责接受来自用户Client的操作请求，并分发任务给DataNode，汇总DataNode的结果并进行排序等操作，最后返回给Client。在DataNode上分布着ES分片，分片是ES的最小级别工作单元，它只保存了索引中所有数据的一部分。
-```
+>ES集群中的节点主要分为Coordinate、DataNode，Cordinate负责接受来自用户Client的操作请求，并分发任务给DataNode，汇总DataNode的结果并进行排序等操作，最后返回给Client。在DataNode上分布着ES分片，分片是ES的最小级别工作单元，它只保存了索引中所有数据的一部分。
 
 ##### ES的查询过程
 
-```
-	ES的查询过程分为两阶段，称为Query Then Fetch。Query就是通过倒排索引查询满足条件的doc_id,Fetch就是根据得到的doc_id从各个节点获取对应文档。
-#Query阶段
-	Query阶段，当Coordinate接收到来自Client的查询请求时，它将查询广播到每一个DataNode上的分片。每个DataNode的分片对本地的Filesystem Cache、磁盘上的数据执行搜索，并得到一个结果列表。
-#Query 查询
-	通常，分片对Filesystem Cache中的数据进行搜索，如果所需要的数据不在Filesystem Cache中，就需要从磁盘中加载到Filesystem Cache，所以Filesystem Cache能否覆盖需要查询的数据，极大的影响查询效率。
-#Query结果列表
-	Query阶段的结果列表包括文档的ID和排序值，排序值即分数，是在本地分片上计算的TF-IDF分数。结果列表的大小由筛选条件决定，例如使用{from 100 ，size 50}，那么每个分片要的结果列表150条数据，如果使用{size 50},那么每个节点结果列表包含50条数据。这些数据会传递给Coordinate,完成Query阶段。
-#Fetch阶段
-	Fetch阶段，协调节点对收到的各个节点信息进行排序，选择需要查询的文档。并使用doc_id、shard标识到对应的DataNode的shard取回信息，最终经过汇总排序，返回给Client。
-```
+>​		ES的查询过程分为两阶段，称为Query Then Fetch。Query就是通过倒排索引查询满足条件的doc_id,Fetch就是根据得到的doc_id从各个节点获取对应文档。
+>
+>#Query阶段
+>	Query阶段，当Coordinate接收到来自Client的查询请求时，它将查询广播到每一个DataNode上的分片。每个DataNode的分片对本地的Filesystem Cache、磁盘上的数据执行搜索，并得到一个结果列表。
+>#Query 查询
+>	通常，分片对Filesystem Cache中的数据进行搜索，如果所需要的数据不在Filesystem Cache中，就需要从磁盘中加载到Filesystem Cache，所以Filesystem Cache能否覆盖需要查询的数据，极大的影响查询效率。
+>#Query结果列表
+>	Query阶段的结果列表包括文档的ID和排序值，排序值即分数，是在本地分片上计算的TF-IDF分数。结果列表的大小由筛选条件决定，例如使用{from 100 ，size 50}，那么每个分片要的结果列表150条数据，如果使用{size 50},那么每个节点结果列表包含50条数据。这些数据会传递给Coordinate,完成Query阶段。
+>#Fetch阶段
+>	Fetch阶段，协调节点对收到的各个节点信息进行排序，选择需要查询的文档。并使用doc_id、shard标识到对应的DataNode的shard取回信息，最终经过汇总排序，返回给Client。
 
-	可见，from size查询方法对服务器的内存要求较高，比较容易OOM，特别是深度分页的情况，from+size决定了查询的数据量。当然，直接查询大量数据也会造成同样的压力，所以需要使用其他方式避免es的分片上的大量数据查询。
+>​		可见，from size查询方法对服务器的内存要求较高，比较容易OOM，特别是深度分页的情况，from+size决定了查询的数据量。当然，直接查询大量数据也会造成同样的压力，所以需要使用其他方式避免es的分片上的大量数据查询。
 
 ##### scroll原理
 
-```
-scroll通过为当前ES的数据和索引创建一份快照，然后使用scroll_id来对这个快照进行持续性的遍历，避免每来一个请求都要去各个节点查询和排序。
-```
+>​		scroll通过为当前ES的数据和索引创建一份快照，然后使用scroll_id来对这个快照进行持续性的遍历，避免每来一个请求都要去各个节点查询和排序。
 
 ##### ES适用场景
 
-```
-适合全文检索，由给定字段查询所在文档，数据量大时需要特定api。适合灵活的节点水平扩展。
-不适合深度分页，因为其跳页实现繁琐。不适合数据频繁的修改，其修改本质是删除加插入操作形成的，高频率的数据增删容易触发段合并，即数据的重新组装。不适合事务操作，没有关系型数据库的事务和锁，难以应对一致性要求较高的场景。
-```
+>适合全文检索，由给定字段查询所在文档，数据量大时需要特定api。适合灵活的节点水平扩展。
+>不适合深度分页，因为其跳页实现繁琐。不适合数据频繁的修改，其修改本质是删除加插入操作形成的，高频率的数据增删容易触发段合并，即数据的重新组装。不适合事务操作，没有关系型数据库的事务和锁，难以应对一致性要求较高的场景。
 
 ### mysql分页和elasticsearch分页
 
-	为什么mysql处理深度分页的能力比es强，不需要非常大的内存支持。虽然mysql随着深度加深，查询时间也会上身，但是没有es的剧烈，对于10000数据量级的很容易处理，而es的深度分页被限制在10000条数据。
+>​	为什么mysql处理深度分页的能力比es强，不需要非常大的内存支持。虽然mysql随着深度加深，查询时间也会上身，但是没有es的剧烈，对于10000数据量级的很容易处理，而es的深度分页被限制在10000条数据。
 
-```
-	ES的设计是为了方便集群节点的水平扩展，所以以shard为基本工作单元存储和管理数据，但是这增加了Coordinate和DataNode中shard沟通的成本，以及shard本地计算的成本，如上文所示。所以，对于同样的查询语句，如上文的from，size，ES相比mysql工作量上升了节点个数的倍数，而且ES为了加速查询适用内存索引，所以对内存提出了更高的要求。
-```
+>​	ES的设计是为了方便集群节点的水平扩展，所以以shard为基本工作单元存储和管理数据，但是这增加了Coordinate和DataNode中shard沟通的成本，以及shard本地计算的成本，如上文所示。所以，对于同样的查询语句，如上文的from，size，ES相比mysql工作量上升了节点个数的倍数，而且ES为了加速查询适用内存索引，所以对内存提出了更高的要求。
 
 ### 相关连接
 
-```
-elasticserach详解长文：https://www.cnblogs.com/Leo_wl/p/16006513.html#_label0
-深入分片：https://www.jianshu.com/p/cc06f9adbe82
-mysql与es对比：https://blog.csdn.net/adparking/article/details/109773492
-ES如何正确深度分页：https://www.cnblogs.com/you-you-111/p/5849945.html
-es线程池:https://www.iteye.com/blog/rockelixir-1890867
-```
+>elasticserach详解长文：https://www.cnblogs.com/Leo_wl/p/16006513.html#_label0
+>深入分片：https://www.jianshu.com/p/cc06f9adbe82
+>mysql与es对比：https://blog.csdn.net/adparking/article/details/109773492
+>ES如何正确深度分页：https://www.cnblogs.com/you-you-111/p/5849945.html
+>es线程池:https://www.iteye.com/blog/rockelixir-1890867

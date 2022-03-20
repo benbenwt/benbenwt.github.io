@@ -482,6 +482,12 @@ def positions(length: Long, numSlices: Int): Iterator[(Int, Int)] = {
 
 ##### RDD转换算子
 
+##### treeReduce算子
+
+>源码详解：https://blog.csdn.net/jiang_jinyue/article/details/59109837
+
+##### treeAggregate算子
+
 ### spark sql
 
 ### spark streaming

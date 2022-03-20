@@ -18,7 +18,11 @@ vt爬虫
 18 项目时间，绘制项目示意图，准备恶意样本
 19 architecture只取前3个，去除导航栏的导入威胁情报选项，springboot单元测试。
 19  log4j日志，读取application.yml错误。
-18 lisa文件乱码，apt的批量读取。这个blob时celery写入的，可能使用了独特的编码方式，没法解码。
+19 lisa文件乱码，apt的批量读取。这个blob时celery写入的，可能使用了独特的编码方式，没法解码。
+20组会
+20 csdn博客写法
+20 是否适合长文本，是否可以处理多标签的分类问题。
+20 skearn gcforest 
 
 202202
 19 检查vsphere平台  ok

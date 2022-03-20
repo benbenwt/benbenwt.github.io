@@ -1892,6 +1892,8 @@ https://github.com/ymcui/Chinese-ELECTRA
 >
 >源码：https://zhuanlan.zhihu.com/p/26591548
 >
+>最新版本:https://github.com/LAMDA-NJU/Deep-Forest
+>
 >特点：使用较少的超参数，模型的复杂程度可根据情况自动调整，默认参数效果往往也不错。比较适合并行，和cpu计算。
 >
 >DNN的缺点，调参难度大，超参数多，需要较大数据集，难以解释黑盒，需要设计网络结构，GBDT效果更好。
@@ -1905,9 +1907,12 @@ https://github.com/ymcui/Chinese-ELECTRA
 ```
 sklearn 随机森林:https://blog.csdn.net/qq_48314528/article/details/119718702
 spark随机森林：https://blog.csdn.net/minemine999/article/details/80698526
+diabetes数据集:https://cloud.tencent.com/developer/article/1134701
+自定义分类器：https://www.jianshu.com/p/b5cd8767c37b
+最新版本:https://github.com/LAMDA-NJU/Deep-Forest
 ```
 
-
+###### 
 
 ##### 实验部分
 
