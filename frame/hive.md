@@ -172,7 +172,7 @@ drop [temporary] function [if exists] [dbname.]function_name;
 
 ### gmall项目
 
-##### ads_order_spu_stats
+##### ads_order_spu_stats 主题
 
 >已知所有表如下所示，编写脚本实现从ods层至ads的数据流动。具体表结构查看datagrip。ods层数据为原始数据，对应一条订单，最小粒度。dwd也为一条订单的粒度，但是其关联了支付、退款等信息。dws为一天的粒度，dwt为1，7，30等不同粒度的统计，ads为最终数据聚合。
 >
@@ -213,11 +213,11 @@ split_coupon_amount:ods_order_detail
 dt:日期，来自ods_order_detail
 ```
 
-dwd_order_detail 清洗sql
+###### dwd_order_detail 清洗sql
 
 >注意dwd_order_detail聚合的行粒度是一个订单明细，不是一个订单，所以left join用order_detail_id进行连接。一个订单包含多个订单明细。
 
-```
+```sql
 INSERT OVERWRITE TABLE dwd_order_detail_my_practice
 SELECT od.id,od.order_id,oi.user_id,od.sku_id,oi.province_id,oda.activity_id,oda.activity_rule_id,odc.coupon_id,oi.create_time,od.source_type,od.source_id,od.sku_num,od.order_price,od.split_final_amount,od.split_activity_amount,od.split_coupon_amount, date_format(create_time,'yyyy-MM-dd')
 FROM
@@ -233,11 +233,9 @@ LEFT JOIN
 ON od.id=odc.order_detail_id
 ```
 
-###### dwd_order_refund_info
+###### dwd_order_refund_info清洗sql
 
- 清洗sql
-
-```
+```sql
 #查看有哪些列，使用哪些表，哪些需要聚合。查两个表就行了，无聚合操作。主要是多表join。
 INSERT OVERWRITE TABLE dwd_order_refund_info_my_pratice
 SELECT ori.id,oi.user_id,ori.order_id,sku_id,oi.province_id,ori.refund_type,ori.refund_num,ori.refund_amount,ori.refund_reason_type,ori.create_time, date_format(ori.create_time,'yyyy-MM-dd')
@@ -248,9 +246,9 @@ FROM
     ON ori.order_id=oi.id
 ```
 
-###### dwd_payment_info
+###### dwd_payment_info清洗sql
 
-```
+```sql
 SELECT pi.id,order_id,pi.user_id,oi.province_id,pi.trade_no,pi.out_trade_no,pi.payment_type,pi.payment_amount,pi.payment_status,pi.create_time,pi.callback_time,nvl(date_format(pi.callback_time,"yyyy-MM-dd"),"9999-99-99") FROM
 (SELECT * FROM ods_payment_info)pi
 LEFT JOIN
@@ -258,7 +256,7 @@ LEFT JOIN
 ON pi.order_id=oi.id
 ```
 
-##### 商品ads
+##### 商品ads 主题
 
 ###### dws_sku_action_daycount
 
@@ -349,7 +347,6 @@ select
     on rp.order_id=ri.order_id
     and rp.sku_id=ri.sku_id
     group by date_format(callback_time,'yyyy-MM-dd'),rp.sku_id
-
 ```
 
 ```
@@ -382,6 +379,14 @@ select
 
 ```
 将5大板块通过dt加sku_id分组查询出来后，没有使用join，而是使用union all合并，不存在的字段使用0，方便后续的sum求和。union的优势，
+```
+
+###### dwt_sku_topic
+
+>确定列来源的表，连接粒度，分块。分块基本按照业务流程划分，如下单、支付、退单、退款，然后这些块内部的属性，如金额、次数、联系上优惠券、活动属性。另外，DWT表还要负责更高粒度的统计，如1粒度、7粒度、30粒度。维度组合多了，看的很混乱，脑袋疼。总结以下固定顺序吧，按照如下顺序逐个处理: 选择业务过程(确认维度)→声明粒度→确认事实,与dws相似，但是dwt的一个表的维度可以是多个业务，比如包括下单、退款等等。选中业务后，确认此业务关注的列，以下单为例子，其维度可以通过组合确认，即（金额、次数）（原始金额、使用优惠券优惠的、活动优惠的）（时间跨度），。粒度一般为主题的最小单位，如sku、user_id、coupon_id、activity_id。确认事实这一步多余，因为有多个事实，如前边提到的金额、次数。以此表为例，业务分为下单、支付、退款、退单，组合维度如上所示
+
+```sql
+
 ```
 
 
@@ -2103,13 +2108,13 @@ web端口:10002
 ```
 #xxx为服务器的登录的用户名
 <property>
-        <name>hadoop.proxyuser.xxx.hosts</name>
-        <value>*</value>
-    </property>
-    <property>
-        <name>hadoop.proxyuser.xxx.groups</name>
-        <value>*</value>
-    </property>
+    <name>hadoop.proxyuser.xxx.hosts</name>
+    <value>*</value>
+</property>
+<property>
+    <name>hadoop.proxyuser.xxx.groups</name>
+    <value>*</value>
+</property>
 ```
 
 添加高可用，不然报一个tez相关的警告，影响启动.
@@ -2136,6 +2141,10 @@ show databases;
 use test;
 show tables;
 ```
+
+
+
+
 
 
 

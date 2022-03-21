@@ -1,10 +1,6 @@
-
-
 # sql
 
 >https://blog.csdn.net/qq_44159028/article/details/114325805
-
-
 
 # 大全
 
@@ -15,6 +11,8 @@
 >GHDB:https://www.exploit-db.com/google-hacking-database
 >
 >usebox:https://www.uedbox.com/shdb/
+>
+>国外分享网站：https://adsecurity.org/
 
 ### inurl
 
