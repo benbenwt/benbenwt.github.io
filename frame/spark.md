@@ -439,10 +439,6 @@ Driver项rm申请资源，rm分配资源后在合适的机器上启动AM，AM再
 
 ### spark scala api
 
-##### mapartion的使用
-
->https://blog.csdn.net/dujunjiehaha/article/details/81625418
-
 ##### RDD创建
 
 >makeRdd底层调用了parallize
@@ -482,11 +478,114 @@ def positions(length: Long, numSlices: Int): Iterator[(Int, Int)] = {
 
 ##### RDD转换算子
 
-##### treeReduce算子
+>RDD根据数据处理方式不同，分为Value类型、双Value类型和Key-Value类型
+
+###### Value类型
+
+>value类型包括map、mappartion
+
+###### map
+
+>对每一条rdd元素调用函数
+
+###### mapPartion
+
+>以分区上的所有数据为单位进行处理，传入传出参数都是一个迭代器。
+
+###### mapPartionWithIndex
+
+>与mapPartion相比，可以多传入一个参数index，可以在函数内获取分区编号。
+
+###### flatMap
+
+>将列表扁平化后，再进行处理。
+
+###### groupBy
+
+>分组，一个组的数据一定在同一个分区
+
+###### filter
+
+>数据过滤，此操作不改变分区，但是可能造成数据倾斜。
+
+###### sample
+
+>根据规则从数据集中抽取数据，第一个参数抽取是否放回、第二个用于比较的数值，小于此参数则要，否则不要。第三个参数，随机数种子。
+
+###### distinct
+
+>去重
+
+###### coalesce
+
+>缩减分区
+
+###### repartion
+
+>重新分区
+
+###### sortby
+
+>排序，需要shuffle。按照f函数处理，然后按照处理结果排序。
+
+```
+val dataRDD = sparkContext.makeRDD(List(
+ 1,2,3,4,1,2
+),2)
+val dataRDD1 = dataRDD.sortBy(num=>num, false, 4)
+```
+
+###### glom
+
+>将同一个分区的数据转换为内存数组
+
+###### 双value类型
+
+>输入未两个数值
+
+###### intersection
+
+>求交集
+
+###### union
+
+>两个RDD并集
+
+###### substract
+
+>集合的差集，去除重复元素，保留其他元素
+
+###### zip
+
+>取第一个RDD的key，第二个RDD的key对应的value值，组成新的key、value
+
+###### key-value类型
+
+>多个输入，reduce、聚合等
+
+###### reduceByKey
+
+###### groupByKey
+
+###### aggregateByKey
+
+foldByKey
+
+combineByKey
+
+sortByKey
+
+join
+
+leftOuterJoin
+
+cogroup
+
+###### treeReduce算子
 
 >源码详解：https://blog.csdn.net/jiang_jinyue/article/details/59109837
 
-##### treeAggregate算子
+###### treeAggregate算子
 
 ### spark sql
 
