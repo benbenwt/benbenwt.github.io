@@ -53,20 +53,7 @@ build/
 
 
 
-# git工作流程
 
-```
-分为工作目录，暂存区域，head区域，远程仓库。
-checkout创建新的工作目录分支
-rollback回归到特定分支的某一版本号，回滚本地部分。
-new branch创建新分支
-merge合并多个分支，会有冲突代码。
-git rebase -i  [startpoint]  [endpoint] ，合并多次的commit，避免push多次和解决多次冲突。将某一分支的变化提交到指定名称分支。
-```
-
-```
-git log，提交历史
-```
 
 ### git工作暂存区reset
 
@@ -76,14 +63,7 @@ https://www.liaoxuefeng.com/wiki/896043488029600/897889638509536
 
 
 
-# git命令
-
->本地仓库由三棵树构成，
->​推送时的顺序：工作目录区域  ->add->  暂存目录区域   ->commit->    head区域  ->push->  远程仓库
->
->拉取时的顺序相反，所有有时可以使用暂存目录区域的内容恢复拉取操作之前的内容。
->
->实际提交改动通过push将head区域中的文件推送到远程仓库。
+# GIT用法
 
 ### 克隆子模块
 
@@ -163,14 +143,16 @@ git push origin master 将head种文件提交到master
 
 ##### git fetch
 
-#### git remote
+>git fetch本质是拉取到本地的head仓库，然后需要使用checkout将工作区切换为此分支，pull是一步到位，直接将远程仓库的内容拉取到工作区，并尝试合并，未改变head区域。
+
+##### git remote
 
 ```
 git remote -v #查看已添加远程仓库
 git remote add  origin 远程仓库url  #origin为对远程仓库的命名。
 ```
 
-#### 拉取
+##### 拉取
 
 ```
 git config --list
@@ -181,6 +163,28 @@ git checkout main,切换到本地main分支
 git pull origin dev(远程分支名称)
 git reset --hard origin/master  强行合并，本地的update覆盖掉。
 ```
+
+# GIT理论知识
+
+### 存储原理
+
+>本地仓库由三棵树构成，
+>​推送时的顺序：工作目录区域  ->add->  暂存目录区域   ->commit->    head区域  ->push->  远程仓库
+>
+>拉取时的顺序相反，所有有时可以使用暂存目录区域的内容恢复拉取操作之前的内容。
+>
+>实际提交改动通过push将head区域中的文件推送到远程仓库。
+>
+>
+>
+>分为工作目录，暂存区域，head区域，远程仓库。
+>checkout创建新的工作目录分支
+>rollback回归到特定分支的某一版本号，回滚本地部分。
+>new branch创建新分支
+>merge合并多个分支，会有冲突代码。
+>git rebase -i  [startpoint]  [endpoint] ，合并多次的commit，避免push多次和解决多次冲突。将某一分支的变化提交到指定名称分支。
+
+
 
 # problem
 
