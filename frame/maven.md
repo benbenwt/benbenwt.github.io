@@ -1,13 +1,3 @@
-### 排除冲突依赖
-
-```
-#查看依赖
-mvn dependency:tree
-#然后使用exclusion排除依赖或删除依赖。
-```
-
-
-
 ### 中心仓库
 
 ```
@@ -737,6 +727,45 @@ mvn -version
 ### 模块依赖
 
 若向让a使用b的功能，如b的entity。在项目结构中，选中a模块，点击dependencies，点击+号，点击Module dependence，选择想要的模块。若提示某些模块已包含，在sources中将其删除。
+
+### maven理论知识
+
+>maven是一个项目管理工具，它对项目进行依赖管理、单元测试、构建等
+
+##### 依赖管理
+
+>下载依赖，在pom中配置groupid，artifactid、version，maven可以帮助开发者从指定的仓库下载对应jar包到本地的仓库文件夹，并提供给项目使用。管理整个项目的依赖，当依赖冲突时，通过排除冲突的jar包解决问题。
+
+##### 单元测试
+
+>mvn 
+
+##### 构建
+
+### maven用法
+
+##### maven单元测试
+
+>为项目编写测试类，可以在程序进行迭代时，使用maven帮助进行单元测试，在上线之前检测出错误，避免一些低级的错误，通过测试后才能进行部署。
+
+```
+#执行所有单元测试
+mvn test
+#执行指定单元测试
+mvn -Dtest=TestMessageBuilder
+```
+
+
+
+##### 查看项目依赖
+
+```
+#查看依赖
+mvn dependency:tree
+#然后使用exclusion排除依赖或删除依赖。
+```
+
+
 
 ### problem
 

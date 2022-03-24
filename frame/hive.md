@@ -1,4 +1,4 @@
-# HIVE SQL基础语法
+# HIVE用法
 
 >hive(hdfs)+hive sql(mr)
 >
@@ -139,7 +139,120 @@ update
 
 ### 
 
+### Shell
+
+```shell
+#-e常用于etl脚本，执行清洗sql
+hive -e "select ... ..."
+#-f 执行文件中的sql
+hvie -f /opt/1.sql
+#exit、quit  退出
+#在hive shell中查看hdfs目录
+dfs -ls /
+#查看历史命令
+cat .hivehistory
+#查看所有配置信息
+set;
+#启动时设置参数 
+-hiveconf param=value
+-hiveconf mapred.reduce.tasks=10
+#查看参数
+set mapred.reduce.tasks
+#使用set声明参数，仅对本次hive启动有效
+set mapred.reduce.tasks=100
+#配置的优先级顺序：参数声明>命令行参数>配置文件
+
+```
+
+
+
 ### 自定义函数
+
+>自定义函数分为以下几类：UDF、UDAF、UDTF
+>
+>UDF:一进一出，用户定义函数
+>
+>UDAF：用户定义聚集函数，多进一处
+>
+>UDTF:用户定义table generating函数，类似lateral view explode（）
+>
+>分别继承：org.apache.hadoop.hive.ql.udf.generic.GenericUDF、org.apache.hadoop.hive.ql.udf.generic.GenericUDTF;
+
+##### 编写自定义函数jar包
+
+```java
+#引入maven依赖
+<dependencies>
+    <dependency>
+        <groupId>org.apache.hive</groupId>
+        <artifactId>hive-exec</artifactId>
+        <version>3.1.2</version>
+    </dependency>
+</dependencies>
+
+#创建一个类继承GenericUDF，然后重写initial函数、evaluate函数、getDisplayString
+package com.atguigu.hive;
+import org.apache.hadoop.hive.ql.exec.UDFArgumentException;
+import org.apache.hadoop.hive.ql.exec.UDFArgumentLengthException;
+import org.apache.hadoop.hive.ql.exec.UDFArgumentTypeException;
+import org.apache.hadoop.hive.ql.metadata.HiveException;
+import org.apache.hadoop.hive.ql.udf.generic.GenericUDF;
+import org.apache.hadoop.hive.serde2.objectinspector.ObjectInspector;
+import 
+org.apache.hadoop.hive.serde2.objectinspector.primitive.PrimitiveObjectIn
+spectorFactory;
+/**
+* 自定义 UDF 函数，需要继承 GenericUDF 类
+* 需求: 计算指定字符串的长度
+*/
+public class MyStringLength extends GenericUDF {
+ /**
+ *
+ * @param arguments 输入参数类型的鉴别器对象
+ * @return 返回值类型的鉴别器对象
+ * @throws UDFArgumentException
+ */
+ @Override
+ public ObjectInspector initialize(ObjectInspector[] arguments) throws 
+UDFArgumentException {
+ // 判断输入参数的个数
+ if(arguments.length !=1){
+ throw new UDFArgumentLengthException("Input Args Length 
+Error!!!");
+ }
+ // 判断输入参数的类型
+ 
+if(!arguments[0].getCategory().equals(ObjectInspector.Category.PRIMITIVE)
+){
+ throw new UDFArgumentTypeException(0,"Input Args Type 
+Error!!!");
+ }
+ //函数本身返回值为 int，需要返回 int 类型的鉴别器对象
+ return PrimitiveObjectInspectorFactory.javaIntObjectInspector;
+ }
+ /**
+ * 函数的逻辑处理
+ * @param arguments 输入的参数
+ * @return 返回值
+ * @throws HiveException
+ */
+ @Override
+ public Object evaluate(DeferredObject[] arguments) throws 
+HiveException {
+ if(arguments[0].get() == null){
+ return 0;
+ }
+ return arguments[0].get().toString().length();
+ }
+ @Override
+ public String getDisplayString(String[] children) {
+ return "";
+ }
+}
+    
+```
+
+
 
 ##### 创建函数
 
@@ -1551,6 +1664,127 @@ GO
 
 # HIVE 理论知识
 
+### 优缺点及使用场景
+
+>优点：1使用SQL语法开发ETL程序，提高开发效率，降低门槛。避免学习mapreduce，减少学习成本。
+>
+>2执行延迟高，主要用于离线分析，优势在于处理大量数据。支持自定义函数。
+>
+>缺点：1sql的表达能力有限，只适合join、聚合等操作。无法表示迭代式算法。
+>
+>2hive自动生成的mapreduce作业，通常不够智能。调优困难，粒度太大。
+
+### hive解析组件
+
+##### 解析器 SQL Parser
+
+>将SQL字符串转换为AST抽象语法树，借助antlr判断语法是否正确。
+
+##### 编译器 Physical Plan
+
+>将AST编译生成逻辑执行计划
+
+##### 优化器 Query Optimizer
+
+>对逻辑执行计划进行优化
+
+##### 执行器 Execution
+
+>及那个逻辑执行计划转换为物理计划，对于hive来所就是spark/MR
+
+### 数据类型
+
+>对应的java数据类型
+>
+>单精度和双精度：https://www.zhihu.com/question/26022206
+
+##### 基本数据类型
+
+| hive 数据类型 | java数据类型 | 长度                        |
+| ------------- | ------------ | --------------------------- |
+| TINYINT       | byte         | 1byte有符号整数             |
+| SMALLINT      | short        | 2byte有符号整数             |
+| INT           | int          | 4byte有符号整数             |
+| LONG          | long         | 8byte有符号整数             |
+| BOOLEAN       | boolean      | 布尔类型，true和false       |
+| FLOAT         | float        | 单精度浮点数，32位（4字节） |
+| DOUBLE        | double       | 双精度浮点数，64位（8字节） |
+| STRING        | string       | 字符系列                    |
+| TIMESTAMP     |              | 时间类型                    |
+| BINARY        |              | 字节数组                    |
+
+##### 集合数据类型
+
+| 数据类型 | 描述                                                         | 语法示例                                   |
+| -------- | ------------------------------------------------------------ | ------------------------------------------ |
+| STRUCT   | 结构体，使用.访问元素内容。如STRUCT{name STRING,major STRING} | struct() struct<street:string,city:string> |
+| MAP      | 键值对，通过下标访问，如person["name"]                       | map()  map<string,int>                     |
+| ARRAY    | 数组，person_list[0]                                         | Array() array<string>                      |
+
+>创建表的时候，我们可以为表的列指定集合数据类型，但是load数据时，必须按照一定的格式。
+>
+>对于如下表结构，需要构造如下的输入文件进行load
+
+```json
+{
+   "name": "songsong",
+ 	"friends": ["bingbing" , "lili"] , //列表 Array, 
+ 	"children": { //键值 Map,
+             "xiao song": 18 ,
+             "xiaoxiao song": 19
+     }
+     "address": { //结构 Struct,
+             "street": "hui long guan",
+             "city": "beijing"
+     }
+}
+#用于导入的文件，其中_用于连接两个同级的元素。
+songsong,bingbing_lili,xiao song:18_xiaoxiao song:19,hui long 
+guan_beijing
+yangyang,caicai_susu,xiao yang:18_xiaoxiao yang:19,chao yang_beijing
+```
+
+### 常用函数
+
+##### CAST
+
+```sql
+CAST ('1' AS INT)
+CAST (1 AS DECIMAL(10,2))
+```
+
+##### EXPLODE
+
+```
+将Array数组的元素展开，与原始表每行记录拼接。例如Array包含1，2，3，三个元素，那么原始记录的一行就会展开为三行，并分别具有1，2，3这几个值。
+```
+
+##### 日期类函数
+
+```
+date_add()
+add_month()
+datediff()
+date_sub()
+date_format()
+```
+
+##### 数值函数
+
+```
+ceil
+floor
+```
+
+##### 字符函数
+
+```
+upper
+lowwer
+```
+
+
+
 ### 外部表内部表
 
 >https://blog.csdn.net/qq_36743482/article/details/78393678
@@ -1562,6 +1796,14 @@ GO
 >删除内部表会直接删除元数据（metadata）及存储数据；删除外部表仅仅会删除元数据，HDFS上的文件并不会被删除；
 >
 >对内部表的修改会将修改直接同步给元数据，而对外部表的表结构和分区进行修改，则需要修复（MSCK REPAIR TABLE table_name;）
+
+##### 内部表与外部表转换
+
+```
+alter table student2 set tblproperties('EXTERNAL'='FALSE');
+```
+
+
 
 ### hive四种排序方式的区别
 

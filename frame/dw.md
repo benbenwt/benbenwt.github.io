@@ -1,5 +1,6 @@
 ```
 八股文(java（jvm，网络，多线程，javase）,框架(hdfs,mr,yarn,hive,spark),javaweb)，项目（数仓（电商场景，TI），web）
+其他：linux环境下的shell及日常使用，git使用，maven使用，nginx，docker
 ```
 
 ```
@@ -7,7 +8,7 @@
 ```
 
 ```
-辅助组件(zookeeper，kafka)，数据采集迁移框架(flume，logtash，sqoop,kettle)，数仓(hadoop,hive)，查询分析框架(spark,kylin,presto,phoenix)，可视化框架(superset)，整体流程控制(azkaban)，数据库（es，mysql）
+框架这一块：辅助组件(zookeeper，kafka)，数据采集迁移框架(flume，logtash，sqoop,kettle)，数仓(hadoop,hive)，查询分析框架(spark,kylin,presto,phoenix)，可视化框架(superset)，整体流程控制(azkaban)，数据库（es，mysql）
 ```
 
 ```

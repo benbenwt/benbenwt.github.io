@@ -111,6 +111,61 @@ location @app {
 该配置项指定转发对象，
 ```
 
+# nginx理论
+
+>nginx是一款轻量级的web服务器、反向代理服务器。经常用来处理前端资源，并代理后端程序。正向代理代理的是请求者、客户端，反向代理代理的是服务器、服务端，代理了谁，隐藏了谁。
+>
+>优点：它占用内存少、启动快、高并发能力强。
+>
+>如何做到高并发的，nginx的work数目与cpu绑定，
+
+# nginx用法
+
+### shell常用命令
+
+```nginx
+nginx -s reload/stop
+ngix -c 绝对路径/nginx.conf
+```
+
+### 配置文件常用语法
+
+##### root
+
+>root用于配置静态资源的目录，index用来配置默认的web主页。
+
+```nginx
+location /{
+    root   D:/webpages;
+    index  index.html;
+}  
+```
+
+
+
+##### proxy_pass
+
+>将后缀为test开头的所有请求发送到 172.18.66.66机器10000的端口上的后端服务
+
+```nginx
+location /test{
+    proxy_pass 172.18.66.66:10000
+}
+```
+
+##### rewrite
+
+>rewrite用于改写转发的后缀，此例子将testtest替换为cvelistnew，使用正则取值。
+
+```
+location  /testtest{
+    proxy_pass 172.18.66.66:10000
+	rewrite "^/testtest/(.*)$"  /cvelistnew/$1 break;  
+}
+```
+
+
+
 
 
 

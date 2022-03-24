@@ -164,71 +164,6 @@ PUT cti/_settings
 
 >es的确是非主键检索，全文检索，但是检索出来后呢，并不是所有数据都放在es中，因为es不支持复杂聚合操作、多表联查，所以不适合业务数据的关系建模方法，以及复杂聚合统计的维度建模方法，那么很多数据其实是放在其他数据库中的，如业务数据、聚合统计数据等。当全文搜索后，需要拼接其他数据时，再使用主键在其他数据库进行检索。
 
-
-
-### painless脚本
-
-### es分析和分析器
-
-```
-#倒排索引
-为了实现实时查询（1s以内），es使用倒排索引维护信息。信息包括一个列表，列表描述每个单词出现在哪些文档。当进行搜索时只需要搜索需要的文档。
-例如：
-文档1内容：hello dogs Quick foxes
-文档2：good quick fox
-为了检索相似单词，如fox,foxes,quick,Quick。在构建索引时，使用标准化规则，即统一为词根或小写。在查询时也要先标准化再进行查询。
-```
-
-##### 分析器构成
-
-```
-官网文档:
-https://www.elastic.co/guide/cn/elasticsearch/guide/current/analysis-intro.html
-字符过滤器:字符串按序通过字符过滤器，字符过滤器用于分此前的整理，用于去除HTML、&转为and等。
-分词器：字符串被分为单个词条
-Token过滤器：词条按序通过token过滤器，这个过程会改变词条，如QUICK->quick，删除词条，如a，and，the等五用词，或增加词条，例如jump和leap这种同义词。
-es提供自定义：https://www.elastic.co/guide/cn/elasticsearch/guide/current/custom-analyzers.html的分析器：https://www.elastic.co/guide/cn/elasticsearch/guide/current/custom-analyzers.html
-```
-
-##### 内置分析器
-
-```
-标准分析器:默认分词器，按照unicode的定义划分文本，删除标点，最后进行小写。
-简单分析器:任何不是字母的地方分割文本，再小写。
-空格分析器:空格划分
-语言分析器:考虑语言特点，删除and和the等。构建近义词、词根等。
-```
-
-查看分析器如何工作
-
-```
-GET /_analyze
-{
-  "analyzer": "standard",
-  "text": "Text to analyze"
-}
-```
-
-### 映射
-
->映射用于控制特定字段域的分析器类型、存储类型
-
-```
-主要类型：text,keyword,float,double,boolean,date,byte,short,integer,long
-#查看映射
-GET /gb/_mapping/tweet
-```
-
-
-
-
-
-```
-若构建三个表存储stix2，当需要聚合查询时效率可以接受。但如果需要分页，就要请求全量数据再汇总，效率受限于索引查询，网络传输和网络请求次数开销。
-```
-
-
-
 ### 聚合查询
 
 ##### 统计malware组件没有malwaretypes的数量
@@ -656,14 +591,6 @@ vim /etc/security/limits.d/90-nproc.cnf
 
 ```
 
-# 迁移数据
-
-```
-新建索引，迁移到新索引
-```
-
-
-
 # kibana
 
 ## 安装配置kibana
@@ -961,13 +888,212 @@ https://kb.objectrocket.com/elasticsearch/elasticsearch-and-scroll-in-python-953
 相当于
 ```
 
+### 基本数据类型
+
+>主要类型：text,keyword,float,double,boolean,date,byte,short,integer,long
+>#查看映射
+>GET /gb/_mapping/tweet
+
 ### 性能
 
 ### 适用场景及优缺点
 
-##### 全量读写
+>适合全文检索，由给定字段查询所在文档，数据量大时需要特定api。适合灵活的节点水平扩展。
+>不适合深度分页，因为其跳页实现繁琐。不适合数据频繁的修改，其修改本质是删除加插入操作形成的，高频率的数据增删容易触发段合并，即数据的重新组装。不适合事务操作，没有关系型数据库的事务和锁，难以应对一致性要求较高的场景。
 
-##### 深度分页
+### es分词器
+
+```
+#倒排索引
+为了实现实时查询（1s以内），es使用倒排索引维护信息。信息包括一个列表，列表描述每个单词出现在哪些文档。当进行搜索时只需要搜索需要的文档。
+例如：
+文档1内容：hello dogs Quick foxes
+文档2：good quick fox
+为了检索相似单词，如fox,foxes,quick,Quick。在构建索引时，使用标准化规则，即统一为词根或小写。在查询时也要先标准化再进行查询。
+```
+
+##### 分析器构成
+
+```
+官网文档:
+https://www.elastic.co/guide/cn/elasticsearch/guide/current/analysis-intro.html
+字符过滤器:字符串按序通过字符过滤器，字符过滤器用于分此前的整理，用于去除HTML、&转为and等。
+分词器：字符串被分为单个词条
+Token过滤器：词条按序通过token过滤器，这个过程会改变词条，如QUICK->quick，删除词条，如a，and，the等五用词，或增加词条，例如jump和leap这种同义词。
+es提供自定义：https://www.elastic.co/guide/cn/elasticsearch/guide/current/custom-analyzers.html的分析器：https://www.elastic.co/guide/cn/elasticsearch/guide/current/custom-analyzers.html
+```
+
+##### 内置分析器
+
+```
+标准分析器:默认分词器，按照unicode的定义划分文本，删除标点，最后进行小写。
+简单分析器:任何不是字母的地方分割文本，再小写。
+空格分析器:空格划分
+语言分析器:考虑语言特点，删除and和the等。构建近义词、词根等。
+```
+
+查看分析器如何工作
+
+```
+GET /_analyze
+{
+  "analyzer": "standard",
+  "text": "Text to analyze"
+}
+```
+
+
+
+# Elasticsearch用法
+
+### 配置使用环境
+
+>es对内存等要求较高，默认的linux系统配置无法满足，一般都会报错，需要进行如下更改才能使用。
+
+```
+#vim /etc/security/limits.conf，修改对打开文件数量的限制
+* soft nofile 65536
+* hard nofile 65536
+* soft nproc 4096
+* hard nproc 4096
+es soft memlock unlimited
+es hard memlock unlimited
+#查看
+ulimit -a
+#修改虚拟内存大小
+vim /etc/sysctl.conf
+vm.max_map_count=262144
+```
+
+
+
+### 聚合查询
+
+>复杂的聚合查询需要使用painless脚本完成，可以使用类似mr的思想完成聚合统计，规避es的聚合统计弱点。
+
+### 设计mapping
+
+##### 数据类型的选择
+
+
+
+### 配置分词引擎
+
+>不同领域对分词有不同的需求，需要结合专业领域的知识提升分词效果，因为分词效果关系到倒排索引的构建，最终影响到搜索性能。es自有的分词器有standard分词器，对中文效果不好。
+
+>将需要的分词引擎拷贝到plugins下，
+
+```
+#为es配置IK分词器，先到github下载IK分词器代码，然后使用maven编译获得一个zip包
+#将zip包解压到es的plugins目录下，查询时使用如下语法即可
+curl -XGET 'http://localhost:9200/_analyze?pretty&analyzer=ik_max_word' -d '联想是全球最大的笔记本厂商'
+#使用IK分词器创建索引，通过setting analyzer指定分词器，ik分为ik_max_word和ik_smart,ik_max_word拆分的粒度最细，smart拆分的粒度最粗。
+"settings" : {
+        "analysis" : {
+            "analyzer" : {
+                "ik" : {
+                    "tokenizer" : "ik_max_word"
+                }
+            }
+        }
+    },
+```
+
+### 迁移数据
+
+>由于之前的索引设计不合理，或者有新的需求,需要新建索引，并在索引之间迁移数据。
+>
+>另外，还可能需要跨机器和跨数据库的迁移，将一台机器的数据迁移到另一个es服务的表中。
+
+##### 索引之间迁移
+
+```
+#kibana语法,5601端口
+#curl语法
+#新建索引
+PUT /test
+{
+......
+}
+#使用reindex迁移到新索引
+POST _reindex { "source": { "index": "my_index_name" }, "dest": { "index": "my_index_name_new" } } 
+```
+
+##### 数据库之间迁移
+
+###### 使用logstash进行迁移
+
+```
+input {
+  elasticsearch {
+  hosts => [ "100.200.10.54:9200" ]
+  index => "doc"
+  size => 1000
+  scroll => "5m"
+  docinfo => true
+  scan => true
+  }
+}
+
+filter {
+json {
+  source => "message"
+  remove_field => ["message"]
+  }
+  mutate {
+  # rename field from 'name' to 'browser_name'
+  rename => { "_id" => "wid" }
+}
+}
+
+output {
+  elasticsearch {
+  hosts => [ "100.20.32.45:9200" ]
+  document_type => "docxinfo"
+  index => "docx"
+  }
+
+  stdout {
+  codec => "dots"
+  }
+
+}
+```
+
+### es结点扩展
+
+>随着业务增长和需求变化，需要加入新的结点，扩展es的内存容量。
+
+```
+#配置：16G，500G磁盘
+
+```
+
+### es-head插件使用
+
+>es-head是一个前端插件，解压就能使用，它使用web前端请求es数据库并进行展示。
+
+```
+将压缩包解压到新的机器，修改配置文件添加对应host，拷贝es/data的数据到新的机器
+#注意要禁用rebalance，不然会花费很久时间
+PUT /_cluster/settings
+{
+    "transient" : {
+        "cluster.routing.allocation.enable" : "none"      //取消分片权衡
+    }
+}
+#指定inde想到特定机器
+PUT index_name/_settings
+{
+  "index.routing.allocation.include._ip": "10.124.105.5,10.124.105.6,10.124.105.7"
+}
+```
+
+### es-kibana使用
+
+##### dashboard使用
+
+>创建dashboard，create panel,左侧拖拽需要的键值，底部栏选择需要的什么类型的图形，如饼状等，右侧选择聚合参数，如平均，最大，求和等。
 
 # 其他
 
