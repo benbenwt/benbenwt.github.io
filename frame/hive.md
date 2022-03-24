@@ -473,12 +473,191 @@ cast(sum(if(order_count>=2,1,0))/sum(if(order_count>=1,1,0))*100 as decimal(16,2
 
 >业务维度，每行粒度，事实列
 >
->（下单） （人数、金额） （统计日期，最近1、7、30） ， 单个订单  ，  人数、金额
+>（下单） （订单数、人数、金额） （统计日期，最近1、7、30） ， 单个订单  ，  人数、金额
 
 ```
-#核心语句，查
+#核心语句，查出1、7、30天，这个when recent_days=0个人认为是无意义的，可能写错了，因为recent_days是自己创建的，明明只有1、7、30几个数。
+ select
+        recent_days,
+        user_id,
+        case when recent_days=0 then order_count
+             when recent_days=1 then order_last_1d_count
+             when recent_days=7 then order_last_7d_count
+             when recent_days=30 then order_last_30d_count
+        end order_count,
+        case when recent_days=0 then order_final_amount
+             when recent_days=1 then order_last_1d_final_amount
+             when recent_days=7 then order_last_7d_final_amount
+             when recent_days=30 then order_last_30d_final_amount
+        end order_final_amount
+    from dwt_user_topic lateral view explode(Array(1,7,30)) tmp as recent_days
+    where dt='2020-06-14'
 
 #行粒度分组统计
+```
+
+###### ads_order_by_province
+
+>（下单）  （订单数、订单金额）  （1、7、30）      单个地区       订单数、订单金额
+
+```sql
+#太明显了，就是dwt查出来，然后进行分组聚合订单数、订单金额，然后与dim事实表拼接。最后，union ads_order_by_province表中原始的数据
+insert overwrite table ads_order_by_province
+select * from ads_order_by_province
+union
+select
+    dt,
+    recent_days,
+    province_id,
+    province_name,
+    area_code,
+    iso_code,
+    iso_3166_2,
+    order_count,
+    order_amount
+from
+(
+    select
+        '2020-06-14' dt,
+        recent_days,
+        province_id,
+        sum(order_count) order_count,
+        sum(order_amount) order_amount
+    from
+    (
+        select
+            recent_days,
+            province_id,
+            case
+                when recent_days=1 then order_last_1d_count
+                when recent_days=7 then order_last_7d_count
+                when recent_days=30 then order_last_30d_count
+            end order_count,
+            case
+                when recent_days=1 then order_last_1d_final_amount
+                when recent_days=7 then order_last_7d_final_amount
+                when recent_days=30 then order_last_30d_final_amount
+            end order_amount
+        from dwt_area_topic lateral view explode(Array(1,7,30)) tmp as recent_days
+        where dt='2020-06-14'
+    )t1
+    group by recent_days,province_id
+)t2
+join dim_base_province t3
+on t2.province_id=t3.id;
+
+```
+
+##### 访客统计
+
+##### 用户统计
+
+###### ads_user_total
+
+>（下单、新增）  （金额数、用户数） （1、7、30天）    中间表是单个用户user_id和recent_days，最终是     recent_days   用户数、金额数
+>
+>这个几个关键变量：login_date_first,表示该用户第一次登录，即新增的日期。login_date_last，最后登陆日期。order_date_first，表示第一次下单的用户，即新增下单用户。order_date_last，最后一次购物。order_final_mount代表周期内的下单金额。
+
+```sql
+#所有用户的下单金额
+sum(order_final_amount) order_final_amount,
+#所有用户的下单次数
+sum(if(order_final_amount>0,1,0)) order_user_count,
+#最近周期内第一次登陆
+sum(if(login_date_first>=recent_days_ago,1,0)) new_user_count,
+#最近周期内第一次购物
+sum(if(order_date_first>=recent_days_ago,1,0)) new_order_user_count,
+#最近活跃，但是就是不购物，白嫖怪。
+sum(if(login_date_last>=recent_days_ago and order_final_amount=0,1,0)) no_order_user_count
+
+#通过如下语句组装需要的几个关键变量
+(select user_id,recent_days,login_date_first,login_date_last,order_date_first,
+       case when recent_days=0 then order_final_amount
+            when recent_days=1 then order_last_1d_final_amount
+            when recent_days=7 then order_last_7d_final_amount
+            when recent_days=30 then order_last_30d_final_amount
+        end order_final_mount,
+        if(recent_days=0,"1997-01-01",date_add('2020-06-14',-recent_days+1)) recent_days_ago
+from dwt_user_topic lateral view explode(Array(0,1,7,30)) tmp as recent_days
+where dt='2020-06-14')t1
+```
+
+###### ads_user_change
+
+>统计流失用户、回流用户
+>
+>（登录  ）  （用户数）统计日期                中间表是
+>
+>流失：最后活跃时间是7日前，即为流失。
+>
+>回流：今日登录，且7日内没有登录
+
+```sql
+#回流筛选
+ where datediff(login_date_last,login_date_previous)>=8
+ #流失筛选
+ where dt='2020-06-14'
+    and login_date_last=date_add('2020-06-14',-7)
+```
+
+###### ads_user_retention
+
+>（新增用户 ）   （留存天数，留存用户数量，留存率）   行粒度：7天内的每个单个日期（create_date），中间表是单个user_id，通过第一次登录日期聚合即可    事实列：用户数量、天数  
+>
+>留存天数：7天内注册，今天减去第一次登录日期，就是留存日期
+>
+>留存用户数：7天内注册，最后登陆日期是今天，记为留存
+>
+>留存率：留存用户数/留存用户数+今天未登录
+>
+>中间表的列为：留存天数、用户id、新增日期
+>
+>结果表：group by dt
+
+```sql
+select
+    '2020-06-14',
+    login_date_first create_date,
+    datediff('2020-06-14',login_date_first) retention_day,
+    sum(if(login_date_last='2020-06-14',1,0)) retention_count,
+    count(*) new_user_count,
+    cast(sum(if(login_date_last='2020-06-14',1,0))/count(*)*100 as decimal(16,2)) retention_rate
+from dwt_user_topic
+where dt='2020-06-14'
+and login_date_first>=date_add('2020-06-14',-7)
+and login_date_first<'2020-06-14'
+group by login_date_first;
+```
+
+##### 优惠券主题
+
+###### ads_coupon_stats
+
+>（领取、下单、过期）    （次数，原始金额，优惠金额，补贴率）               粒度是优惠券id
+
+```sql
+select coupon_id,order_original_amount,order_final_amount,order_reduce_amount,
+        cast(order_reduce_amount/order_original_amount as decimal(16,2)) reduce_rate
+       from dwt_coupon_topic
+```
+
+##### 活动主题
+
+###### ads_activity_stats
+
+>（下单）  （下单原始金额，最终金额，优惠金额，补贴率）  活动id  
+
+```sql
+ select
+        activity_id,
+        sum(order_count) order_count,
+        sum(order_original_amount) order_original_amount,
+        sum(order_final_amount) order_final_amount,
+        sum(order_reduce_amount) reduce_amount,
+        cast(sum(order_reduce_amount)/sum(order_original_amount)*100 as decimal(16,2)) reduce_rate
+    from dwt_activity_topic
+    where dt='2020-06-14'
+    group by activity_id
 ```
 
 
