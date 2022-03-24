@@ -172,7 +172,7 @@ drop [temporary] function [if exists] [dbname.]function_name;
 
 ### gmall项目
 
-##### ads_order_spu_stats 主题
+##### ads_order_spu_status 商品主题详细流程
 
 >已知所有表如下所示，编写脚本实现从ods层至ads的数据流动。具体表结构查看datagrip。ods层数据为原始数据，对应一条订单，最小粒度。dwd也为一条订单的粒度，但是其关联了支付、退款等信息。dws为一天的粒度，dwt为1，7，30等不同粒度的统计，ads为最终数据聚合。
 >
@@ -386,7 +386,99 @@ select
 >确定列来源的表，连接粒度，分块。分块基本按照业务流程划分，如下单、支付、退单、退款，然后这些块内部的属性，如金额、次数、联系上优惠券、活动属性。另外，DWT表还要负责更高粒度的统计，如1粒度、7粒度、30粒度。维度组合多了，看的很混乱，脑袋疼。总结以下固定顺序吧，按照如下顺序逐个处理: 选择业务过程(确认维度)→声明粒度→确认事实,与dws相似，但是dwt的一个表的维度可以是多个业务，比如包括下单、退款等等。选中业务后，确认此业务关注的列，以下单为例子，其维度可以通过组合确认，即（金额、次数）（原始金额、使用优惠券优惠的、活动优惠的）（时间跨度），。粒度一般为主题的最小单位，如sku、user_id、coupon_id、activity_id。确认事实这一步多余，因为有多个事实，如前边提到的金额、次数。以此表为例，业务分为下单、支付、退款、退单，组合维度如上所示
 
 ```sql
+#将四块业务用全是一个表的即dws_sku_aciton_daycount，再用nvl处理。可以发现下单件数、下单件数的sql基本一样，只用切换列名即可，其他的查询也是这样，全是重复类似操作。
+#下单 次数  1、7、30天
+select sku_id,sum(if(dt="2020-06-14",order_num,0)) order_last_1day_count ,sum(if(dt>date_add("2020-06-14",-6),order_num,0)) order_last_7day_count,sum(if(dt>date_add("2020-06-14",-29),order_num,0)) order_last_30day_count
+from dws_sku_action_daycount
+ group by sku_id
+#下单 件数  1、7、30天
+select sku_id,sum(if(dt="2020-06-14",order_count,0)) order_last_1day_count ,sum(if(dt>date_add("2020-06-14",-6),order_count,0)) order_last_7day_count,sum(if(dt>date_add("2020-06-14",-29),order_count,0)) order_last_30day_count
+from dws_sku_action_daycount
+ group by sku_id
+ 下边的业务维度也是一样的，只用替换列名
+#下单 参与活动的件数  1、7、30天
+#下单 参与优惠券的件数  1、7、30天
+#下单 活动优惠的金额  1、7、30天
+#下单 优惠券优惠的金额  1、7、30天
+#下单  原始金额   1、7、30天
+#下单  最终的金额  1、7、30天
 
+#支付
+#退款
+#退单
+```
+
+###### ads_order_spu_stats
+
+>确定有哪些业务、维度列，行的单位还是sku，多个事实列
+>
+>（下单） （次数、金额）  （最近1、7、30天）
+
+```sql
+#下边是核心语句，查出来后与事实表拼接，然后用行粒度分组并聚合统计即可。
+select
+        recent_days,
+        sku_id,
+        case
+            when recent_days=1 then order_last_1d_count
+            when recent_days=7 then order_last_7d_count
+            when recent_days=30 then order_last_30d_count
+        end order_count,
+        case
+            when recent_days=1 then order_last_1d_final_amount
+            when recent_days=7 then order_last_7d_final_amount
+            when recent_days=30 then order_last_30d_final_amount
+        end order_amount
+    from dwt_sku_topic lateral view explode(Array(1,7,30)) tmp as recent_days
+    where dt='2020-06-14'
+
+```
+
+
+
+###### ads_repeat_purchase
+
+>品牌复购率计算，业务维度如下，每行的粒度是由唯一的user_id sku_id recent_days确定的，事实是回购率，中间的临时表事实是购买次数。
+>
+>（购买）（品牌复购率）  （最近1、7、30天）
+>
+>复购率的含义，至少买过2次及以上的人所占的比列，即（买两次的用户数）/(买两次的用户数+买一次的用户数)
+>
+>
+
+```sql
+#利用explode将dwd_order_detail表的数据复制三份，分别用于1、7、30的recent_days的select，然后借助date_add(now_date,-recent_days+1)对三组数据进行筛选。
+select
+            recent_days,
+            user_id,
+            sku_id,
+            count(*) order_count
+        from dwd_order_detail lateral view explode(Array(1,7,30)) tmp as recent_days
+        where dt>=date_add('2020-06-14',-29)
+        and dt>=date_add('2020-06-14',-recent_days+1)
+        group by recent_days, user_id,sku_id
+```
+
+```
+#查出来后，再与dim_sku_info使用join，拼接获得sku的品牌名称和id。
+#然后计算大于1的，以及大于2的，再相除。
+cast(sum(if(order_count>=2,1,0))/sum(if(order_count>=1,1,0))*100 as decimal(16,2))
+```
+
+
+
+##### 订单主题
+
+###### ads_order_total
+
+>业务维度，每行粒度，事实列
+>
+>（下单） （人数、金额） （统计日期，最近1、7、30） ， 单个订单  ，  人数、金额
+
+```
+#核心语句，查
+
+#行粒度分组统计
 ```
 
 

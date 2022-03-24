@@ -95,10 +95,12 @@ source create_table.sql
 
 
 
-### 安装
+### 批量PrepareStatement插入
+
+>时间花费=网络传输时间（传输的数据量，建立的连接次数）+数据库相应时间（索引结构、存储原理）
 
 ```
-批量insert
+#批量insert
 for (int k = 1; k <= 10000; k++) {
 					pst.setLong(1, k * i);
 					pst.setLong(2, k * i);
@@ -106,11 +108,11 @@ for (int k = 1; k <= 10000; k++) {
 				}
 pst.executeBatch();
 #prepareStatement使用batch插入15000条要200s。添加后两个参数，速度直接到达一秒。
-  conn = DriverManager.getConnection("jdbc:mysql://hbase2:3306/platform?useUnicode=true&characterEncoding=utf-8&useSSL=true&serverTimezone=UTC&rewriteBatchedStatements=true&useServerPrepStmts=true","root","root");
-使用批量后，只传递一条语句，一次请求。将数据放在一起一次传递过去。
+conn = DriverManager.getConnection("jdbc:mysql://hbase2:3306/platform?useUnicode=true&characterEncoding=utf-8&useSSL=true&serverTimezone=UTC&rewriteBatchedStatements=true&useServerPrepStmts=true","root","root");
+#使用这两个参数后，只传递一条预编译语句，一次请求将数据放在一起传递过去。减少了传递的预编译语句数量，以及创建连接的次数。
 ```
 
-
+### 重设自增id
 
 ```
 清空自增id
@@ -184,6 +186,16 @@ PRIMARY KEY(`dept_no`)
 )ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 ### 理论部分
+
+##### mysq数据安全管理
+
+>数据库是企业的核心资产，如果发生意外的损坏，如删除、更新会导致很大的灾难，可通过以下方式减小损失和发生的可能性。
+>
+>1在资源允许的情况下，定期备份重要数据库的信息。
+>
+>2开启sql_safe_update模式，此模式可避免忘记写where的update和delete操作。
+>
+>3数据库用户权限管理，只给需要查询的用户对应权限账户，update和delete权限要慎重分配，这样也可以防止部分攻击行为。
 
 ##### Java MySQL数据类型对照
 
