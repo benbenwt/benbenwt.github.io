@@ -37,3 +37,14 @@
 >```
 >TaskContext.getPartitionId()
 >```
+
+
+
+# problem
+
+##### idea无法创建scala类
+
+```
+<orderEntry type="library" name="scala-sdk-2.11.8" level="application" />
+```
+

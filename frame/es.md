@@ -840,32 +840,6 @@ POST /myindex/user/_search
 
 java api
 
-# 主键查询大量数据
-
->默认的window_size=1000，不能超过此数值。否则应使用scroll。es不太适合分页操作，本质是不适合大量主键查询、和深页查询（基于主键查询，再排序）。因为其构建的是基于列的分片存储，对于主键没有像mysql一样的索引，只能靠排序来进行分页。其主要面临大量查询时的内存问题，以及分页时间问题。
->
->es的几个限制条件：
->
->1.单次不能查询超过10000条
->
->2.from、size不可以查询超过10000的深页
->
->3如果我想获取全部数据，
->
->4如果我想获得满足特定条件的全部数据，其大于10000条。
->
->
-
-##### 关于es内存
-
->https://zhuanlan.zhihu.com/p/99718374
-
-```
-只将需要搜索的字段放入es，这样可以减少数据量，如果你的数据量比filesystem cache还小，那么相当于你的所有数据都在内存而不是磁盘，这种情况下速度最快，磁盘中放的数据越多，效果越差。
-```
-
-
-
 python scroll
 
 ```
@@ -965,12 +939,6 @@ vim /etc/sysctl.conf
 vm.max_map_count=262144
 ```
 
-
-
-### 聚合查询
-
->复杂的聚合查询需要使用painless脚本完成，可以使用类似mr的思想完成聚合统计，规避es的聚合统计弱点。
-
 ### 设计mapping
 
 ##### 数据类型的选择
@@ -998,6 +966,71 @@ curl -XGET 'http://localhost:9200/_analyze?pretty&analyzer=ik_max_word' -d '联�
         }
     },
 ```
+
+### 基础语法
+
+>包括叶子查询字句、复合查询字句、
+
+##### 叶子查询字句
+
+>match、term、range、wildcard，用于在特定字段中。代码中的wildcard用于指定如何匹配给定的字段和值
+>
+>wildcard:表示严格匹配，即给定的字段必须包含完整的value。
+>
+>match:表示匹配分词的结果，如果匹配了value分词的一部分，也会进行返回。如搜索“张三”，他也会返回“李三”
+>
+>fuzzy：表示模糊，它比match更加广泛，如果分词中有错误字符，它也能进行纠正，并将结果返回。如搜索”邓字棋“，他也能修正为”邓紫棋“。
+>
+>term:表示精确匹配，不对数据value进行分词，直接进行查询。
+>
+>terms：同term，传入一个数据，相当于多个term的组合。
+>
+>exist：存在对应字段
+>
+>ids：根据id返回
+>
+>range：表示范围，用于数值型数据。gte：大于，lte：小于
+
+```
+SearchSourceBuilder ssb1=new SearchSourceBuilder();
+        ssb1.from((pageNum-1)*5);
+        ssb1.size(5);
+        QueryBuilder queryBuilder=QueryBuilders.boolQuery()
+                .should(QueryBuilders.wildcardQuery("objects.malware_types",value))
+                .should(QueryBuilders.wildcardQuery("objects.pattern",value))
+                .should(QueryBuilders.wildcardQuery("objects.architecture_execution_envs",value))
+                .should(QueryBuilders.wildcardQuery("objects.value",value))     .should(QueryBuilders.wildcardQuery("objects.external_references.external_id.keyword",value));
+        ssb1.query(queryBuilder);
+        SearchRequest searchRequest=new SearchRequest("myindex").source(ssb1);
+        return searchRequest;
+```
+
+##### 复合查询字句
+
+>bool query、constant_score query、dis_max query
+>
+>bool query：用于连接多个查询，多个查询之间可用修饰词连接，如：should、must、must_not、filter
+
+```
+SearchSourceBuilder ssb1=new SearchSourceBuilder();
+        ssb1.from((pageNum-1)*5);
+        ssb1.size(5);
+        QueryBuilder queryBuilder=QueryBuilders.boolQuery()
+                .should(QueryBuilders.wildcardQuery("objects.malware_types",value))
+                .should(QueryBuilders.wildcardQuery("objects.pattern",value))
+                .should(QueryBuilders.wildcardQuery("objects.architecture_execution_envs",value))
+                .should(QueryBuilders.wildcardQuery("objects.value",value))     	.should(QueryBuilders.wildcardQuery("objects.external_references.external_id.keyword",value));
+
+        ssb1.query(queryBuilder);
+        SearchRequest searchRequest=new SearchRequest("myindex").source(ssb1);
+        return searchRequest;
+```
+
+
+
+### 聚合查询
+
+>复杂的聚合查询需要使用painless脚本完成，可以使用类似mr的思想完成聚合统计，规避es的聚合统计弱点。
 
 ### 迁移数据
 
@@ -1320,6 +1353,14 @@ GET test_dev/_search
 
 >适合全文检索，由给定字段查询所在文档，数据量大时需要特定api。适合灵活的节点水平扩展。
 >不适合深度分页，因为其跳页实现繁琐。不适合数据频繁的修改，其修改本质是删除加插入操作形成的，高频率的数据增删容易触发段合并，即数据的重新组装。不适合事务操作，没有关系型数据库的事务和锁，难以应对一致性要求较高的场景。
+
+##### 关于es内存
+
+>https://zhuanlan.zhihu.com/p/99718374
+
+```
+只将需要搜索的字段放入es，这样可以减少数据量，如果你的数据量比filesystem cache还小，那么相当于你的所有数据都在内存而不是磁盘，这种情况下速度最快，磁盘中放的数据越多，效果越差。
+```
 
 ### mysql分页和elasticsearch分页
 

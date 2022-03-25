@@ -324,9 +324,24 @@ sbin/start-history-server.sh
 ### scala安装
 
 ```
-下载scala包或在idea的project structure中指定自动下载，在setting的plugins中下载scala插件。
-创建maven项目，在project structure中添加scala。
-sprk3.0.0,scala-2.12
+1下载scala包或在idea的project structure中指定自动下载，
+2在setting的plugins中下载scala插件。
+3创建maven项目，在project structure中添加scala。
+4pom中引入spark3.0.0,scala-2.12及scala打包插件
+ <dependencies>
+        <dependency>
+            <groupId>org.apache.spark</groupId>
+            <artifactId>spark-core_2.12</artifactId>
+            <version>3.1.2</version>
+        </dependency>
+        <!-- https://mvnrepository.com/artifact/net.alchim31.maven/scala-maven-plugin -->
+        <dependency>
+            <groupId>net.alchim31.maven</groupId>
+            <artifactId>scala-maven-plugin</artifactId>
+            <version>3.2.2</version>
+
+        </dependency>
+    </dependencies>
 ```
 
 # 理论知识
@@ -565,21 +580,48 @@ val dataRDD1 = dataRDD.sortBy(num=>num, false, 4)
 
 ###### reduceByKey
 
+>将数据按照key相同的对value进行聚合
+
 ###### groupByKey
+
+>将数据按照key对value进行分组，相比于reduceByKey，groupByKey只是对数据进行分组，而没有进行聚合。reduceByKey可以借助combine在shuffle之前进行预聚合，所以聚合性能更好。
 
 ###### aggregateByKey
 
-foldByKey
+>将数据根据不同的规则进行分区内计算和分区间计算
+>
+>它具有两个参数列表，第一个参数列表表示分区内的计算规则，第二个参数列表表示分区间的计算规则。
 
-combineByKey
+```
+val resultRDD=rdd.aggregateByKey(10)(
+	(x,y)=> math.max(x,y)
+	(x,y)=> x+y
+)
+```
 
-sortByKey
+###### foldByKey
 
-join
+>当分区内和分区间计算规则相同时，使用此函数
 
-leftOuterJoin
+###### combineByKey
 
-cogroup
+>相当于aggregateByKey的区内部分
+
+###### sortByKey
+
+>在一个<K,V>的RDD上调用，K必须实现Ordered接口，返回一个按照key排序的RDD
+
+###### join
+
+>使用相同key连接两个RDD，将(K,V)(K,W)组成(K,(V,W))
+
+###### leftOuterJoin
+
+>左外连接，即以左表为基表，保留左表的空值行。
+
+###### cogroup
+
+>将(K,V)(K,W)组成(K,(Iterable<V>,Iterable<W>))
 
 ###### treeReduce算子
 
@@ -587,9 +629,356 @@ cogroup
 
 ###### treeAggregate算子
 
+>
+
+##### RDD Action算子
+
+###### reduce
+
+>聚合RDD中的所有元素
+
+###### collect
+
+>以数据形式返回所有元素
+
+###### count
+
+>返回RDD中元素个数
+
+###### first
+
+>返回RDD中的第一个元素
+
+###### take
+
+>返回前n个元素
+
+###### takeOrdered
+
+>排序后返回前n个
+
+###### aggregate
+
+>分区的数据通过初始值和分区内的数据进行聚合，然后再和初始值进行分区间的数据聚合
+
+###### fold
+
+>折叠操作，aggregate 的简化版操作
+
+###### countByKey
+
+>统计每种 key 的个数
+
+###### save
+
+```scala
+def saveAsTextFile(path: String): Unit
+def saveAsObjectFile(path: String): Unit
+def saveAsSequenceFile(
+ path: String,
+ codec: Option[Class[_ <: CompressionCodec]] = None): Unit
+```
+
+###### foreach
+
+>分布式遍历 RDD 中的每一个元素，调用指定函数
+
 ### spark sql
 
+>三者都是分布式弹性数据集**Resilient** 
+>
+>RDD相比DataFrame不支持sql操作，一般与mlib一起使用。DataFrame是指定了列名的，可以通过列名访问。
+>
+>DataFrame是Dataset的一个特例，其类型为Dataset[Row]。两者都支持sql操作，比如select，groupby。
+
+#### DataFrame
+
+##### 创建DataFrame
+
+```scala
+#查看支持的数据源格式
+spark.read
+val df=spark.read.json("data/user.json")
+```
+
+##### SQL语法
+
+```
+#对DataFrame创建一个临时表，这样可以使用sql进行操作
+df.createOrReplaceTempView('user')
+val sqlDF=spark.sql("SELECT * FROM user")
+sqlDF.show()
+#创建全局表
+df.createGlobalTempView("user")
+spark.sql("SELECT * FROM global_temp.user").show()
+```
+
+##### DSL语法
+
+>domain-specific language，DSL语法用于管理结构化数据，可以使用scala、java、python等编写DSL语法语句，无需创建临时视图使用sql了。
+
+```
+#等同于sql的select语句
+df.select($"username",$"age" + 1).show
+df.select('username, 'age + 1).show()
+#
+df.filter($"age">30).show
+df.groupBy("age").count.show
+```
+
+##### RDD转换为DataFrame
+
+>在IDEA开发程序时，如果需要将RDD于DF和DS之间互相操作，需要import spark.implicits._
+
+```
+val idRDD=sc.textFile("id.txt")
+idRDD.toDF("id").show
+#DataFrame转RDD
+df.rdd
+```
+
+#### Dataset
+
+>Dataset是具有强类型的数据集合，需要提供对应的类型信息。
+
+##### 创建Dataset
+
+```
+#使用样例类序列创建DataSet
+case class Person(name:String,age:Long)
+val caseClassDS=Seq(Person("zhangsan",2)).toDS()
+caseClassDS.show
+#使用基本类型的序列创建DataSet
+val ds=Seq(1,2,3,4,5).toDS
+ds.show
+#RDD转DataSet
+ds1=sc.makeRDD(List(("zhangsna",30),("lisa",60))).map(t=>User(t._1,t._2)).toDS
+#Dataset转RDD
+ds1.rdd
+#DataFrame和DataSet转换
+val df=sc.makeRDD(List(("zhangsan"，30)))
+val ds=df.as[User]
+VAL df=ds.toDF
+```
+
+#### 用户自定义函数
+
+>可以使用spark.udf添加自定义函数
+
+```
+spark.udf.register("addName",(x:String)=>"Name:"+x)
+df.createOrReplaceTempView("people")
+spark.sql("Select addName(name),age from people").show()
+```
+
+#### 数据保存和加载
+
+```
+#数据加载通用方式，format设置类型：csv，jdbc，json，parquet
+load：在csv，jdbc，json，parquet格式下需要传入数据的路径
+option：在jdbc格式下，需要传入jdbc相应参数，url、user、password和dbtable
+spark.read.format("…")[.option("…")].load("…")
+
+#保存数据
+#查看
+df.write.
+df.write.format("")[.option("...")].save("...")
+
+```
+
+>core-site.xml   hdfs-site.xml  mapred-site.xml  yarn-site.xml
+>
+>hadoop-env.sh,yarn-env.sh,mapred-env.sh
+>
+>workers
+
 ### spark streaming
+
+#### wordcount例子
+
+```
+package com.wt.learn
+
+import org.apache.spark.streaming.{Seconds, StreamingContext}
+import org.apache.spark.{SparkConf, SparkContext}
+
+object StreamWordCount {
+  def main(args: Array[String]):Unit={
+    val sparkConf=new SparkConf().setMaster("local[*]").setAppName("streaming")
+    val ssc=new StreamingContext(sparkConf,Seconds(3))
+    val lineStreams=ssc.socketTextStream("66.66.66.66",9999)
+
+    val wordStreams=lineStreams.flatMap(_.split(" "))
+    val wordAndOneStreams=wordStreams.map((_,1))
+    val wordAndCountStreams=wordAndOneStreams.reduceByKey(_+_)
+
+    wordAndCountStreams.print()
+
+    ssc.start()
+    ssc.awaitTermination()
+  }
+}
+nc  -lk 9999
+hello world
+```
+
+#### DStream创建
+
+##### RDD队列
+
+>测试过程中，可以通过ssc.queueStream(queueOfRDDs)创建DStream，每一个推送到这个队列的RDD，都会作为一个DStream处理。
+
+```
+package com.wt.learn
+
+import org.apache.spark.SparkConf
+import org.apache.spark.rdd.RDD
+import org.apache.spark.streaming.{Seconds, StreamingContext}
+
+import scala.collection.mutable
+
+object RDDStream {
+  def main(args:Array[String]):Unit={
+    val conf=new SparkConf().setMaster("local[*]").setAppName("RDDStream")
+    val ssc=new StreamingContext(conf,Seconds(4))
+
+    val rddQueue=new mutable.Queue[RDD[Int]]()
+
+    val inputStream=ssc.queueStream(rddQueue,oneAtATime = false)
+    val mappedStream=inputStream.map((_,1))
+    val reducedStream=mappedStream.reduceByKey(_+_)
+
+    reducedStream.print()
+
+    ssc.start()
+
+    for(i<-1 to 5)
+      {
+        println(i)
+        rddQueue+=ssc.sparkContext.makeRDD(1 to 300, 10)
+        Thread.sleep(2000)
+      }
+    ssc.awaitTermination()
+  }
+}
+
+```
+
+#### 自定义数据源
+
+>需要继承Receiver类，并实现onStrat、onStop方法来自定义数据源采集。
+
+#### Kafka数据源
+
+>通过sparkStreaming连接上kafka特定的topic，并将数据读取出来进行计算。
+
+```
+package com.wt.learn
+
+import org.apache.kafka.clients.consumer.{ConsumerConfig, ConsumerRecord}
+import org.apache.spark.SparkConf
+import org.apache.spark.streaming.dstream.{DStream, InputDStream}
+import org.apache.spark.streaming.kafka010.{ConsumerStrategies, KafkaUtils, LocationStrategies}
+import org.apache.spark.streaming.{Seconds, StreamingContext}
+
+object DirectAPI {
+  def main(args: Array[String]): Unit = {
+    val sparkConf:SparkConf=new SparkConf().setAppName("ReceiverWordCount").setMaster("local[*]")
+    val ssc=new StreamingContext(sparkConf,Seconds(3))
+
+    val kafkaPara:Map[String,Object]=Map[String,Object](
+      ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG->
+      "hbase:9092,hbase1:9092,hbase2:9092",
+      ConsumerConfig.GROUP_ID_CONFIG->
+      "atguigu",
+      "key.deserializer"->
+      "org.apache.kafka.common.serialization.StringDeserializer",
+      "value.deserializer"->
+      "org.apache.kafka.common.serialization.StringDeserializer"
+    )
+    val kafkaDStream:InputDStream[ConsumerRecord[String,String]]=KafkaUtils.createDirectStream[String,String](ssc,LocationStrategies.PreferConsistent,ConsumerStrategies.Subscribe[String,String](Set("atguigu_topic"),kafkaPara))
+
+    val valueDStream:DStream[String]=kafkaDStream.map(record=>record.value())
+    valueDStream.flatMap(_.split(" ")).map((_,1)).reduceByKey(_+_).print()
+
+    ssc.start()
+    ssc.awaitTermination()
+  }
+}
+
+#查看goup id为atguigu的kafka消费情况
+bin/kafka-consumer-groups.sh --describe --bootstrap-server hbase:9092 --group  atguigu
+
+
+```
+
+### DStream转换
+
+>DStream与RDD类似，也分为Transformations转换和Output Operations输出两种。
+
+#### 无状态转换
+
+##### transform
+
+>执行任何自定义的函数，本质每一批次调度一次，其实也是对DSream应用转换
+
+##### join
+
+>两个流之间的join需要两个流的批次大小一直，这样才能做到同时触发计算。触发时，两个流中的各自的RDD进行join，与两个RDD的join效果相同。
+
+#### 有状态转换
+
+>指定如何根据之前的状态和来自输入流的新值对状态进行更新。
+
+##### UpdateStateByKey
+
+>它会传入两个参数，第一个参数是当前时间区间的状态，第二个参数是之前的状态
+
+```
+#生成一个新的DStream，为每个时间区间对应的（键，状态）对组成的。
+#自定义函数，foldLeft的第一个参数是默认初始值值，相当于累加的初始sum。Some表示有类型，不是None，scala中option的子类有some和none。
+val updateFunc = (values: Seq[Int], state: Option[Int]) => {
+     val currentCount = values.foldLeft(0)(_ + _)
+    val previousCount = state.getOrElse(0)
+     Some(currentCount + previousCount)
+ }
+#调用
+val stateDstream = pairs.updateStateByKey[Int](updateFunc)
+```
+
+
+
+#### WindowOperations
+
+>由两个参数决定，窗口时长是计算内容的时间范围，滑动步长是隔多久触发一次计算。
+
+### DStream输出
+
+#### print
+
+>在驱动节点上打印最开始10个元素
+
+#### save
+
+>saveAsTextFiles
+>
+>saveAsObjectFiles
+>
+>saveAsHadoopFiles
+
+#### foreachRDD
+
+>
+
+### 案例实操
+
+>广告黑名单：将每天对某个广告点击超过100次的用户统计出来，将其保存到mysql作为黑名单。
+>
+>广告点击量：统计每天各地区各城市各广告的点击总流量，并将其存入MySQL
+>
+>最近一小时广告点击量
+>
+>这两个能称为实时streaming？都以天为单位进行处理了。
 
 ### spark shell
 
