@@ -2810,3 +2810,4 @@ mapred-site.xml
 </property>
 ```
 
+# 离线数仓

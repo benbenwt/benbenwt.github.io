@@ -67,7 +67,7 @@ bin/kafka-console-producer.sh --broker-list hbase:9092 --topic
 bin/kafka-console-consumer.sh --bootstrap-server hbase:9092 --topic test --from-beginning
 #监听topic
 bin/kafka-console-consumer.sh \
---bootstrap-server hadoop102:9092 --from-beginning --topic topic_log
+--bootstrap-server h:9092 --from-beginning --topic topic_log
 
 ```
 

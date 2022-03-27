@@ -53,6 +53,19 @@ vim /etc/rc.d/rc.local
 
 
 
+### 用户管理
+
+```
+useradd -d  /home/username  username
+userdel -f username
+passwd username
+sudo -u
+#查看所有用户
+cut -d : -f 1 /etc/passwd
+```
+
+
+
 ### 环境变量
 
 ##### 登录shell与非登录shell

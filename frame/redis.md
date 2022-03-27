@@ -31,10 +31,10 @@ redis是基于内存操作，性能与cpu无关，只受内存和网络宽带影
 
 # 使用
 
-1解压后make编译，进入src 使用make install安装。redis-servr  redis.conf启动
-2redis.cli 启动客户端，ping测试连接
-3基本操作：set，get，keys *
-redis.conf配置访问端口，能否远程等。
+>1解压后make编译，进入src 使用make install安装。redis-server  redis.conf启动
+>2redis.cli 启动客户端，ping测试连接
+>3基本操作：set，get，keys *
+>redis.conf配置访问端口，能否远程等。
 
 ## 和springboot
 导入依赖，在application.xml配置好host，端口

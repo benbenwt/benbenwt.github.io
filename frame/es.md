@@ -534,6 +534,33 @@ https://www.elastic.co/guide/en/elasticsearch/reference/7.5/docker.html
 在宿主机上执行sysctl -w vm.max_map_count=262144命令，避免虚拟内存报错。
 ```
 
+```
+#修改系统配置，如系统内存限制、打开文件数量限制。
+vim config/elasticsearch.yml
+http.cors.enabled: true 
+http.cors.allow-origin："*"
+network.host: 0.0.0.0
+discovery.seed_hosts: ["hbase2"]
+
+vim config/jvm.options
+-Xms8g
+-Xmx8g
+
+vim /etc/sysctl.conf
+vm.max_map_count=655360
+sysctl -p
+
+vim /etc/security/limits.conf
+* soft nofile 65536
+* hard nofile 131072
+* soft nproc 2048
+* hard nproc 4096
+ulimit -Sn/-Hn
+
+vim /etc/security/limits.d/90-nproc.cnf
+* soft nproc 4096
+```
+
 
 
 es 7.11
@@ -562,7 +589,7 @@ java.options
 -Xmx8g
 ```
 
-es-head插件
+# es-head插件
 
 ```
 vim config/elasticsearch.yml
@@ -570,28 +597,11 @@ http.cors.enabled: true
 http.cors.allow-origin："*"
 network.host: 0.0.0.0
 discovery.seed_hosts: ["hbase2"]
-
-vim config/jvm.options
--Xms8g
--Xmx8g
-
-vim /etc/sysctl.conf
-vm.max_map_count=655360
-sysctl -p
-
-vim /etc/security/limits.conf
-* soft nofile 65536
-* hard nofile 131072
-* soft nproc 2048
-* hard nproc 4096
-ulimit -Sn/-Hn
-
-vim /etc/security/limits.d/90-nproc.cnf
-* soft nproc 4096
-
 ```
 
-# kibana
+
+
+# Kibana
 
 ## 安装配置kibana
 
@@ -603,7 +613,7 @@ hostname 0.0.0.0
 vim KIBANA_HOME/config/kibana.yml
 server.host: "this_host_id"
 elasticsearch.hosts: ["http://hbase2:9200"]
-bin/kibana --allow-rooot
+bin/kibana --allow-root
 ```
 
 

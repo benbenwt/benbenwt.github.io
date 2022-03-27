@@ -143,7 +143,7 @@ nohup bin/yanagishima-start.sh >y.log 2>&1 &
 #执行此语句SELECT count(*) FROM hive.gmall."ads_user_change"  LIMIT 100，presto需要0.54s，而hive需要22s。
 ```
 
-![presto](..\resources\images\presto.png)
+![presto](../resources/images/Presto.jpg)
 
 ### problem
 

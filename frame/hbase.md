@@ -463,6 +463,8 @@ scan 'test',FILTER=>"FamilyFilter(=,'substring:name')"
 
 # 理论知识
 
+>hbase本质是key-value类型数据库，所以它最适合的场景就是key值查询，表现比其他数据库优异。一般用于实时数仓中的临时数据存储，如当日是否登陆过、当日是否消费过。
+
 ##### timestamp
 
 ```
@@ -496,20 +498,26 @@ scan 'test',FILTER=>"FamilyFilter(=,'substring:name')"
 ##### org.apache.hbase.thirdparty.io.netty.channel.AbstractChannel$AnnotatedConnectException
 
 ```
-hadoop dfsamin -safemode leave
+hadoop dfsadmin -safemode leave
 ```
 
 ##### org.apache.hadoop.hbase.PleaseHoldException: Master is initializing
 
-```
-直接报zk中的数据全删了
-deleteall /hbase
-再把hbase在hdfs的文件全删了。
-```
+>**如果是个人的测试环境!!!**数据不重要，可以把zk中的数据全删了
+>deleteall /hbase
+>再把hbase在hdfs的文件全删了。
 
 ##### address already in use
 
 ```
 在hbase-env.sh里面设置HBASE_MANAGES_ZK 改成false 默认是true，先手动启动zookeeper，然后再启动hbase
+```
+
+##### 无法根据pid关闭hbase进程
+
+```
+#指定一个合适的目录，tmp文件夹会丢失pid，因为系统定期对此文件夹清理。
+vim hbase-env.sh
+PID_DIRECOTYR: /var/hbase/pid
 ```
 
