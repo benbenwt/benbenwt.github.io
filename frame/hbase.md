@@ -471,6 +471,29 @@ scan 'test',FILTER=>"FamilyFilter(=,'substring:name')"
 同一条数据有多个版本，用时间戳后缀作为区分。
 ```
 
+# HBase用法
+
+### hbase shell语法
+
+```
+#查看hbase结点状态
+status
+#查看hbase版本
+version
+#查看当前登录用户
+whoami
+#查看数据库里有哪些表
+list
+```
+
+### Phoenix sql语法
+
+```
+#查看数据库里有哪些表
+select distinct TABLE_NAME from SYSTEM."CATALOG"
+
+```
+
 
 
 # 与关系型数据库基本结构对比

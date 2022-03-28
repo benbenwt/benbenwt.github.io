@@ -4,6 +4,13 @@
 https://search.maven.org/search?q=springboot
 ```
 
+### 国内仓库地址
+
+```
+#aliyun respository
+http://maven.aliyun.com/nexus/content/groups/public
+```
+
 ### 安装
 
 ```

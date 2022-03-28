@@ -36,6 +36,11 @@ vt爬虫
 22 改了哪些：down.py的时间加了8小时，服务器的时间改了时区，前端sampleList加了标签，PcapAnalyze导入功能加了解析，lisa改了celery的获取utc时间，java后端改了统计limit3，
 24 hive八股文、用法、spark八股文、用法
 25 spark core
+27 sparkstreaming 日活
+28 ss 首单
+28 kafka用法与理论,博客
+28 zookeeper用法与理论，博客
+
 202201
 03 DW13 ok
 03 DW20 ok
