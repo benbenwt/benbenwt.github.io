@@ -1177,7 +1177,11 @@ NM是每个结点上运行的资源和任务管理器，负责向RM汇报本节�
 
 >理解InputSplit和RecordReader才能理解maptask的map函数的参数来源，真正明白maptask的划分，map函数的调用，inputfomat如何自定义等问题。
 >
->我们都知道，当一个文件上传到hdfs时，其会按照blocksize进行切分，让每一块block不大于blocksize，并给切分的块给予编号。那么，当mapreduce执行任务时，根据splitsize的确定原则，其size值为max(blocksize,maxsize,minsize)，如何划分呢，split可以根据block读取一定量的数据，且其值不超过size值。将split划分好之后，传递给RecordReader，RecordReader读取split中划分的信息，这些信息不是真的数据，而是数据的block路径标识，以及在block内的偏移标识，并根据nextKey，nextValue确定读取split中的哪个block的哪一行信息。也就是说，split是和block息息相关的，split中记录的数据本质就是，在哪个路径的block，这个block的哪里开始、哪里结束是本分片的，这说明其不会跨越block，也不会把两个block拼在一起达到size值，combineInputFormat是例外。一般情况下，不会设置与blokcsize不同的分片值，因为其导致读取的数据在不同的block，甚至在不同的结点上，造成数据的通信。即切分只根据，size，文件block结构，使用的inputformat。在忽略combineInputFormat的情况下，一个block至少是一个分片，当其超过分片大小时，切分为多个分片。
+>我们都知道，当一个文件上传到hdfs时，其会按照blocksize进行切分，让每一块block不大于blocksize，并给切分的块给予编号。那么，当mapreduce执行任务时，根据splitsize的确定原则，其size值为max(blocksize,maxsize,minsize)，如何划分呢，split可以根据逻辑文件读取一定量的数据，且其值不超过size值。将split划分好之后，传递给RecordReader，RecordReader读取split中划分的信息，这些信息不是真的数据，而是数据的逻辑文件的路径标识，以及在逻辑文件内的偏移标识，这些标识由dataNode转换为具体的block及偏移，并根据nextKey，nextValue确定读取split中的哪个block的哪一行信息。也就是说，split是和逻辑文件息息相关的，split中记录的数据本质就是，在哪个路径的逻辑文件，这个逻辑文件的哪里开始、大小是多少，这说明其不会跨越逻辑文件，也不会把两个逻辑文件拼在一起达到size值，combineInputFormat是例外。一般情况下，不会设置与blokcsize不同的分片值，因为其导致读取的数据在不同的block，甚至在不同的结点上，造成数据的通信。即切分只根据，size，逻辑文件数量，使用的inputformat。在忽略combineInputFormat的情况下，一个逻辑文件至少是一个分片，当其超过分片大小时，切分为多个分片。
+>
+>切分总结：逻辑文件小于size，直接一个maptask。大于size，切分即可，使用逻辑文件路径和偏移标识切分结果。切分不会拼接不同逻辑文件，注意从逻辑文件理解切分，切分完了再转换为block信息，切分是不去管你的block怎么存储的。举例500M文件，切分size为100，存储blokc为128M，那第一块要拆下来28，再到第二块拆下来一块72M，组成逻辑文件的数据，此数据对应于InputSplit(paths=逻辑文件名，startoffset=100)。也是说，对于InputSplit来说block是透明的，它只理解逻辑文件，不知道你的block存储形式,所以它描述时也是用逻辑文件形式描述。
+>
+>split关键属性：startoffset,paths，逻辑文件路径，文件内偏移。
 
 ##### Map
 
@@ -2005,3 +2009,138 @@ bin/hadoop dfsadmin -safemode leave
 yarn.nodemanager.resource.memory-mb 
 ```
 
+# HADOOP数据分片及MapTask并行度
+
+>MapReduce进行数据处理时，首先，需要从hdfs读取数据借助**getSplits()**方法进行分片；然后，创建和分片数量一致的**Maptask**，并为每个**MapTask**分配一个数据分片；最后，再借助**RecordReader**类读取分配的数据分片，以**key，value**的形式传递给**map**函数使用。分片数量决定了**MapTask**数量，进一步决定了Map任务的并行度。InputFormat的**getSplits()**方法和**RecordReader**是数据分片的关键函数。
+
+### InputSplit对象
+
+>FileSplit用于描述分片的结果信息，是getSplits方法的处理结果，其部分类属性如下。
+>
+>其中file为分片对应的文件的hdfs路径或本地文件系统file路径，
+>
+>start表示从file的哪一个字节开始属于此分片，
+>
+>length表示file中从start取多少字节数据。
+
+```java
+private Path file;
+private long start;
+private long length;
+```
+
+### getSplits()方法
+
+>getSplits方法对输入的文件进行分片，并将分片的结果信息封装到InputSplit对象中。主要根据文件的数量，文件的大小进行文件的分片。以分片大小设置为100M为例，对于文件大小不超过100M的，直接作为一个单独数据分片。对于超过100M超过的文件，将其切分为多个数据分片，每个分片小于等于100M。
+
+```java
+#此处以TextInputFormat的代码为例
+#getSplits方法的简略代码如下,其中bytesRemaining表示文件还剩多少字节，如果剩下的大小还超过分片大小，就截取splitSize长度的文件创建新分片，直到剩下的字节小于等于分片大小。
+while (((double) bytesRemaining)/splitSize > =1) {
+          splits.add(new FileSplit(file=path, start=length-bytesRemaining, length=splitSize);     
+          bytesRemaining -= splitSize;        //剩余的大小
+        }
+```
+
+>下边对分片过程进行举例说明，使用getSplits方法获得InputSplit对象结果。
+>
+>例如，对于两个文件：1.txt,2.txt，分片大小为100M。1.txt大小为180M，2.txt大小为280M。其分片结果为，
+>
+>InputSplit(file="1.txt",start=0,length=100x1024x1024)  InputSplit(file="1.txt",start=80x1024x1024,length=80x1024x1024)   
+>
+>
+>
+>InputSplit(file="2.txt",start=0,length=100x1024x1024)
+>
+>InputSplit(file="2.txt",start=100x1024x102,length=100x1024x1024)
+>
+>InputSplit(file="2.txt",start=200x1024x102,length=80x1024x1024)
+>
+>这样共产生了5个数据分片，举例说明第一个分片，它是来自1.txt，开始索引为0，长度为100x1024x1024字节，即100M。实际上不同文件的分片结果互不影响，只用关注单个文件的分片过程即可。
+
+### MapTask
+
+>MapTask是map任务的执行者，有多少MapTask就有多少个并行执行的任务，即并行度。每个MapTask对应一个FileSplit，两者关系为一对一，MapTask通过调用RecordReader的nextKey，NextValue逐个读取FileSplit中的数据。
+
+```
+#contenxt.getCurrentKey，context.getCurrentValue本质就是调用的RecordReader的getCurrentKey，getCurrentValue，通过循环调用nextKeyValue()进行取值，直到nextKeyValue()返回false，到达数据分片的结尾。
+while (context.nextKeyValue()) {
+        map(context.getCurrentKey(), context.getCurrentValue(), context);
+      }
+```
+
+### RecordReader
+
+>RecordReader用于控制如何读取MapTask的InputSplit对象数据，并传递给Map函数。关键函数为NextKeyValue（），getCurrentKey（），getCurrentValue（）。NextKeyValue（）返回true或false，表示是否读取到结尾，getCurrentKey（），getCurrentValue（）用于获取key、value的值。
+
+```
+#以TextInputFormat使用的LineRecordReader的简略代码为例，其NextKeyValue（）如下，每次调用NextKeyValue（）它会读取InputSplit的一行数据
+key=new LongWritable()
+value=new Text()
+newSize = in.readLine(value, maxLineLength, maxBytesToConsume(pos));  //读取的结果引用传递给value
+pos=pos+newSize  //pos表示读取到那里了，即在数据分片中的偏移量
+k.set(pos)
+
+#之后MapTask会调用getCurrentKey（），getCurrentValue（）获取刚刚NextKeyValue（）生成的key和value。并传递给map函数使用
+ @Override
+  public LongWritable getCurrentKey() {
+    return key;
+  }
+
+  @Override
+  public Text getCurrentValue() {
+    return value;
+  }
+```
+
+### 其他分片方式
+
+##### CombineTextInputFormat
+
+>CombineTextInputFormat使用TextRecordReaderWrapper作为RecordReader，将CombineFileSplit作为TextRecordReaderWrapper的输入，且CombineTextInputFormat实现了自己的getSplits，他会将多个小文件合并为一个分片，直到达到分片大小，可以有效解决小文件过多，MapTask过多降低效率的问题。
+
+##### 自定义RecordReader
+
+>为了实现小文件合并，并且每次调用map函数，读取一个小文件的全部内容，编写一个类继承了CombineTextInputFormat，并重写了createRecordReader方法，编写一个类继承了RecordReader类，重写了三个关键方法。
+
+```
+public boolean nextKeyValue() throws IOException, InterruptedException {
+//        split包括逻辑文件路径，文件内偏移。根据FileSplit的getPaths属性取出路径，然后一次全部读取到value中，并设置key和value。
+        if(fileIndex<split.getPaths().length)
+        {
+            Path path=split.getPath(fileIndex);
+            System.out.println("CombineWholeRecordReader read whole json file in:"+path+" startOffset is "+split.getOffset(fileIndex));
+            FileSystem fileSystem=path.getFileSystem(configuration);
+            InputStream inputStream=fileSystem.open(path);
+            BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream));
+            StringBuffer json=new StringBuffer();
+            String tem="";
+            while(true){
+                tem = bufferedReader.readLine();
+                if (tem != null) {
+                    json.append(tem);
+                } else break;
+            }
+            k.set(fileIndex);
+            v.set(json.toString());
+            isProgress=false;
+            fileIndex++;
+            return true;
+        }
+        return false;
+    }
+```
+
+### 分片优化
+
+##### HADOOP分块
+
+>HDFS的文件在物理上是分块存储的(Block)，块的大小可以通过配置参数dfs.blocksize来规定，Hadoop3中默认块大小为128M。当存储一个大于128M的文件时，hdfs会将其划分为Block1，Block2... ...，每一块最大为128M，而文件与划分后地Block的对应关系由NameNode进行存储和维护。DataNode负责存储实际地数据块Block，执行数据块地读写操作。
+
+>在分片完成后，MapTask数据需要获取自身所需的分片数据，一般情况下对应的Block都在本地，无需进行网络沟通。但是，如果将分片尺寸设置的与Blocksize 不同，便会将Block切分开，发送到不同结点上的MapTask，所以会造成网络开销，故一般将两者设置的一样大。
+
+##### 处理核心数
+
+>处理核心数=结点机器数*每台机器的核心数
+>
+>可参考此参数和输入数据的规模设计分片规则，让机器的到最大利用，并且挑选合适的并行度用于削减执行时间，注意执行时间与数据传输时间、初始化时间的占比。

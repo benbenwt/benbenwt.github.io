@@ -1170,6 +1170,8 @@ _shards_percent_as_number" : 100.0
 
 
 
+
+
 # Elasticsearch大量查询和深度分页
 
 >大量查询问题：elasticsearch在默认情况下，不允许单词请求窗口大于10000，因为在这种情况下，elasticsearch的查询效率很慢，占用内存很大。
