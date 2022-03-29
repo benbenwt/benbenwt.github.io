@@ -3,6 +3,8 @@
 >数仓的数据一般来源于以下三种，1.用户的业务数据，如购买、注册、登录等，这些数据一般在mysql、oracle等业务数据库中。2.用户的行为日志数据，这些数据不会与后端交互，所以需要在前端采集，如点击了某个前端元素，在某个页面停留了多久。3.爬虫数据，从其他同类型网站或相关网站爬取的信息，如竞品。本项目主要是爬虫数据，这里的爬虫是指源头是爬虫，但是是将文章、软件分析之后生成的爬虫信息。
 
 >之前用mr写的基本流程：后端直接推到kafka（这一步可以用flume代替），然后java程序读取kafka写入hdfs（这一步可以用flume代替），然后mr任务读取hdfs清洗为列写入hive（这一步的清洗为列能放到后边嘛，还是用mr吧，调试方便些）。应该是清洗到多个表，而不是一个表。和es_provider中解析json的代码差不多。后边再用hive，那怎么导入的，正常情况下是insert overwrite  partition（.... ....），以前采用的load了语法批量载入，一天一个分区。
+>
+>没有用户就没有复杂的业务过程，数仓的数据就会很单薄，只有维度的罗列。
 
 ### 爬虫模块
 
@@ -11,6 +13,47 @@
 ### 分析模块
 
 >分析模块用于生成最终的json数据
+
+### HIVE数仓
+
+>将分析模块和爬虫模块的数据采集至hdfs，然后dump到hive表，主要目的，统计category，即类别，统计Location，即地区，统计Architecture，即架构。其他topic，ThreatActor，
+
+#### 建表语句
+
+##### ods_category
+
+```
+```
+
+
+
+##### ods_location
+
+##### ods_architecture
+
+##### dwd_category
+
+##### dwd_location
+
+##### dwd_architecture
+
+##### dws_category
+
+##### dws_location
+
+##### dws_architecture
+
+##### dwt_category
+
+##### dwt_location
+
+##### dwt_architecture
+
+##### ads_category
+
+##### ads_location
+
+##### ads_architecture
 
 ### 数据库
 

@@ -1006,7 +1006,7 @@ hadoop.hive.hbase.HBbaseStorageHandler
 CREATE TABLE cctable (key int, value string) STORED BY 'org.apache.hadoop.hive.hbase.HBaseStorageHandler' WITH SERDEPROPERTIES ("hbase.columns.mapping" = ":key,cf:val") TBLPROPERTIES ("hbase.table.name" = "cc");
 ```
 
-# HIVE SQL理论知识
+# HIVE SQL用法
 
 ### 基本类型
 
