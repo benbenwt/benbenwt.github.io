@@ -1831,3 +1831,197 @@ zookeeper,kafka,flume,sqoop,superset
 ![软件版本](../resources/images/image-20220103163534955.png)
 
 ##### 
+
+# 数仓4.0总结
+
+>bili资源：数仓4.0
+
+### 整体架构
+
+>采集数据,离线仓库，迁移数据，可视化。
+>
+>采集数据时使用sqoop从mysq清洗数据到hdfs，使用flume采集用户行为日志到hdfs。
+>
+>离线数仓使用hive搭建，包括ods、dwd、dim、dws、dwt、ads层。编写清洗脚本，逐层清洗数据。
+>
+>迁移数据数据使用sqoop重新存储到mysql数据库，用于可视化和业务使用。
+>
+>可视化使用superset，借助图表展现数仓统计结果。
+
+### 采集
+
+#### flume用法
+
+##### flume自定义拦截器
+
+>继承Interceptor，重写两个interceptor方法，一个是处理单个Event的，另一个是处理Event列表的，在第二个种调用第一个即可。
+
+##### flume配置文件
+
+```
+## 组件
+a1.sources=r1
+a1.channels=c1
+a1.sinks=k1
+
+## source1
+a1.sources.r1.type = org.apache.flume.source.kafka.KafkaSource
+a1.sources.r1.batchSize = 5000
+a1.sources.r1.batchDurationMillis = 2000
+a1.sources.r1.kafka.bootstrap.servers = hadoop102:9092,hadoop103:9092,hadoop104:9092
+a1.sources.r1.kafka.topics=topic_log
+a1.sources.r1.interceptors = i1
+a1.sources.r1.interceptors.i1.type = com.atguigu.flume.interceptor.TimeStampInterceptor$Builder
+
+## channel1
+a1.channels.c1.type = file
+a1.channels.c1.checkpointDir = /opt/module/flume/checkpoint/behavior1
+a1.channels.c1.dataDirs = /opt/module/flume/data/behavior1/
+
+
+## sink1
+a1.sinks.k1.type = hdfs
+a1.sinks.k1.hdfs.path = /origin_data/gmall/log/topic_log/%Y-%m-%d
+a1.sinks.k1.hdfs.filePrefix = log-
+a1.sinks.k1.hdfs.round = false
+
+#控制生成的小文件
+a1.sinks.k1.hdfs.rollInterval = 10
+a1.sinks.k1.hdfs.rollSize = 134217728
+a1.sinks.k1.hdfs.rollCount = 0
+
+## 控制输出文件是原生文件。
+a1.sinks.k1.hdfs.fileType = CompressedStream
+a1.sinks.k1.hdfs.codeC = lzop
+
+## 拼装
+a1.sources.r1.channels = c1
+a1.sinks.k1.channel= c1
+```
+
+#### sqoop用法
+
+```
+#导入数据到hdfs
+$sqoop import \
+--connect jdbc:mysql://hadoop102:3306/$APP \
+--username root \
+--password 000000 \
+--target-dir /origin_data/$APP/db/$1/$do_date \
+--delete-target-dir \
+--query "$2 where \$CONDITIONS" \
+--num-mappers 1 \
+--fields-terminated-by '\t' \
+--compress \
+--compression-codec lzop \
+--null-string '\\N' \
+--null-non-string '\\N'
+```
+
+##### 碰到的问题
+
+###### hive无法使用load导入hdfs采集的数据
+
+>flume的hdfs sink有三种类型：SequenceFile,Datastream,CompressedStream，对于hdfs sink数据，如果要导入TEXTFILE格式的hive表，flume sink时必须使用Datastream。
+
+###### vim 本质是创建新文件
+
+>使用flume采集时，如果用vim修改文件进行追加，flume会认为其是新文件，将文件的全部内容进行了发送，所以应该使用echo ”hello“ >>2.txt进行测试，模拟追加文件的功能。
+
+### hive仓库
+
+##### ODS
+
+>使用sqoop和flume采集到hdfs目录，在导入到ods表中，ods表的设计不用维度建模，参考采集的数据即可。
+>
+>ods是原生的数据，没有所谓的维度。可以通过维度建模的维度来考虑和设计这些表，并进行一定扩展。如维度包括优惠券，订单，商品，可扩展为优惠券信息表、优惠券领用表，订单表、订单明细优惠券关联表，商品表、商品销售属性表（如白色，4英寸等属性）。
+>
+>时间是常用的列，如创建，使用，取消，支付等
+
+##### DIM
+
+>描述几个topic的维度表：用户，商品，活动，优惠，时间，地区。和ads基本一致
+
+##### DWD
+
+>DIM层DWD层需构建维度模型，一般采用星型模型，呈现的状态一般为星座模型。
+>
+>DWD层使用维度建模，一般按照以下四个步骤：
+>
+>**选择业务过程→声明粒度→确认维度→确认事实**
+
+```
+业务过程：下单业务，支付业务，退款业务，物流业务，一条业务线对应一张事实表，即一张DWD表。
+声明粒度：粒度就是行，决定一行代表什么。一般DWD层都是可用的最小粒度，如一次交易，一个商品，一次浏览等。
+确认维度：维度就是列，即关心业务过程的哪些特征维度。如下单业务的时间，下单业务的地区，下单业务的用户等。
+确认事实：事实就是度量值（次数、个数、件数、金额，可以进行累加），暂时理解为一种特殊的列，也就是特殊的维度。
+```
+
+##### DWS
+
+##### DWT
+
+>DWS层和DWT层统称宽表层，这两层的设计思想大致相同。
+>
+>一般来说DWT中存储的数据的粒度比DWS大，是DWS的汇总数据，如DWS是一天的订单金额，则DWT是一周、一个月的金额。
+>
+>设计原则：
+>
+>1.需要建哪些宽表：以维度为基准。（哪些公用的维度，如都关注地区，但是关注）
+>
+>2.宽表里面的字段：是站在不同维度的角度去看事实表，重点关注事实表聚合后的度量值。
+
+##### ADS
+
+>对电商系统各大主题指标分别进行分析。
+>
+>最终需要将统计的数据放入mysql、es等，方便其他分析人员使用。
+
+### 迁移数据
+
+##### sqoop用法
+
+```
+#导出数据到mysql
+/bin/sqoop export \
+--connect "jdbc:mysql://hadoop102:3306/${mysql_db_name}?useUnicode=true&characterEncoding=utf-8"  \
+--username root \
+--password 000000 \
+--table $1 \
+--num-mappers 1 \
+--export-dir /warehouse/$hive_db_name/ads/$1 \
+--input-fields-terminated-by "\t" \
+--update-mode allowinsert \
+--update-key $2 \
+--input-null-string '\\N'    \
+--input-null-non-string '\\N'
+}
+```
+
+### 可视化
+
+>活动的分析信息、优惠券的分析信息、订单在省份维度上的分析、订单在spu（商品）上的分析、订单的总体分析、用户的点击路径分析、商品的回购力度分析、用户行为在1、7、30天的分析（）、用户变动信息（回归、离开）、用户停留时间（不同创建日期）、用户1、7、30天总信息分析（下单、上限、）、用户浏览商品信息
+
+### 脚本任务调度
+
+>使用azkaban管理清洗数据的脚本，azkaban可以有效管理任务之间的依赖，查看任务执行进度，检查错误等。通过编写basic.flow文件，我们可以管理自己的调度任务。
+
+```
+#一个示例
+#创建azkaban.project，写入如下内容
+azkaban-flow-version: 2.0
+#创建basic.flow文件，写入如下内容
+nodes:
+  - name: jobA
+    type: command
+    config:
+      command: echo "jobA"
+  - name: jobB
+    type: command
+    dependsOn:
+     - jobA
+    config:
+     command: echo "jobB"
+将两者打包到同一个zip下，在azkaban创建project时upload即可。
+```
+

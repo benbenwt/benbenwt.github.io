@@ -149,3 +149,26 @@ a1.sinks.k1.channel= c1
 
 ```
 
+# flume理论
+
+### source
+
+>以行为单位检测指定的所有文件，每有一行增加，将改行的内容作为body进行封装Event，并发送到channel。
+
+### channel
+
+### sink
+
+# flume用法
+
+### ExecSource
+
+### Sink
+
+##### hdfs Sink
+
+>hdfs sink有三种类型：SequenceFile,Datastream,CompressedStream
+>
+>https://blog.csdn.net/helloxiaozhe/article/details/88417091.
+>
+>对于要导入TEXTFILE的hive表的数据，flume sink时必须使用Datastream。

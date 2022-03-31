@@ -1080,8 +1080,6 @@ Secondary NameNode用于解决fsimage过旧的问题，它定时拉取、合并N
 5.ZKFailoverController（主备切换控制器，FC）：ZKFailoverController 作为独立的进程运行，对 NameNode 的主备切换进行总体控制。ZKFailoverController 能及时检测到 NameNode 的健康状况，在主 NameNode 故障时借助 Zookeeper 实现自动的主备选举和切换（当然 NameNode 目前也支持不依赖于 Zookeeper 的手动主备切换）；
 ```
 
-
-
 ### Yarn架构
 
 ##### resourceManager

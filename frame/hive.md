@@ -12,6 +12,12 @@ show databases；
 
 
 
+##### 创建数据库
+
+```
+create database userdb;
+```
+
 ##### 建表语句
 
 ```
@@ -116,6 +122,15 @@ LOAD DATA [LOCAL] INPATH 'filepath' [OVERWRITE] INTO TABLE tablename [PARTITION 
 ```
 #同插入与修改，hive本质是hdfs文件，对于文件变动和查询性能很差，增删改。它唯一的作用就是存储，它的存储作用是由hdfs分布式文件体现的，与它无关。另一个作用就是将sql翻译为执行引擎的语言，所以说它不能称为存储组件，而是辅助分析插件，因为其没有添加存储架构，没有修改文件的增删改查性能，其性能与hdfs文件完全相同。
 delete
+```
+
+```
+#借助insert overrite删除数据
+insert overwrite table t_table1 select * from t_table1 where 1=0;
+#xxxx为要保留的数据
+insert overwrite table t_table1 select * from t_table1 where XXXX;
+#按照分区删除
+ALTER TABLE test1  DROP PARTITION (dt='2016-04-29');
 ```
 
 
@@ -1664,6 +1679,12 @@ GO
 
 # HIVE 理论知识
 
+### hive文件存储格式
+
+>包括TEXTFILE,SEQUENCEFILE,RCFILE,ORCFILE，PARQUET。
+>
+>TEXTFILE为默认格式，如果使用TEXTFILE作为建表格式，即STORED AS 。那么load data导入的文件必须是TEXTFILE，不然会导入报错。hive的TEXTFILE对应于flume hdfs.fileType=DataStream
+
 ### 优缺点及使用场景
 
 >优点：1使用SQL语法开发ETL程序，提高开发效率，降低门槛。避免学习mapreduce，减少学习成本。
@@ -1866,9 +1887,18 @@ Impala是基于Hive的大数据实时分析查询引擎，直接使用Hive的元
 ```
 一般分为UDAF（用户自定义聚合函数）和UDTF（用户自定义表生成函数）
 Hive有两个不同的接口编写UDF程序。一个是基础的UDF接口，一个是复杂的GenericUDF接口。
-org.apache.hadoop.hive.ql. exec.UDF 基础UDF的函数读取和返回基本类型，即Hadoop和Hive的基本类型。如，Text、IntWritable、LongWritable、DoubleWritable等。
+org.apache.hadoop.hive.ql. exec.UDF 基础UDF的函数读取和返回基本类型，即Hadoop和Hive的基本类型。如，Text、IntWritable、LongWritable、DoubleWritable等。udf接口已经弃用了。
+```
+
+```
 org.apache.hadoop.hive.ql.udf.generic.GenericUDF 复杂的GenericUDF可以处理Map、List、Set类型。
 ```
+
+```
+UDTF（用户自定义表生成函数）用于表级函数，如lateral view explode。
+```
+
+
 
 ### Hive Sql 是怎样解析成MR job的
 
@@ -2810,4 +2840,3 @@ mapred-site.xml
 </property>
 ```
 
-# 离线数仓

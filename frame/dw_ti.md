@@ -18,26 +18,137 @@
 
 >将分析模块和爬虫模块的数据采集至hdfs，然后dump到hive表，主要目的，统计category，即类别，统计Location，即地区，统计Architecture，即架构。其他topic，ThreatActor，
 
-#### 建表语句
+#### 数据采集
 
-##### ods_category
+##### flume
+
+>对于只能采集单行的问题，可以将json保存为单行。因为json保存时本来就应该剔除制表符和换行符，这样方便数据的处理。显示时如果需要，直接添加indent即可。flume采集后，直接load原生字符串到hive，再编写udf函数解析。
+
+>hdfs sink:hdfs.fileType=DataStream
+
+>flume Line legnth exceeds max
+>
+>这说明 截取 之后才会进入intecpter，所以intercepter报错了，其不是完整的json。
+
+>taildir,spooldir
+
+#### hive仓库
+
+##### 自定义函数
 
 ```
+#使用自定义函数，查看信息。
+select get_id(json) id,get_arch(json) arch,get_location(json) location,get_category(json) category,get_time(json) created_time,json from ods_json;
 ```
 
+```
+#创建自定义函数
+#getArch
+create function ti.get_arch as 'com.atguigu.gmall.hive.udtf.GetArch' using jar 'hdfs://hbase:9000/user/root/hiveudf/gmall-udtf-1.0-SNAPSHOT.jar';
+#getLocation
+create function ti.get_location as 'com.atguigu.gmall.hive.udtf.GetLocation' using jar 'hdfs://hbase:9000/user/root/hiveudf/gmall-udtf-1.0-SNAPSHOT.jar';
+#getCategory
+create function ti.get_category as 'com.atguigu.gmall.hive.udtf.GetCategory' using jar 'hdfs://hbase:9000/user/root/hiveudf/gmall-udtf-1.0-SNAPSHOT.jar';
+#getTime
+create function ti.get_time as 'com.atguigu.gmall.hive.udtf.GetTime' using jar 'hdfs://hbase:9000/user/root/hiveudf/gmall-udtf-1.0-SNAPSHOT.jar';
+#getId
+create function ti.get_id as 'com.atguigu.gmall.hive.udtf.GetId' using jar 'hdfs://hbase:9000/user/root/hiveudf/gmall-udtf-1.0-SNAPSHOT.jar';
+```
 
+##### ods_json
 
-##### ods_location
+```sql
+create external table ods_json(
+    `json` string
+)partitioned by (`dt` string)
+location '/warehouse/ti/ods/ods_json'
+```
 
-##### ods_architecture
+```
+#将数据加载到ods_json
+load data inpath '/origin_data/threat/json/stix_json/2022-03-30'
+into table ti.ods_json partition(dt='2022-03-30');
+```
 
 ##### dwd_category
 
+```sql
+create external table dwd_category(
+    `id` string,
+    `created_time` string,
+    `category` string
+)partitioned by (`dt` string)
+location '/warehouse/ti/dwd/dwd_category'
+```
+
+```
+insert overwrite table  dwd_category partition(dt='2022-03-30')
+select get_id(json) id,get_time(json) created_time,category  from ods_json lateral view explode(get_category(json)) tmp as category;
+```
+
+###### 大量小文件合并
+
+>在hive表下，有许多load进来的数据，它们的数量影响了mapTask的效率，故想使用合并的方式减少MapTask数量。
+
+```
+1.输入合并
+set mapred.max.split.size=256000000;  #每个Map最大输入大小
+set mapred.min.split.size.per.node=100000000; #一个节点上split的至少的大小 
+set mapred.min.split.size.per.rack=100000000; #一个交换机下split的至少的大小
+set hive.input.format=org.apache.hadoop.hive.ql.io.CombineHiveInputFormat;  #执行Map前进行小文件合并
+
+在开启了org.apache.hadoop.hive.ql.io.CombineHiveInputFormat后，一个data node节点上多个小文件会进行合并，合并文件数由mapred.max.split.size限制的大小决定。
+mapred.min.split.size.per.node决定了多个data node上的文件是否需要合并~
+mapred.min.split.size.per.rack决定了多个交换机上的文件是否需要合并~
+
+2.输出合并
+set hive.merge.mapfiles = true #在Map-only的任务结束时合并小文件
+set hive.merge.mapredfiles = true #在Map-Reduce的任务结束时合并小文件
+set hive.merge.size.per.task = 256*1000*1000 #合并文件的大小
+set hive.merge.smallfiles.avgsize=16000000 #当输出文件的平均大小小于该值时，启动一个独立的map-reduce任务进行文件merge
+```
+
 ##### dwd_location
+
+```
+create external table dwd_location(
+    `id` string,
+    `created_time` string,
+    `location` string
+)partitioned by (`dt` string)
+location '/warehouse/ti/dwd/dwd_location'
+```
+
+```
+insert overwrite table  dwd_location partition(dt='2022-03-30')
+select get_id(json) id,get_time(json) created_time,location  from ods_json lateral view explode(get_location(json)) tmp as location;
+```
 
 ##### dwd_architecture
 
+```
+create external table dwd_architecture(
+    `id` string,
+    `created_time` string,
+    `location` string
+)partitioned by (`dt` string)
+location '/warehouse/ti/dwd/dwd_architecture'
+```
+
+```
+insert overwrite table  dwd_architecture partition(dt='2022-03-30')
+select get_id(json) id,get_time(json) created_time,architecture  from ods_json lateral view explode(get_arch(json)) tmp as architecture;
+```
+
 ##### dws_category
+
+>一天为粒度
+
+```
+select * from dwd_category;
+```
+
+
 
 ##### dws_location
 
@@ -45,15 +156,23 @@
 
 ##### dwt_category
 
+>1，7，30天
+
 ##### dwt_location
 
 ##### dwt_architecture
 
 ##### ads_category
 
+>存储到业务数据库，用于查询
+
 ##### ads_location
 
 ##### ads_architecture
+
+##### 
+
+
 
 ### 数据库
 
