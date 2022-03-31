@@ -1856,6 +1856,16 @@ zookeeper,kafka,flume,sqoop,superset
 
 >继承Interceptor，重写两个interceptor方法，一个是处理单个Event的，另一个是处理Event列表的，在第二个种调用第一个即可。
 
+##### 碰到的问题
+
+###### hive无法使用load导入hdfs采集的数据
+
+>flume的hdfs sink有三种类型：SequenceFile,Datastream,CompressedStream，对于hdfs sink数据，如果要导入TEXTFILE格式的hive表，flume sink时必须使用Datastream。
+
+###### vim 本质是创建新文件
+
+>使用flume采集时，如果用vim修改文件进行追加，flume会认为其是新文件，将文件的全部内容进行了发送，所以应该使用echo ”hello“ >>2.txt进行测试，模拟追加文件的功能。
+
 ##### flume配置文件
 
 ```
@@ -1917,16 +1927,6 @@ $sqoop import \
 --null-string '\\N' \
 --null-non-string '\\N'
 ```
-
-##### 碰到的问题
-
-###### hive无法使用load导入hdfs采集的数据
-
->flume的hdfs sink有三种类型：SequenceFile,Datastream,CompressedStream，对于hdfs sink数据，如果要导入TEXTFILE格式的hive表，flume sink时必须使用Datastream。
-
-###### vim 本质是创建新文件
-
->使用flume采集时，如果用vim修改文件进行追加，flume会认为其是新文件，将文件的全部内容进行了发送，所以应该使用echo ”hello“ >>2.txt进行测试，模拟追加文件的功能。
 
 ### hive仓库
 
