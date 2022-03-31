@@ -172,3 +172,30 @@ a1.sinks.k1.channel= c1
 >https://blog.csdn.net/helloxiaozhe/article/details/88417091.
 >
 >对于要导入TEXTFILE的hive表的数据，flume sink时必须使用Datastream。
+
+# Flume架构和用法示例
+
+### Flume架构
+
+>Flume是一个分布式的日志数据收集、聚合系统，它可以收集很多不同来源的数据到数据中心存储。
+>
+>Flume Event是一个数据单元，body中包含一定字节的数据，headers包含一些属性，如时间戳。
+>
+>Flume Agent是一个JVM进程，它运行程序组件，以便支持将数据从一个数据源清洗到目的源进行存储。
+>
+>Flume Source消费从外部源传递给它的Event，外部源的发送Event格式必须与Source一致，以便Source能识别。当Source接收到Event，它将Event存储到一个或多个channels中。
+>
+>Flume Channel是一个被动的存储，它会保存数据直到Flulme Sink主动消费其存储的数据。例如File Channel，它存储数据到本地filesystem。
+>
+>Flume Sink从Channel中移除Event，并将Event的数据存储到目的源，例如HDFS。Sink也可以将数据发送到下一个Agent的source。
+>
+>Flume Source和Flume Sink两者是异步的，各自分别与channel中的Event进行交流。
+
+### Source
+
+>Source用于从指定
+
+### Channel
+
+### Sink
+
