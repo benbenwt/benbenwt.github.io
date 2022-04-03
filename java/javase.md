@@ -1,184 +1,3 @@
-# 异步非阻塞IO（文件io），网络，缓存，多线程并发。
-
-### 刷题的遗忘的点
-
-##### 异常类
-
-```
-JAVA异常类,Throwable,Error,Exception，RuntimeException,IOException的继承关系
-```
-
-##### 访问修饰符
-
-```
-```
-
-
-
-# JVM
-
-### JVM的结构
-
-JVM = 类加载器 classloader + 执行引擎 execution engine + 运行时数据区域 runtime data area
-
-##### classloader
-
-###### 两种装载方式
-
-classloader两种装载class的方式：
-1.隐式：运行过程中，碰到new方式生成对象时，隐式调用classloader到JVM。
-2.显示：通过class.forname()动态加载。​
-
-###### 双亲委派模型（Parent Delegation Model）
-
-**工作过程**
-1当前ClassLoader首先从自己已经加载的类中查询此类是否已加载。若已经加载就返回加载的类。
-每个类加载器都有自己的加载缓存，当一个类被加载以后就会放入缓存。
-2当前classloader的缓存中没有找到时，委托父类加载器去加载，父类加载器采用同样的策略，直到找到或到达bootstrap classloader.
-3.当所有的父类加载器都没有加载时，再由当前的类加载器加载，并放入自己的缓存。​
-
-**优点**
-1为了安全性，避免用户的类动态替换java的核心类，比如String。同时避免了重复加载，因为相同的class文件被不同classloader加载是不同的两个类，相互转型会抛出classCaseException。
-
-**常用类加载器**
-Bootstrap class loader：所有类加载器的父类，当运行jvm时，她负责核心库的加载，如java.lang.*等。例如java.lang.Object就是由根类加载器加载的。此加载器不是由java编写的，而是c/c++写的。
-Extension class loader：这个加载器加载除了基本API之外的拓展类。
-AppClassLoader:加载应用程序和程序员自定义的类。​
-用户也可以自定义自己的类加载器，java提供了java.long.classloader.
-
-##### **执行引擎**
-
-执行字节码，或者执行本地方法。
-
-###### JIT Complier
-
->JIT编译器是动态编译器的一种，相对的静态编译器则指C/C++编译器。
-
-对于重复执行较多的代码，JIT将其单独翻译为对应平台的机器码，以后调用直接执行即可，提高程序执行速度。但是编译程序和优化需要一定时间，并且占用一定内存，无法在程序刚启动时使用编译器。
-
-而java解释器则是一行一行将java字节码翻译为机器码，不可复用机器码，执行效率较低。
-
-##### runtime data area
-
-jvm运行期间，对内存空间的划分和分配。jvm将内存分为了6个区域来存储。程序员所写的程序都被加载到运行时数据区域中，不同类别存放在heap，java stack,native method stack,PC register ,method area.
-
-###### java stacks
-
-每个jvm线程都有自己私有的java虚拟栈，每个方法占用一个栈帧，这个栈帧和线程同时创建，他的生命周期和线程相同。
-每个java方法被执行时创建一个栈帧用于存储变量表，操作数，动态链接，方法出口等信息。每个方法被调用直至执行完成对应着再java stack中入栈和出战的过程。
-
-###### native method stack
-
-与虚拟机栈的作用相似，虚拟机栈执行java方法，而本地方法栈为虚拟机使用到的本地方法服务。
-本地方法：由其他语言编写，和处理器相关的机器代码。本地方法保存在动态链接库中，即dll中。
-
-###### PC regiters
-
-程序计数器保存当前线程执行到哪行（指令地址），以便线程之间切换。
-​每个线程都有自己的PC，以便完成不同线程切换。
-
-###### heap Memory
-
-所有线程共享的一块区域，用来存储对象实例和数组值。new的对象实例。
-
-jvm初始分配的内存由-Xms,-Xmx指定，默认值分别为物理内存的1/64和1/4。
-
-```
-堆被划分成两个不同的区域：新生代 ( Young )、老年代 ( Old )。新生代 ( Young ) 又被划分为三个区域：Eden、From Survivor、To Survivor。
-这样划分的目的是为了使 JVM 能够更好的管理堆内存中的对象，包括内存的分配以及回收。
-
-默认的，新生代 ( Young ) 与老年代 ( Old ) 的比例的值为 1:2 ( 该值可以通过参数 –XX:NewRatio 来指定 )，即：新生代 ( Young ) = 1/3 的堆空间大小。
-老年代 ( Old ) = 2/3 的堆空间大小。其中，新生代 ( Young ) 被细分为 Eden 和 两个 Survivor 区域，这两个 Survivor 区域分别被命名为 from 和 to，以示区分。
-默认的，Edem : from : to = 8 : 1 : 1 ( 可以通过参数 –XX:SurvivorRatio 来设定 )，即： Eden = 8/10 的新生代空间大小，from = to = 1/10 的新生代空间大小。
-JVM 每次只会使用 Eden 和其中的一块 Survivor 区域来为对象服务，所以无论什么时候，总是有一块 Survivor 区域是空闲着的。
-因此，新生代实际可用的内存空间为 9/10 ( 即90% )的新生代空间。
-```
-
-
-
-###### method area
-
-方法区是线程共享区域，用于存储每个类的结构信息。例如成员变量和方法数据，构造函数和普通函数字节码内容，还包括一些类，实例，接口初始化时用到的特殊方法。当开发人员在程序中通过class对象的getName，isInstance获取消息时，这些数据都来自方法区。
-在一定条件下也会被gc，这块区域对应Permanent  generation持久代。
-
-运行时常量池，其空间从方法区分配，存储类中常量，方法，域引用信息。
-
-### GC
-
-##### 为什么要gc
-
-当一个对象不可达，或一个对象没有任何引用指向它，他就没有必要存在，此时就可以被gc回收。
-
-
-
-##### 触发gc的情况
-
-非线程对象不被指向或超出作用域
-线程对象线程未启动或停止
-
-###### 改变对象引用，置为null或指向其他对象。
-
-Object x=new Object();//object1 
-   Object y=new Object();//object2 
-   x=y;//object1 变为垃圾 
-   x=y=null;//object2 变为垃圾
-
-###### 超出作用域
-
-if(i==0){ 
-      Object x=new Object();//object1 
-   }//括号结束后object1将无法被引用，变为垃圾 
-
-###### 类嵌套导致未完全释放
-
-class A{ 
-      A a; 
-   } 
-   A x= new A();//分配一个空间 
-   x.a= new A();//又分配了一个空间 
-   x=null;//将会产生两个垃圾 
-
-###### 线程中的垃圾
-
-class A implements Runnable{   
-     void run(){ 
-       //.... 
-     } 
-   } 
-   //main 
-   A x=new A();//object1 
-   x.start(); 
-   x=null;//等线程执行完后object1才被认定为垃圾 
-   这样看，确实在代码执行过程中会产生很多垃圾，不过不用担心，java可以有效地处理他们。
-
-##### Java垃圾回收机制算法
-
- 1.标记-清除算法
-标记：标记出所有要回收的对象
-清除：回收被标记对象
-缺点：效率低，这两个操作效率都不高
-​​空间问题，形成大量不连续碎片空间。当以后需要分配较大的对象时，无法找到足够大的连续空间，触发gc。
-
-2.复制算法
-内存分为相等的两块，需要回收时，把存活的对象拷贝到另一半，清除当前的整个块，以保证空间连续性。
-缺点：代价高。
-现在一般分为三块，Eden和两块较小的Survivor。当回收时，将存活对象放到另一个Survivor中，清除当前Survivor和Eden.
-
-3.标记-整理算法
-标记：标记所有要回收的对象。
-整理:将存活对象向一段移动，然后直接清理到边界以外的内存空间
-
-4.分代收集算法
-分代：新生代，老生代
-新生代：存活少，使用复制算法。
-老生代：存活多，使用标记清除或标记整理算法。​
-
-
-
-```
-各个类，接口之间的继承和实现关系。每个类的属性和方法，优缺点，适用场景，代码逻辑如何实现这些特点的。
-```
-
 # util
 
 >Collection为顶级的接口，List接口继承自Collection，AbstractCollection实现自Collection。
@@ -1100,7 +919,7 @@ sychronized可以修饰方法，代码块。
 ReentrantLock:阻塞所，可重入，操作由程序员编写。可实现非公平锁。
 automaticInteger乐观锁，如原子变量就是乐观锁的应用。
 wait(),notify(),sleep()：wait使一个线程处于等待状态，释放所有lock。sleep保留锁。
-volatile(易变的):确保每次都重新取值，而不是使用寄存器的值。
+3(易变的):确保每次都重新取值，而不是使用寄存器的值。
 
 ###### 线程池
 
@@ -1555,4 +1374,299 @@ this.getClass().getClassLoader().getResourceAsStream("logback.xml");
 下载压缩包，配置环境变量
 安装和管理：https://blog.csdn.net/u012707739/article/details/78489833
 ```
+
+
+
+# 刷题的遗忘的点
+
+##### 异常类
+
+```
+JAVA异常类,Throwable,Error,Exception，RuntimeException,IOException的继承关系
+```
+
+##### 访问修饰符
+
+```
+
+```
+
+
+
+# JVM理论知识
+
+### JVM的结构
+
+JVM = 类加载器 classloader + 执行引擎 execution engine + 运行时数据区域 runtime data area
+
+##### classloader
+
+###### 两种装载方式
+
+classloader两种装载class的方式：
+1.隐式：运行过程中，碰到new方式生成对象时，隐式调用classloader到JVM。
+2.显示：通过class.forname()动态加载。​
+
+###### 双亲委派模型（Parent Delegation Model）
+
+**工作过程**
+1当前ClassLoader首先从自己已经加载的类中查询此类是否已加载。若已经加载就返回加载的类。
+每个类加载器都有自己的加载缓存，当一个类被加载以后就会放入缓存。
+2当前classloader的缓存中没有找到时，委托父类加载器去加载，父类加载器采用同样的策略，直到找到或到达bootstrap classloader.
+3.当所有的父类加载器都没有加载时，再由当前的类加载器加载，并放入自己的缓存。​
+
+**优点**
+1为了安全性，避免用户的类动态替换java的核心类，比如String。同时避免了重复加载，因为相同的class文件被不同classloader加载是不同的两个类，相互转型会抛出classCaseException。
+
+**常用类加载器**
+Bootstrap class loader：所有类加载器的父类，当运行jvm时，她负责核心库的加载，如java.lang.*等。例如java.lang.Object就是由根类加载器加载的。此加载器不是由java编写的，而是c/c++写的。
+Extension class loader：这个加载器加载除了基本API之外的拓展类。
+AppClassLoader:加载应用程序和程序员自定义的类。​
+用户也可以自定义自己的类加载器，java提供了java.long.classloader.
+
+##### **执行引擎**
+
+执行字节码，或者执行本地方法。
+
+###### JIT Complier
+
+>JIT编译器是动态编译器的一种，相对的静态编译器则指C/C++编译器。
+
+对于重复执行较多的代码，JIT将其单独翻译为对应平台的机器码，以后调用直接执行即可，提高程序执行速度。但是编译程序和优化需要一定时间，并且占用一定内存，无法在程序刚启动时使用编译器。
+
+而java解释器则是一行一行将java字节码翻译为机器码，不可复用机器码，执行效率较低。
+
+##### runtime data area
+
+jvm运行期间，对内存空间的划分和分配。jvm将内存分为了6个区域来存储。程序员所写的程序都被加载到运行时数据区域中，不同类别存放在heap，java stack,native method stack,PC register ,method area.
+
+###### java stacks
+
+每个jvm线程都有自己私有的java虚拟栈，每个方法占用一个栈帧，这个栈帧和线程同时创建，他的生命周期和线程相同。
+每个java方法被执行时创建一个栈帧用于存储变量表，操作数，动态链接，方法出口等信息。每个方法被调用直至执行完成对应着再java stack中入栈和出战的过程。
+
+###### native method stack
+
+与虚拟机栈的作用相似，虚拟机栈执行java方法，而本地方法栈为虚拟机使用到的本地方法服务。
+本地方法：由其他语言编写，和处理器相关的机器代码。本地方法保存在动态链接库中，即dll中。
+
+###### PC regiters
+
+程序计数器保存当前线程执行到哪行（指令地址），以便线程之间切换。
+​每个线程都有自己的PC，以便完成不同线程切换。
+
+###### heap Memory
+
+所有线程共享的一块区域，用来存储对象实例和数组值。new的对象实例。
+
+jvm初始分配的内存由-Xms,-Xmx指定，默认值分别为物理内存的1/64和1/4。
+
+```
+堆被划分成两个不同的区域：新生代 ( Young )、老年代 ( Old )。新生代 ( Young ) 又被划分为三个区域：Eden、From Survivor、To Survivor。
+这样划分的目的是为了使 JVM 能够更好的管理堆内存中的对象，包括内存的分配以及回收。
+
+默认的，新生代 ( Young ) 与老年代 ( Old ) 的比例的值为 1:2 ( 该值可以通过参数 –XX:NewRatio 来指定 )，即：新生代 ( Young ) = 1/3 的堆空间大小。
+老年代 ( Old ) = 2/3 的堆空间大小。其中，新生代 ( Young ) 被细分为 Eden 和 两个 Survivor 区域，这两个 Survivor 区域分别被命名为 from 和 to，以示区分。
+默认的，Edem : from : to = 8 : 1 : 1 ( 可以通过参数 –XX:SurvivorRatio 来设定 )，即： Eden = 8/10 的新生代空间大小，from = to = 1/10 的新生代空间大小。
+JVM 每次只会使用 Eden 和其中的一块 Survivor 区域来为对象服务，所以无论什么时候，总是有一块 Survivor 区域是空闲着的。
+因此，新生代实际可用的内存空间为 9/10 ( 即90% )的新生代空间。
+```
+
+
+
+###### method area
+
+方法区是线程共享区域，用于存储每个类的结构信息。例如成员变量和方法数据，构造函数和普通函数字节码内容，还包括一些类，实例，接口初始化时用到的特殊方法。当开发人员在程序中通过class对象的getName，isInstance获取消息时，这些数据都来自方法区。
+在一定条件下也会被gc，这块区域对应Permanent  generation持久代。
+
+运行时常量池，其空间从方法区分配，存储类中常量，方法，域引用信息。
+
+### GC
+
+##### 为什么要gc
+
+当一个对象不可达，或一个对象没有任何引用指向它，他就没有必要存在，此时就可以被gc回收。
+
+
+
+##### 触发gc的情况
+
+非线程对象不被指向或超出作用域
+线程对象线程未启动或停止
+
+###### 改变对象引用，置为null或指向其他对象。
+
+Object x=new Object();//object1 
+   Object y=new Object();//object2 
+   x=y;//object1 变为垃圾 
+   x=y=null;//object2 变为垃圾
+
+###### 超出作用域
+
+if(i==0){ 
+      Object x=new Object();//object1 
+   }//括号结束后object1将无法被引用，变为垃圾 
+
+###### 类嵌套导致未完全释放
+
+class A{ 
+      A a; 
+   } 
+   A x= new A();//分配一个空间 
+   x.a= new A();//又分配了一个空间 
+   x=null;//将会产生两个垃圾 
+
+###### 线程中的垃圾
+
+class A implements Runnable{   
+     void run(){ 
+       //.... 
+     } 
+   } 
+   //main 
+   A x=new A();//object1 
+   x.start(); 
+   x=null;//等线程执行完后object1才被认定为垃圾 
+   这样看，确实在代码执行过程中会产生很多垃圾，不过不用担心，java可以有效地处理他们。
+
+##### Java垃圾回收机制算法
+
+ 1.标记-清除算法
+标记：标记出所有要回收的对象
+清除：回收被标记对象
+缺点：效率低，这两个操作效率都不高
+​​空间问题，形成大量不连续碎片空间。当以后需要分配较大的对象时，无法找到足够大的连续空间，触发gc。
+
+2.复制算法
+内存分为相等的两块，需要回收时，把存活的对象拷贝到另一半，清除当前的整个块，以保证空间连续性。
+缺点：代价高。
+现在一般分为三块，Eden和两块较小的Survivor。当回收时，将存活对象放到另一个Survivor中，清除当前Survivor和Eden.
+
+3.标记-整理算法
+标记：标记所有要回收的对象。
+整理:将存活对象向一段移动，然后直接清理到边界以外的内存空间
+
+4.分代收集算法
+分代：新生代，老生代
+新生代：存活少，使用复制算法。
+老生代：存活多，使用标记清除或标记整理算法。​
+
+
+
+```
+各个类，接口之间的继承和实现关系。每个类的属性和方法，优缺点，适用场景，代码逻辑如何实现这些特点的。
+```
+
+# JAVA理论知识
+
+# JAVA用法
+
+# 并发编程基础
+
+## 线程状态
+
+>java中的线程状态分为6种。
+>
+>1初始NEW:新创建一个对象，还没有start（）
+>
+>2RUNNABLE:java线程中将ready和running统称为可运行，这表示这个线程具备运行的条件，但是可能在ready状态，也可能在running状态。
+>
+>3BLOCKED：表示线程阻塞于锁
+>
+>4WAITING：进入此状态的线程需要等待其他线程做出一些特定动作
+>
+>5TIMED_WAITING：不同于WAITING，它可以在指定时间后自行返回。
+>
+>6TERMINATED：表示线程执行完毕。
+
+### NEW
+
+>当一个线程被使用new Thread（）创建时，其就处于NEW状态，等待使用start（）方法启动
+
+### RUNNABLE
+
+>当调用start（）方法后，线程计入RUNNABLE状态，等待CPU分配时间片和资源。
+
+### BLOCKED
+
+>当一个线程试图获取一个内部的对象锁，即synchronized锁，而锁被其他线程占用时，进入阻塞状态。
+
+### WAITING
+
+>当线程等待另一个线程通知调度器出现一个条件时，这个线程会进入等待状态。例如调用object.wait(),object.join(),以及等待java.util.concurrent中的Lock和Condition时，会出现这种状况。
+
+### TIMED_WAITING
+
+>调用带有超时参数的方法，在等待一定时间后自动返回。例如object.wait(timeout),object.join(timeout),Lock.tryLock(timeout),Condition.await(timeout)，Thread.sleep(timeout)等方法。
+
+### TERMINATED
+
+>run方法自动正常退出，或者因为未捕获的异常终止了run方法。
+
+## 中断线程
+
+>使用interupt方法时，会将线程设置为中断状态，中断不意味着终止，如何响应中断状态可以由程序定义。可以使用isInterrupted（）检查线程的中断状态，并采取相应的措施。
+
+## 守护线程
+
+>调用t.setDaemon(true)将线程设置为守护线程，守护线程为其他线程提供服务。当只剩守护线程时，程序会直接退出。
+
+## 未捕获异常的处理器
+
+>在平时编写程序时，由于编写错误程序也会停止运行，并报异常，然后我们根据异常情况修复代码。这些未捕获的异常是由谁处理的呢，默认情况下会调用线程组的UncaughtExceptionHandler接口，他会将Throwable的栈轨迹输出到控制台。
+>
+>我们可以通过setUncaughtExceptionHandler指定自己的异常处理器，可以在处理器中使用日子API将异常存储到日志文件。
+
+## 锁对象
+
+>当多线程并发访问对象时，会导致数据的不一致性。java提供了sychronized关键字、ReentrantLocak类
+
+```java
+#ReentrantLock方法可以保护代码块临界区，它确保任何时候只有一个线程进入临界区。当一个线程成功调用Lock方法后，其他线程只能等待。
+#可以通过传入true，false指定是否采用公平锁。公平锁是指让每个线程都有机会执行，其倾向于等待过久的线程。
+var bankLock=new ReentrantLock(false);
+bankLock.lock();
+try
+{}
+finally{
+    bank.unlock();
+}
+```
+
+## sychronized关键字
+
+>Lock和condition可以允许灵活的控制锁定，但大多数情况下，我们只需要确保互斥的访问即可。java语言内置了对象的内部锁。如果一个方法带有sychronized关键字，那么对象的锁将保护整个方法。
+
+```java
+#public sychronized void method()
+{
+	method body
+}
+#sychronized 代码块
+sychronized {
+    //do something
+}
+```
+
+## 条件对象
+
+>有时候，线程获取到了资源，并进入临界区。却发现只有满足某个条件后其才能执行，例如转账时自己的账户金额必须足够支付。这时，可以使用一个条件对象进行管理，其目的是管理那些已经获得了锁但是却无法做有用工作的线程。这种情况，使用if语句检查是错误的，因为线程可能在if之后中断，然后账户金额发生变动。如果使用ReentrantLock加锁，当账户金额不够时，会导致其他线程无法访问账户对象，更无法增加账户金额，形成死锁。使用条件对象可以让当前线程进入await状态，并允许其他线程访问对象变更金额条件，当金额变动后调用singnalAll（）唤醒所有被await的线程尝试工作。
+
+```
+var bankLock=new ReentrantLock(false);
+private Condition sufficientFunds=bankLock.newCondition()
+bankLock.lock()
+try{
+whiel(accounts[from]<amount)
+    sufficientFunds.await();
+sufficientFunds.singnalAll()
+}finally
+{
+  bankLock.unlock()
+}
+```
+
+## volatile字段
+
+>有时如果只是为了读写一两个实例字段而使用同步，所带来的开销过大，可以使用volatile可以确保读取的值是最新的值。例如, return done，如果使用volatile修饰，则可以保证done得到的值是正确的a值。但是，注意其无法确保原子性。如done=！done就无法保证读取、反转、写入时不被中断。
 

@@ -14,8 +14,6 @@ http://hbase.apache.org/book.html#quickstart
 在hbase-site.xml中指定zk的请求地址，在regionserver中填写regionserver服务器ip。
 ```
 
-
-
 2快捷启动：运行bin/start-hbase.sh,访问http://localhost:16010
 
 ## 伪分布式
@@ -461,15 +459,137 @@ scan 'test',FILTER=>"FamilyFilter(=,'substring:name')"
 
 3888 zooo
 
-# 理论知识
+# HBase理论知识
 
 >hbase本质是key-value类型数据库，所以它最适合的场景就是key值查询，表现比其他数据库优异。一般用于实时数仓中的临时数据存储，如当日是否登陆过、当日是否消费过。
 
-##### timestamp
+## 存储结构
 
-```
-同一条数据有多个版本，用时间戳后缀作为区分。
-```
+>HBase通过构建多个map键值对存储数据，一个列簇放置在一起作为同一个value，row_key作为key，value部分除了对应的列簇数据，还有一些固定的数据，如TimeStamp时间戳、Type数据操作类型（PUT,DELETE），列簇名称，列名称。一条HBase数据取出来类似如下，(row_key,column_family,column qualifier,timestamp,type,value)
+
+## 数据类型
+
+### Name Space
+
+>命名空间，类似mysql的DataBase概念。HBase自带两个命名空间，分别是hbase和default。hbase存放的是hbase内置的表，default存放的是用户默认使用的命名空间。
+
+### Region
+
+>类似关系型数据库的表概念，不同的是，hbase只需要声明列簇即可，不需要具体的列。向hbase写入时，可以灵活的指定列，所以hbase可以应对字段的变更。因为当你增加一个列时，hbase只需要创建一条新的键值对记录，在其中指定列簇、列名、timestamp、type、value即可，不需要操作其他数据。
+
+### Row
+
+>一个RowKey和多个列组成，数据按照Rowkey的字典顺序存储。查询数据只能通过rowkey，rowkey如何设计很重要。
+
+### Column
+
+>通过Column family 列族和Column Qualifier列限定符指定列。
+
+### TimeStamp
+
+>用于标识数据的不同版本，每条数据写入时都会添加。
+
+### Cell
+
+>由rowkey，column family，column qualifier，timestamp唯一确定的单元。cell中的数据无类型，都是字节形式。
+
+## 基础架构
+
+>由Master，Region Server构成，通过zookeeper提供高可用、regionserver的监控、集群配置的维护、元数据入口等。HDFS为HBase提供几层数据存储服务。
+
+### Master
+
+>Master是所有Region Server的管理者。
+>
+>功能：管理对于表的create，delete，alter
+>
+>对于RegionServer的管理，分配regions到server，负载均衡、故障转义、监控状态。
+
+### Region Server
+
+>一台分区服务器对应一个server，负责对数据的操作，如get ,put,delete。对分区的操作，如splitRegion,compactRegion。
+
+>RegionServer上有多个Region分区、以及一个WAL(Write-Ahead logFile)、一个Block Cache。WAL和Block Cache在region server是唯一的，多个region分区共同使用。
+
+### WAL(Write-Ahead logFile)
+
+>WAL(Write-Ahead logFile)是写入日志，为了防止memStore数据丢失，在写入mem  Store前，先在WAL中进行记录，如果mem Store故障，可以通过WAL进行恢复。
+
+### Block Cache
+
+>每个region server都有一个读缓存。
+
+### Region
+
+>每个Region分区包含一个或多个store组成，至少是一个store。实际上，hbase为每个列族创建一个store，有多少列族就有多少store。
+>
+>可以理解为在行的方向上分为多个Region，在列的方向上划分为多个Store，在一个Region内是包含对应行的全部列族的。也就是说，每个Region内的store数目一致，就是每个列族。
+
+### Store
+
+>存储列族的基本单位，由mem Store、StoreFile构成。
+>
+>mem Store是内存缓存，当写入的数据达到阈值时，刷写到StoreFile。
+>
+>StoreFile是实际存储的文件系统，也就是HDFS文件，可以有多个StoreFile。每次mem Store的刷写都会生成一个新的StoreFile，底层以HFile格式保存。
+
+### HFile
+
+>HBase中KeyValue数据的存储格式，基于谷歌BigTable中的SSTable。
+>
+>大致包括以下File Info，Data Index，Meta Index，Trailer。
+
+## 写流程
+
+>设计的主要组件：regionserver、region、mem store、WAL、storeFile，怎么Master没有参与呢，看来Master只负责region的分区，表的管理、监控状态等。
+>
+>1Client先访问zookeeper，获取hbase：meta表位于哪个Region Server。
+>
+>2访问对应的Region Server，获取hbase：meta表，查询出位于哪个region分区，将该table的分区信息以及meta表的信息缓存在客户端的meta cache，方便下次访问。
+>
+>3.与目标Region server通讯
+>
+>4将数据顺序加入WAL
+>
+>5将数据写入memStore，数据会在memStore进行排序
+>
+>6向客户端发送ack
+>
+>7等待memStore的刷写时机后，将数据刷写到HFile。
+
+## 读流程
+
+>1 访问zk后去region server
+>
+>2访问region server获取region分区，获取table的meta信息到客户端并缓存。
+>
+>3与目标Region server进行通讯
+>
+>4分别在Block Cache，Mem Store和StoreFile中查询数据，并进行合并，得到同一条数据的不同版本，即timestamp或type不同。
+>
+>5将查询到的数据缓存到Block Cache
+>
+>6.返回结果给客户端
+
+## StoreFile Compaction
+
+>由于每次刷写都会生成新的HFile，当对数据查询时，其不同timestamp、type的数据可能分布在多个HFile中，因此需要查询遍历所有HFile，为了减少HFile的数量，会进行StoreFile Compaction.
+>
+>Compaction分为两种，Minor Compaction和Major Compaction。Minor Compaction将临近的若干个HFile合并成大的HFile。但不会清理过期和删除的数据。Major Compaction会将一个store下的所有HFile合并为一个大HFile，会清理过期和删除的数据。
+
+## Region Split
+
+>当1个region中的某个Store下的所有StoreFile总大小超过Min（R^2*"hbase.hregion.memestore.flush.size","hbase.hregion.max.filesize"）就会拆分，其中R为当前regionserver中属于该table的region个数。
+
+## MemStore刷写时机
+
+>1当某个分区的store的memstore达到了hbase.hregion.memstore.flush.size，该region全部刷写。
+>
+>2当region server中的memstore的总大小达到java_heapsize*hbase.regionserver.global.memstore.size*hbase.regionserver.global.memstore.size.lower.limit，region会将所有memstore按照从大到小的顺序依次进行刷写，直到memstore减小到lowerlimit以下。
+
+## 相关链接
+
+>尚硅谷官网：HBase学习笔记
 
 # HBase用法
 
@@ -491,10 +611,7 @@ list
 ```
 #查看数据库里有哪些表
 select distinct TABLE_NAME from SYSTEM."CATALOG"
-
 ```
-
-
 
 # 与关系型数据库基本结构对比
 

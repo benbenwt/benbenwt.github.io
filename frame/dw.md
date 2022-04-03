@@ -25,3 +25,8 @@ superset bi报表可视化
 关于简历，展现部分很重要，如项目效果、个人博客等。
 ```
 
+```
+#coursera上的课程
+https://www.coursera.org/specializations/big-data
+```
+

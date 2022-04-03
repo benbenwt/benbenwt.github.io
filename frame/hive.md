@@ -817,14 +817,6 @@ sku_id：商品 ID，其中 1111 是拉新的活动商品
 数据表是一个以订单-商品为粒度的流水表。
 ```
 
-
-
-##### 按周订单数及用户数
-
-#####  按 UTM 串统计访问情况
-
-#####  用户留存数据
-
 ### sql优化
 
 # 仓库规范
@@ -2846,13 +2838,12 @@ mapred-site.xml
 >
 >按照思路划分，写sql的思路。
 
-## 电商
+## 间隔分组、连续问题
 
 ### 连续问题
 
-```
+```sql
 #找出连续三天及以上购买金额在100以上的用户
-#找出连续N(天，月，年)及以上****   在M以上的****
 id    dt        cost
 1001 2021-12-12 123
 1002 2021-12-12 45
@@ -2865,22 +2856,307 @@ id    dt        cost
 1001 2021-12-15 23
 ```
 
-```
-#sql
-select * from cost_table where cost > 100
+```sql
+#使用rank排序的解法
+#1.先计算每个用户每一日的，大于100的，过滤掉不符合的，对应临时表t1.
+#2.计算每一行的rank，也就是对同一个用户，其日期在该用户中的排名，例如2022.12.29，2022.12.30，2022.12.31对应排名为1，2，3，也就是产生一个和它等差一样的数列。对应临时表t2
+#3.再用日期减去rank的排名，即date_sub(date,rk)相等，如果两条记录的id相同，且date_sub(date,rk)相同，那么说明这两条记录是连续的，反之说明其不连续。如果是连续的天，它们相减之后值是相同的，但是如果缺少一天，那么其date_sub(date,rk)就不相同。例如 2,3,4,6,7,8,  对应的flag为   1,1,1,2,2,2。中间少了5号这一天，导致日期与排名相减的结果变为2了，这样就达到了日期是否连续的判定效果。对应临时表t3
+#4.相减之后的flag和id一起作为分组标志，然后一个分组的count大于3就说明3天连续，date_sub(date,rk)代表连续，组内有多少个，就是连续多少天。所以筛选ct>3的，就是连续三天的用户了。对应最终结果。
+selct id,flag,count(*) ct
+    (select id,dt,cost,date_sub(dt,rk) flag from
+        (select id,dt,cost,rank() over(partition by id order by dt) rk from
+            (select id,dt,sum(cost) cost from cost_table group by id,dt having cost > 100
+            )t1
+        )t2
+    )t3 
+group by id,flag having ct>=3
 ```
 
+```sql
+#使用lag函数的解法
+#如果两个日期间隔大于1天就是新标记，计算截至当前记录大于1的天数个数，就是当前的分组id。
+select id,dt,groupid,count(*) ct
+    (select id,dt,sum(if(dtdiff>=1,1,0)) over(partition by id order by dt) groupid from
+        (select id,dt,dt-prev_dt dtdiff from
+            (select  id,dt,lag(dt,1,0) over(partition by id order by dt) prev_dt from cost_table where cost > 100
+            )t1
+        )t2;
+     )t3
+group by id ,groupid having ct>=3
+```
 
+```sql
+#推广,适用于日期是否连续
+#找出连续N(天，月，年)及以上column_name1   在M以上的column_name2
+#对于月的连续，将天数去掉，只取年份，月份。对于年份的连续，月份和天数去掉，只取年份。剩下的替换列属性和阈值。
+selct column_name2,flag,count(*) ct
+    (select column_name2,dt,cost,date_sub(dt,rk) flag from
+        (select column_name2,dt,cost,rank() over(partition by id order by dt) rk from
+            (select column_name2,dt,sum(cost) cost from cost_table group by id,dt having column_name1 > N
+            )t1
+        )t2
+    )t3 
+group by id,flag having ct>=M
+```
 
 ### 分组问题
 
+>判定是否连续，根据相邻的两条记录使用lag函数或lead函数决定分组还是连续。这个思路是不是也能写连续天数的题，如果两个日期间隔大于1天就是新标记，计算截至当前记录大于1的天数个数，就是当前的分组id。
+
+```sql
+id ts(秒)
+1001 17523641234
+1001 17523641256
+1002 17523641278
+1001 17523641334
+1002 17523641434
+1001 17523641534
+1001 17523641544
+1002 17523641634
+1001 17523641638
+1001 17523641654
+#某个用户连续的访问记录如果时间间隔小于 60 秒，则分为同一个组，结果为：
+id ts(秒) group
+1001 17523641234 1
+1001 17523641256 1
+1001 17523641334 2
+1001 17523641534 3
+1001 17523641544 3
+1001 17523641638 4
+1001 17523641654 4
+1002 17523641278 1
+1002 17523641434 2
+1002 17523641634 3
+```
+
+```sql
+#从哪里断开了，就是哪里ts间隔大于60s了，就要产生新标识，类似于连续天数的新flag。
+#将前一行时间后移到下一行然后计算间隔，间隔大于60了，就要产生新标记，大于60的个数，就是标记的groupId。
+select id,ts,sum(if(tsdiff>=60,1,0)) over(partition by id order by ts) groupid from
+    (select id,ts,ts-prev_ts tsdiff from
+        (select  id,ts,lag(ts,1,0) over(partition by id order by ts) prev_ts from table_test 
+        )t1
+    )t2;
+```
+
 ### 间隔连续问题
 
-### 打折日期交叉问题
+```
+某游戏公司记录的用户每日登录数据
+id dt
+1001 2021-12-12
+1002 2021-12-12
+1001 2021-12-13
+1001 2021-12-14
+1001 2021-12-16
+1002 2021-12-16
+1001 2021-12-19
+1002 2021-12-17
+1001 2021-12-20
+计算每个用户最大的连续登录天数，可以间隔一天。解释：如果一个用户在 1,3,5,6 登
+录游戏，则视为连续 6 天登录。
+```
 
-### 同时在线问题
+```sql
+#间隔连续的判定条件为，diff>2。lag函数解法
+select id,max(continous_days) max_days+1 from
+    (select id,dt, datediff(max(dt),min(dt)) continous_days from
+        (select id,dt,sum(if(dtdiff>2,1,0)) groupid from 
+            (select id,dt,dt-prev_dt dtdiff from
+                (select id,dt,lag(dt,1,0) prev_dt from test_table
+                )t1
+            )t2
+        )t3
+    group by id,groupid)t4
+group by id;
+```
+
+## 打折日期交叉问题
+
+>对于时间段、数据范围，去除重复部分，如打折日期交叉、计算品牌销量（存在品类重叠）、计算假期（存在假期重叠）
+
+```
+如下为平台商品促销数据：字段为品牌，打折开始日期，打折结束日期
+brand stt edt
+oppo 2021-06-05 2021-06-09
+oppo 2021-06-11 2021-06-21
+vivo 2021-06-05 2021-06-15
+vivo 2021-06-09 2021-06-21
+redmi 2021-06-05 2021-06-21
+redmi 2021-06-09 2021-06-15
+redmi 2021-06-17 2021-06-26
+huawei 2021-06-05 2021-06-26
+huawei 2021-06-09 2021-06-15
+huawei 2021-06-17 2021-06-21
+计算每个品牌总的打折销售天数，注意其中的交叉日期，比如 vivo 品牌，第一次活动时
+间为 2021-06-05 到 2021-06-15，第二次活动时间为 2021-06-09 到 2021-06-21 其中 9 号到 15
+号为重复天数，只统计一次，即 vivo 总打折天数为 2021-06-05 到 2021-06-21 共计 17 天。
+```
+
+```sql
+#这个很明显要排序，然后去除重复天数。取该条记录之前的row中最大的edt，然后与当前行的stt比较，确认真实的开始时间。在用截至时间减去开始时间确定天数。
+select brand,sum(datediff) days from 
+    select brand,stt,edt-max(real_start,stt) datediff from
+        select brand,stt,edt,if(max_ett is null,stt,date_add(max_ett,1)) real_start from
+            (select brand,stt,edt,max(edt)  over(partition by brand order by stt rows between UNBOUNDED PRECEDING and 1 PRECEDING) max_ett from test_table
+            )t1
+        )t2
+    )t3
+group by  brand
+```
+
+## 同时在线问题
+
+>计算某个累计数量，如同时在线数量、当前直播间人数（根据进入退出记录）、
+
+```
+如下为某直播平台主播开播及关播时间，根据该数据计算出平台最高峰同时在线的主播
+人数。
+id stt edt
+1001 2021-06-14 12:12:12 2021-06-14 18:12:12
+1003 2021-06-14 13:12:12 2021-06-14 16:12:12
+1004 2021-06-14 13:15:12 2021-06-14 20:12:12
+1002 2021-06-14 15:12:12 2021-06-14 16:12:12
+1005 2021-06-14 15:18:12 2021-06-14 20:12:12
+1001 2021-06-14 20:12:12 2021-06-14 23:12:12
+1006 2021-06-14 21:12:12 2021-06-14 23:15:12
+1007 2021-06-14 22:12:12 2021-06-14 23:10:12
+```
+
+```sql
+#从开始到结束的人数，这次不是分组间隔连续的思路，直接进行滑动窗口计数就行了，上线+1，下线-1.间隔分组题型一般是一个时间点，而不是时间段。
+select max(sum_p) max_people from 
+    (select id,dt,sum(p) over(order by dt) sum_p
+        （select id， stt dt,1 p from test_table 
+        union
+        select id， edt dt,-1 p from test_table ）t1
+    )t2
+```
+
+## 不同粒度统计
+
+>如需要统计1，7，30天周期的数据，使用lateral view explode(Array(1,7,30))复制三份数据，使用1，7，30新列过滤出符和条件的数据，在每一份数据上继续写对应的sql。使用lateral view explode(Array(1,7,30))函数列转行，是常用的方式。
+
+```sql
+sku_id order_last_1d_count  order_last_7d_count  order_last_30d_count
+1                10                 5                23
+2                12                 7                48
+3                44                 47               22
+#如统计1，7，30天内不同sku的订单数目
+select
+        recent_days,
+        sku_id,
+        case
+            when recent_days=1 then order_last_1d_count
+            when recent_days=7 then order_last_7d_count
+            when recent_days=30 then order_last_30d_count
+        end order_count,
+    from dwt_sku_topic lateral view explode(Array(1,7,30)) tmp as recent_days
+```
 
 
 
+## 具体业务
 
+>函数不复杂，搞清业务指标的具体含义即可
+
+### 品牌复购率
+
+>复购：某个用户对某个商品至少买过2次及以上
+>
+>复购率的含义，至少买过2次及以上的人所占的比列，即（买两次的用户数）/(买两次的用户数+买一次的用户数)
+
+```
+user_id sku_id 
+1         2
+1         3
+1         2
+2         3
+2         2
+```
+
+```
+select sku_id,cast(sum(if(order_count>=2,1,0))/sum(if(order_count>=1,1,0))*100 as decimal(16,2))  from
+    (select user_id,sku_id,count(*) order_count   group by user_id,sku_id
+    )t1
+group by sku_id
+```
+
+### 今日新增
+
+>今日注册，即第一次登录为今天。
+
+### 今日流失
+
+>今日达到了7日未活跃条件，即7天前最后一次登录。
+
+### 今日回流
+
+>7日内未登录，今日登陆了。即倒数第二次登录不在七日内，倒数第一次登录未今天。
+
+## 相关链接
+
+>尚硅谷sql题解析流程:尚硅谷官网
+>
+>lag函数：https://www.cnblogs.com/qingyunzong/p/8798606.html#_label1
+
+## HIVE窗口函数
+
+### window 字句
+
+>PRECEDING
+>
+>FOLLOWING
+>
+>CURRENT ROW
+>
+>UNBOUNDED
+>
+>UNBOUNDED PRECEDING
+>
+>UNBOUNDED FOLLOWING
+
+```
+#开始行到当前行的前一行
+ROWS BETWEEN UNBOUNDED PRECEDING 1 PRECEDING
+#当前行到结束行
+ROWS BETWEEN  CURRENT ROW UNBOUNDED FOLLOWING
+```
+
+### windowing 函数
+
+>LAG(colname,n,DEFAULT),取colname这一列，往前n行的记录。
+>
+>LEAD(colname,n,DEFAULT),取colname这一列，往后n行的记录。
+>
+>FIRST_VALUE(colname,bool),取第一个值,bool表示是否跳过空值。
+>
+>LAST_VALUE(colname,bool),取最后一个值,bool表示是否跳过空值。
+
+```
+select id,dt,lag(dt,1,0) over(order by dt) prev_dt from test_table;
+select id,dt,lead(dt,1,0) over(order by dt) prev_dt from test_table;
+select id,dt,first_value(dt) over(order by dt) prev_dt from test_table;
+select id,dt,last_value(dt) over(order by dt) prev_dt from test_table;
+```
+
+### 聚合函数
+
+>SUM
+>
+>COUNT
+>
+>MAX
+>
+>MIN
+>
+>AVG
+
+### 分析函数
+
+>RANK()  获取当前记录的排序值，会并列排名，并跳过，如 1，2，2，4，5没有第三名。
+>
+>DENSE_RANK（），会并列，但不会跳过排名，如1，2，2，3，4仍然有第三名。
+>
+>ROW_NUMBER()，不会并列，即直接编号。
 

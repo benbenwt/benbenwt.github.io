@@ -657,6 +657,12 @@ PUT /haoke
 DELETE /haoke
 ```
 
+查看索引
+
+```
+GET /cti
+```
+
 
 
 ### 数据**处理**语句
