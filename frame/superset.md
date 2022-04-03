@@ -43,12 +43,13 @@ WTForms==2.3.3
 sqlalchemy==1.3.24
 ```
 
+# superset用法
 
-
-# superset使用
-
-```
-创建datasource，创建table，创建dashboard，创建table并保存到dashboard。
-table左侧选择指标，需要指定数据的时间范围，数据的query那些列，以及数据的group by和过滤条件。
-```
+>1创建databases，在选项中填写数据库连接即可，然后点击test connection，测试是否可以连接。
+>
+>2创建tables，这是为了指定你需要使用那些数据，在这里选择需要的表即可。
+>
+>3创建dashboard，dashboard用于容纳多个chart图形，也就是数据大屏。
+>
+>4创建charts，在左侧选择tables数据源，并选择图形效果，如饼状图、柱状图等。在左侧可以指定时间字段，分组的字段，分组的聚合函数等。
 

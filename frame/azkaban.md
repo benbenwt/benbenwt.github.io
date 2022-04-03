@@ -180,3 +180,65 @@ nodes:
 它可以从整体的角度监控shell任务的执行情况，获取执行的日志，执行到了哪一个流程，并以图形化的方式直观展示。编写好shell脚本后，通过web页面就可以远程管理任务的执行。
 ```
 
+# Azkaban基础用法
+
+>数据分析系统中包含shell脚本，hive脚本等，这些脚本有前后依赖关系，而且数量众多，使用azkaban可以更好的管理它们的依赖关系，以及监测他们的执行进度，查看错误等。而且还可以定时执行，以及邮件提醒，即使处理异常情况。
+>
+>简单的任务调度可以通过编写shell脚本和crontab来定义，复杂的任务调度可以使用Ooize、Azkaban、Airflow、DolphinSecheduler等。Ooize比Azkaban更重量级，功能全且复杂。
+
+## 基本架构
+
+>Azkaban可以配置一个master和多个executor，但是每个executor执行shell脚本所需的环境，必须在每个节点都配置，或者通过指定结点让任务在特定结点执行。
+
+## Work Flow编写
+
+>通过编写work flow可以自定义管理任务，将编写好的basic.flow文件和azkaban.project文件压缩为zip，并上传到web项目，就可以完成任务的建立。
+
+```
+#azkaban.project内容，指定版本
+azkaban-flow-version: 2.0
+```
+
+```
+#基础实例,type表示执行作业的方式，config未job的配置。
+nodes:
+  - name: jobA
+    type: command
+    config:
+      command: echo "hello"
+#指定依赖
+  - name: jobB
+    type: command
+    dependsOn:
+      -jobA
+    config:
+      command: echo "hello jobB"
+#自动重试，重试次数3，重试间隔10000。
+   - name: jobC
+    type: command
+    config:
+      command: echo "hello jobB"
+      retries: 3
+      retry.backoff: 10000
+#java程序
+   - name: jobC
+    type: javaprocess
+    config:
+      Xms: 50M
+      Xmx: 100M
+      java.class: com.atguigu.AzTest
+#条件执行，当某个参数满足时，执行此任务,wk是输出参数。
+#jobA.sh的内容如下，判断的条件参数需要输出到$JOB_OUTPUT_PRO_FILE
+echo "{\"wk\":`date+%w`}">$JOB_OUTPUT_PRO_FILE
+#条件执行，配置文件如下
+  - name: jobC
+    type: javaprocess
+    config:
+      Xms: 50M
+      Xmx: 100M
+      java.class: com.atguigu.AzTest
+    condition: ${jobA:wk}== 1
+```
+
+
+
