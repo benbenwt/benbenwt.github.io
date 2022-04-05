@@ -29,7 +29,7 @@
 多样的数据类型，持久化，集群，事务。
 redis是基于内存操作，性能与cpu无关，只受内存和网络宽带影响，所以使用单线程。
 
-# 使用
+# redis用法
 
 >1解压后make编译，进入src 使用make install安装。redis-server  redis.conf启动
 >2redis.cli 启动客户端，ping测试连接
@@ -55,11 +55,13 @@ DBSIZE 查看dbsize
 flushdb 清空当前db
 FLUSHALL 清空所有db
 
+# redis理论
+
 ## 五大数据类型
 
 消息队列，中间件，订阅消息，数据库，缓存。
 
-## String
+### String
 
 set name bob
  get name EXISTS name
@@ -87,13 +89,15 @@ getset db redis  不存在返回nil，否则获取并更新
 
 
 
-## 场景
+#### 场景
+
 计数器  uid:9645454:follow 0 incr
 ​粉丝数
 对象缓存存储
 统计多单位的数量
 
-## List
+### List
+
 LPUSH list one
 LRANGE list 0 -1先插入的下标大，后插入的小。
 ​Rpush list good 放置在list右边
@@ -109,7 +113,8 @@ rpoplpush mylist myotherlist
 lset   key index  value
 lset key  before  value  insertvalue
 
-## Set
+### Set
+
 sadd myset  world
 sismember myset hello
 ​srandommember  myset
@@ -120,7 +125,8 @@ sdiff   set1 set2
 sinter set1 set2
 ​sunion set1 set2
 
-## Hash
+### Hash
+
 key-map结构,map由hash值和所设定的value构成。
 hset myhash name bob
 hmset  myhash field1 hello field2 world
@@ -134,7 +140,7 @@ hincrby myhash field1 1
 hsetnx myhash field1 hello
 ​
 
-## Zset
+### Zset
 
 # 持久化RDB
 
@@ -177,3 +183,4 @@ dump。rdb保存二进制数据，可以用来备份恢复。
 >保存数据操作命令，恢复时执行一遍命令。
 
 根据aof文件内容决定保存策略。
+

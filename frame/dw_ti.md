@@ -206,11 +206,11 @@ select * from dwd_category;
 >
 >业务数据批量迁移使用sqoop，增量实时迁移使用canal、maxwell等。
 
-# 尚硅谷
+# 尚硅谷spark-streaming实时数仓
 
 >尚硅谷SparkStreaming实时数仓。使用canal、maxwell采集mysql数据库的数据到kafka，使用日志服务器后端将采集到的数据落盘并发送到kafka，使用sparkStreaming编写程序进行处理。统计以下几个指标，当日日活数量、当日首单用户数量。
 
-### 日志采集后端
+## 日志采集后端
 
 >使用springboot搭建后端日志服务，借助logback将日志落盘，利用spring-kafka将日志按照类型分发到不同的kafka topic，主要包括启动日志topic、事件topic，命名为gmall_start、gmall_event
 >
@@ -218,7 +218,7 @@ select * from dwd_category;
 >
 >使用spring-kafka将日志发送到对应的日志topic，区分启动日志和事件日志。
 
-### 业务数据采集
+## 业务数据采集
 
 >主要有以下几个表，使用maxwell、canal采集到kafka对应topic，每个表对应一个topic。
 >
@@ -226,40 +226,147 @@ select * from dwd_category;
 >
 >安装好canal、maxwell后，配置好mysql地址，并为canal、maxwell创建好mysql账户，给予权限，为两者配置kafka地址，及发送的topic。
 
-### nginx反代
+## nginx反代
 
 >使用nginx反向代理三台日志服务器，因为用户的客户端操作日志数据量很大，使用nginx创建upstream，负载均衡三台机器，这样可以向nginx动态的替换机器，在需要重启服务时，可以逐个重启服务，保证upstream中有一个可用的结点。让用户无法感知服务器已经进行了重启和更新。
 
-### 日活统计
+## 日活统计
 
->日活统计要求统计当日登录的人数，通过采集的登录日志进行统计。需要借助redis进行去重，比如某个用户进行了多次登录，只能记作一个活跃用户。然后将去重的日活记录插入到ES数据库中，用于可视化和查询。如果不需要使用kibana可以写入MySQL，给业务使用，也可以用sql统计后提供给其他可视化工具，如DataV、QuickBI。
+>日活统计要求统计当日登录的人数，通过采集的登录日志进行统计。需要借助redis进行去重，比如某个用户进行了多次登录，只能记作一个活跃用户。然后将去重的日活记录插入到ES数据库中，用于可视化和查询。如果不需要使用kibana可以写入MySQL，给业务使用，也可以用sql统计后提供给其他可视化工具，如DataV、QuickBI。这一部分代码在DauApp中完成，即day active user。
 
-### 首单分析
+```
+#根据启动日志，进行日活统计
+#首先,从redis取出kafka偏移量
+#获取jedis客户端
+val prop = MyPropertiesUtil.load("config.properties")
+val host = prop.getProperty("redis.host")
+val port = prop.getProperty("redis.port")
+
+val jedisPoolConfig: JedisPoolConfig = new JedisPoolConfig
+jedisPoolConfig.setMaxTotal(100)  //最大连接数
+jedisPoolConfig.setMaxIdle(20)   //最大空闲
+jedisPoolConfig.setMinIdle(20)     //最小空闲
+jedisPoolConfig.setBlockWhenExhausted(true)  //忙碌时是否等待
+jedisPoolConfig.setMaxWaitMillis(5000)//忙碌时等待时长 毫秒
+jedisPoolConfig.setTestOnBorrow(true) //每次获得连接的进行测试
+
+jedisPool=new JedisPool(jedisPoolConfig,host,port.toInt)
+jedis=jedisPool.getResource
+val offsetMap: util.Map[String, String]=jedis.hgetAll(offsetKey)
+
+#从kafka创建sparkstreaming输入流
+kafkaParam("group.id")=groupId
+val dStream = KafkaUtils.createDirectStream[String,String](
+      ssc,
+      LocationStrategies.PreferConsistent,
+      //这句话将整个topic,groupid传递进去,也就是所有partition的offset都传递进去了,这表示,consumer(topic,groupid)接受所有传递进去的分区的消息.
+      ConsumerStrategies.Subscribe[String,String](Array(topic),kafkaParam,offsets))
+      dStream
+    
+#从kafka读取偏移量。
+var offsetRanges: Array[OffsetRange] = Array.empty[OffsetRange]
+
+    val offsetDStream: DStream[ConsumerRecord[String, String]] = recordDStream.transform {
+      rdd => {
+        //因为recodeDStream底层封装的是KafkaRDD，混入了HasOffsetRanges特质，这个特质中提供了可以获取偏移量范围的方法
+        offsetRanges = rdd.asInstanceOf[HasOffsetRanges].offsetRanges
+        rdd
+      }
+    }
+    
+#后续就是在创建的directStream进行spark操作。
+#完全不知道stream里边是什么类型
+
+```
+
+
+
+## 首单分析
 
 >ods，dwd
 >
->交易的每一条记录都在mysql中，使用canal、maxwell采集到kafka，然后使用sparkStreaming对数据分流，放入不同的topic。使用hbase过滤掉不是首单的用户，如果是首单还需要修改hbase的标记，最终将首单的信息写入数据库。由于是否首单需要统计历史数据，数据量比较大，如果使用redis内存压力比较大，而且是否首单需要保存很久，不是24小时过期的数据，需要修改hbase的标记，需要是key-value模式的查询，综合上边三点，适合保存在hbase中。
+>交易的每一条记录都在mysql中，使用canal、maxwell采集到kafka，然后使用sparkStreaming对数据分流，放入不同的topic。这一部分分流的代码在BaseDBMaxwellApp。
 >
->具体流程：读取ods_order_info，从hbase查出所有ods_order_info中存在的user_id信息，然后将ods_order_info中已存在的标记为1，然后对ods_order_info中同一个用户后续提交的标记为0，最终稿将过滤好的首单结果与省份表、用户表拼接得到宽表，将首单信息写入es，将首单标记写入hbase。
+>基础的dim维度信息，由dim层的流处理app处理。
+>
+>使用hbase过滤掉不是首单的用户，如果是首单还需要修改hbase的标记，最终将首单的信息写入数据库。由于是否首单需要统计历史数据，数据量比较大，如果使用redis内存压力比较大，而且是否首单需要保存很久，不是24小时过期的数据，需要修改hbase的标记，需要是key-value模式的查询，综合上边三点，适合保存在hbase中。这一部分代码在orderInfoApp中。
+>
+>具体流程：读取ods_order_info，从hbase查出所有ods_order_info中存在的user_id信息，然后将ods_order_info中斗胆用户的标记为1，然后对ods_order_info中同一个用户后续提交的标记为0，最终稿将过滤好的首单结果与省份表、用户表拼接得到宽表，将首单信息写入es，将首单标记写入hbase。
 
-### Exactly once
+```
+#用maxWell采集数据到kafka
+#取table字段，根据表名称发送到不同的kafka topic，作为ods层
+if(
+                ("order_info".equals(tableName)&&"insert".equals(opType))
+                  || (tableName.equals("order_detail") && "insert".equals(opType))
+                  ||  tableName.equals("base_province")
+                  ||  tableName.equals("user_info")
+                  ||  tableName.equals("sku_info")
+                  ||  tableName.equals("base_trademark")
+                  ||  tableName.equals("base_category3")
+                  ||  tableName.equals("spu_info")
+              ){
+                //拼接要发送到的主题
+                var sendTopic = "ods_" + tableName
+                MyKafkaSink.send(sendTopic,dataJsonObj.toString)
+              }
+              
+#从ods_order_info的kafka主题中创建directStream
+
+#借助phoenix从hbase读取首单信息
+Class.forName("org.apache.phoenix.jdbc.PhoenixDriver")
+    //建立连接
+    val conn: Connection = DriverManager.getConnection("jdbc:phoenix:hbase,hbase1,hbase2:2181")
+    //创建数据库操作对象
+val ps: PreparedStatement = conn.prepareStatement(sql)
+    //执行SQL语句
+val rs: ResultSet = ps.executeQuery()
+
+#后去es链接
+jestFactory = new JestClientFactory
+    jestFactory.setHttpClientConfig(new HttpClientConfig
+        .Builder("http://172.18.65.187:9200")
+        .multiThreaded(true)
+        .maxTotalConnection(20)
+        .connTimeout(10000)
+        .readTimeout(1000).build())
+jestFactory.getObject
+```
+
+## 实付分摊金额及交易额统计
+
+>购买商品有时会有优惠，但优惠一般是以订单为单位，现在需要以商品为单位，计算每个商品优惠了多少，进一步计算出每个商品的实付金额。对于除法除不尽的情况，不是最后一件商品的分摊金额使用乘除法比例计算，最后一件商品的分摊金额使用减法计算，用实付金额减去前边计算的其他商品的金额得到。
+
+### 双流join
+
+>由于两个流的数据是独立保存的，独立消费，很有可能同一业务的数据，分布在不同的批次。因为join算子只join同一批次的数据，如果只用简单的join流方式，会丢掉不同批次的数据。
+>
+>可以通过缓存的形式处理这种情况，将没有匹配join成功的数据放入该流的缓存中，当其需要匹配的数据到来时，再进行join。但是其编写逻辑负责。
+>
+>也可以通过滑动窗口+数据去重，这种方式处理代码简单，但是会造成数据重复，滑动窗口每次会覆盖一些重复数据，如果使用滚动窗口，每次窗口的数据不重复，无法解决join问题。
+
+## ADS聚合及可视化
+
+>将dws的数据进行聚合，插入mysql。编写发布接口，让阿里云DataV使用发布的接口。
+
+## Exactly once
 
 >为了实现精确一次消费，有两种方案。1.使用具有幂等性的操作，如es，redis等，在数据操作完成后，再提交offset。2使用mysql事务，将数据操作和索引操作进行绑定，达到原子性事务。
 
-### kafka分层
+## kafka分层
 
 >对输入的不同类别的原始日志进行处理
 
-#### ods
+## ods
 
-#### dwd
+## dwd
 
-#### dws
+## dws
 
-#### dwt
+## dwt
 
 
 
-### problem
+## problem
 
 Stream.foreach的操作单位、对象是什么

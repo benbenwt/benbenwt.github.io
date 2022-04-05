@@ -5,9 +5,8 @@
 02  zk
 02 javase并发
 03  presto，superset，azkaban
-
 04  redis,sparkstreaming那个项目总结
-05  ti项目写完，算法以前的笔记总结
+05  ti项目写完，算法以前的笔记总结，数据治理
 06  写当前可展示部分
 07  flink
 
