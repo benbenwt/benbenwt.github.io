@@ -493,7 +493,9 @@ def positions(length: Long, numSlices: Int): Iterator[(Int, Int)] = {
 
 ##### RDD转换算子
 
->RDD根据数据处理方式不同，分为Value类型、双Value类型和Key-Value类型
+>RDD转换算子数量很多，根据执行操作不同，分为map类，reduce类，分区类、聚合函数类、集合操作类。
+
+>RDD根据数据处理方式不同，分为Value类型、双Value类型和Key-Value类型。
 
 ###### Value类型
 
@@ -644,6 +646,10 @@ val resultRDD=rdd.aggregateByKey(10)(
 >
 
 ##### RDD Action算子
+
+>有很多action算子用于从rdd中取出数据，不触发额外的计算，如take，first，takeOrdered，collect
+>
+>还有部分算子触发操作，常见的操作有reduce函数，聚合函数，如count，reduce，aggregate，fold，countByKey
 
 ###### reduce
 
@@ -980,7 +986,7 @@ val stateDstream = pairs.updateStateByKey[Int](updateFunc)
 
 #### foreachRDD
 
->
+>对于每个到来的批次
 
 ### 案例实操
 
