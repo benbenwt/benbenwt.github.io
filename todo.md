@@ -8,7 +8,10 @@
 04  redis,sparkstreaming那个项目总结
 05  ti项目写完，算法以前的笔记总结，数据治理
 06  写当前可展示部分
-07  flink
+06 scala写法
+06  数据库Scala写法
+06  streaming api，spark使用的算子
+
 
 202203
 03 DW 66-

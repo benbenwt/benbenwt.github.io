@@ -511,6 +511,18 @@ def positions(length: Long, numSlices: Int): Iterator[(Int, Int)] = {
 
 >与mapPartion相比，可以多传入一个参数index，可以在函数内获取分区编号。
 
+>mapPartitionsWithIndex详解https://blog.csdn.net/yilulvxing/article/details/98968750
+>
+>mapPartitionsWithIndex通过额外传递一个int类型的index给mappartion函数，是的在mapPartion内部可以打印分区id。
+>
+>也可以通过如下函数在mapPartion调用函数内部打印partionId。
+>
+>```
+>TaskContext.getPartitionId()
+>```
+
+
+
 ###### flatMap
 
 >将列表扁平化后，再进行处理。
