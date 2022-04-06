@@ -1,5 +1,5 @@
 ```
-八股文(java（jvm，网络，多线程，javase）,框架(hdfs,mr,yarn,hive,spark),javaweb)，项目（数仓（电商场景，TI），web）
+计算机基础八股文（算法，网络），八股文(java（jvm，网络，多线程，javase）,框架(hdfs,mr,yarn,hive,spark),javaweb)，项目（数仓（电商场景，TI），web）
 其他：linux环境下的shell及日常使用，git使用，maven使用，nginx，docker
 ```
 
@@ -28,5 +28,6 @@ superset bi报表可视化
 ```
 #coursera上的课程
 https://www.coursera.org/specializations/big-data
+#github iot spark
 ```
 
