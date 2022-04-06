@@ -359,11 +359,44 @@ jestFactory.getObject
 
 ## ods
 
+>将maxwell采集到kafka的数据取出，再根据表名称写入对应的ods消息队列。
+
 ## dwd
+
+>读取对应的ods消息队列，将订单、订单明细写入dwd消息队列
 
 ## dws
 
-## dwt
+>拼接维度形成宽表
+
+## ads
+
+>将数据从dws取出并处理，结果写入mysql、es等。
+
+## 使用的DStream算子
+
+>按照无状态，有状态，窗口，输出区分。
+
+### 无状态
+
+```
+transform
+mapPartitions
+map
+join
+```
+
+### 窗口
+
+```
+window(windowDuration,slideDuration)
+```
+
+### 输出DStream
+
+```
+foreachRDD
+```
 
 
 
