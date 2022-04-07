@@ -300,8 +300,6 @@
     4.一个1：1联系可以转换为一个独立的关系模式
     5.3个以上多元联系转换为一个关系模式​​
 
-
-
 ### mysql例
 
 CREATE TABLE `category_tbl`
@@ -321,3 +319,6 @@ CREATE TABLE `category_tbl`
 ​    PRIMARY KEY(`category_id`)
 
 )ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+# 数据库引擎
+

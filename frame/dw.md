@@ -31,6 +31,7 @@ https://www.nowcoder.com/discuss/792950?channel=-1&source_id=profile_follow_post
 https://www.nowcoder.com/discuss/719344?source_id=discuss_experience_nctrack&channel=-1
 https://www.nowcoder.com/discuss/916657?source_id=discuss_experience_nctrack&channel=-1
 https://www.nowcoder.com/discuss/842391?source_id=discuss_experience_nctrack&channel=-1
+https://www.nowcoder.com/discuss/868723?source_id=discuss_experience_nctrack&channel=-1
 #coursera上的课程，项目
 https://www.coursera.org/specializations/big-data
 #github iot spark，项目

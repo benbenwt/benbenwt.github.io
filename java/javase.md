@@ -542,6 +542,12 @@ rotation操作分为4种，分别为左左，左右，右右，右左。
 
 ##### String类
 
+>==:对于基本数据类型就是比较数值，基本数据类型存储在方法栈中的局部变量。
+>
+>对于引用类型来说，是比较引用地址，因为引用类型只在方法栈中存储引用的地址，对象实例存储在堆中。
+>
+>equals：是为了比较string引用对象的值设计的，具体原理如下所示。
+
 equals
 
 ```
@@ -1388,7 +1394,10 @@ JAVA异常类,Throwable,Error,Exception，RuntimeException,IOException的继承�
 ##### 访问修饰符
 
 ```
-
+public
+prected
+package
+private
 ```
 
 
@@ -1646,6 +1655,74 @@ class A implements Runnable{
 >深入理解jvm虚拟机
 
 # JAVA理论知识
+
+## 并发容器
+
+>https://www.jianshu.com/p/67076450de38
+>
+>大致分为：HashMap，ArrayList，Set，队列（阻塞队列，优先队列，数据交换队列）
+
+>**ConcurrentHashMap：并发版HashMap**
+>
+>**CopyOnWriteArrayList：并发版ArrayList**
+>
+>**CopyOnWriteArraySet：并发Set**
+>
+>**ConcurrentLinkedQueue：并发队列(基于链表)**
+>
+>**ConcurrentLinkedDeque：并发队列(基于双向链表)**
+>
+>**ConcurrentSkipListMap：基于跳表的并发Map**
+>
+>**ConcurrentSkipListSet：基于跳表的并发Set**
+>
+>**ArrayBlockingQueue：阻塞队列(基于数组)**
+>
+>**LinkedBlockingQueue：阻塞队列(基于链表)**
+>
+>**LinkedBlockingDeque：阻塞队列(基于双向链表)**
+>
+>**PriorityBlockingQueue：线程安全的优先队列**
+>
+>SynchronousQueue：读写成对的队列
+>
+>LinkedTransferQueue：基于链表的数据交换队列
+>
+>DelayQueue：延时队列
+
+>ConcurrentHashMap采用了分段锁，可以让写操作保持一定的并发性。读操作是完全并发的。
+>
+>CopyOnWriteArrayList采用了读无需加锁，写的时候先复制一个数组，然后再替换旧的数组。这样读操作完全并发，但是有脏数据，可能读取的数据过期。写操作加锁，适合读多写少的场景。
+>
+>CopyOnWriteArraySet：是并发版Set，底层用数组写的。
+>
+>ConcurrentSkipListSet：基于跳表的并发Set
+
+### 阻塞队列
+
+>阻塞队列是一个支持两个附加操作的嘟列
+>
+>1支持阻塞的插入方法：意思是当队列满时，队列会阻塞插入元素的线程，知道队列不满。
+>
+>2支持阻塞的一处方法：意思是在队列为空时，获取元素的线程会等待队列变为非空
+
+### 优先队列
+
+>
+
+### 跳表
+
+>跳表全称为跳跃列表，允许快速查询。
+>
+>普通的单向链表只能从头开始查找，但是跳表用空间换时间，多存储了一个跳跃的表，用于加快查找速度。举例如下：
+>
+>对于单链表  1->2->3->4->5->6->7-> ... .... ->15
+>
+>可以构造一层跳表为：  1->7->15
+>
+>这样对于元素8，如果不适用跳表在原始表查找就是8次移动。
+>
+>如果使用跳表，先在跳表查找一次，然后进入原始链表 查找一次，共2次。当然，这是极端的情况，在某些极端情况下跳表也会降低效率，但是从整体来看，跳表能极大地提升查询效率，达到O(logn)。
 
 # JAVA用法
 
