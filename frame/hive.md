@@ -1671,13 +1671,13 @@ GO
 
 # HIVE 理论知识
 
-### hive文件存储格式
+## hive文件存储格式
 
 >包括TEXTFILE,SEQUENCEFILE,RCFILE,ORCFILE，PARQUET。
 >
 >TEXTFILE为默认格式，如果使用TEXTFILE作为建表格式，即STORED AS 。那么load data导入的文件必须是TEXTFILE，不然会导入报错。hive的TEXTFILE对应于flume hdfs.fileType=DataStream
 
-### 优缺点及使用场景
+## 优缺点及使用场景
 
 >优点：1使用SQL语法开发ETL程序，提高开发效率，降低门槛。避免学习mapreduce，减少学习成本。
 >
@@ -1687,25 +1687,264 @@ GO
 >
 >2hive自动生成的mapreduce作业，通常不够智能。调优困难，粒度太大。
 
-### hive解析组件
+## hive解析组件
 
-##### 解析器 SQL Parser
+### 解析器 SQL Parser
 
 >将SQL字符串转换为AST抽象语法树，借助antlr判断语法是否正确。
 
-##### 编译器 Physical Plan
+### 编译器 Physical Plan
 
 >将AST编译生成逻辑执行计划
 
-##### 优化器 Query Optimizer
+### 优化器 Query Optimizer
 
 >对逻辑执行计划进行优化
 
-##### 执行器 Execution
+### 执行器 Execution
 
 >及那个逻辑执行计划转换为物理计划，对于hive来所就是spark/MR
 
-### 数据类型
+### MR任务翻译
+
+>美团：https://tech.meituan.com/2014/02/12/hive-sql-to-mapreduce.html
+>
+>https://blog.csdn.net/qq_36039236/article/details/107818720
+
+>如果现在有个hql，是select count(*) from 表，这个是怎么翻译为MR任务的（就解释了一下计算key的方法，map并行执行任务，reduce的一个过程）
+
+#### join实现原理
+
+```
+select u.name,o.orderid from order o join user u on o.uid=u.uid
+```
+
+>在map的输出value为不同表的数据打上tag，在reduce阶段根据tag判断数据来源。key值是on的键值，也就是uid，但是在value中多加一个tag，区分来自user表还是order表。
+
+#### group by实现原理
+
+```
+select rank, isonline, count(*) from city group by rank, isonline;
+```
+
+>将groupBy的字段组合为map的输出key值，利用Mapreduce的排序，在reduce阶段保存LastKey区分不同的key。
+
+#### Distinct实现原理
+
+```
+select dealid, count(distinct uid) num from order group by dealid;
+```
+
+>当只有一个distinct时，如果不考虑map阶段的hash groupby，只需要将groupby字段和distinct字段组合为map输出key，利用mapreduce排序，然后将groupby字段作为reduce的key，在reduce阶段保存lastkey即可完成去重。
+
+```
+select dealid, count(distinct uid), count(distinct date) from order group by dealid;
+```
+
+>也就是将dealid,uid,date 三元组的一条记录分成两条，并且加上一个标记区分两条数据
+>
+>划分成如下：其中0,1是标记tag
+>
+>dealid,uid,date      1004,101,0401
+>
+>dealid uid   tag      1004,101,0
+>
+>dealid  date tag     1004,0401,1
+
+#### SQL转换为Mapreduce过程
+
+>1**Antlr**定义SQL的语法规则，完成SQL词法，语法解析，将SQL转化为抽象语法树**AST Tree**
+>2遍历AST Tree，抽象出查询的基本组成单元**QueryBlock**
+>3遍历QueryBlock，翻译为执行操作树**OperatorTree**
+>4逻辑层优化器进行OperatorTree变换，合并不必要的**ReduceSinkOperator**，减少shuffle数据量
+>5遍历**OperatorTree**，翻译为MapReduce任务
+>6物理层优化器进行**MapReduce**任务的变换，生成最终的执行计划
+>
+>
+>
+>QueryBlock：三元组：输入源，计算过程，输出.
+>OperatorTree：由QueryBlock组成的树结构
+>ReduceSinkOperator：优化tree结构
+
+##### 抽象语法树AST Tree
+
+>Abstract Syntax Tree
+>
+>具有层级目录的树，不依赖于语言细节，抽象表示源代码。借助AST可以进行优化等功能。
+>
+>Hive中根据Antlr编写了语法规则，存储在hive.g中，后来拆分为多个文件，分别为词法规则HiveLexer.g和语法规则SelectClauseParser.g,FromClauseParser.g,IdentifierParser.g,HiveParser.g
+
+###### 实例
+
+>下边是SelectStatement的语法规则，从中可以看出select，from，where，groupby，having，orderby等字句。
+
+```
+selectStatement
+   :
+   selectClause
+   fromClause
+   whereClause?
+   groupByClause?
+   havingClause?
+   orderByClause?
+   clusterByClause?
+   distributeByClause?
+   sortByClause?
+   limitClause? -> ^(TOK_QUERY fromClause ^(TOK_INSERT ^(TOK_DESTINATION ^(TOK_DIR TOK_TMP_FILE))
+                     selectClause whereClause? groupByClause? havingClause? orderByClause? clusterByClause?
+                     distributeByClause? sortByClause? limitClause?))
+   ;
+```
+
+##### QueryBlock
+
+>QueryBlock是一条SQL最基本的组成单元，包括三部分：输入源，计算过程，输出，简单来讲QueryBlock就是一个子查询。
+>
+>QB  包括aliasToSubq，qbm，qbp,
+
+>**QB#aliasToSubq**（表示QB类的aliasToSubq属性）**保存子查询的QB对象**，aliasToSubq key值是子查询的别名
+>
+>**QB#qbm**保存每个输入表的元信息，比如表在HDFS上的路径，保存表数据的文件格式等。
+>
+>**QB#qbp**就是**QBParseInfo**对象，它保存一个基本SQL单元中的给个操作部分的**AST Tree结构**，QBParseInfo#nameToDest这个HashMap保存查询单元的输出，key的形式是inclause-i（由于Hive支持Multi Insert语句，所以可能有多个输出），value是对应的ASTNode节点，即TOK_DESTINATION节点。类QBParseInfo其余HashMap属性分别保存输出和各个操作的ASTNode节点的对应关系。
+>
+>**QBExpr**这个对象是为了表示Union操作。
+
+![](../resources/images/queryBlock.png)
+
+##### OperatorTree
+
+>既然是树，那就是确定节点是什么，子节点是什么，边是什么。
+>
+>Hive最终生成的MapReduce任务，Map阶段和Reduce阶段均由OperatorTree组成。逻辑操作符，就是在Map阶段或者Reduce阶段完成单一特定的操作。
+>
+>基本的操作符包括TableScanOperator，SelectOperator，FilterOperator，JoinOperator，GroupByOperator，ReduceSinkOperator
+>
+>从名字就能猜出各个操作符完成的功能，TableScanOperator从MapReduce框架的Map接口原始输入表的数据，控制扫描表的数据行数，标记是从原表中取数据。JoinOperator完成Join操作。FilterOperator完成过滤操作
+>
+>ReduceSinkOperator将Map端的字段组合序列化为Reduce Key/value, Partition Key，只可能出现在Map阶段，同时也标志着Hive生成的MapReduce程序中Map阶段的结束。
+>
+>Operator在Map Reduce阶段之间的数据传递都是一个流式的过程。每一个Operator对一行数据完成操作后之后将数据传递给childOperator计算。
+
+##### 样例
+
+```
+#以此sql为例讲解转换过程
+FROM
+( 
+  SELECT
+    p.datekey datekey,
+    p.userid userid,
+    c.clienttype
+  FROM
+    detail.usersequence_client c
+    JOIN fact.orderpayment p ON p.orderid = c.orderid
+    JOIN default.user du ON du.userid = p.userid
+  WHERE p.datekey = 20131118 
+) base
+INSERT OVERWRITE TABLE `test`.`customer_kpi`
+SELECT
+  base.datekey,
+  base.clienttype,
+  count(distinct base.userid) buyer_count
+GROUP BY base.datekey, base.clienttype
+```
+
+###### sql生成AST Tree
+
+>Antlr堆sql进行解析，HiveLexerX，HiveParser分别是词法解析和语法解析类。
+>
+>AST Tree的结构类似多叉树，每个节点是一个关键操作，如TOK_QUERY，TOK_SELECT，TOK_FROM，TOK_INSERT，TOK_INSERT也可以是元素，如TOK_TABREF,TOK_DESTINATION
+
+###### sql基本组成单元QueryBlock
+
+>AST Tree仍然非常复杂，无法直接翻译为mapreduce，需要转化为queryBlock进一步抽象。
+>
+>AST Tree生成QueryBlock的过程是一个递归的过程，先序遍历AST Tree，即根->左->右。遇到不同的TOK（Token）节点，保存到QueryBlock对象的对应属性。主要包括以下几个过程：
+>
+>TOK_QUERY,创建QB对象，循环递归子节点
+>
+>TOK_FROM，将表名语法部分保存到QB对象的aliasToTabs等属性中
+>
+>TOK_INSERT，循环递归子节点
+>
+>TOK_DESTINATION，将输出部分的语法部分保存在QBParseInfo对象的nameToDest属性中
+>
+>TOK_SELECT,分别将查询表达式的语法部分destToSelExpr，destToAggregationExprs，destToDistinctFuncExprs三个属性中
+>
+>TOK_WHERE，将where部分的语法保存在QBParserInfo对象的destToWhereExpr属性中
+>
+>最终SQL生成两个QB对象，QB对象的关系如下，QB1是外层查询，QB2是子查询。
+
+```
+QB1
+   \
+     QB2
+```
+
+###### QueryBlock生成Operator Tree
+
+>QueryBlock生成Operator Tree就是遍历上一个过程中生成的QB和QBParseInfo对象的保存语法的属性，包含如下几个步骤：
+>
+>QB#aliasToSubq => 有子查询，递归调用
+>
+>QB#aliasToTabs => TableScanOperator
+>
+>QBParseInfo#joinExpr => QBJoinTree => ReduceSinkOperator + JoinOperator
+>
+>QBParseInfo#destToWhereExpr => FilterOperator
+>
+>QBParseInfo#destToGroupby => ReduceSinkOperator + GroupByOperator
+>
+>QBParseInfo#destToOrderby => ReduceSinkOperator + ExtractOperator
+>
+>最终的结果是生成一个树状图，树状图是使用各种operator进行描述的。就是将queryBlock中的各种属性，如qbp转换为operator形式。下图对应的是例子中的子查询对应的operatorTree。每个join前都需要调用rs，用于生成reduce所用的key，value。
+>
+>***图中 TS=TableScanOperator RS=ReduceSinkOperator JOIN=JoinOperator\***
+
+![](../resources/images/operatorTree.png)
+
+###### 逻辑层优化
+
+>大部分逻辑层优化器通过变换OperatorTree，合并操作符，达到减少MapReduce Job，减少shuffle数据量的目的。
+
+| 名称                      | 作用                                                   |
+| :------------------------ | :----------------------------------------------------- |
+| ② SimpleFetchOptimizer    | 优化没有GroupBy表达式的聚合查询                        |
+| ② MapJoinProcessor        | MapJoin，需要SQL中提供hint，0.11版本已不用             |
+| ② BucketMapJoinOptimizer  | BucketMapJoin                                          |
+| ② GroupByOptimizer        | Map端聚合                                              |
+| ① ReduceSinkDeDuplication | 合并线性的OperatorTree中partition/sort key相同的reduce |
+| ① PredicatePushDown       | 谓词前置                                               |
+| ① CorrelationOptimizer    | 利用查询中的相关性，合并有相关性的Job，HIVE-2206       |
+| ColumnPruner              | 字段剪枝                                               |
+
+###### OperatorTree生成MapReduce Job的过程
+
+开始扫描
+
+>首先挑选出根节点，然后让根节点入栈，在逐个向下遍历，当栈中元素满足如下条件时，进行操作。
+
+合并stage
+
+>扫描其他根节点，如果发现后续的节点已经在扫描之前的根节点时添加过了，就讲其合并为一个mr stage。
+
+切分mapreduce阶段
+
+>从rs（reducesinkoperator）处断开，生成maptask和reducetask
+
+![](../resources/images/operatorTreeToMR.png)
+
+###### 物理层优化器
+
+| 名称                                 | 作用                             |
+| :----------------------------------- | :------------------------------- |
+| Vectorizer                           | HIVE-4160，将在0.13中发布        |
+| SortMergeJoinResolver                | 与bucket配合，类似于归并排序     |
+| SamplingOptimizer                    | 并行order by优化器，在0.12中发布 |
+| CommonJoinResolver + MapJoinResolver | MapJoin优化器                    |
+
+## 数据类型
 
 >对应的java数据类型
 >
@@ -1757,7 +1996,7 @@ guan_beijing
 yangyang,caicai_susu,xiao yang:18_xiaoxiao yang:19,chao yang_beijing
 ```
 
-### 常用函数
+## 常用函数
 
 ##### CAST
 
@@ -1798,7 +2037,7 @@ lowwer
 
 
 
-### 外部表内部表
+## 外部表内部表
 
 >https://blog.csdn.net/qq_36743482/article/details/78393678
 >
@@ -1832,7 +2071,7 @@ cluster by
 cluster by 可以看做是一个特殊的distribute by+sort by，它具备二者的功能，但是只能实现倒序排序的方式,不能指定排序规则为asc 或者desc
 ```
 
-### metastore服务
+## metastore服务
 
 >https://www.itcast.cn/news/20190829/12032894477.shtml
 
@@ -1862,19 +2101,17 @@ nohup /export/servers/hive/bin/hive --service metastore &
 nohup /export/servers/hive/bin/hive --service hiveserver2 &
 ```
 
-### hive中join都有哪些
+## hive中join都有哪些
 
 见HIVE SQL理论 join一章中
 
-### Impala 和 hive 的查询有哪些区别
-
->
+## Impala 和 hive 的查询有哪些区别
 
 ```
 Impala是基于Hive的大数据实时分析查询引擎，直接使用Hive的元数据库Metadata,意味着impala元数据都存储在Hive的metastore中。并且impala兼容Hive的sql解析，实现了Hive的SQL语义的子集，功能还在不断的完善中。
 ```
 
-### HIVE UDF
+## HIVE UDF
 
 ```
 一般分为UDAF（用户自定义聚合函数）和UDTF（用户自定义表生成函数）
@@ -1889,36 +2126,6 @@ org.apache.hadoop.hive.ql.udf.generic.GenericUDF 复杂的GenericUDF可以处理
 ```
 UDTF（用户自定义表生成函数）用于表级函数，如lateral view explode。
 ```
-
-
-
-### Hive Sql 是怎样解析成MR job的
-
-##### group by
-
-```
-将group by的字段作为map的输出key和reduce的key，实现聚合操作。
-```
-
-##### SQL转化为MapReduce的过程
-
->https://www.cnblogs.com/Dhouse/p/7132476.html
-
-```
-1Antlr定义SQL的语法规则，完成SQL词法，语法解析，将SQL转化为抽象语法树AST Tree
-2遍历AST Tree，抽象出查询的基本组成单元QueryBlock
-3遍历QueryBlock，翻译为执行操作树OperatorTree
-4逻辑层优化器进行OperatorTree变换，合并不必要的ReduceSinkOperator，减少shuffle数据量
-5遍历OperatorTree，翻译为MapReduce任务
-6物理层优化器进行MapReduce任务的变换，生成最终的执行计划
-SQL转化为MapReduce的过程
-抽象语法树AST Tree:具有层级目录的树，不依赖于语言细节，抽象表示源代码。借助AST可以进行优化等功能。
-QueryBlock：三元组：输入源，计算过程，输出.
-OperatorTree：...
-ReduceSinkOperator：...
-```
-
-
 
 # SGG_DW教程
 
