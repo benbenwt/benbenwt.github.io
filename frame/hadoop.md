@@ -1623,9 +1623,9 @@ map join用于处理小表，在hive中需要将小表放在左侧，map端会�
 
 >partion sort,key sort,combiner,spill
 
-##### partion  sort
+##### partition  sort
 
->默认partin sort是用key对分区数取余,就映射到了不同分区.
+>默认partition sort是用key对分区数取余,就映射到了不同分区.
 
 ###### 自定义分区
 

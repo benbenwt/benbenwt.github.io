@@ -2101,16 +2101,6 @@ nohup /export/servers/hive/bin/hive --service metastore &
 nohup /export/servers/hive/bin/hive --service hiveserver2 &
 ```
 
-## hive中join都有哪些
-
-见HIVE SQL理论 join一章中
-
-## Impala 和 hive 的查询有哪些区别
-
-```
-Impala是基于Hive的大数据实时分析查询引擎，直接使用Hive的元数据库Metadata,意味着impala元数据都存储在Hive的metastore中。并且impala兼容Hive的sql解析，实现了Hive的SQL语义的子集，功能还在不断的完善中。
-```
-
 ## HIVE UDF
 
 ```
@@ -2126,6 +2116,66 @@ org.apache.hadoop.hive.ql.udf.generic.GenericUDF 复杂的GenericUDF可以处理
 ```
 UDTF（用户自定义表生成函数）用于表级函数，如lateral view explode。
 ```
+
+## 数据倾斜
+
+>计算数据时，数据分散度不够，导致大量计算集中到某几台机器上，而其他机器没有工作，这样导致计算速度变慢。
+>
+>博客总结：https://blog.csdn.net/u010039929/article/details/55044407
+
+### 现象
+
+>经典表现有：
+>
+>1hadoop计算时reduce阶段卡在99%，有多个reduce卡住，OOM报错很多，任务被kill。
+>
+>2sparkstreaming计算时，executor出现OOM的错误，但是其余executor内存利用率很低。
+
+### 如何解决
+
+>比如统计城市的销量，结果groupby导致部分城市数据量倾斜。
+>
+>思路有：1业务逻辑上改变，如单独计算热门城市
+>
+>2程序sql层面，控制reduce数量，在count（distinct）时添加group再count。
+>
+>3调整参数集群参数
+
+#### 业务逻辑改变
+
+>1找到异常数据，过滤为0的
+>
+>2对分布不均匀的单独计算
+>
+>3对key值重新调整，如将keyhash掉，让其均匀分布。
+
+#### 参数优化
+
+>1mapjoin
+>
+>2为此下推
+>
+>3group 代替count distinct
+>
+>4left semi join
+>
+>5控制map段输出，中间结果压缩
+
+## 其他题目
+
+### 1
+
+>一个文件有十亿行，要找topK，有什么好办法（就按照MR的思想答的，然后说了一下可以堆排，取topK）
+>
+>为什么用堆排、堆排时间复杂度
+
+>建立一个10000个元素的小顶堆，然后逐个添加剩余的元素，如果大于堆顶，则插入，并调整结构。
+>
+>借助mr并行，可以对任务拆分，然后分别求前10000，再合并结果。mr本地使用堆计算即可。
+>
+>堆排序时间复杂度是o(nlogn),空间复杂度为o(1)，当插入一个新元素，从底部开始网上推元素，把最大的或最小的推到顶部。然后再把
+
+>https://blog.csdn.net/zyq522376829/article/details/47686867
 
 # SGG_DW教程
 
