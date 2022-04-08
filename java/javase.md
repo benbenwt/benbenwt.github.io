@@ -763,7 +763,7 @@ isAssignableFrom()
 instanceof()
 ```
 
-##### Integer
+## Integer
 
 ```
 intValue()是把Integer对象类型变成int的基础数据类型；
@@ -773,7 +773,7 @@ Valueof()是把String 转化成Integer对象类型；（现在JDK版本支持自
 
 
 
-##### Clone
+## Clone
 
 ###### 深拷贝与浅拷贝
 
@@ -795,7 +795,7 @@ Stu s2=(Stu)s1.clone();
 
 
 
-##### Object
+## Object
 
 ###### 创建对象5种方式
 
@@ -818,7 +818,7 @@ Stu s2=(Stu)s1.clone();
     ByteArrayInputStream bis = new ByteArrayInputStream(bos.toByteArray());
     ObjectInputStream ois = new ObjectInputStream(bis);
 
-##### Reflect
+## Reflect
 
 >可以分析类的能力，动态的操作java代码称为反射。多用于开发供他人使用的构建工具。
 
@@ -879,11 +879,14 @@ public boolean equals(Object obj) {
 
 如果重写equals但不重写hashcode，会出现equals为true，但hashcode不一样的情况。
 
-##### Thread
+## Thread
 
-###### 线程与锁
+>https://www.jianshu.com/p/9beab78a3afe
 
-**进程和线程**
+### 线程与锁
+
+#### **进程和线程**
+
 进程：并发执行的程序在执行过程中分配计算机资源的基本单位。
 线程：是进程的一个执行单元，是比进程更小的基本单位。
 一个程序至少一个进程，一个进程至少一个线程。
@@ -892,189 +895,213 @@ public boolean equals(Object obj) {
 应用场景：用户接入tomcat，tomcat分配给新线程，再调用servlet。
 ​​                         后台备份，前台不断询问后端进度。
 
-**线程的实现**
+#### **线程的实现**
+
 继承Thread,实现Runnable,重写run方法。
 
-###### 线程的状态
+#### 线程的状态
+
+>-new:对象被创建后状态
+>
+>-runnable:对象start()后，等待cpu资源
+>
+>-running:获取到cpu，执行线程，只能由runnable转换而来
+>
+>-blocking:放弃cpu，停止
+>
+>  等待阻塞
+>
+>  调用wait(),失去锁，进入等待池。等待自己被唤醒。
+>
+>  同步阻塞
+>
+>  当线程申请锁失败，进入锁池，等待锁。
+>
+> 其他阻塞
+
+```
+通过调用join()，sleep()不会释放锁,IO请求。当以上操作结束或完成，进入就绪状态。
+多线程实现同步方法
+```
+
+>sychronized可以修饰方法，代码块。
+>ReentrantLock:阻塞所，可重入，操作由程序员编写。可实现非公平锁。
+>automaticInteger乐观锁，如原子变量就是乐观锁的应用。
+>wait(),notify(),sleep()：wait使一个线程处于等待状态，释放所有lock。sleep保留锁。
+>3(易变的):确保每次都重新取值，而不是使用寄存器的值。
+
+### 线程池
+
+#### **ThreadPoolExecutor**的重要参数
+
+>使用Executors来创建线程池，失去了线程池的灵活性，而且存在隐患，可能导致资源耗尽。
+
+>corePoolSize:核心线程数量
+>​ maximumPoolSize:最大线程数量 
+>​workQueue:等待队列，当线程数量​​大于corePoolSize时，任务封装成worker放入队列。 
+>
+>keepAliveTime:当线程数超过corePoolSize时，超过此时间空闲，则回收。
+>timeUnit:时间单位
+>​ threadFactory:指定创建的线程池类型
+>handler:拒绝策略
+
+#### workQueue参数
+
+>ArrayBlockingQueue
+>
+>LinkedBlockingQueue
+>
+>SynchronousBlockingQueue
+>
+>PriorityBlockingQueue
+
+>SynchronousQueue是一个不存储元素的阻塞队列。每一个put操作必须等待一个take操作，否则不能继续添加元素。
+
+#### 拒绝策略参数
+
+>AbortPolicy抛出RejectedExecutionException
+>DiscardPolicy什么也不做，直接忽略
+>DiscardOldestPolicy丢弃执行队列中最老的任务，尝试为当前提交的任务腾出位置
+>CallerRunsPolicy直接由提交任务者执行这个任务
+
+#### 过程原理
+
+>If fewer than corePoolSize threads are running, the Executor always prefers adding a new thread rather than queuing.
+> If corePoolSize or more threads are running, the Executor always prefers queuing a request rather than adding a new thread.
+> If a request cannot be queued, a new thread is created unless this would exceed maximumPoolSize, in which case, the task will be rejected.
+>即： corePoolSize -> 任务队列 -> maximumPoolSize -> 拒绝策略 
+
+#### **ThreadPoolExecutor类型**
+
+>借助ThreadPoolExecutor创建一些特定的线程池
+
+>ThreadPoolExecutor, ScheduledThreadPoolExecutor通常由工厂类Executors创建。
+>Executors可以创建三种类型的ThreadPoolExecutor:
+>SingleThreadPool,FixedThreadPool和CachedThreadPool。
+>Executors可以创建2种类型的ScheduledThreadPoolExecutor：
+>SingleScheduledThreadPoo和ScheduledThreadPool。
+
+>SingleThreadPool:适用于需要保证顺序地执行各个任务；并且在任意时间点，不会有多个线程是活动的应用场景。它填写的参数为corepoolsize为1，最大size也为1，使用LinkedBlockingQueue
+>
+>FixedThreadPool:固定数量线程池（newFixedThreadPool）,适用于为了满足资源管理的需求，而需要限制当前线程数量的应用场景，它适用于负载比较重的服务器。使用LinkedBlockingQueue
+>
+>newCachedThreadPool:创建一个会根据需要创建新线程的，适用于执行很多的短期异步任务的小程序，或者是负载较轻的服务器。它填写的corePoolsize为0，使用的队列为SynchronousQueue。
+
+#### 线程池状态
+
+```
+running:能接受，能处理
+shutdown:不接受新任务，能处理已添加
+stop:不接受新任务，不处理已添加
+tidying:由shutdown和stop转换而来
+terminated:线程时彻底终止。由tidying执行terminated()转换而来
+```
+
+#### Executors快捷创建线程
+
+```
+newFixedThreadPool(int nThreads)创建固定大小的线程池
+newSingleThreadExecutor()创建只有一个线程的线程池
+newCachedThreadPool()创建一个不限线程数上限的线程池，任何提交的任务都将立即执行
+
+使用ThreadPoolExecutor安全创建线程
+填写ThreadPoolExecutor重要参数：
+ExecutorService executorService = new ThreadPoolExecutor(2, 2, 
+                0, TimeUnit.SECONDS, 
+                new ArrayBlockingQueue<>(512), // 使用有界队列，避免OOM
+                new ThreadPoolExecutor.DiscardPolicy());
+```
+
+#### 提交任务
+
+>Future<T> submit(Callable <T> task):
+>​关注返回值,用future.get()获得返回信息
+>Future<T> submit(Runnable task)  不关注返回值
+>void execute(Runnable command)​   不关注返回值
+>
+>中断线程
+>
+>shutdown
+>
+>shutdownnow
+
+#### 如何正确使用线程池
+
+```
+避免使用无界队列
+明确拒绝任务时的行为
+获取处理结果和异常
+ExecutorService executorService = Executors.newFixedThreadPool(4);
+Future<Object> future = executorService.submit(new Callable<Object>() {
+        @Override
+        public Object call() throws Exception {
+            throw new RuntimeException("exception in call~");// 该异常会在调用Future.get()时传递给调用者
+        }
+    });
+    
+try {
+  Object result = future.get();
+} catch (InterruptedException e) {
+  // interrupt
+} catch (ExecutionException e) {
+  // exception in Callable.call()
+  e.printStackTrace();
+}
+```
+
+#### 线程池的优势
+
+>降低资源消耗，创建和销毁线程很占用资源，jvm需要跟踪回收。
+>提高响应速度，任务到达，无需等待创建线程。
+>方便管理
+
+#### AQS同步器
+
+>AQS就是实现锁的框架，内部实现时FIFO，state状态，定义内部内ConditionObject
+>
+>sleep和yield
+>sleep保留锁，进入阻塞状态。他会给予低优先级线程机会。可能出现死锁，和interruptedExceptoion。
+>yield进入就绪状态，只会给相同优先级或更高优先级的线程运行机会。
+>
+>stop和suspend
+>stop强制中断线程，解除所有锁定，其他线程就可以访问对象。
+>suspend()目标线程停止，但仍然持有锁，可能导致死锁。A需要B来苏醒，B需要A的锁。
+>应该使用wait(),notify().​
+>
+>cyclicbarrier和countdownlatch
+>CountDownLatch用于A等待若干个线程执行完任务后，他才执行。
+>CylicBarrier一般用于一组线程互相等待至某个状态，然后同时执行。
+>
+>公平锁和非公平锁，可重入锁，读写锁，中断锁
+>用队列FIFO是公平锁的一个完美方式，能保证每个人都拿到锁。
+>公平锁效率低，非公平锁能利用好cpu碎片时间。
+>非公平锁需要锁时，直接尝试获取锁，失败则排到队尾。
+>​可重入：多次申请一个对象的锁，如method1调用method2，就会再次申请对象锁。
+>读写锁：使多个线程的读操作不冲突。
+>中断锁：B在锁池等待，但突然要处理其他事情，就中断自己。​
+>
+>sychronized和Lock
+>都是阻塞锁。都可重入，sychronized使用计数器实现。Lock需要程序员自己实现，更加灵活适用复杂的场景，sychronized由系统隐式实现。
+>
+>悲观锁和乐观锁
+>悲观锁：假设数据一定发生冲突，通过阻塞来保证数据安全。
+>乐观锁：假设不会发生冲突，到更新时再检查。
+>​CAS就是使用的乐观锁,v:内存值，A：期望的旧值 B：新值，比较v，A,若相等才交换为B。无法处理ABA的情况，处理方法，加上version号。
+>
+>死锁
+>互斥条件：一个资源只能被一个进程使用
+>请求与保持条件：一个进程请求资源而阻塞时，对已获得的资源不释放。
+>不剥夺条件：进程已获得的资源，在使用完之前，不能强行剥夺
+>循环等待条件​：若干进程形成头尾相接的循环等待资源关系。
+>
+>避免死锁
+>1：破环请求和保持条件：请求失败后，释放已有资源。
+>2:破坏不可抢占，代价大。
+>3：破环循环，规定顺序，避免相互等待。​
 
 
 
--new:对象被创建后状态
-
--runnable:对象start()后，等待cpu资源
-
--running:获取到cpu，执行线程，只能由runnable转换而来
-
--blocking:放弃cpu，停止
-
-  等待阻塞
-
-  调用wait(),失去锁，进入等待池。等待自己被唤醒。
-
-  同步阻塞
-
-  当线程申请锁失败，进入锁池，等待锁。
-
- 其他阻塞
-
-   	通过调用join()，sleep()不会释放锁,IO请求。当以上操作结束或完成，进入就绪状态。
-   	
-   		多线程实现同步方法
-
-sychronized可以修饰方法，代码块。
-ReentrantLock:阻塞所，可重入，操作由程序员编写。可实现非公平锁。
-automaticInteger乐观锁，如原子变量就是乐观锁的应用。
-wait(),notify(),sleep()：wait使一个线程处于等待状态，释放所有lock。sleep保留锁。
-3(易变的):确保每次都重新取值，而不是使用寄存器的值。
-
-###### 线程池
-
-**ThreadPool类型**
-
-ThreadPoolExecutor, ScheduledThreadPoolExecutor通常由工厂类Executors创建。
-​Executors可以创建三种类型的ThreadPoolExecutor:
-SingleThreadPool,FixedThreadPool和CachedThreadPool。
-​Executors可以创建2种类型的ScheduledThreadPoolExecutor：
-​SingleScheduledThreadPoo和ScheduledThreadPool。
-
-**ThreadPoolExecutor**的重要参数
-corePoolSize:核心线程数量
-​ maximumPoolSize:最大线程数量 
-​workQueue:等待队列，当线程数量​​大于corePoolSize时，任务封装成worker放入队列。 keepAliveTime:当线程数超过corePoolSize时，超过此时间空闲，则回收。
-timeUnit:时间单位
-​ threadFactory:指定创建的线程池类型
-handler:拒绝策略
-
-**等待阻塞队列**
-
-- ArrayBlockingQueue
-
-- Linked Blocking Queue
-
-- Synchro nousBlockingQueue
-
-- PriorityBlockingQueue
-
-- 拒绝策略
-  AbortPolicy抛出RejectedExecutionException
-  ​DiscardPolicy什么也不做，直接忽略
-  ​DiscardOldestPolicy丢弃执行队列中最老的任务，尝试为当前提交的任务腾出位置
-  ​CallerRunsPolicy直接由提交任务者执行这个任务
-
-- 过程原理
-  If fewer than corePoolSize threads are running, the Executor always prefers adding a new thread rather than queuing.
-  ​ If corePoolSize or more threads are running, the Executor always prefers queuing a request rather than adding a new thread.
-  ​ If a request cannot be queued, a new thread is created unless this would exceed maximumPoolSize, in which case, the task will be rejected.
-  即： corePoolSize -> 任务队列 -> maximumPoolSize -> 拒绝策略 
-
-- 线程池状态
-
-  - running:能接受，能处理
-
-  - shutdown:不接受新任务，能处理已添加
-
-  - stop:不接受新任务，不处理已添加
-
-  - tidying:由shutdown和stop转换而来
-
-  - terminated:线程时彻底终止。由tidying执行terminated()转换而来
-
-- Executors快捷创建线程
-  newFixedThreadPool(int nThreads)创建固定大小的线程池
-  ​newSingleThreadExecutor()创建只有一个线程的线程池
-  ​newCachedThreadPool()创建一个不限线程数上限的线程池，任何提交的任务都将立即执行
-
-- 使用ThreadPoolExecutor安全创建线程
-  填写ThreadPoolExecutor重要参数：
-  ​ExecutorService executorService = new ThreadPoolExecutor(2, 2, 
-                  0, TimeUnit.SECONDS, 
-                  new ArrayBlockingQueue<>(512), // 使用有界队列，避免OOM
-                  new ThreadPoolExecutor.DiscardPolicy());
-
-- 提交任务
-  Future<T> submit(Callable <T> task):
-  ​关注返回值,用future.get()获得返回信息
-  Future<T> submit(Runnable task)  不关注返回值
-  void execute(Runnable command)​   不关注返回值
-
-- 中断线程
-
-  - shutdown
-
-  - shutdownnow
-
-- 如何正确使用线程池
-  避免使用无界队列
-  明确拒绝任务时的行为
-  获取处理结果和异常
-  ExecutorService executorService = Executors.newFixedThreadPool(4);
-  Future<Object> future = executorService.submit(new Callable<Object>() {
-          @Override
-          public Object call() throws Exception {
-              throw new RuntimeException("exception in call~");// 该异常会在调用Future.get()时传递给调用者
-          }
-      });
-      
-  try {
-    Object result = future.get();
-  } catch (InterruptedException e) {
-    // interrupt
-  } catch (ExecutionException e) {
-    // exception in Callable.call()
-    e.printStackTrace();
-  }
-
-- 线程池的优势
-  降低资源消耗，创建和销毁线程很占用资源，jvm需要跟踪回收。
-  提高响应速度，任务到达，无需等待创建线程。
-  方便管理
-
-- AQS同步器
-  AQS就是实现锁的框架，内部实现时FIFO，state状态，定义内部内ConditionObject
-
-- sleep和yield
-  sleep保留锁，进入阻塞状态。他会给予低优先级线程机会。可能出现死锁，和interruptedExceptoion。
-  yield进入就绪状态，只会给相同优先级或更高优先级的线程运行机会。
-
-- stop和suspend
-  stop强制中断线程，解除所有锁定，其他线程就可以访问对象。
-  suspend()目标线程停止，但仍然持有锁，可能导致死锁。A需要B来苏醒，B需要A的锁。
-  应该使用wait(),notify().​
-
-- cyclicbarrier和countdownlatch
-  CountDownLatch用于A等待若干个线程执行完任务后，他才执行。
-  CylicBarrier一般用于一组线程互相等待至某个状态，然后同时执行。
-
-- 公平锁和非公平锁，可重入锁，读写锁，中断锁
-  用队列FIFO是公平锁的一个完美方式，能保证每个人都拿到锁。
-  公平锁效率低，非公平锁能利用好cpu碎片时间。
-  非公平锁需要锁时，直接尝试获取锁，失败则排到队尾。
-  ​可重入：多次申请一个对象的锁，如method1调用method2，就会再次申请对象锁。
-  读写锁：使多个线程的读操作不冲突。
-  中断锁：B在锁池等待，但突然要处理其他事情，就中断自己。​
-
-- sychronized和Lock
-  都是阻塞锁。都可重入，sychronized使用计数器实现。Lock需要程序员自己实现，更加灵活适用复杂的场景，sychronized由系统隐式实现。
-
-- 悲观锁和乐观锁
-  悲观锁：假设数据一定发生冲突，通过阻塞来保证数据安全。
-  乐观锁：假设不会发生冲突，到更新时再检查。
-  ​CAS就是使用的乐观锁,v:内存值，A：期望的旧值 B：新值，比较v，A,若相等才交换为B。无法处理ABA的情况，处理方法，加上version号。
-
-- 死锁
-  互斥条件：一个资源只能被一个进程使用
-  请求与保持条件：一个进程请求资源而阻塞时，对已获得的资源不释放。
-  不剥夺条件：进程已获得的资源，在使用完之前，不能强行剥夺
-  循环等待条件​：若干进程形成头尾相接的循环等待资源关系。
-
-- 避免死锁
-  1：破环请求和保持条件：请求失败后，释放已有资源。
-  2:破坏不可抢占，代价大。
-  3：破环循环，规定顺序，避免相互等待。​
-
-##### Annotation
-
-
+## Annotation
 
 # IO
 
