@@ -390,6 +390,12 @@ Executor负责执行任务并返回给驱动进程，通过自身的Block Manage
 >
 >2hadoop yarn，统一的资源管理工具，在上面可以运行多套计算框架，如MR，Storm等。根据driver在集群中的位置不同，分为yarn client和yarn cluster。
 
+#### spark alone
+
+>spark alone使用一个简单地FIFO调度
+>
+>讲的时候把yarn的rm和nm替换为master和worker即可。
+
 #### yarn cluster模式
 
 >注意几个关键组件：YARN的AM,NM,RM,yarn服务器，yarn客户端        spark：sparksubmit进程，Executor，Driver

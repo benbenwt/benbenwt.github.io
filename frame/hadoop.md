@@ -1,7 +1,7 @@
 # 相关组件版本
 
 ```
-hadoop3.1.1
+hadoop3.1.4
 hbase-2.3.3
 hive-3.1.2
 zookeeper3.5.9
