@@ -292,9 +292,13 @@ public int hashCode() {
 
 >ArrayList继承AbstractList接口，serialize,cloned,randomAccess接口
 
-构造函数：
+###### 构造函数：
 
-指定初始容量，若使用无参构造方法，创建为DEFAULT_EMPTY_ELEMENT.
+指定InitialCapacity初始容量，创建对应length的数组。
+
+若使用无参构造方法，创建为DEFAULT_EMPTY_ELEMENT。
+
+当调用add方法时，会使用default将容量扩展到default_capacity大小。
 
 ```
 public ArrayList(int initialCapacity) {
@@ -309,7 +313,7 @@ public ArrayList(int initialCapacity) {
 }
 ```
 
-ArrayList添加的方法有如下：
+###### ArrayList添加的方法有如下：
 
 将容量缩小到现有元素大小
 
@@ -324,7 +328,11 @@ public void trimToSize() {
 }
 ```
 
-确保容量安全函数,通过calculate函数计算newcapacity，并更新minicapacity。若数组length不满足minicapacity则使用grow函数进行扩容。
+>确保容量安全函数,通过calculate函数计算newcapacity，并更新minicapacity。
+>
+>若数组length不满足minicapacity则使用grow函数进行扩容。
+>
+>关注三个值：mincapacity计算，newcapacity，maxArraySize。
 
 ```
 private void ensureCapacityInternal(int minCapacity) {
@@ -334,6 +342,7 @@ private void ensureCapacityInternal(int minCapacity) {
 ```
 
 ```
+#如果计算的minCapacity比当前设置的length大，则使用grow扩充
 private void ensureExplicitCapacity(int minCapacity) {
     modCount++;
 
@@ -344,6 +353,7 @@ private void ensureExplicitCapacity(int minCapacity) {
 ```
 
 ```
+#取default_capacity和size+1中大的一个。
 private static int calculateCapacity(Object[] elementData, int minCapacity) {
     if (elementData == DEFAULTCAPACITY_EMPTY_ELEMENTDATA) {
         return Math.max(DEFAULT_CAPACITY, minCapacity);
@@ -353,6 +363,7 @@ private static int calculateCapacity(Object[] elementData, int minCapacity) {
 ```
 
 ```
+#
 private void grow(int minCapacity) {
     // overflow-conscious code
     int oldCapacity = elementData.length;
@@ -482,6 +493,16 @@ map中的内部接口Entry。静态内部类只可调用类成员，非静态内
 ##### HashMap
 
 >继承和实现AbstractMap,Clone,Serializable。
+>
+>默认capacity为16
+>
+>loadFactor加载因子，默认是0.75
+>
+>threshold阈值。阈值=容量*加载因子。默认12，当元素数量超过阈值，触发扩容
+>
+>首次put的时候，
+>
+>https://blog.csdn.net/qq_45655489/article/details/119563733
 
 ###### 内部类Node
 
@@ -500,9 +521,169 @@ map中的内部接口Entry。静态内部类只可调用类成员，非静态内
 transient表示此属性不进行序列化，只可存活在内存中。无法序列化进行存储或传输。
 ```
 
-调用旋转函数调整平衡二叉树结构的流程：put/remove,treeifyBin,treeify,balanceInsertion,RotateLeft,RotateRight
+调用旋转函数调整平衡二叉树结构的流程：
+
+```
+put/remove,treeifyBin,treeify,balanceInsertion,RotateLeft,RotateRight
 
 balance*函数是调整的具体内容。
+```
+
+###### hashmap插入元素的步骤  put方法
+
+>1如果此hash没有放入值，则直接创建一个node，放入table
+>
+>2如果已经存在，按照如下步骤处理：
+>
+>​          1如果插入的hash值与已经存在的元素的hash值相等，key值相等，将元素赋值给e
+>
+>​          2如果hash、key值不相等，并且是红黑树节点，则将值放入树中
+>
+>​          3如果hash、key值不相等，并且是链表，则将值插入链表末尾。
+
+```
+final V putVal(int hash, K key, V value, boolean onlyIfAbsent,
+               boolean evict) {
+    Node<K,V>[] tab; Node<K,V> p; int n, i;
+    //table未初始化或者长度为0，进行扩容
+    if ((tab = table) == null || (n = tab.length) == 0)
+        n = (tab = resize()).length;
+    //(n - 1) & hash 确定元素存放在哪个桶中，桶为空，
+    //新生成结点放入桶中(此时，这个结点是放在数组中)
+    if ((p = tab[i = (n - 1) & hash]) == null)
+        tab[i] = newNode(hash, key, value, null);
+    //桶中已经存在元素
+    else {
+        Node<K,V> e; K k;
+        //key相等，hash相等
+        if (p.hash == hash &&
+            ((k = p.key) == key || (key != null && key.equals(k))))
+            //将元素赋值给e
+            e = p;
+        //hash值不相等，即key不相等，并且该节点是红黑树节点
+        else if (p instanceof TreeNode)
+        	//放入树中
+            e = ((TreeNode<K,V>)p).putTreeVal(this, tab, hash, key, value);
+        //链表节点
+        else {
+        	//在链表末尾插入节点
+            for (int binCount = 0; ; ++binCount) {
+                if ((e = p.next) == null) {
+                    p.next = newNode(hash, key, value, null);
+                    //节点数量达到阈值8，执行treeifyBin方法
+                    //此方法会根据HashMap的数组来决定是否要转换为红黑树
+                    //数组长度大于等于64才会转换为红黑树，否则只会扩容数组
+                    if (binCount >= TREEIFY_THRESHOLD - 1) // -1 for 1st
+                        treeifyBin(tab, hash);
+                    //跳出循环
+                    break;
+                }
+                if (e.hash == hash &&
+                    ((k = e.key) == key || (key != null && key.equals(k))))
+                    break;
+                p = e;
+            }
+        }
+        //桶中有key值和hash值于插入节点相等的节点
+        if (e != null) { // existing mapping for key
+            V oldValue = e.value;
+            if (!onlyIfAbsent || oldValue == null)
+                e.value = value;
+            afterNodeAccess(e);
+            //覆盖以后返回旧值
+            return oldValue;
+        }
+    }
+    ++modCount;
+    //插入完成后实际大小大于阈值，需要扩容
+    if (++size > threshold)
+        resize();
+    afterNodeInsertion(evict);
+    return null;
+}
+
+```
+
+###### resize方法
+
+```
+final Node<K,V>[] resize() {
+    Node<K,V>[] oldTab = table;
+    int oldCap = (oldTab == null) ? 0 : oldTab.length;
+    int oldThr = threshold;
+    int newCap, newThr = 0;
+    //容量超过最大值就不再扩容
+    if (oldCap > 0) {
+        if (oldCap >= MAXIMUM_CAPACITY) {
+            threshold = Integer.MAX_VALUE;
+            return oldTab;
+        }
+        //没超过最大值扩容到原来的2倍
+        else if ((newCap = oldCap << 1) < MAXIMUM_CAPACITY &&
+                 oldCap >= DEFAULT_INITIAL_CAPACITY)
+            newThr = oldThr << 1; // double threshold
+    }
+    else if (oldThr > 0) // initial capacity was placed in threshold
+        newCap = oldThr;
+    else {               // zero initial threshold signifies using defaults
+        newCap = DEFAULT_INITIAL_CAPACITY;
+        newThr = (int)(DEFAULT_LOAD_FACTOR * DEFAULT_INITIAL_CAPACITY);
+    }
+    if (newThr == 0) {
+        float ft = (float)newCap * loadFactor;
+        newThr = (newCap < MAXIMUM_CAPACITY && ft < (float)MAXIMUM_CAPACITY ?
+                  (int)ft : Integer.MAX_VALUE);
+    }
+    threshold = newThr;
+    @SuppressWarnings({"rawtypes","unchecked"})
+    Node<K,V>[] newTab = (Node<K,V>[])new Node[newCap];
+    table = newTab;
+    if (oldTab != null) {
+    	//扩容完成后，重新进行hash分配，写入数据
+        for (int j = 0; j < oldCap; ++j) {
+            Node<K,V> e;
+            if ((e = oldTab[j]) != null) {
+                oldTab[j] = null;
+                if (e.next == null)
+                    newTab[e.hash & (newCap - 1)] = e;
+                else if (e instanceof TreeNode)
+                    ((TreeNode<K,V>)e).split(this, newTab, j, oldCap);
+                else { // preserve order
+                    Node<K,V> loHead = null, loTail = null;
+                    Node<K,V> hiHead = null, hiTail = null;
+                    Node<K,V> next;
+                    do {
+                        next = e.next;
+                        if ((e.hash & oldCap) == 0) {
+                            if (loTail == null)
+                                loHead = e;
+                            else
+                                loTail.next = e;
+                            loTail = e;
+                        }
+                        else {
+                            if (hiTail == null)
+                                hiHead = e;
+                            else
+                                hiTail.next = e;
+                            hiTail = e;
+                        }
+                    } while ((e = next) != null);
+                    if (loTail != null) {
+                        loTail.next = null;
+                        newTab[j] = loHead;
+                    }
+                    if (hiTail != null) {
+                        hiTail.next = null;
+                        newTab[j + oldCap] = hiHead;
+                    }
+                }
+            }
+        }
+    }
+    return newTab;
+}
+```
 
 ##### TreeMap
 
