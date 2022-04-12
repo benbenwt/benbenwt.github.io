@@ -539,11 +539,257 @@ FlinkKafkaConsumer<String>(
 
 #### 类型提示
 
->returns用于进行类型提示，因为对于map里传入的lambda表达式，系统只能推断出是tuple2类型，无法
+>returns用于进行类型提示，因为对于map里传入的lambda表达式，系统只能推断出是tuple2类型，无法得到tuple2<String，Long>。只有显示的告诉系统返回类型，才能正确解析数据。
 
-### 定义数据的转换操作
 
-### 定义计算结果的输出位置
+
+### 转换操算子Transformation
+
+#### 基本转换算子
+
+##### map
+
+>用于将数据流中的数据进行转换，形成新的数据流。
+
+```
+#可以通过匿名类、lambda、直接创建一个类等方法表示mapfunction，map是一个可以调用用户自定义操作的算子
+// 传入匿名类，实现 MapFunction
+ stream.map(new MapFunction<Event, String>() {
+ @Override
+ public String map(Event e) throws Exception {
+ return e.user;
+ }
+ });
+```
+
+##### filter
+
+>filter传入的参数需要实现filterFunction接口
+
+```
+stream.filter(new FilterFunction<Event>() {
+ @Override
+ public boolean filter(Event e) throws Exception {
+ return e.user.equals("Mary");
+ }
+ });
+```
+
+##### flatMap
+
+>先map，然后将复合元素拆分成单个，最终返回一个拆分后的列表。
+
+```
+stream.flatMap(new MyFlatMap()).print();
+public static class MyFlatMap implements FlatMapFunction<Event, String> {
+ @Override
+ public void flatMap(Event value, Collector<String> out) throws Exception 
+{
+ if (value.user.equals("Mary")) {
+ out.collect(value.user);
+ } else if (value.user.equals("Bob")) {
+ out.collect(value.user);
+ out.collect(value.url);
+ }
+ }
+ }
+
+```
+
+#### 聚合算子
+
+##### keyBy
+
+```
+#flink没有直接聚合的api，因为对数据进行聚合时需要进行分区处理，这样才能提高效率。所以在flink中，要做聚合需要自己调用keyBy进行分区。keyBy用于从逻辑上划分不同分区，这里的分区是指并行处理的子任务，也就是任务槽。
+#可以指定tuple的多个位置的子弹组合作为分区，对于pojo类型可以指定属性（String），另外可以传入lambda表达式实现一个键选择器，用于从数据中提取key的逻辑。
+KeyedStream<Event, String> keyedStream1 = stream.keyBy(new
+KeySelector<Event, String>() {
+ @Override
+ public String getKey(Event e) throws Exception {
+ return e.user;
+ }
+ });
+ env.execute();
+ }
+}
+```
+
+##### 简单聚合
+
+>sum
+>
+>min
+>
+>max
+>
+>minBy
+>
+>maxBy
+>
+>通过指定位置或名称进行聚合，元组通过f0、f1.... ..进行指定位置。
+>
+>一个聚合算子会为每一个key保存一个聚合的值，在flink中叫做状态，所以当有一个新的数据输入，算子就会更新保存的聚合结果，并发送一个带有更新后聚合值的事件到下游算子。对于无界流来说，这个状态是永远不会清除的。所以聚合算子的key应该是有限个的。
+
+##### 规约聚合
+
+>**简单聚合是对一些特定统计需求的实现，那么reduce算子就是一个一般化的聚合统计操作**
+>
+>reduce操作会将keyedstream转换为datastream，调用reduce传入一个参数，此类需要实现reduceFunction接口。定义的方法有两个参数，是输入事件，将输入事件合并可以得到输出事件。
+>
+>在流处理中，将两个输入事件合并后的状态进行保存，当到来一个新事件时，对其进行计算并更新状态。
+
+>所有聚合的操作保存在flink的状态内存中，因为他需要跨越多条记录，需要根据key保存状态。数据流入的过程，就是不断计算并更新flink中保存的状态的过程。
+
+##### 物理分区
+
+>与keyBy区别，
+
+### 输出算子 Sink
+
+>addSink可以创建新的sink，添加的类需要实现一SinkFunction接口
+
+#### 输出到文件
+
+```
+StreamingFileSink<String> fileSink = StreamingFileSink
+ .<String>forRowFormat(new Path("./output"),
+ new SimpleStringEncoder<>("UTF-8"))
+ .withRollingPolicy(
+ DefaultRollingPolicy.builder()
+ .withRolloverInterval(TimeUnit.MINUTES.toMillis(15)
+)
+ .withInactivityInterval(TimeUnit.MINUTES.toMillis(5
+))
+ .withMaxPartSize(1024 * 1024 * 1024)
+.build())
+ .build();
+ // 将 Event 转换成 String 写入文件
+ stream.map(Event::toString).addSink(fileSink);
+
+```
+
+
+
+#### 输出到kafka
+
+```
+stream
+ .addSink(new FlinkKafkaProducer<String>(
+ "clicks",
+ new SimpleStringSchema(),
+ properties
+ ));
+
+```
+
+
+
+#### 输出到redis
+
+```
+<dependency>
+ <groupId>org.apache.bahir</groupId>
+ <artifactId>flink-connector-redis_2.11</artifactId>
+ <version>1.0</version>
+</dependency>
+
+public static class MyRedisMapper implements RedisMapper<Event> {
+ @Override
+ public String getKeyFromData(Event e) {
+ return e.user;
+ }
+ @Override
+ public String getValueFromData(Event e) {
+ return e.url;
+ }
+ @Override
+ public RedisCommandDescription getCommandDescription() {
+ return new RedisCommandDescription(RedisCommand.HSET, "clicks");
+ }
+}
+
+FlinkJedisPoolConfig conf = new 
+FlinkJedisPoolConfig.Builder().setHost("hadoop102").build();
+ env.addSource(new ClickSource())
+ .addSink(new RedisSink<Event>(conf, new MyRedisMapper()));
+
+```
+
+
+
+#### 输出到Elasticsearch
+
+```
+<dependency>
+ <groupId>org.apache.flink</groupId>
+ 
+<artifactId>flink-connector-elasticsearch7_${scala.binary.version}</artifactI
+d>
+ <version>${flink.version}</version>
+</dependency>
+
+ElasticsearchSinkFunction<Event> elasticsearchSinkFunction = new 
+ElasticsearchSinkFunction<Event>() {
+ @Override
+ public void process(Event element, RuntimeContext ctx, RequestIndexer 
+indexer) {
+ HashMap<String, String> data = new HashMap<>();
+ data.put(element.user, element.url);
+ IndexRequest request = Requests.indexRequest()
+ .index("clicks")
+ .type("type") // Es 6 必须定义 type
+ .source(data);
+ indexer.add(request);
+ }
+ };
+ stream.addSink(new ElasticsearchSink.Builder<Event>(httpHosts, 
+elasticsearchSinkFunction).build());
+```
+
+
+
+#### 输出到MySQL （JDBC）
+
+```
+<dependency>
+ <groupId>org.apache.flink</groupId>
+ <artifactId>flink-connector-jdbc_${scala.binary.version}</artifactId>
+ <version>${flink.version}</version>
+</dependency>
+<dependency>
+ <groupId>mysql</groupId>
+ <artifactId>mysql-connector-java</artifactId>
+ <version>5.1.47</version>
+</dependency>
+
+stream.addSink(
+ JdbcSink.sink(
+ "INSERT INTO clicks (user, url) VALUES (?, ?)",
+(statement, r) -> {
+ statement.setString(1, r.user);
+statement.setString(2, r.url);
+ },
+JdbcExecutionOptions.builder()
+ .withBatchSize(1000)
+.withBatchIntervalMs(200)
+ .withMaxRetries(5)
+ .build(),
+ new 
+JdbcConnectionOptions.JdbcConnectionOptionsBuilder()
+ .withUrl("jdbc:mysql://localhost:3306/userbe
+havior")
+ // 对于 MySQL 5.7，用"com.mysql.jdbc.Driver"
+ .withDriverName("com.mysql.cj.jdbc.Driver")
+.withUsername("username")
+ .withPassword("password")
+ .build()
+ )
+ );
+
+```
+
+
 
 ## 窗口函数
 

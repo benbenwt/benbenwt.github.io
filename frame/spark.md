@@ -1203,9 +1203,9 @@ df.write.format("")[.option("...")].save("...")
 >
 >workers
 
-### spark streaming
+## DStream创建
 
-#### wordcount例子
+### wordcount例子
 
 ```
 package com.wt.learn
@@ -1233,9 +1233,7 @@ nc  -lk 9999
 hello world
 ```
 
-#### DStream创建
-
-##### RDD队列
+### RDD队列
 
 >测试过程中，可以通过ssc.queueStream(queueOfRDDs)创建DStream，每一个推送到这个队列的RDD，都会作为一个DStream处理。
 
@@ -1275,11 +1273,11 @@ object RDDStream {
 
 ```
 
-#### 自定义数据源
+### 自定义数据源
 
 >需要继承Receiver类，并实现onStrat、onStop方法来自定义数据源采集。
 
-#### Kafka数据源
+### Kafka数据源
 
 >通过sparkStreaming连接上kafka特定的topic，并将数据读取出来进行计算。
 
@@ -1323,11 +1321,15 @@ bin/kafka-consumer-groups.sh --describe --bootstrap-server hbase:9092 --group  a
 
 ```
 
-### DStream转换
+## DStream转换
 
 >DStream与RDD类似，也分为Transformations转换和Output Operations输出两种。
 
-#### 无状态转换
+### 无状态转换
+
+>无状态只需要简单的将操作施加到每个批次上，就是转化DStream中的每一个rdd。不会将中间状态保存，并用于同之后到来记录进行计算。
+
+>map,flatmap,filter,repartition,groupbykey,reducebykey
 
 ##### transform
 
@@ -1337,13 +1339,13 @@ bin/kafka-consumer-groups.sh --describe --bootstrap-server hbase:9092 --group  a
 
 >两个流之间的join需要两个流的批次大小一直，这样才能做到同时触发计算。触发时，两个流中的各自的RDD进行join，与两个RDD的join效果相同。
 
-#### 有状态转换
+### 有状态转换
 
 >指定如何根据之前的状态和来自输入流的新值对状态进行更新。
 
 ##### UpdateStateByKey
 
->它会传入两个参数，第一个参数是当前时间区间的状态，第二个参数是之前的状态
+>它会传入两个参数，第一个参数是当前时间区间的状态，第二个参数是之前的状态。定义如何更新状态。
 
 ```
 #生成一个新的DStream，为每个时间区间对应的（键，状态）对组成的。
@@ -1357,13 +1359,27 @@ val updateFunc = (values: Seq[Int], state: Option[Int]) => {
 val stateDstream = pairs.updateStateByKey[Int](updateFunc)
 ```
 
-
-
 #### WindowOperations
 
->由两个参数决定，窗口时长是计算内容的时间范围，滑动步长是隔多久触发一次计算。
+>由两个参数决定，这两个参数都是采集周期的整数倍。
+>
+>窗口时长是计算内容的时间范围，也就是允许获取到那些范围的允许内存状态，
+>
+>滑动步长是隔多久触发一次计算。
+>
+>比如采集周期是3秒一个批次，窗口是12秒，滑步是6秒。
 
-### DStream输出
+```
+window（windowLength，slideInterval）
+countByWindow（windowLength，slideInterval）
+reduceByWindow（func，windowLength，slideInterval）
+reduceByKeyAndWindow（func，invFunc，windowLength，slideInterval，[numTasks]）
+
+```
+
+
+
+## DStream输出
 
 #### print
 
@@ -1381,6 +1397,8 @@ val stateDstream = pairs.updateStateByKey[Int](updateFunc)
 
 >对于每个到来的批次
 
+#### foreachPartition
+
 ### 案例实操
 
 >广告黑名单：将每天对某个广告点击超过100次的用户统计出来，将其保存到mysql作为黑名单。
@@ -1391,7 +1409,7 @@ val stateDstream = pairs.updateStateByKey[Int](updateFunc)
 >
 >这两个能称为实时streaming？都以天为单位进行处理了。
 
-### spark shell
+## spark shell
 
 ##### 交互shell
 
