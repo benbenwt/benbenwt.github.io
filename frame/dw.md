@@ -35,6 +35,7 @@ https://www.nowcoder.com/discuss/868723?source_id=discuss_experience_nctrack&cha
 #coursera上的课程，项目
 https://www.coursera.org/specializations/big-data
 #github iot spark，项目
+https://github.com/harsh86/iot-traffic-monitor-flink
 ```
 
 ```
