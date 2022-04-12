@@ -591,6 +591,50 @@ scan 'test',FILTER=>"FamilyFilter(=,'substring:name')"
 
 >尚硅谷官网：HBase学习笔记
 
+## rowkey设计原则
+
+>目的：根据查询方法设计rowkey，避免全表扫描，避免集中在单节点。
+>
+>1唯一原则
+>
+>2排序原则，范围查询
+>
+>3散列原则，并发节点
+>
+>热点问题
+>
+>1reverse反转
+>
+>2前缀拼接，salt加盐
+>
+>3hash散列
+>
+>长度问题：
+>
+>1越短越好
+>
+>
+
+## 列族
+
+>列族建议在1-3个。
+>
+>列族数对Flush的影响：
+>
+>每个列族有自己的memstore，越多的列族，创建的memstore越多，列族越多，flush一次生成一个HFile，那么小文件就很多。
+>
+>列族数对Split的影响：
+>
+>拆分小的列族，小文件变多
+>
+>列族数对Compaciton的影响：
+>
+>region级别，不必要io
+>
+>列族数对regionserver的影响：
+>
+>占用内存
+
 # HBase用法
 
 ### hbase shell语法

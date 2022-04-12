@@ -196,7 +196,7 @@ select * from dwd_category;
 
 >实时数仓如果不使用持久化结果的组件，那么其计算结果都不可复现、不可纠正，像内存中的数据一样，停止了就会消失。所以一般是处理日活类型的指标，将结果存入mysql，clickhouse等，后续不会再用到这些数据。今日日活+历史数据，不就是实时的嘛。然后离线的仍然一天一次，实时就这样增量就好了。
 
-### 埋点与业务数据
+## 埋点与业务数据
 
 >埋点分为前端埋点和后端埋点
 >
@@ -212,11 +212,53 @@ select * from dwd_category;
 
 ## 日志采集后端
 
->使用springboot搭建后端日志服务，借助logback将日志落盘，利用spring-kafka将日志按照类型分发到不同的kafka topic，主要包括启动日志topic、事件topic，命名为gmall_start、gmall_event
+>为了模拟生产中的场景，开启了一个sprinboot后端服务作为日志服务器，负责接收来自前段的日志，并存储到logfile，并发送到对应的kafka的topic，topic包括日志topic，事件topic。
+
+### 日志模拟生成
+
+>这里前端用一个java程序模拟代替，其源源不断的向后端日志服务器发送模拟的数据。发送的速度为每秒100条，因为设置的每条日志发送的延迟为10ms。
+
+```
+#使用okhttp将数据发送到日志服务器的后端接口。
+#日志格式如下，第一层的key有common和start，start下是启动的信息，common是其他信息，如浏览的品牌等。
+#启动信息：loading_time,open_ad_id,open_ad_ms,open_ad_skip_ms
+{"common":{"ar":"110000","ba":"Redmi","ch":"oppo","md":"Redmi k30","mid":"mid_168","os":"Android 11.0","uid":"337","vc":"v2.1.132"},"start":{"entry":"notice","loading_time":17874,"open_ad_id":2,"open_ad_ms":2467,"open_ad_skip_ms":0},"ts":1594652955000}
+```
+
+### Logback
+
+>1创建logback.xml，在其中控制日志的输出级别的输出节点root，logger，以及输出源appender。
 >
->在logback.xml中配置好落盘目录，输出日志到文件。
+>2为类添加@Slf4j注解
+
+```
+<appender name="console" class="ch.qos.logback.core.ConsoleAppender">
+    <encoder>
+    	<pattern>%msg%n</pattern>
+    </encoder>
+</appender>
+
+<!-- 将某一个包下日志单独打印日志 -->
+<logger name="com.atguigu.logger.controller.LoggerController" level="INFO" additivity="false">
+    <appender-ref ref="rollingFile" />
+    <appender-ref ref="console" />
+</logger>
+
+#当没有子节点logger，会调用root
+ <root level="error" additivity="false">
+ 	<appender-ref ref="console" />
+ </root>
+```
+
+### Kafka发送
+
+>使用springframework提供的spring-kafka链接kafka。
 >
->使用spring-kafka将日志发送到对应的日志topic，区分启动日志和事件日志。
+>1首先配置好springframework-kafka的pom依赖，然后编写application.properties填写bootstrap-server,key-serializer,value-serializer。
+>
+>2然后在代码中创建KafkaTemplate对象，使用Autowired注入对象。
+>
+>3使用：kafkaTemplate.send(topic,jsonObject);
 
 ## 业务数据采集
 
@@ -226,16 +268,65 @@ select * from dwd_category;
 >
 >安装好canal、maxwell后，配置好mysql地址，并为canal、maxwell创建好mysql账户，给予权限，为两者配置kafka地址，及发送的topic。
 
+### binlog格式
+
+>binlog支持以下格式：
+>
+>1row格式，一行为单位保存记录，仅仅保存那条记录被修改，可以不记录sql语句的信息。
+>
+>2statement，将每一条会修改数据的sql记录在binlog中。不需要记录每一行的变化，减少了日志量。还需要记录每条语句执行时候的一些信息，确保在slave节点上执行时候获得相同的结果。
+>
+>3Mixed格式
+>
+>该格式是以上两种level的混合使用
+
+### maxwell的格式
+
+```
+#指明数据库，表名，data字段中携带表中的数据，old字段中携带旧的字段值，时间戳，xid（对应的sql的id）。
+#maxwell以影响的数据为单位发送日志，每一条数据产生一条日志，如果想知道是否来自同一条sql，可以通过xid判断。
+{
+"database":"gmall-2020-04",
+"table":"z_user_info",
+"type":"insert",
+"ts":1589385314,
+"xid":82982,
+"xoffset":0,
+"data":{"id":30,
+"user_name":"zhang3",
+"tel":"1381000101
+0"
+}
+}
+```
+
 ## nginx反代
 
 >使用nginx反向代理三台日志服务器，因为用户的客户端操作日志数据量很大，使用nginx创建upstream，负载均衡三台机器，这样可以向nginx动态的替换机器，在需要重启服务时，可以逐个重启服务，保证upstream中有一个可用的结点。让用户无法感知服务器已经进行了重启和更新。
 
-## 日活统计
+## 需求1日活统计
 
->日活统计要求统计当日登录的人数，通过采集的登录日志进行统计。需要借助redis进行去重，比如某个用户进行了多次登录，只能记作一个活跃用户。然后将去重的日活记录插入到ES数据库中，用于可视化和查询。如果不需要使用kibana可以写入MySQL，给业务使用，也可以用sql统计后提供给其他可视化工具，如DataV、QuickBI。这一部分代码在DauApp中完成，即day active user。
+>日活统计要求统计当日登录的人数，通过采集的登录日志进行统计。需要借助redis进行去重，比如某个用户进行了多次登录，只能记作一个活跃用户。然后将去重的日活记录插入到ES数据库中，用于可视化和查询。如果不需要使用kibana可以写入MySQL，给业务使用，也可以用sql统计后提供给其他可视化工具，如DataV、QuickBI。这一部分代码在DauApp类中完成，即day active user。
+
+### 读取kafka的启动日志topic
+
+#### 精确一次消费
+
+>精确一次消费可以通过两种形式达到：
+>
+>1使用事务，让两步操作必须同时失败或成功。
+>
+>2手动提交+幂等性，在存储好数据后在提交offset，避免offset成功但数据没存储的情况。然后，确保数据存储是幂等性的操作，也就是说offset提交失败时，虽然会重试数据存储的操作，但是无论重试多少次都是结果一样的，会进行覆盖，例如es相同的id会进行覆盖。
+
+>为了达到精确一次消费，需要进行手动提交及读取offset，避免出现offset提交了，但是数据还没有存储的情况。然后借助es的幂等性达到精确一次消费。
+
+>kafka默认5秒提交一次偏移。
+>
+>enable.auto.commit 的默认值是 true；就是默认采用自动提交的机制。 
+>
+>auto.commit.interval.ms 的默认值是 5000，单位是毫秒。
 
 ```
-#根据启动日志，进行日活统计
 #首先,从redis取出kafka偏移量
 #获取jedis客户端
 val prop = MyPropertiesUtil.load("config.properties")
@@ -253,7 +344,9 @@ jedisPoolConfig.setTestOnBorrow(true) //每次获得连接的进行测试
 jedisPool=new JedisPool(jedisPoolConfig,host,port.toInt)
 jedis=jedisPool.getResource
 val offsetMap: util.Map[String, String]=jedis.hgetAll(offsetKey)
+```
 
+```
 #从kafka创建sparkstreaming输入流
 kafkaParam("group.id")=groupId
 val dStream = KafkaUtils.createDirectStream[String,String](
@@ -262,7 +355,9 @@ val dStream = KafkaUtils.createDirectStream[String,String](
       //这句话将整个topic,groupid传递进去,也就是所有partition的offset都传递进去了,这表示,consumer(topic,groupid)接受所有传递进去的分区的消息.
       ConsumerStrategies.Subscribe[String,String](Array(topic),kafkaParam,offsets))
       dStream
-    
+```
+
+```
 #从kafka读取偏移量。
 var offsetRanges: Array[OffsetRange] = Array.empty[OffsetRange]
 
@@ -273,15 +368,28 @@ var offsetRanges: Array[OffsetRange] = Array.empty[OffsetRange]
         rdd
       }
     }
-    
-#后续就是在创建的directStream进行spark操作。
-#完全不知道stream里边是什么类型
-
 ```
 
+### 借助redis去重
 
+```
+#使用sadd函数，如果存在插入元素，返回0，否则返回1并插入。
+val isNew:lang.Long=jedisClient.sadd(dauKey,mid)
+去重这一部分使用了mapPartitions函数，对于每个分区创建了一次jedisClient，对于分区内每个记录请求了一次redis服务。
+#然后得到首次登录的用户列表。
+#将首次登录的用户信息封装好之后，插入ES。
+#使用了foreachPartition方法，将整个分区的数据封装好后，借助ES bulk insert批量插入。
+```
 
-## 首单分析
+#### foreachPartition mapPartition
+
+>1foreachPartition是action算子，用于数据处理的结尾，获取处理的结果，并将结果插入es，hbase等数据库中，它不会返回一个新的数据流rdd。mapPartition是转换操作，返回一个可以继续操作的rdd
+
+### 写入结果数据
+
+#### 精确一次消费
+
+## 需求2首单分析
 
 >ods，dwd
 >
@@ -333,7 +441,7 @@ jestFactory = new JestClientFactory
 jestFactory.getObject
 ```
 
-## 实付分摊金额及交易额统计
+## 需求3实付分摊金额及交易额统计
 
 >购买商品有时会有优惠，但优惠一般是以订单为单位，现在需要以商品为单位，计算每个商品优惠了多少，进一步计算出每个商品的实付金额。对于除法除不尽的情况，不是最后一件商品的分摊金额使用乘除法比例计算，最后一件商品的分摊金额使用减法计算，用实付金额减去前边计算的其他商品的金额得到。
 
@@ -345,7 +453,7 @@ jestFactory.getObject
 >
 >也可以通过滑动窗口+数据去重，这种方式处理代码简单，但是会造成数据重复，滑动窗口每次会覆盖一些重复数据，如果使用滚动窗口，每次窗口的数据不重复，无法解决join问题。
 
-## ADS聚合及可视化
+## 需求4ADS聚合及可视化
 
 >将dws的数据进行聚合，插入mysql。编写发布接口，让阿里云DataV使用发布的接口。
 

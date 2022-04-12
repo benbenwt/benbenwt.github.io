@@ -2177,6 +2177,10 @@ UDTF（用户自定义表生成函数）用于表级函数，如lateral view exp
 
 >https://blog.csdn.net/zyq522376829/article/details/47686867
 
+### 2
+
+>一亿级别数据量的话怎么优化，数据倾斜的话怎么优化，自连接笛卡尔积怎么优化
+
 # SGG_DW教程
 
 ### 建表语句

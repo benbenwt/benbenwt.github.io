@@ -344,6 +344,8 @@ sbin/start-history-server.sh
 
 # 理论知识
 
+>四个层级划分，然后shuffle，然后持久化。
+
 ## spark运行架构
 
 >spark框架采用标准的master-slave的结构，Driver即master，Executor即slave。
@@ -816,6 +818,30 @@ sc.setCheckpointDir("./checkpoint1")
 ```
 Driver项rm申请资源，rm分配资源后在合适的机器上启动AM，AM再申请资源启动Executor，Excutor注册到Driver，Driver开始执行，划分任务并分发。
 ```
+
+## 数据倾斜
+
+>https://cloud.tencent.com/developer/article/1916231
+>
+>查看是哪个stage导致的数据倾斜，然后到代码中找到位置，
+>
+>1join类型用mapjoin
+>
+>2分组聚合类型在map端进行提前聚合
+>
+>3使用随机前缀拆分导致倾斜的key值
+
+## 其他八股
+
+### 两个大文件中找出共同记录
+
+>1使用分治的方法，使用值得hash将任务划分为多个小任务，至于划分为多少个，使用内存容量/每条记录大小得到每个小任务的容纳量c，然后用总的记录数/c得到分治个数。
+>
+>2借助bitmap，因为bitmap可以随机访问，判定是否存在相同记录。
+
+### 两个大文件找出topk
+
+>使用内存维持一个小顶堆，逐个处理。当然也可以划分后分治，然后再merge分治的小顶堆。
 
 # spark用法
 

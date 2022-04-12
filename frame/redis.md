@@ -57,6 +57,12 @@ FLUSHALL 清空所有db
 
 # redis理论
 
+>在入门级linux服务器上，每秒数10万次读写。
+
+## 基本架构
+
+>
+
 ## 五大数据类型
 
 消息队列，中间件，订阅消息，数据库，缓存。
@@ -141,6 +147,8 @@ hsetnx myhash field1 hello
 ​
 
 ### Zset
+
+>有序set
 
 # 持久化RDB
 

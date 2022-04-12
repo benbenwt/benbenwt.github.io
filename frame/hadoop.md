@@ -120,6 +120,8 @@ cd .ssh
 ssh-keygen -t rsa
 ssh-copy-id localhost
 输入密码即可
+ssh-copy-id -i ~/.ssh/id_rsa.pub root@要拷贝到的机器ip
+
 ```
 
 执行ssh localhost无需密码，即为成功。
@@ -1080,6 +1082,10 @@ Secondary NameNode用于解决fsimage过旧的问题，它定时拉取、合并N
 5.ZKFailoverController（主备切换控制器，FC）：ZKFailoverController 作为独立的进程运行，对 NameNode 的主备切换进行总体控制。ZKFailoverController 能及时检测到 NameNode 的健康状况，在主 NameNode 故障时借助 Zookeeper 实现自动的主备选举和切换（当然 NameNode 目前也支持不依赖于 Zookeeper 的手动主备切换）；
 ```
 
+##### 其他问题
+
+>NN、DN结构，作用，读写过程（能说到API最好），读写容错，HA，联邦这些
+
 ### Yarn架构
 
 ##### resourceManager
@@ -1159,7 +1165,11 @@ NM是每个结点上运行的资源和任务管理器，负责向RM汇报本节�
 每个maptask任务对应一个tasktracker
 ```
 
+##### cgroup
 
+>cpu资源是弹性资源，不会影响到程序的死亡，因此cpu的资源隔离方案采用了Linux Kernel提供的轻量级资源隔离技术Cgroup。
+
+>cpu资源隔离，内存资源隔离
 
 ### MapReduce架构及原理
 

@@ -539,7 +539,7 @@ balance*函数是调整的具体内容。
 >
 >​          2如果hash、key值不相等，并且是红黑树节点，则将值放入树中
 >
->​          3如果hash、key值不相等，并且是链表，则将值插入链表末尾。
+>​          3如果hash、key值不相等，并且是链表，则将值插入链表末尾。如果大于TREEIFY_THRESHOLD，尝试扩容。如果大于最小		       MIN_TREEIFY_CAPACITY会扩充为红黑树。
 
 ```
 final V putVal(int hash, K key, V value, boolean onlyIfAbsent,

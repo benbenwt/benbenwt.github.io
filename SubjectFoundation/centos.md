@@ -519,6 +519,8 @@ su root切换到root用户。chmod 777 /etc/sudoers开启修改权限，vim打�
 
 例子：ssh-keygen -R 192.168.0.100
 
+如果还不行，删除know_hosts即可。
+
 ##### ssh秘钥公钥问题
 
 将自己的公钥给别人，自己可以登陆别人。
@@ -528,6 +530,10 @@ su root切换到root用户。chmod 777 /etc/sudoers开启修改权限，vim打�
 使用ssh-copy-id ip将自己的秘钥放到目标主机的authorized_hosts
 
 中。随后使用ssh ip即可无密码访问。
+
+>authorized_hosts，存储哪些主机在我这注册了，我拥有它的公钥。
+>
+>known_hosts,存储连接过的机器的公钥，当对用同一host对比公钥不同时，发出警告，防止黑客攻击。
 
 ##### 关于slaves
 

@@ -16,7 +16,14 @@
 07  网络
 07  操作系统
 07  concurrent 容器,面经里的
-08
+09  clickhouse搭建
+09  flink可视化，代码
+11  讲清逻辑，深入细节，代码部分
+11 搭建
+12 基本架构
+12 Flink Data Stream API，窗口函数，多流操作。
+13 iot flink
+
 
 202203
 03 DW 66-
