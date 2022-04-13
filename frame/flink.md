@@ -641,9 +641,45 @@ KeySelector<Event, String>() {
 
 >所有聚合的操作保存在flink的状态内存中，因为他需要跨越多条记录，需要根据key保存状态。数据流入的过程，就是不断计算并更新flink中保存的状态的过程。
 
+##### aggregate
+
+>aggregate需要指定一个aggregatefunction函数，可以看做reduce函数的通用版本，这里有三种类型IN,ACC,OUT,分别代表输入类型，累加器类型，输出类型。
+>
+>接口中有四个方法：
+>
+>createAccumulator（）：创建一个累加器，这就是为聚合创建一个初始状态，每个聚合任务只会调用一次
+>
+>add（）：将输入的元素添加到累加器中，这就是聚合状态，对于新来的数据进行进一步聚合的过程。传入两个参数，当前新到来的数据value，和当前的累加器accumulator；返回一个新的累加器值，对聚合状态进行更新。
+>
+>getResult（）：从累加器提取聚合的输出结果。也就是说我们可以定义多个状态，然后基于这些聚合的状态计算出一个结果进行输出。比如计算平均，我们可以设置sum和count两个状态，最终调用这个方法时相除得到最终的结果。这个方法只在窗口要输出结果时调用。
+>
+>merge（）：合并两个累加器，并将合并后的状态作为一个累加器返回。这个方法只在需要合并窗口的场景下才会被调用；最常见的合并窗口的场景就是会话窗口。
+>
+>与reduce相比，aggregate的输入格式与输出格式可以不同。
+
+##### 用户自定义函数UDF
+
+>我们可以通过匿名函数、函数类、lambda表达式来表示一个function。
+
+###### 富函数类
+
+>富函数也是DataStream API提供的一个函数类的接口，所有的Flink函数类都有其Rich版本。富函数一般以抽象类的形式出现，例如RichMapFunction，RichFilterFunction、RichReduceFunction等。与常规函数类的不同主要自在于，富函数类可以获取运行环境的上下文，并拥有一些生命周期写法，所以可以实现更复杂的功能。
+>
+>这样自定义的函数，会改变map等函数的功能，如在其中加入对状态的操作和访问，它们还能称为无状态函数吗，显然不能，我们可以改写
+
+```
+#典型的生命周期方法有：
+open（）方法，是RichFunciton的初始化方法，也就是开启一个算子的生命周期。当一个算子的实际工作方法例如map（）或filter（）方法被调用前，open（）方法首先被调用。所以像文件io创建，数据库链接，配置文件读取都可以在open方法中完成
+close（）方法，是生命周期中的最后一个调用的方法，类似于解构方法。一般用来做一些清理工作。
+#这里的生命周期方法对于一个并行子任务来说只会调用一次，而对应的实际工作方法，例如RichMapFunction中的map（），在每条数据到来后都会触发一次调用
+#getRuntimeContext（）方法，可以获取到运行时上下文的信息，如并行度、任务名称、甚至状态（state）。这对应了后续的状态管理和状态编程。
+```
+
+
+
 ##### 物理分区
 
->与keyBy区别，
+>与keyBy区别，这是直接控制物理上的分布
 
 ### 输出算子 Sink
 
@@ -895,21 +931,79 @@ havior")
 
 >通过flink记录用户浏览过这个类目下的哪些产品，为后面的基于Item的协同过滤做准备，实时的记录用户的评分到Hbase中，为后续离线处理做准备。
 
+>从kafka的con topic读取数据，继承mapFunction编写map函数，将用户id、产品id分别存入u_history表和p_history表。增加计数。
+
 ### 用户-兴趣->实现基于上下文的推荐逻辑
 
->根据用户对同一个产品的操作计算兴趣度，计算规则通过操作事件间隔（如购物-浏览 <100s）则判定为一次兴趣事件，通过flink的valueState实现如果用户的操作Aciton=3（收藏），则清除这个产品的state，如果超过100s没有出现Action=3的事件，也清除这个state。
+>根据用户对同一个产品的操作计算兴趣度，计算规则通过操作事件间隔（如购物-浏览 <100s）则判定为一次兴趣事件，通过flink的valueState实现如果用户的操作Aciton=3（购物），则清除这个产品的state，如果超过100s没有出现Action=3的事件，也清除这个state。
+
+>从kafka的con topic读取数据，获取到日志后封装为Log对象，然后按照userid分组。最后调用map函数，继承RichMapFunction编写内容，实现记录用户兴趣。实际上就是在100s内进行了连续向后的操作，就记为一次兴趣事件，每触发一个兴趣事件，将userid为rowkey的记录的，列族中列名为productid的数值加一。增加计数。
+
+```
+#从getRuntimeContext中获取state，放入类的属性，供map函数使用
+@Override
+    public void open(Configuration parameters) throws Exception {
+
+        // 设置 state 的过期时间为100s
+        StateTtlConfig ttlConfig = StateTtlConfig
+                .newBuilder(Time.seconds(100L))
+                .setUpdateType(StateTtlConfig.UpdateType.OnCreateAndWrite)
+                .setStateVisibility(StateTtlConfig.StateVisibility.NeverReturnExpired)
+                .build();
+
+        ValueStateDescriptor<Action> desc = new ValueStateDescriptor<>("Action time", Action.class);
+        desc.enableTimeToLive(ttlConfig);
+        state = getRuntimeContext().getState(desc);
+    }
+    
+#map函数操作state，进行更新和计算
+@Override
+    public String map(LogEntity logEntity) throws Exception {
+        Action actionLastTime = state.value();
+        Action actionThisTime = new Action(logEntity.getAction(), logEntity.getTime().toString());
+        int times = 1;
+        // 如果用户没有操作 则为state创建值
+        if (actionLastTime == null) {
+            actionLastTime = actionThisTime;
+            saveToHBase(logEntity, 1);
+        }else{
+            times = getTimesByRule(actionLastTime, actionThisTime);
+        }
+        saveToHBase(logEntity, times);
+
+        // 如果用户的操作为3(购物),则清除这个key的state
+        if (actionThisTime.getType().equals("3")){
+            state.clear();
+        }
+        return null;
+}
+```
+
+
 
 ### 用户画像计算->实现基于标签的推荐逻辑
 
 >按照三个维度计算用户画像，分别是用户的颜色兴趣，用户的产地兴趣和用户的风格兴趣，根据日志不断的修改用户画像的数据，记录在Hbase中。数据存储在hbase的user表中
 
+>从kafka的con topic读取数据，查询对应的产品信息（country、color、style），在以userId为rowkey的记录中找到以（country、color、style）为列的cell，增加计数。
+
 ### 产品画像记录->实现基于标签的推荐逻辑
 
 >用两个维度记录产品画像，一个是喜爱该产品的年龄段，另一个是性别，数据存储在Hbase的prod表。
 
+>从kafka的con topic中读取数据，继承mapFunction编写map函数，从mysql的user表查询出该用户的信息，数据存入hbase的prod表。增加计数。
+
 ### 实时热度榜->实现基于热度的推荐逻辑
 
->通过flink时间窗口机制，统计当前时间的实时热度，并将数据缓存在Redis中，通过Flink的窗口机制计算实时热度，使用ListState保存一次热度榜。数据存储在redis中，按照时间戳存储list。
+>通过flink时间窗口机制，统计当前时间的实时热度，并将数据缓存在Redis中，通过Flink的窗口机制计算实时热度，使用ListState保存一次热度榜。数据存储在redis中，按照时间戳存储list。增加计数。
+
+```
+#将数据统计后写入redis，用于实时热度榜使用
+首先按照productId分组，对于每个productId内部使用滑动窗口，对于窗口内的进行aggregate操作。
+aggregate目的是，每有一条数据累加一次。
+```
+
+
 
 ### 日志导入
 
@@ -918,6 +1012,8 @@ havior")
 >数据按时间窗口统计数据大屏需要的数据，返回前段显示
 >
 >数据存储在Hbase的con表
+
+>从kafka的logs topic读取数据，继承mapFunction编写map函数，将日志解析为LogEntity(userid,produceid,time,action)，然后根据用户id、产品id、时间戳拼接hbase的rowkey，最终将每一条记录插入hbase的con表中。
 
 ## web模块
 
