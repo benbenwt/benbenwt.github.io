@@ -825,9 +825,322 @@ havior")
 
 ```
 
+#### 自定义sink输出
 
+```
+#实现RichSinkFunction，重写如下方法
+open() 在其中建立链接
+invoke（）在其中执行sink的操作
+close（）在其中关闭链接
+```
 
 ## 窗口函数
+
+### 时间语义
+
+>事件像水流一样到来，经过pipline进行处理，为了划定窗口进行计算，需要以时间作为标准，也就是流中元素事件的先后以及间隔描述。
+>
+>flink是一个分布式系统，如何让所有机器保证时间的完全同步呢。比如上游任务8点59分59秒发送了消息，到达下游时是9点零1秒，那么应该放到哪个窗口内计算呢。所以，我们需要决定到底以哪个时间为标准。
+
+#### 处理时间
+
+>processing time,指执行处理操作的机器的系统时间，就是说什么时候到达处理机器，就将其划分到哪个滑动窗口。这是最直接的时间语义，各结点按照自己的系统时钟划分窗口。
+
+>处理时间由于数据一旦到来就处理，所以效率很高，延迟很低。一般用在对准确性要求不太高的场景。
+
+#### 事件时间
+
+>事件时间，是指每个事件在对应的设备上发生的时间，也就是数据生成的时间。数据一旦产生，这个时间自然就确定了，所以它可以作为一个属性嵌入到数据中。这就是时间戳。这种情况，我们无法看到系统时间，假设只以到来时间的时间戳为基准，控制滑动窗口，那么到来数据必须是有序的，时间戳也是不断增长的。这实际上不可能，所以我们需要借助另外的标志，水位线wateramrks。
+
+>事件语义允许设置水位线，并可以接收乱序的数据，可以进行一定的延迟等待，让窗口内的所有数据都到齐，再进行计算。
+
+#### 摄入时间
+
+>它指数据进入flink数据流的时间，也就是source算子读入数据的时间。他是事件时间和处理时间的中和，不会引入太大的延迟，他的具体行为跟事件时间非常像，可以当做特殊的事件时间处理。
+
+### 水位线
+
+>关于sparkstreaming和flink水位线的思考对比：
+>
+>https://www.sohu.com/a/270444235_494938
+>
+>流计算中我们需要保存状态，但是Dstream是无状态的，那么其count算子是如何工作的呢，答案是将前一个时间步的RDD作为当前时间步的前继结点，就能达到状态更替的效果。
+
+>watermark用来度量事件时间，watermark是为了服务事件时间产生的。
+>
+>在处理时间语义中，每个事件以到达处理机器的时间作为时间戳，当机器时间到达9点（窗口尾部），那么触发计算8点到9点这个窗口的数据，左闭右开。
+>
+>在事件时间语义中，每个事件以事件产生的时间为时间戳，以事件时间作为窗口的起始和截止，何时触发操作呢？每当一个事件到来，我们读取它的时间戳，作为当前的水位线时钟，当9点的事件到来时，我们认为数据到齐了，开始触发计算。当然，我们可以通过调节触发时机，来调整数据延迟的容忍度及处理效率。
+
+>通过在数据流中插入一条记录，这条记录包含从数据流事件中读取的时间戳，称为水位线。通过将水位线广播到下游所有子任务，可以更新下游子任务的时钟
+
+>水位线的特性：
+>
+>1必须递增
+>
+>2可以设置延迟，保证处理完整的乱序流
+>
+>3一个水位线t表示t之前的数据都到齐了，之后流中不会再出现小于t的事件了。
+
+#### 有序流中的水位线
+
+>有序流中可以保证水位线有序增长，在实际应用中，我们需要水位线的插入周期，当大量相同时间戳的数据到来时，不要频繁插入值相同的水位线。以系统时间为基准，每隔一段时间，插入水位线。
+
+#### 乱序流中的水位线
+
+>乱序流中有很多迟到数据，我们需要容忍这些数据全部到期，所以我们可以为水位线添加延迟，当读取时间戳时，减去2s作为时间戳，再当做水位线插入数据流。
+
+#### 生成水位线
+
+##### 生成水位线原则
+
+>我们知道，完美的水位线是绝对正确的，一旦水位线t出现表示t之前的数据都到齐了，之后流中不会再出现小于t的事件了。但是，这在实际中很难达成，我们需要考虑效率，及一些意外延迟。如何确保大部分数据不迟到，设置合理的水位线呢。另一种做法是，创建一个单独的flink作业监控事件流，统计事件概率，学习事件的迟到规律。然后，选择置信区间确定延迟，作为水位线的生成策略。
+
+##### 水位线生成策略
+
+>flink的datastream api中，使用assignTimestampsAndWatermarks（）为流中的数据分配时间戳，并生成水位线指示时间。
+
+```
+assignTimestampsAndWatermarks方法需要传入一个WatermarkStrategy作为参数，这就是所谓的“水位线生成策略”。WatermarkStrategy中包含一个时间戳分配器TimestampAssigner和一个“水位线生成器”WatermarkGenerator。
+TimestampAssigner：主要负责从流中数据元素的某个字段中提取时间戳，并分配给元素。时间戳的分配是生成水位线的基础
+WatermarkGenerator主要负责按照既定的方式，基于时间戳生成水位线。在WatermarkGenerator接口中，主要又有两个方法：onEvent（）和onPeriodicEmit（）
+onEvent：每个事件到来都会调用的方法，它的参数由当前时间、时间戳，以及允许发出水位线的一个WatermarkOutput，可以基于事件做各种操作。
+onPeriodicEmit：周期性调用的方法，可以由WatermarkOutput发出水位线。周期时间为处理时间，可以调用环境配置的.setAutoWatermarkInternal()方法来设置，默认为200ms。
+env.getConfig().setAutoWatermarkInternal(60*1000L)
+```
+
+##### flink内置水位线生成器
+
+>flink提供了内置的生成器，可以使用WatermarkStrategy的静态辅助方法来创建，它们都是周期性生成水位线的，分别对应着处理有序流和乱序流的场景
+
+###### 有序流
+
+>对于有序流，主要特点就是时间戳单调递增，所以永远不会出现迟到数据的问题。直接调用WatermarkStrategy.forMonotonousTimestamps()就可以实现，就是拿当前最大的时间戳作为水位线。
+>
+>我们使用withTimestampAssigner方法将数据中的timestamp字段取出来，作为时间戳分配给数据元素；然后用内置的有序流水线生成器构造策略。
+
+```
+stream.assignTimestampsAndWatermarks(
+ WatermarkStrategy.<Event>forMonotonousTimestamps()
+ .withTimestampAssigner(new SerializableTimestampAssigner<Event>() 
+{
+ @Override
+ public long extractTimestamp(Event element, long recordTimestamp) 
+{
+ return element.timestamp;
+ }
+ })
+);
+```
+
+###### 乱序流
+
+>乱序流需要设置延迟时间。调用WatermarkStrategy.  forBoundedOutOfOrderness()可以实现，这个方法需要传入一个maxOutOfOrderness参数，表示最大乱序程度。
+
+```
+env
+ .addSource(new ClickSource())
+ // 插入水位线的逻辑
+ .assignTimestampsAndWatermarks(
+ // 针对乱序流插入水位线，延迟时间设置为 5s
+ 
+WatermarkStrategy.<Event>forBoundedOutOfOrderness(Duration.ofSeconds(5))
+ .withTimestampAssigner(new 
+SerializableTimestampAssigner<Event>() {
+ // 抽取时间戳的逻辑
+@Override
+public long extractTimestamp(Event element, long 
+recordTimestamp) {
+ return element.timestamp;
+ }
+ })
+ )
+ .print();
+
+```
+
+##### 自定义水位线
+
+>水位线分为周期性的，断点式的，分别在onPeriodicEmit和onEvent编写程序。
+
+###### 周期性水位线生成器
+
+>周期性水位线一般通过onEvent观察输入事件，而在onPerioddicEmit发出水位线。
+
+```
+public static class CustomPeriodicGenerator implements 
+WatermarkGenerator<Event> {
+ private Long delayTime = 5000L; // 延迟时间
+ private Long maxTs = Long.MIN_VALUE + delayTime + 1L; // 观察到的最大时间戳
+ @Override
+ public void onEvent(Event event, long eventTimestamp, WatermarkOutput 
+output) {
+ // 每来一条数据就调用一次
+ maxTs = Math.max(event.timestamp, maxTs); // 更新最大时间戳
+ }
+ @Override
+ public void onPeriodicEmit(WatermarkOutput output) {
+ // 发射水位线，默认 200ms 调用一次
+ output.emitWatermark(new Watermark(maxTs - delayTime - 1L));
+ }
+ }
+}
+```
+
+###### 断点式水位线生成器
+
+>断点式生成器会不停地检测 onEvent()中的事件，当发现带有水位线信息的特殊事件时， 就立即发出水位线。一般来说，断点式生成器不会通过 onPeriodicEmit()发出水位线。
+
+```
+@Override
+ public void onEvent(Event r, long eventTimestamp, WatermarkOutput output) {
+// 只有在遇到特定的 itemId 时，才发出水位线
+ if (r.user.equals("Mary")) {
+ output.emitWatermark(new Watermark(r.timestamp - 1));
+ }
+ }
+ @Override
+ public void onPeriodicEmit(WatermarkOutput output) {
+ // 不需要做任何事情，因为我们在 onEvent 方法中发射了水位线
+ }
+```
+
+#### 水位线的传递
+
+>当有多个来自上游的水位线时，取值最小的水位线，因为要确保水位线以前的消息都到齐了。
+
+### 窗口
+
+>窗口将无界数据流切分为多个数据块
+>
+>当使用处理时间时，窗口的概念很直观。
+>
+>当使用事件时间时，窗口的触发时机发生了变化。我们把窗口理解为一个桶，讲不同的数据收集到正确的窗口桶中。
+>
+>主要关注几个属性：事件到来，窗口范围及存储数据，水位线。
+>
+>注意触发计算和窗口关闭是可以分开的，只是一般情况无需这么复杂。
+
+#### 窗口的分类
+
+##### 按照驱动类型分类
+
+>窗口可以按照驱动类型分为时间窗口、计数窗口。
+>
+>计数窗口按照某个固定的个数，来截取一段数据集，这种窗口叫做计数窗口。
+
+###### 时间窗口
+
+>flink中有一个时间窗口的类叫做TimeWindow，这个类有两个私有属性：start和end，表示窗口的开始和结束的时间戳，单位为毫秒。
+
+```
+private final long start;
+private final long end;
+```
+
+>我们可以调用公有的getStrat()和getEnd()方法直接获取这两个时间戳。另外，TimeWindow还提供了一个maxTimestamp()方法，用来获取窗口中能够包含的数据的最大时间戳。
+
+```
+public long maxTimestamp(){
+   return end-1;
+}
+#很明显，窗口中的数据，最大的允许的时间戳是end-1，也就代表了窗口时间范围是左闭右开的。
+```
+
+###### 计数窗口
+
+>计数窗口基于元素的个数来截取数据，到达固定个数时就触发计算并关闭窗口。这相当于座位有限，人满就发车。每个窗口截取的个数，就是窗口的大小。flink通过全局窗口global window来实现计数窗口。
+
+##### 按照窗口分配数据的规则分配
+
+>时间窗口和计数窗口，只是对窗口的一个大致划分；在具体应用时，还需要定义更加精细的规则，来控制数据应该划分到哪个窗口中去。不同的分配数据的方式，就可以有不同的功能应用。
+>
+>根据分配的规则，窗口的具体实现可以分为4类：滚动窗口（Tumbling Window）、滑动窗口（Sliding Window）、会话窗口（Session Window），以及全局窗口（Global  Window）。
+
+###### 滚动窗口Tumbling Windows
+
+>滚动窗口对数据进行均匀分片。窗口之间没有重叠，也不会有间隔，是首尾相接的状态。如果把多个窗口的创建看作一个窗口的移动，那么他就像在滚动一样。
+
+###### 滑动窗口Sliding Windows
+
+>由窗口大小和滑动距离确定，每个窗口之间有一定重叠部分。滑动窗口是滚动窗口的一种广义方式，当滑动步长等于滑动窗口大小时，就是滚动窗口。
+
+###### 会话窗口Session Windows
+
+>简单来说，就是数据来了之后开启一个会话窗口，如果接下来还有数据陆续到来，那么一直保持会话，如果一段时间没有接收到数据，那就认为会话超时失效，窗口自动关闭。
+>
+>会话窗口只能基于时间来定义，而没有会话计数窗口的概念，因为会话的意思就是“隔一段时间没有数据来”。会话窗口的关键参数是窗口大小，如果两个数据到来的间隔小于指定的大小，那么说明还在保持会话。
+>
+>在乱序流中，如果gap间隔超过size就关闭，可能导致迟到的消息丢失。为了处理这种情况，每当来一个新的数据，都会创建一个新的会话窗口；然后判断已有窗口之间的距离，如果小于给定的size，就对它进行合并操作。相当于会话窗口永远不关闭，一直在维护，无论迟到的数据何时到来，总能合并到正确的会话中。注意会话窗口的一些特性：
+>
+>1不同分区是不相关的
+>
+>2会话窗口的长度不固定
+>
+>3起始和结束时间不确定
+
+###### 全局窗口Global Windows
+
+>还有一类比较通用的窗口，就是全局窗口。这种窗口全局有效，会把相同key的所有数据分配到同一个窗口中。说直白点，就是没分窗口一样，这种窗口没有结束的时候，默认是不会做触发计算的，必须编写触发器。
+
+#### 窗口API
+
+```
+#按键分区Keyed Windows
+stream.keyBy().window()
+#非按键分区Non-Keyed Windows
+stream.windowAll()
+#窗口api使用
+steram.keyBy(<key selector>)
+       .window(<window assigner>)
+       .aggregate(<window function>)
+```
+
+##### 窗口分配器
+
+###### 时间窗口
+
+>分为滚动、滑动和会话三种
+
+```
+#滚动处理时间窗口
+stream.keyBy(...)
+.window(TumblingProcessingTimeWindows.of(Time.seconds(5)))
+.aggregate(...)
+
+```
+
+##### 窗口函数
+
+###### 增量聚合函数
+
+>**简单聚合是对一些特定统计需求的实现，那么reduce算子就是一个一般化的聚合统计操作**
+>
+>1.归约函数
+>
+>reduce操作会将keyedstream转换为datastream，调用reduce传入一个参数，此类需要实现reduceFunction接口。定义的方法有两个参数，是输入事件，将输入事件合并可以得到输出事件。
+>
+>在流处理中，将两个输入事件合并后的状态进行保存，当到来一个新事件时，对其进行计算并更新状态。
+
+>所有聚合的操作保存在flink的状态内存中，因为他需要跨越多条记录，需要根据key保存状态。数据流入的过程，就是不断计算并更新flink中保存的状态的过程。
+
+>2.聚合函数
+>
+>aggregate需要指定一个aggregatefunction函数，可以看做reduce函数的通用版本，这里有三种类型IN,ACC,OUT,分别代表输入类型，累加器类型，输出类型。
+>
+>接口中有四个方法：
+>
+>createAccumulator（）：创建一个累加器，这就是为聚合创建一个初始状态，每个聚合任务只会调用一次
+>
+>add（）：将输入的元素添加到累加器中，这就是聚合状态，对于新来的数据进行进一步聚合的过程。传入两个参数，当前新到来的数据value，和当前的累加器accumulator；返回一个新的累加器值，对聚合状态进行更新。
+>
+>getResult（）：从累加器提取聚合的输出结果。也就是说我们可以定义多个状态，然后基于这些聚合的状态计算出一个结果进行输出。比如计算平均，我们可以设置sum和count两个状态，最终调用这个方法时相除得到最终的结果。这个方法只在窗口要输出结果时调用。
+>
+>merge（）：合并两个累加器，并将合并后的状态作为一个累加器返回。这个方法只在需要合并窗口的场景下才会被调用；最常见的合并窗口的场景就是会话窗口。
+>
+>与reduce相比，aggregate的输入格式与输出格式可以不同。
+
+### 迟到数据的处理
 
 ## 多流操作
 
@@ -999,8 +1312,8 @@ havior")
 
 ```
 #将数据统计后写入redis，用于实时热度榜使用
-首先按照productId分组，对于每个productId内部使用滑动窗口，对于窗口内的进行aggregate操作。
-aggregate目的是，每有一条数据累加一次。
+首先按照productId分组，对于每个productId内部使用滑动窗口，对于窗口内的进行aggregate操作，统计商品次数封装为topProduct对象。
+aggregate目的是，每有一条数据累加一次。然后使用keyBy按照windwoEnd分组，然后对相同windwoEnd内的商品进行排序，获得商品的排名。最后将结果写入。
 ```
 
 
@@ -1021,7 +1334,11 @@ aggregate目的是，每有一条数据累加一次。
 
 >该页面返回给用户推荐的产品list
 
+>使用html编写
+
 ### 后台监控
+
+>使用superset，es kibana查看效果
 
 >该页面返回给管理员指标监控
 
