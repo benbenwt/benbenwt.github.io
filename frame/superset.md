@@ -4,8 +4,6 @@
 sudo yum install -y gcc gcc-c++ libffi-devel python-devel python-pip python-wheel python-setuptools openssl-devel cyrus-sasl-devel openldap-devel
 ```
 
-
-
 ### 安装anaconda创建python环境
 
 ```

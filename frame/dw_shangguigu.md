@@ -1,6 +1,6 @@
 # 项目
 
-### 基本
+## 基本
 
 ```
 spu，standard product unit，标准化产品单元，描述一个产品的特性，一般是品牌+型号+关键属性确定。
@@ -8,22 +8,22 @@ sku,stock keep unit ,库存量单位，不可分割的最小单位，涉及到�
 实时数仓可以快速步骤当前的行为，有时候不需要获得大量的数据，关注当前这一天、一小时的行为，也有很大的价值，越即时越有效。
 ```
 
-
-
-### 目的
+## 目的
 
 ```
 搭建采集通道，将json格式的用户行为日志文件采集到hdfs上，并进行过滤处理，然后存入hive数据仓库。搭建采集通道，将mysql业务数据采集到hdfs上，并进行过滤处理，然后存入hive数据仓库。搭建hive数据仓库，存储存储用户行为日志和电商平台的业务数据，并合理设计和搭建分层数据仓库，包括ods,dwd,dim,dws,dwt,ads层。实现分析目的，包括活动的分析信息、优惠券的分析信息、订单在省份维度上的分析、订单在spu（商品）上的分析、订单的总体分析、用户的点击路径分析、商品的回购力度分析、用户行为在1、7、30天的分析（）、用户变动信息（回归、离开）、用户停留时间（不同创建日期）、用户1、7、30天总信息分析（下单、上限、）、用户浏览商品信息。并精心设计仓库结构，优化sql和函数，提高处理速度。
 ```
 
-### 采集
+## 采集
 
 ##### flume
 
 ###### flume配置
 
 ```
-
+a1.source
+a1.channel
+a1.sink
 ```
 
 ###### flume过滤器
@@ -37,7 +37,7 @@ sku,stock keep unit ,库存量单位，不可分割的最小单位，涉及到�
 ```
 ```
 
-### hdfs
+## hdfs
 
 >无法使用hivesql、sparksql等完成的功能，用java mapreduce（spark）代码操作hdfs文件。
 
@@ -57,9 +57,9 @@ sku,stock keep unit ,库存量单位，不可分割的最小单位，涉及到�
 
 
 
-### spark
+## spark
 
-### 仓库设计
+## 仓库设计
 
 >设计原则，设计技巧
 >
@@ -1787,23 +1787,224 @@ TBLPROPERTIES ("parquet.compression"="lzo");
 
 ##### azkaban
 
-### ketttle
+## ketttle
 
 >基本操作，操作技巧
 
 ##### DIM
 
-### superset图表
+## superset图表
 
 >活动的分析信息、优惠券的分析信息、订单在省份维度上的分析、订单在spu（商品）上的分析、订单的总体分析、用户的点击路径分析、商品的回购力度分析、用户行为在1、7、30天的分析（）、用户变动信息（回归、离开）、用户停留时间（不同创建日期）、用户1、7、30天总信息分析（下单、上限、）、用户浏览商品信息
 >
 >superset+presto：https://www.cnblogs.com/luweiseu/p/9493134.html
 
-### 采集迁移脚本
+>superset可以对mysql中的数据进行可视化展示。
+
+### 订单
+
+#### ads_order_total
+
+>订单统计，订单数、订单金额、下单人数
+
+>画图：1.订单数量、订单金额、下单人数 2.1、7、30间隔    3.不同日期
+
+```
+SELECT dt AS dt,
+       sum(order_count) AS `SUM(order_count)`,
+       SUM(order_user_count) AS `SUM(order_user_count)`,
+       SUM(order_amount/10000) AS `SUM(order_amount/10000)`
+FROM gmall_report.ads_order_total
+WHERE dt >= STR_TO_DATE('2020-06-15', '%Y-%m-%d')
+  AND dt < STR_TO_DATE('2020-06-19', '%Y-%m-%d')
+  AND recent_days = 1
+GROUP BY dt
+ORDER BY `SUM(order_count)` DESC
+LIMIT 50000;
+```
+
+#### ads_order_by_province
+
+>统计订单在省份上的分布，包括地区编码、身份名称、国际标准地区编码、订单数、订单金额
+
+```
+SELECT iso_code AS iso_code,
+       sum(order_count) AS `SUM(order_count)`
+FROM ads_order_by_province
+WHERE dt >= STR_TO_DATE('2020-06-14', '%Y-%m-%d')
+  AND dt < STR_TO_DATE('2020-06-19', '%Y-%m-%d')
+GROUP BY iso_code
+ORDER BY `SUM(order_count)` DESC
+LIMIT 50000;
+```
+
+### 用户
+
+#### ads_visit_stats
+
+>访客统计
+
+```
+SELECT DATE(dt) AS __timestamp,
+       sum(uv_count) AS `SUM(uv_count)`,
+       sum(page_count) AS `SUM(page_count)`,
+       sum(duration_sec) AS `SUM(duration_sec)`
+FROM ads_visit_stats
+WHERE dt >= STR_TO_DATE('2020-06-14', '%Y-%m-%d')
+  AND dt < STR_TO_DATE('2020-06-19', '%Y-%m-%d')
+GROUP BY DATE(dt)
+ORDER BY `SUM(uv_count)` DESC
+LIMIT 10000;
+```
+
+#### ads_user_total
+
+>用户统计，包括新增用户、新增下单用户数、下单用户数、下单金额、活跃用户未下单用户数
+
+```
+SELECT DATE(dt) AS __timestamp,
+       sum(new_user_count) AS `SUM(new_user_count)`,
+       sum(new_order_user_count) AS `SUM(new_order_user_count)`
+FROM ads_user_total
+WHERE dt >= STR_TO_DATE('2020-06-14', '%Y-%m-%d')
+  AND dt < STR_TO_DATE('2022-04-15', '%Y-%m-%d')
+  AND recent_days = 1
+GROUP BY DATE(dt)
+ORDER BY `SUM(new_user_count)` DESC
+LIMIT 50000;
+```
+
+#### ads_user_change
+
+>用户变动统计，包括流失用户数、回流用户数
+
+```
+SELECT DATE(dt) AS __timestamp,
+       sum(user_back_count) AS `SUM(user_back_count)`,
+       sum(user_churn_count) AS `SUM(user_churn_count)`
+FROM ads_user_change
+WHERE dt >= STR_TO_DATE('2020-06-13', '%Y-%m-%d')
+  AND dt < STR_TO_DATE('2020-06-18', '%Y-%m-%d')
+GROUP BY DATE(dt)
+ORDER BY `SUM(user_back_count)` DESC
+LIMIT 25;
+```
+
+#### ads_user_action
+
+>用户行为漏斗分析，浏览首页人数、浏览商品详情页人数、加入购物车人数、下单人数、支付人数
+
+```
+SELECT dt AS dt,
+       sum(home_count) AS `SUM(home_count)`,
+       sum(good_detail_count) AS `SUM(good_detail_count)`,
+       sum(cart_count) AS `SUM(cart_count)`,
+       sum(order_count) AS `SUM(order_count)`,
+       sum(payment_count) AS `SUM(payment_count)`
+FROM ads_user_action
+WHERE dt >= STR_TO_DATE('2020-06-15', '%Y-%m-%d')
+  AND dt < STR_TO_DATE('2020-06-18', '%Y-%m-%d')
+GROUP BY dt
+ORDER BY `SUM(home_count)` DESC
+LIMIT 10000;
+```
+
+#### ads_user_retention
+
+>用户留存率分析，包括留存用户数量、新增用户数量、留存率
+
+```
+SELECT create_date AS create_date,
+       sum(retention_rate) AS `SUM(retention_rate)`,
+       sum(retention_day) AS `SUM(retention_day)`
+FROM ads_user_retention
+GROUP BY create_date
+ORDER BY `SUM(retention_rate)` DESC
+LIMIT 10000;
+```
+
+### 商品
+
+#### ads_repeat_purchase
+
+>品牌复购率，品牌ID、品牌名称、复购率
+
+```
+SELECT tm_name AS tm_name,
+       sum(order_repeat_rate) AS `SUM(order_repeat_rate)`
+FROM ads_repeat_purchase
+WHERE dt >= STR_TO_DATE('2020-06-14', '%Y-%m-%d')
+  AND dt < STR_TO_DATE('2020-06-15', '%Y-%m-%d')
+  AND recent_days = 30
+GROUP BY tm_name
+ORDER BY `SUM(order_repeat_rate)` DESC
+LIMIT 10000;
+```
+
+#### ads_order_spu_stats
+
+>商品统计，包括商品ID、商品名称、品牌ID、品牌名称、三级品类ID、三级品类名称、二级品类ID、二级品类名称、一级品类ID、一级品类名称、订单数、订单金额。
+
+```
+SELECT tm_name AS tm_name,
+       sum(order_count) AS `SUM(order_count)`
+FROM ads_order_spu_stats
+WHERE dt >= STR_TO_DATE('2020-06-14', '%Y-%m-%d')
+  AND dt < STR_TO_DATE('2020-06-15', '%Y-%m-%d')
+GROUP BY tm_name
+ORDER BY `SUM(order_count)` DESC
+LIMIT 10000;
+```
+
+### 页面
+
+#### ads_page_path
+
+>页面路径分析
+
+```
+#没有合适的路径图
+```
+
+### 优惠
+
+#### ads_coupon_stats
+
+>优惠券统计，包括优惠券ID、优惠券名称、开始日期、优惠规则、领用次数、使用次数、使用优惠券订单原始金额、优惠金额、补贴率
+
+```
+SELECT coupon_name AS coupon_name,
+       sum(order_original_amount) AS `SUM(order_original_amount)`
+FROM ads_coupon_stats
+GROUP BY coupon_name
+ORDER BY `SUM(order_original_amount)` DESC
+LIMIT 25;
+```
+
+### 活动
+
+#### ads_activity_stats
+
+>活动统计，包括活动ID、活动名称、参与活动订单数、参与活动订单金额、参与活动订单最终金额、补贴率。
+
+```
+SELECT activity_name AS activity_name,
+       sum(order_original_amount) AS `SUM(order_original_amount)`
+FROM ads_activity_stats
+GROUP BY activity_name
+ORDER BY `SUM(order_original_amount)` DESC
+LIMIT 10000;
+```
+
+## 采集迁移脚本
 
 ##### sqoop
 
+>
+
 ##### flume
+
+>
 
 # summary
 
