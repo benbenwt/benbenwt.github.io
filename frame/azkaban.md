@@ -44,7 +44,7 @@ xsync /opt/module/azkaban/azkaban-exec
 #进入每台机器
 bin/start-exec.sh
 #验证exec的状态
-curl -G "hadoop102:12321/executor?action=activate" && echo
+curl -G "hbase:12321/executor?action=activate" && echo
 ```
 
 ##### 配置webserver
@@ -190,6 +190,15 @@ nodes:
 
 >Azkaban可以配置一个master和多个executor，但是每个executor执行shell脚本所需的环境，必须在每个节点都配置，或者通过指定结点让任务在特定结点执行。
 
+>到azkaban的mysql元数据库的executors中查看对应机器的id，然后在启动flow时设置useExecutor，指定为对应id
+
+```
+useExecutor  7
+d
+```
+
+
+
 ## Work Flow编写
 
 >通过编写work flow可以自定义管理任务，将编写好的basic.flow文件和azkaban.project文件压缩为zip，并上传到web项目，就可以完成任务的建立。
@@ -240,5 +249,25 @@ echo "{\"wk\":`date+%w`}">$JOB_OUTPUT_PRO_FILE
     condition: ${jobA:wk}== 1
 ```
 
+# problem
 
+# azkaban.utils.UndefinedPropertyException: Missing required property 'azkaban.native.lib'
 
+>https://blog.csdn.net/poem_2010/article/details/92066771
+
+```
+vim azkaban-exec/conf/azkaban.properties
+#将此参数修改为绝对路径
+azkaban.jobtype.plugin.dir=plugins/jobtypes
+vim plugins/jobtypes
+#追加参数，修改成如下内容
+# set execute-as-user
+execute.as.user=false
+azkaban.native.lib=false
+```
+
+## 打包上传到py文件无法找到
+
+>执行command：python3 check_ods.py ，no such file and directory。
+>
+>这是由于压缩打包导致的错误，对文件夹打包时，会多压缩一层。正确的打包方式为选中所有文件，然后进行压缩。

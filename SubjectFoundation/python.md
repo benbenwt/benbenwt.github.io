@@ -10,8 +10,6 @@ https://blog.csdn.net/Scythe666/article/details/84623786
  sA = sparse.csr_matrix(A)
 ```
 
-
-
 ### np
 
 ```
@@ -38,6 +36,12 @@ for row in my_reader
 ```
 
 
+
+### 安装
+
+>源码安装
+
+>https://blog.csdn.net/enter89/article/details/99681716
 
 # venv
 
@@ -181,6 +185,17 @@ python中时间日期格式化符号：
 
 
 
+# mysql
+
+>python使用传统的mysqlcient，必须安装对应的平台依赖，不然无法安装，按照如下步骤安装。
+
+```
+yum install mysql-devel python-devel
+pip install mysqlclient
+```
+
+
+
 # pycharm调试快捷键
 
 ```
@@ -250,7 +265,35 @@ https://blog.csdn.net/weixin_43141320/article/details/108343528
 
 # PYTHON
 
-### python语法糖或常用函数
+## pymysql
+
+```
+conn = pymysql.connect(
+        host='******.com',
+        user = 'test',
+        password = 'test',
+        db = 'market_test',
+        charset = 'utf8'
+    )
+cur = conn.cursor()
+sql_countAll = "select count(*) from record where createtime>'%s' and createtime<'%s';" %(timeStart, timeEnd)
+cur.execute(sql_countAll)
+countAll = cur.fetchall()[0][0]
+print("订单数：",countAll)
+```
+
+
+
+## requests库
+
+```
+requests.post(url,body)
+requests.get(url,param)
+```
+
+
+
+## python语法糖或常用函数
 
 ```
 __call__   person（）
@@ -260,13 +303,13 @@ __getitem__ person[0:3]
 
 
 
-### python替换换行符
+## python替换换行符
 
 ```
 str.replace("\r","").replace("\n",""),必须两个都替换
 ```
 
-#### matplot绘图
+## matplot绘图
 
 ```
 https://blog.csdn.net/qq_41262248/article/details/79839998
@@ -274,13 +317,13 @@ https://blog.csdn.net/qq_41262248/article/details/79839998
 
 
 
-### httpServer
+## httpServer
 
 ```
 python -m http.server 端口号
 ```
 
-### subprocess
+## subprocess
 
 ```
 https://www.cnblogs.com/xiugeng/p/8874227.html
@@ -573,6 +616,12 @@ python setup.py install
 ```
 pip install --upgrade tensorflow
 ts官网:https://tensorflow.google.cn/install/pip
+```
+
+##### 关于命令行调用
+
+```
+#关于为什么可以直接使用superset命令，因为它将site-packages/superset/bin/superset软连接到了/usr/bin或添加了环境变量。有时候不是放在对应安装包的bin目录下，而是在python环境的目录，gunicorn就是这样，如conda/env/my_python/bin/gunicorn
 ```
 
 

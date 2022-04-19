@@ -2037,7 +2037,7 @@ zookeeper,kafka,flume,sqoop,superset
 
 >bili资源：数仓4.0
 
-### 整体架构
+## 整体架构
 
 >采集数据,离线仓库，迁移数据，可视化。
 >
@@ -2049,7 +2049,7 @@ zookeeper,kafka,flume,sqoop,superset
 >
 >可视化使用superset，借助图表展现数仓统计结果。
 
-### 采集
+## 采集
 
 #### flume用法
 
@@ -2129,7 +2129,7 @@ $sqoop import \
 --null-non-string '\\N'
 ```
 
-### hive仓库
+## hive仓库
 
 ##### ODS
 
@@ -2178,7 +2178,7 @@ $sqoop import \
 >
 >最终需要将统计的数据放入mysql、es等，方便其他分析人员使用。
 
-### 迁移数据
+## 迁移数据
 
 ##### sqoop用法
 
@@ -2199,11 +2199,11 @@ $sqoop import \
 }
 ```
 
-### 可视化
+## 可视化
 
 >活动的分析信息、优惠券的分析信息、订单在省份维度上的分析、订单在spu（商品）上的分析、订单的总体分析、用户的点击路径分析、商品的回购力度分析、用户行为在1、7、30天的分析（）、用户变动信息（回归、离开）、用户停留时间（不同创建日期）、用户1、7、30天总信息分析（下单、上限、）、用户浏览商品信息
 
-### 脚本任务调度
+## 脚本任务调度
 
 >使用azkaban管理清洗数据的脚本，azkaban可以有效管理任务之间的依赖，查看任务执行进度，检查错误等。通过编写basic.flow文件，我们可以管理自己的调度任务。
 
@@ -2226,7 +2226,291 @@ nodes:
 将两者打包到同一个zip下，在azkaban创建project时upload即可。
 ```
 
-### 数据治理
+## 数据质量管理
+
+>数据质量管理，是指从对数据从计划、获取、存储、共享、维护、应用、消亡生命周期的各个阶段可能引发的各类数据质量问题，进行识别、度量、监控、预警等一系列管理活动，并通过改善和提高组织的管理水平是的数据质量获得进一步提高。
+>
+>数据质量管理是循环管理过程，其最终目标是通过可靠的数据提升数据在使用中的价值。
+
+### 数据质量评价指标
+
+>数据质量的目标是改善，如何评估改善的结果呢，通常包括以下内容。
+
+| 评价标准 | 描述                                         | 监控项                                            |
+| -------- | -------------------------------------------- | ------------------------------------------------- |
+| 唯一性   | 指主键保持唯一                               | 字段唯一性检查                                    |
+| 完整性   | 主要包括记录缺失和字段值缺失等方面           | 字段枚举值检查     字段记录数检查                 |
+| 精确性   | 数据生成的正确性，数据在整个链路流转的正确性 | 波动阈值检查                                      |
+| 合法性   | 主要包括格式、类型、阈值的合法性             | 字段日期格式检查      字段长度检查   字段值域检查 |
+| 时效性   | 主要包括数据处理的时效性                     | 批处理是否按时完成                                |
+
+### 数据质量管理实操
+
+#### 需求分析
+
+>数仓4.0主要监控以下指标：
+>ODS层数据量，每日环比和每周同比变化不能超过一定范围
+>
+>DIM层不能出现id控制，重复值。
+>
+>DWD层不能出现id空值，重复值。
+>
+>id列：重复值、空值，其他相关列：值域检查，行：数据总量同比、环比增长。
+
+| 表                | **检查项目**   | **依据**     | **异常值下限** | **异常值上限** |      |
+| ----------------- | -------------- | ------------ | -------------- | -------------- | ---- |
+| ods_order_info    | **同比增长**   | 数据总量     | -10%           | 10%            |      |
+| ods_order_info    | **环比增长**   | 数据总量     | -10%           | 50%            |      |
+| ods_order_info    | **值域检查**   | final_amount | 0              | 100            |      |
+| dwd_order_info    | **空值检查**   | id           | 0              | 10             |      |
+| dwd_order_info    | **重复值检查** | id           | 0              | 5              |      |
+| dwd_order_info    | **空值检查**   | id           | 0              | 10             |      |
+| **dim_user_info** | **重复值检查** | id           | 0              | 5              |      |
+
+#### 功能分块
+
+>数据统计模块：使用shell脚本，统计数据仓库中的指标，然后插入mysql数据库
+>
+>可视化模块：使用superset读取myslq数据库，可视化告警结果。
+>
+>告警模块：使用python读取mysql的数据，判断是否需要告警，并发送邮件。
+>
+>调度模块：使用azkaban监控数仓清洗任务状态，如果有新的清洗任务，就执行 数据统计模块  和 告警模块，检测数据质量。
+
+#### 数据统计模块
+
+##### 空id检查脚本
+
+```sh
+#!/usr/bin/env bash
+# -*- coding: utf-8 -*-
+# 检查id空值
+# 解析参数
+while getopts "t:d:c:s:x:l:" arg; do
+  case $arg in
+  # 要处理的表名
+  t)
+    TABLE=$OPTARG
+    ;;
+  # 日期
+  d)
+    DT=$OPTARG
+    ;;
+  # 要计算空值的列名
+  c)
+    COL=$OPTARG
+    ;;
+  # 空值指标下限
+  s)
+    MIN=$OPTARG
+    ;;
+  # 空值指标上限
+  x)
+    MAX=$OPTARG
+    ;;
+  # 告警级别
+  l)
+    LEVEL=$OPTARG
+    ;;
+  ?)
+    echo "unkonw argument"
+    exit 1
+    ;;
+  esac
+done
+
+#如果dt和level没有设置，那么默认值dt是昨天 告警级别是0
+[ "$DT" ] || DT=$(date -d '-1 day' +%F)
+[ "$LEVEL" ] || LEVEL=0
+
+# 数仓DB名称
+HIVE_DB=gmall
+
+# 查询引擎
+HIVE_ENGINE=hive
+
+# MySQL相关配置
+mysql_user="root"
+mysql_passwd="000000"
+mysql_host="hadoop102"
+mysql_DB="data_supervisor"
+mysql_tbl="null_id"
+
+# 认证为hive用户，如在非安全(Hadoop未启用Kerberos认证)环境中，则无需认证
+kinit -kt /etc/security/keytab/hive.keytab hive
+
+# 空值个数
+RESULT=$($HIVE_ENGINE -e "set hive.cli.print.header=false;select count(1) from $HIVE_DB.$TABLE where dt='$DT' and $COL is null;")
+
+#结果插入MySQL
+mysql -h"$mysql_host" -u"$mysql_user" -p"$mysql_passwd" \
+  -e"INSERT INTO $mysql_DB.$mysql_tbl VALUES('$DT', '$TABLE', '$COL', $RESULT, $MIN, $MAX, $LEVEL)
+ON DUPLICATE KEY UPDATE \`value\`=$RESULT, value_min=$MIN, value_max=$MAX, notification_level=$LEVEL;"
+
+```
+
+##### 重复id检查脚本
+
+```
+RESULT=$($HIVE_ENGINE -e "set hive.cli.print.header=false;select count(1) from (select $COL from $HIVE_DB.$TABLE where dt='$DT' group by $COL having count($COL)>1) t1;")
+
+# 将结果插入MySQL
+mysql -h"$mysql_host" -u"$mysql_user" -p"$mysql_passwd" \
+  -e"INSERT INTO $mysql_DB.$mysql_tbl VALUES('$DT', '$TABLE', '$COL', $RESULT, $MIN, $MAX, $LEVEL)
+ON DUPLICATE KEY UPDATE \`value\`=$RESULT, value_min=$MIN, value_max=$MAX, notification_level=$LEVEL;"
+```
+
+##### 值域检查脚本
+
+```
+# 查询不在规定值域的值的个数
+RESULT=$($HIVE_ENGINE -e "set hive.cli.print.header=false;select count(1) from $HIVE_DB.$TABLE where dt='$DT' and $COL not between $RANGE_MIN and $RANGE_MAX;")
+
+# 将结果写入MySQL
+mysql -h"$mysql_host" -u"$mysql_user" -p"$mysql_passwd" \
+  -e"INSERT INTO $mysql_DB.$mysql_tbl VALUES('$DT', '$TABLE', '$COL', $RESULT, $RANGE_MIN, $RANGE_MAX, $MIN, $MAX, $LEVEL)
+ON DUPLICATE KEY UPDATE \`value\`=$RESULT, range_min=$RANGE_MIN, range_max=$RANGE_MAX, value_min=$MIN, value_max=$MAX, notification_level=$LEVEL;"
+
+```
+
+##### 数据量环比检查脚本
+
+```
+# 昨日数据量
+YESTERDAY=$($HIVE_ENGINE -e "set hive.cli.print.header=false; select count(1) from $HIVE_DB.$TABLE where dt=date_add('$DT',-1);")
+
+# 今日数据量
+TODAY=$($HIVE_ENGINE -e "set hive.cli.print.header=false;select count(1) from $HIVE_DB.$TABLE where dt='$DT';")
+
+# 计算环比增长值
+if [ "$YESTERDAY" -ne 0 ]; then
+  RESULT=$(awk "BEGIN{print ($TODAY-$YESTERDAY)/$YESTERDAY*100}")
+else
+  RESULT=10000
+fi
+
+# 将结果写入MySQL表格
+mysql -h"$mysql_host" -u"$mysql_user" -p"$mysql_passwd" \
+  -e"INSERT INTO $mysql_DB.$mysql_tbl VALUES('$DT', '$TABLE', $RESULT, $MIN, $MAX, $LEVEL)
+ON DUPLICATE KEY UPDATE \`value\`=$RESULT, value_min=$MIN, value_max=$MAX, notification_level=$LEVEL;"
+
+```
+
+##### 数据量同比检查脚本
+
+```
+# 上周数据量
+LASTWEEK=$($HIVE_ENGINE -e "set hive.cli.print.header=false;select count(1) from $HIVE_DB.$TABLE where dt=date_add('$DT',-7);")
+
+# 本周数据量
+THISWEEK=$($HIVE_ENGINE -e "set hive.cli.print.header=false;select count(1) from $HIVE_DB.$TABLE where dt='$DT';")
+
+# 计算增长
+if [ $LASTWEEK -ne 0 ]; then
+  RESULT=$(awk "BEGIN{print ($THISWEEK-$LASTWEEK)/$LASTWEEK*100}")
+else
+  RESULT=10000
+fi
+
+# 将结果写入MySQL
+mysql -h"$mysql_host" -u"$mysql_user" -p"$mysql_passwd" \
+  -e"INSERT INTO $mysql_DB.$mysql_tbl VALUES('$DT', '$TABLE', $RESULT, $MIN, $MAX, $LEVEL)
+ON DUPLICATE KEY UPDATE \`value\`=$RESULT, value_min=$MIN, value_max=$MAX, notification_level=$LEVEL;"
+
+```
+
+##### ODS层
+
+```
+#!/usr/bin/env bash
+DT=$1
+[ "$DT" ] || DT=$(date -d '-1 day' +%F)
+
+#检查表 ods_order_info 数据量日环比增长
+#参数： -t 表名
+#      -d 日期
+#      -s 环比增长下限
+#      -x 环比增长上限
+#      -l 告警级别
+bash day_on_day.sh -t ods_order_info -d "$DT" -s -10 -x 10 -l 1
+
+#检查表 ods_order_info 数据量周同比增长
+#参数： -t 表名
+#      -d 日期
+#      -s 同比增长下限
+#      -x 同比增长上限
+#      -l 告警级别
+bash week_on_week.sh -t ods_order_info -d "$DT" -s -10 -x 50 -l 1
+
+#检查表 ods_order_info 订单异常值
+#参数： -t 表名
+#      -d 日期
+#      -s 指标下限
+#      -x 指标上限
+#      -l 告警级别
+#      -a 值域下限
+#      -b 值域上限
+bash range.sh -t ods_order_info -d "$DT" -c final_amount -a 0 -b 100000 -s 0 -x 100 -l 1 
+
+```
+
+##### DWD层
+
+```
+#!/usr/bin/env bash
+DT=$1
+[ "$DT" ] || DT=$(date -d '-1 day' +%F)
+
+# 检查表 dwd_order_info 重复ID
+#参数： -t 表名
+#      -d 日期
+#      -c 检查重复值的列
+#      -s 异常指标下限
+#      -x 异常指标上限
+#      -l 告警级别
+bash duplicate.sh -t dwd_order_info -d "$DT" -c id -s 0 -x 5 -l 0
+
+#检查表 dwd_order_info 的空ID
+#参数： -t 表名
+#      -d 日期
+#      -c 检查空值的列
+#      -s 异常指标下限
+#      -x 异常指标上限
+#      -l 告警级别
+bash null_id.sh -t dwd_order_info -d "$DT" -c id -s 0 -x 10 -l 0
+
+```
+
+##### DIM层
+
+```
+#!/usr/bin/env bash
+DT=$1
+[ "$DT" ] || DT=$(date -d '-1 day' +%F)
+
+#检查表 dim_user_info 的重复ID
+#参数： -t 表名
+#      -d 日期
+#      -c 检查重复值的列
+#      -s 异常指标下限
+#      -x 异常指标上限
+#      -l 告警级别
+bash duplicate.sh -t dim_user_info -d "$DT" -c id -s 0 -x 5 -l 0
+
+#检查表 dim_user_info 的空ID
+#参数： -t 表名
+#      -d 日期
+#      -c 检查空值的列
+#      -s 异常指标下限
+#      -x 异常指标上限
+#      -l 告警级别
+bash null_id.sh -t dim_user_info -d "$DT" -c id -s 0 -x 10 -l 0
+
+```
+
+##### 告警模块
+
+>使用python读取数据，判断是否需要告警，发送邮件
 
 # 尚硅谷spark-streaming实时数仓
 
@@ -2475,6 +2759,10 @@ jestFactory.getObject
 >
 >也可以通过滑动窗口+数据去重，这种方式处理代码简单，但是会造成数据重复，滑动窗口每次会覆盖一些重复数据，如果使用滚动窗口，每次窗口的数据不重复，无法解决join问题。
 
+### Elasticsearch可视化
+
+>添加indexpattern，添加dashboard
+
 ## 需求4ADS聚合及可视化
 
 >将dws的数据进行聚合，插入mysql。编写发布接口，让阿里云DataV使用发布的接口。
@@ -2526,5 +2814,189 @@ window(windowDuration,slideDuration)
 
 ```
 foreachRDD
+```
+
+# 拆分可视化服务
+
+>为了方便展示项目效果，将可视化的模块与庞大的数仓集群独立出来，只保留关键的ads数据库、后端、前段可视化展示。包括如下服务：es，mysql，clickhouse，superset，springboot，echarts。为了方便管理这些零散的服务，使用docker-compose将其制作成镜像，方便展示。
+>
+>可能问题：1集群和项目的服务是在服务器上，只是将清洗结果和可视化服务迁移到本机。
+>2实验室没有其他项目嘛，有一些小项目，与当前职位关系很小。
+
+>mysql的数据用navicate导出为sql，再导入新的数据库
+>
+>elasticsearch借助logstash导入到新的es数据库。
+
+## docker-compose
+
+```
+version: "2"
+services:
+  mysql:
+    image: vs-mysql
+    build:
+      context: ./docker/mysql
+      dockerfile: ./Dockerfile
+    environment:
+      - MYSQL_ROOT_PASSWORD=root
+      - MYSQL_USER=vsserver
+      - MYSQL_PASSWORD=vsserver
+      - MYSQL_DATABASE=gmall_report
+    volumes:
+      - "./data/mysqldb:/var/lib/mysql"
+    ports:
+      - 3307:3306
+    networks:
+      vs_server_net:
+        ipv4_address: 172.42.1.10
+  superset:
+    image: vs-superset
+    build:
+      context: ./docker/superset
+      dockerfile: ./Dockerfile
+    ports:
+      - 8787:8787
+    networks:
+      vs_server_net:
+        ipv4_address: 172.42.1.11
+  elasticsearch:
+    image: vs-elasticsearch
+    build:
+      context: ./docker/elasticsearch
+      dockerfile: ./Dockerfile
+    deploy:
+      resources:
+        limits:
+          memory: 4096M
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    volumes:
+      - "./data/elasticsearch:/usr/share/elasticsearch/data"
+ #     - "./data/kibana:/usr/local/kibana-7.11.1-linux-x86_64/"
+    ports:
+      - 9201:9200
+      - 5602:5601
+    networks:
+      vs_server_net:
+        ipv4_address: 172.42.1.12
+networks:
+  vs_server_net:
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.42.1.0/24
+```
+
+## Dockerfile
+
+### mysql
+
+>platform.sql中是建表语句
+
+```
+FROM mariadb:latest
+USER root
+COPY ./platform.sql /docker-entrypoint-initdb.d
+RUN chown -R mysql:mysql /docker-entrypoint-initdb.d/
+```
+
+### superset
+
+>如下的dockerfile主要是为了安装python的编译依赖，将python和pip编译并安装好。然后使用pip安装superset及其依赖。
+
+```
+FROM centos:7
+ENV FLASK_APP=superset
+RUN useradd -m platform \
+&& yum install -y gcc gcc-c++ libffi-devel \
+MySQL-python mysql-devel python-devel \
+python-devel python-pip python-wheel python-setuptools\
+ openssl-devel cyrus-sasl-devel openldap-devel bzip2-devel expat-devel\
+gdbm-devel readline-devel sqlite-devel automake  autoconf libtool make \
+libffi-devel wget
+RUN cd /usr/local/ \
+&& wget https://www.python.org/ftp/python/3.7.0/Python-3.7.0.tgz\
+&&tar -zxvf Python-3.7.0.tgz \
+&& cd /usr/local/Python-3.7.0/ \
+&& ./configure --prefix=/usr/local/python3\
+&& make && make install\
+&&mv /usr/bin/python /usr/bin/python_bak\
+&&ln -s /usr/local/python3/bin/python3 /usr/bin/python\
+&& cd /usr/local\
+&& wget https://bootstrap.pypa.io/get-pip.py\
+&&  python get-pip.py\
+&&ln -s /usr/local/python3/bin/pip3 /usr/bin/pip
+Run  pip install --upgrade setuptools pip -i https://pypi.douban.com/simple/ 
+Run pip install apache-superset==0.36.0  -i https://pypi.douban.com/simple/ \
+markupsafe==2.0.1 -i https://pypi.douban.com/simple/ \
+WTForms==2.3.3 \
+sqlalchemy==1.3.24  \
+pymysql
+#Run superset db upgrade \
+#&&superset fab create-admin \
+#&&superset init \
+#&&pip install gunicorn -i https://pypi.douban.com/simple/ \
+#&&gunicorn --workers 5 --timeout 120 --bind hadoop102:8787  "superset.app:create_app()" --daemon 
+#COPY   --chown=platform:platform  ./superset /home/platform/
+COPY   --chown=platform:platform  ./entrypoint.sh /home/platform/
+#CMD ["python3","-m","http.server","8888"]
+USER root
+CMD ["sh","/home/platform/entrypoint.sh"]
+```
+
+```
+#第一次启动还要进行如下操作
+#关于为什么可以直接使用superset命令，因为它将site-packages/superset/bin/superset软连接到了/usr/bin或添加了环境变量。有时候不是放在对应安装包的bin目录下，而是在python环境的目录，gunicorn就是这样，如conda/env/my_python/bin/gunicorn
+#superset需要创建数据库，指定登陆web界面的用户和密码，及后续的gunicorn这一部分需要如下手动完成。
+先使用ln -s将superset、gunicorn的可执行文件链接到/usr/bin
+superset db upgrade
+export FLASK_APP=superset
+superset fab create-admin
+superset init
+#配置前端页面
+pip install gunicorn -i https://pypi.douban.com/simple/
+gunicorn --workers 5 --timeout 120 --bind hadoop102:8787  "superset.app:create_app()"
+```
+
+### elasticsearch kibana
+
+>将es拷贝进去，修改配置文件，启动
+>
+>导入数据
+
+```
+FROM centos:7
+
+ADD ./jdk-11.0.10_linux-x64_bin.tar.gz /usr/local/java/
+ENV JAVA_HOME /usr/local/java/jdk-11.0.10
+ENV PATH $JAVA_HOME/bin:$PATH
+RUN useradd -m elasticsearch
+ADD ./kibana-7.11.1-linux-x86_64.tar.gz  /usr/local
+COPY --chown=elasticsearch:elasticsearch ./elasticsearch /usr/share/elasticsearch
+#COPY  --chown=elasticsearch:elasticsearch  ./elasticsearch.yml /usr/share/elasticsearch/config/elasticsearch.yml
+COPY --chown=elasticsearch:elasticsearch ./kibana.yml /usr/local/kibana-7.11.1-linux-x86_64/config
+COPY  --chown=elasticsearch:elasticsearch  ./entrypoint.sh /usr/local
+#USER root
+#ENTRYPOINT ["/usr/local/entrypoint.sh"]
+#CMD ["/usr/local/kibana-7.11.1-linux-x86_64/bin/kibana ","--allow-root"]
+USER elasticsearch
+ENTRYPOINT  ["/usr/local/entrypoint.sh"]
+```
+
+>entrypoint.sh启动脚本
+
+```
+#!/bin/bash
+/usr/share/elasticsearch/bin/elasticsearch -d
+/usr/local/kibana-7.11.1-linux-x86_64/bin/kibana
+```
+
+## 花生壳映射
+
+```
+elasticsearch的映射地址：http://49144m9k60.zicp.vip:52494/goto/a4e86e4a7460d926509c55f7fe258989
+superset的映射地址：http://49144m9k60.zicp.vip/r/5
 ```
 

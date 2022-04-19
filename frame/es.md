@@ -862,6 +862,10 @@ python scroll
 https://kb.objectrocket.com/elasticsearch/elasticsearch-and-scroll-in-python-953#:~:text=There%20are%20three%20different%20ways%20to%20scroll%20Elasticsearch,scroll%20%28%29%20method.%20Scrolling%20Elasticsearch%20documents%20in%20Python
 ```
 
+## 画图
+
+>index pattern
+
 # 理论知识
 
 ### 基本架构
@@ -1075,38 +1079,41 @@ POST _reindex { "source": { "index": "my_index_name" }, "dest": { "index": "my_i
 ```
 input {
   elasticsearch {
-  hosts => [ "100.200.10.54:9200" ]
-  index => "doc"
-  size => 1000
-  scroll => "5m"
-  docinfo => true
-  scan => true
+    hosts => ["172.18.65.187:9200"]
+    index => "gmall0523_order_info_20220410"
+    size => 1000
+    scroll => "5m"
   }
 }
-
-filter {
-json {
-  source => "message"
-  remove_field => ["message"]
-  }
-  mutate {
-  # rename field from 'name' to 'browser_name'
-  rename => { "_id" => "wid" }
-}
-}
-
+filter {}
 output {
-  elasticsearch {
-  hosts => [ "100.20.32.45:9200" ]
-  document_type => "docxinfo"
-  index => "docx"
-  }
-
-  stdout {
-  codec => "dots"
-  }
-
+    elasticsearch{
+      hosts => ["172.42.1.12:9200"]
+      index => "gmall0523_order_info_20220410"
+    }
 }
+```
+
+```
+input {
+  elasticsearch {
+    hosts => ["172.18.65.187:9200"]
+    index => "gmall2020_dau_info_2022-03-27"
+    size => 1000
+    scroll => "5m"
+  }
+}
+filter {}
+output {
+    elasticsearch{
+      hosts => ["172.42.1.12:9200"]
+      index => "gmall2020_dau_info_2022-03-27"
+    }
+}
+```
+
+```
+bin/logstash  -f  es2es.conf
 ```
 
 ### es结点扩展
@@ -1393,3 +1400,7 @@ GET test_dev/_search
 >mysql与es对比：https://blog.csdn.net/adparking/article/details/109773492
 >ES如何正确深度分页：https://www.cnblogs.com/you-you-111/p/5849945.html
 >es线程池:https://www.iteye.com/blog/rockelixir-1890867
+
+# docker部署
+
+>在使用docker挂载时，会有accese denied，对于/usr/local/elasticsearch/data/无法访问，需要手动创建外部目录elasticsearch/data,然后chmode -R 777 elasticsearch，最后才能挂载使用，这样就不会有权限问题了。

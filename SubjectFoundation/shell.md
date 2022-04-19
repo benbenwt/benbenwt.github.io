@@ -28,27 +28,6 @@ https://www.cnblogs.com/zhaolizhe/p/6923501.html
 
 # 集群管理脚本
 
-hadoop
-
-```
-```
-
-
-
-zookeeper
-
-```
-```
-
-
-
-管理所有组件的脚本
-
-```
-```
-
-
-
 # 其他软件的命令
 
 ### curl
@@ -77,7 +56,7 @@ curl   -X POST  "http://172.18.65.190:8001/search" -H 'Content-Type: application
 
 # problem
 
-##### 环境变量和lib
+## 环境变量和lib
 
 如果无法访问到常规的环境变量，要在sh脚本头部export
 
@@ -89,6 +68,31 @@ export PATH=$PATH:$HADOOP_HOME/sbin
 PATH=$PATH:/usr/local/bin:/usr/bin:/usr/local/sbin:/usr/sbin:/bin:/sbin
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib
 ```
+
+## windows与unix文件格式
+
+>在windows环境下编写好脚本，放入linux后报错，语句语法都是正确。这是由于windows的换行符与linux符号不同。安装dos2unix库转换以下即可。
+
+```
+#查看文件内容
+cat -v test.sh
+#vim修改fileformat
+vim test.sh
+#在命令模式输入set ff,查看类型，常为dos或unix
+:set  ff
+#将dos修改为unix，在wq保存
+
+```
+
+
+
+```
+#使用dos2unix转为unix
+yum install  -y dos2unix
+dos2unix ./*.sh
+```
+
+
 
 # 进阶语法
 
@@ -140,7 +144,7 @@ done
 >
 >其他服务的命令
 
-### 变量
+## 变量
 
 >包含字符串，数组，整数等类型
 
@@ -154,7 +158,7 @@ unset name
 
 创建后变量只读
 
-### 变量使用范围
+## 变量使用范围
 
 **本地变量**：只能在shell内使用
 
@@ -180,13 +184,13 @@ $@,传递给脚本或函数的所有参数。
 
 
 
-### 文件包含
+## 文件包含
 
 . include.sh
 
 source include.sh
 
-### 字符串
+## 字符串
 
 双引号：" "可以使用$,`,\,",之外的，可以解析变量。
 
@@ -198,13 +202,13 @@ source include.sh
 
 echo ${str1:2:3}
 
-### 数组
+## 数组
 
 array=(a b c d)
 
 echo $(array[0])
 
-### 各种运算
+## 各种运算
 
 ##### **文件表达式**
 
@@ -280,7 +284,7 @@ test 1 -eq 2:返回值为0成功。
 
    ！：逻辑非
 
-### 分支结构
+## 分支结构
 
 >[   ]格式前后有空格
 >
@@ -549,5 +553,21 @@ sed  '3,7s//jin/xxx/g ' 1.txt
 ```
 ~表示对后边的正则表达式进行匹配，匹配就输出1，否则输出0。例子：
 if [[ "$SERVICE" =~ ^(help|version|orcfiledump|rcfilecat|schemaTool|cleardanglingscratchdir|metastore|beeline|llapstatus|llap)$ ]] ; then
+```
+
+## 其他命令
+
+### getopts
+
+>用于处理以'-'开头的选项参数。可以支持我们自定义自己的命令，进行解析。
+>
+>getopts  "n:c:" arg，使用这种形式调用getopts，没调用一次就获取到一个参数，并尝试解析给arg。当传入的参数获取完毕时，返回false。
+>
+>例如  test.sh  -h haha -n hello -c good
+>
+>程序每使用一次 getopts  "n:c:" arg会按照顺序访问传入的三个参数。
+
+```
+help getopts
 ```
 

@@ -1515,6 +1515,98 @@ Connection提供了事务处理的方法，通过调用setAutoCommit(false)可�
 
 # NIO
 
+# JNI
+
+>博客：https://www.jianshu.com/p/6cbdda111570
+
+>extern "C"。JNI函数声明声明代码是用C++语言写的，所以需要添加extern "C"声明；如果源代码是C语言声明，则不需要添加这个声明
+>
+>JNIEXPORT。这个关键字表明这个函数是一个可导出函数。每一个C/C++库都有一个导出函数列表，只有在这个列表里面的函数才可以被外部直接调用，类似Java的public函数和private函数的区别。
+>
+>JNICALL。说明这个函数是一个JNI函数，用来和普通的C/C++函数进行区别。
+>
+>Void 返回值类型
+>
+>JNI函数名原型：Java_ + JNI方法所在的完整的类名，把类名里面的”.”替换成”_” + 真实的JNI方法名，这个方法名要和Java代码里面声明的JNI方法名一样。
+>
+>env 参数 是一个执行JNIENV函数表的指针。
+>
+>thiz 参数 代表的是声明这个JNI方法的Java类的引用。
+>
+>msg 参数就是和Java声明的JNI函数的msg参数对于的JNI函数参数
+>
+>示例如下，下方为c语言代码。
+
+```java
+public native void helloJNI(String msg);
+```
+
+```c
+extern "C"
+JNIEXPORT void JNICALL
+Java_com_kgdwbb_jnistudy_MainActivity_helloJNI(JNIEnv* env, jobject thiz,jstring msg) {
+    //do something
+}
+```
+
+# 注解
+
+>自定义注解一般与拦截器或aop一起配合，拦截器与注解配合可以检测过滤被注解的方法，如用于登录检测。
+>
+>aop与注解配合可以用于对注解的方法进行日志打印
+>
+>https://www.jianshu.com/p/a7bedc771204
+>
+>**Target**：描述了注解修饰的对象范围，取值在`java.lang.annotation.ElementType`定义，常用的包括：
+>
+>- METHOD：用于描述方法
+>- PACKAGE：用于描述包
+>- PARAMETER：用于描述方法变量
+>- TYPE：用于描述类、接口或enum类型
+>
+>**Retention**: 表示注解保留时间长短。取值在`java.lang.annotation.RetentionPolicy`中，取值为：
+>
+>- SOURCE：在源文件中有效，编译过程中会被忽略
+>- CLASS：随源文件一起编译在class文件中，运行时忽略
+>- RUNTIME：在运行时有效
+>
+>注解定义如下，定义并使用注解，然后借助反射检测是否加了对应的注解，拦截器和aop也是这个原理。
+
+```java
+@Target(ElementType.FIELD)
+@Retention(RetentionPolicy.RUNTIME)
+public @interface MyField {
+    String description();
+    int length();
+}
+```
+
+```java
+public class MyFieldTest {
+
+    //使用我们的自定义注解
+    @MyField(description = "用户名", length = 12)
+    private String username;
+
+    @Test
+    public void testMyField(){
+
+        // 获取类模板
+        Class c = MyFieldTest.class;
+
+        // 获取所有字段
+        for(Field f : c.getDeclaredFields()){
+            // 判断这个字段是否有MyField注解
+            if(f.isAnnotationPresent(MyField.class)){
+                MyField annotation = f.getAnnotation(MyField.class);
+                System.out.println("字段:[" + f.getName() + "], 描述:[" + annotation.description() + "], 长度:[" + annotation.length() +"]");
+            }
+        }
+
+    }
+}
+```
+
 
 
 # 待整理

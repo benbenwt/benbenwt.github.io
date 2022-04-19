@@ -1205,6 +1205,8 @@ df.write.format("")[.option("...")].save("...")
 
 ## DStream创建
 
+>DStream的代码主要分为driver部分代码、算子代码，driver部分代码在driver部分执行一次，但DStream中的算子代码，每当到来新的流，都会执行一次。在算子内部，这些变量都是rdd类型或其衍生。如果对DStream调用了action算子，就会触发执行，部分action算子不会返回新的DStream对象。对于传入的list类型数据，rdd会将其处理为迭代器，通过逐个访问的方式降低内存消耗。
+
 ### wordcount例子
 
 ```
