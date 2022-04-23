@@ -1767,7 +1767,7 @@ RemoteIterator<LocatedFileStatus> listFiles = fs.listFiles(new Path("/"), true);
 
 ### shell
 
-##### 基本文件操作
+#### 基本文件操作
 
 >hadoop fs:可以操作任何文件系统，不局限于dfs
 >
@@ -1796,6 +1796,22 @@ hadoop fs -du -s -h /jinguo
 #设置副本数
 hadoop fs -setrep 10 /jinguo/shuguo.txt
 ```
+
+#### 文件夹功能
+
+>bin：管理脚本的基础实现
+>
+>sbin：关闭开启应用服务
+>
+>etc：配置文件
+>
+>lib：依赖库如jar包
+>
+>logs：运行的日志，一般由namenode/datanode/rm/nm/snn进行划分。历史服务器承担一部分日志功能。
+>
+>include：对外提供的编程库头文件，由c++定义，用于c++访问hafs和mr。
+>
+>share：各个模块编译后的jar包
 
 ### 常用命令
 

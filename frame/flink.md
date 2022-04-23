@@ -759,9 +759,7 @@ FlinkJedisPoolConfig.Builder().setHost("hadoop102").build();
 ```
 <dependency>
  <groupId>org.apache.flink</groupId>
- 
-<artifactId>flink-connector-elasticsearch7_${scala.binary.version}</artifactI
-d>
+<artifactId>flink-connector-elasticsearch7_${scala.binary.version}</artifactId>
  <version>${flink.version}</version>
 </dependency>
 
@@ -783,7 +781,26 @@ indexer) {
 elasticsearchSinkFunction).build());
 ```
 
-
+```
+#builder添加setBulkFlushMaxActions参数后，可以控制多久写入es数据库一次。
+       ElasticsearchSinkFunction<TopProductEntity> elasticsearchSinkFunction=new ElasticsearchSinkFunction<TopProductEntity>() {
+            @Override
+            public void process(TopProductEntity topProductEntity, RuntimeContext runtimeContext, RequestIndexer requestIndexer) {
+                HashMap<String,String> data=new HashMap<>();
+                data.put("productid",Integer.valueOf(topProductEntity.getProductId()).toString());
+                data.put("times",Integer.valueOf(topProductEntity.getActionTimes()).toString());
+                data.put("windowEnd",Long.valueOf(topProductEntity.getWindowEnd()).toString());
+                IndexRequest request= Requests.indexRequest().index("topproduct").source(data);
+                System.out.println(data);
+                requestIndexer.add(request);
+            }
+        };
+        ArrayList<HttpHost> httpHosts=new ArrayList<>();
+        httpHosts.add(new HttpHost("192.168.244.128",9201,"http"));
+        ElasticsearchSink.Builder<TopProductEntity> builder = new ElasticsearchSink.Builder<TopProductEntity>(httpHosts,elasticsearchSinkFunction );
+        builder.setBulkFlushMaxActions(1);
+        topProduct.addSink(builder.build());
+```
 
 #### 输出到MySQL （JDBC）
 
@@ -1170,6 +1187,37 @@ stream.keyBy(...)
 
 ### Fink SQL
 
+## problem
+
+### flink elasticsearch sink无法写入
+
+>flink elasticsearch sink无法写入，程序也不报错。
+>
+>就是sink的触发机制问题啊，没想到，它肯定是做了缓存的，到达某个时间或数据量到达多少，就会触发sink操作。
+
+```
+#builder添加setBulkFlushMaxActions参数后，可以控制多久写入es数据库一次。
+       ElasticsearchSinkFunction<TopProductEntity> elasticsearchSinkFunction=new ElasticsearchSinkFunction<TopProductEntity>() {
+            @Override
+            public void process(TopProductEntity topProductEntity, RuntimeContext runtimeContext, RequestIndexer requestIndexer) {
+                HashMap<String,String> data=new HashMap<>();
+                data.put("productid",Integer.valueOf(topProductEntity.getProductId()).toString());
+                data.put("times",Integer.valueOf(topProductEntity.getActionTimes()).toString());
+                data.put("windowEnd",Long.valueOf(topProductEntity.getWindowEnd()).toString());
+                IndexRequest request= Requests.indexRequest().index("topproduct").source(data);
+                System.out.println(data);
+                requestIndexer.add(request);
+            }
+        };
+        ArrayList<HttpHost> httpHosts=new ArrayList<>();
+        httpHosts.add(new HttpHost("192.168.244.128",9201,"http"));
+        ElasticsearchSink.Builder<TopProductEntity> builder = new ElasticsearchSink.Builder<TopProductEntity>(httpHosts,elasticsearchSinkFunction );
+        builder.setBulkFlushMaxActions(1);
+        topProduct.addSink(builder.build());
+```
+
+
+
 # Fink zhihu
 
 >知乎是一个问答平台，每个使用者可以提出自己的问题，也可以回答自己擅长的问题。也可以在平台上发布文章，短视频等。用户主要通过推送的方式接收信息，也可以通过搜索检索特定的问题。
@@ -1236,21 +1284,27 @@ stream.keyBy(...)
 
 # Flink 实时项目
 
-## 模块说明
+## 流处理模块说明
 
 >在flink-2hbase中，主要分为6个flink任务
+>
+>mysql中中主要存储用户信息，商品信息，相当于维表，主要用于拼接获得信息。
+>
+>hbase用于存储从flink处理完的数据结果。
 
 ### 用户-产品浏览历史->实现基于协同过滤的推荐逻辑
 
 >通过flink记录用户浏览过这个类目下的哪些产品，为后面的基于Item的协同过滤做准备，实时的记录用户的评分到Hbase中，为后续离线处理做准备。
 
->从kafka的con topic读取数据，继承mapFunction编写map函数，将用户id、产品id分别存入u_history表和p_history表。增加计数。
+>从kafka的con topic读取数据，继承mapFunction编写map函数，将用户id、产品id分别存入u_history表和p_history表的对应行，并增加计数。
 
 ### 用户-兴趣->实现基于上下文的推荐逻辑
 
 >根据用户对同一个产品的操作计算兴趣度，计算规则通过操作事件间隔（如购物-浏览 <100s）则判定为一次兴趣事件，通过flink的valueState实现如果用户的操作Aciton=3（购物），则清除这个产品的state，如果超过100s没有出现Action=3的事件，也清除这个state。
 
->从kafka的con topic读取数据，获取到日志后封装为Log对象，然后按照userid分组。最后调用map函数，继承RichMapFunction编写内容，实现记录用户兴趣。实际上就是在100s内进行了连续向后的操作，就记为一次兴趣事件，每触发一个兴趣事件，将userid为rowkey的记录的，列族中列名为productid的数值加一。增加计数。
+>从kafka的con topic读取数据，获取到日志后封装为Log对象，然后按照userid分组。最后调用map函数，继承RichMapFunction编写内容，实现记录用户兴趣。实际上就是在100s内进行了连续向后的操作，就记为一次兴趣事件，每触发一个兴趣事件，将u_interest表中以userid为rowkey的记录的，列族中列名为productid的数值加一。增加计数。
+
+>RichMapFunction的内容如下。可以说对于连续性的操作才会定义为兴趣，如100s内浏览并分享，100s内浏览并购物。
 
 ```
 #从getRuntimeContext中获取state，放入类的属性，供map函数使用
@@ -1272,13 +1326,17 @@ stream.keyBy(...)
 #map函数操作state，进行更新和计算
 @Override
     public String map(LogEntity logEntity) throws Exception {
+    //flink状态中保存的值
         Action actionLastTime = state.value();
+      //当前这个数据封装的Action对象（动作类型，动作时间）
         Action actionThisTime = new Action(logEntity.getAction(), logEntity.getTime().toString());
         int times = 1;
         // 如果用户没有操作 则为state创建值
+        //如果flink状态中没有state，那么需要为其创建一个新的flink状态，此次状态当作flink的状态存入。同时，该条计数加一保存到hbase。
         if (actionLastTime == null) {
             actionLastTime = actionThisTime;
             saveToHBase(logEntity, 1);
+            //另外，如果flink中已经有该state，那么根据规则计算后，也存入hbase计数加对应次数。
         }else{
             times = getTimesByRule(actionLastTime, actionThisTime);
         }
@@ -1298,13 +1356,13 @@ stream.keyBy(...)
 
 >按照三个维度计算用户画像，分别是用户的颜色兴趣，用户的产地兴趣和用户的风格兴趣，根据日志不断的修改用户画像的数据，记录在Hbase中。数据存储在hbase的user表中
 
->从kafka的con topic读取数据，查询对应的产品信息（country、color、style），在以userId为rowkey的记录中找到以（country、color、style）为列的cell，增加计数。
+>从kafka的con topic读取数据，查询对应的产品信息（country、color、style），在以userId为rowkey的记录中找到以（country、color、style）为列的cell，增加计数。存入的表名为user表。
 
 ### 产品画像记录->实现基于标签的推荐逻辑
 
 >用两个维度记录产品画像，一个是喜爱该产品的年龄段，另一个是性别，数据存储在Hbase的prod表。
 
->从kafka的con topic中读取数据，继承mapFunction编写map函数，从mysql的user表查询出该用户的信息，数据存入hbase的prod表。增加计数。
+>从kafka的con topic中读取数据，继承mapFunction编写map函数，从mysql的user表查询出该用户的sex、age信息，数据存入hbase的prod表。增加计数。
 
 ### 实时热度榜->实现基于热度的推荐逻辑
 
@@ -1313,7 +1371,21 @@ stream.keyBy(...)
 ```
 #将数据统计后写入redis，用于实时热度榜使用
 首先按照productId分组，对于每个productId内部使用滑动窗口，对于窗口内的进行aggregate操作，统计商品次数封装为topProduct对象。
-aggregate目的是，每有一条数据累加一次。然后使用keyBy按照windwoEnd分组，然后对相同windwoEnd内的商品进行排序，获得商品的排名。最后将结果写入。
+aggregate目的是，每有一条数据累加一次。然后使用keyBy按照windwoEnd分组，然后对相同windwoEnd内的商品借助keyBy分组到一起，再进行排序，获得商品的排名。最后将结果写入。这里要理解为什么还要按照windwoEnd分组，就要理解窗口函数的输出传递到下游是什么，他是一个由分区号+窗口时间段唯一确定的一条记录。
+```
+
+```
+#流处理的概念理解
+当我们对流施加keyBy操作，本质是创建n个分区，当数据到来时，数据被分发到不同的分区。如果keyBy后续有操作，那么本质就是在多个分区上施加该操作。如果后续是聚合，那么会得到对应数目的聚合结果，聚合结果是针对整个流进行累积的状态呢，还是当前单个流呢？是针对整个流，来了新数据它会尝试更新状态，然后发往下一个任务。如果加了窗口呢？那就是针对一个窗口的状态，一个计算完就结束了，没有累计状态。
+这个的问题是，为了统计相同窗口的，不同分区的聚合数据。如果不添加按照窗口分区，那么数据由同一个map处理。就是累积了嘛？额，所有没加窗口的聚合都是累积吧。
+理清的关键是确定1.何时触发计算2计算的数据对象是什么3计算的结果是累积状态嘛4计算的结果发往哪里
+
+即使用window后，当水位线到达windwoend时，就触发计算。计算的对象为该widows内数据，如果分区了，还要截取对应分区。计算的结果不是累积state，计算结果数量时分区数*窗口个数，该数目的记录数全部发往下游的任务。下游的任务，如果需要对应窗口的数据，只能借助窗口时间分组，才能获取到对应的数据，自己使用窗口时间分组，就涉及到触发时间的问题，因为分组无法自己触发计算，所以要借助定时器，当到达end时触发计算，统计该时间分组的所有数据。flatmap。
+```
+
+```
+aggregate：对数据进行统计聚合
+process:可以对流施加复杂的操作，包括设定定时器、触发定时器等。除了设定map函数，还可以设定其他如open、onTimer等函数，时较为底层的api，功能丰富。
 ```
 
 
@@ -1326,21 +1398,86 @@ aggregate目的是，每有一条数据累加一次。然后使用keyBy按照win
 >
 >数据存储在Hbase的con表
 
->从kafka的logs topic读取数据，继承mapFunction编写map函数，将日志解析为LogEntity(userid,produceid,time,action)，然后根据用户id、产品id、时间戳拼接hbase的rowkey，最终将每一条记录插入hbase的con表中。
+>从kafka的con  topic读取数据，继承mapFunction编写map函数，将日志解析为LogEntity(userid,produceid,time,action)，然后根据用户id、产品id、时间戳拼接hbase的rowkey，最终将每一条记录插入hbase的con表中。
+
+### Elasticsearch Sink
+
+```
+PUT /topproduct
+{
+	"settings": { 
+ 	"number_of_shards": 3
+ },
+	"mappings": {
+		  "properties":{
+		     "productid":{
+		     	"type":"keyword"
+		     },
+		     "times":{
+		     	"type":"keyword"
+		     },
+		     "windowEnd":{
+		     	"type":"date"
+		     }
+		  }
+		}
+	
+}
+```
+
+
 
 ## web模块
 
 ### 前台用户
 
->该页面返回给用户推荐的产品list
+>该页面返回给用户推荐的产品list，使用html编写
 
->使用html编写
+>前端的推荐模块主要分为三块：1热榜推荐2基于协同过滤3产品画像
+
+#### 热榜
+
+##### 热榜推荐
+
+>从redis查出热榜的所有信息，根据热榜中的产品id查询产品基本信息product表、产品详情表contact，这两个是mysql中的维度表。
+
+##### 热榜+协同过滤
+
+>首先计算px表，对于一个produceid，为它启动一个单独的线程，执行协同过滤的计算，然后将结果写入px表。对于给定的两个productid，为了计算评分，从p_history表根据productid查出所有相关的列。然后比对两个product是否拥有相同的用户，每有一个相同的用户，sum就加一。然后使用sum除以total，total就是（product1有的用户数*product2有的用户数）再开根号。就相当于在计算，在所有用户中，两种产品有多少共同用户。数据写入px表，rowkey为产品id，列名为产品id。
+
+>在正常情况下，是要计算每个商品的被用户打的分数，或者其他度量，如被用户的操作次数等，这比单纯的计数更有意义。
+
+>从toplist中取出热榜商品的pid，然后从px表中取出pid对应的所有行记录，返回一个结果id的集合。然后根据结果id集合查询产品详情表、产品基本信息表。最后返回结果。
+
+##### 热榜+产品标签画像
+
+>首先计算ps表，产品的画像计算产品的相似度。对于给定的两个产品。从prod用户画像表查出数据，统计共有的标签属性有那些，这些标签的总数sum起来，标签有性别、年龄等，然后除以sqrt（product1的属性累计数量*product2的属性累计数量），相当于在计算两个商品共有的标签属性有多少个，在总的属性中占有多少。这里实际上可以加以改进，加入具体标签的数值计算相关性。数据写入ps表，rowkey为产品id，列名为产品id。
+
+>从toplist中取出热榜商品的pid，然后从ps表取出所有对应的id。最后拼接出结果并返回。
+
+#### 用户
+
+##### 用户协同顾虑
+
+>先根据用户历史表u_history计算每个用户的相近的用户，并记录数据到hbase的表。
+
+##### 用户标签画像
+
+>先根据用户画像表user计算每个用户的相近的用户，并记录数据到hbase的表。
+>
+>主要由商品的国家、风格、颜色组成。
+
+##### 用户兴趣
+
+>先根据用户兴趣表u_interest计算每个用户的相近的用户，并记录数据到hbase的表。
+
+>用户兴趣的定义，
 
 ### 后台监控
 
 >使用superset，es kibana查看效果
 
->该页面返回给管理员指标监控
+>该页面返回给管理员指标监控，主要包括热榜产品，日志接入量
 
 ## 推荐引擎说明
 

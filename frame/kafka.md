@@ -73,7 +73,7 @@ bin/kafka-topics.sh --create --bootstrap-server hbase:9092 --replication-factor 
 bin/kafka-topics.sh --list --bootstrap-server hbase:9092
 test
 bin/kafka-topics.sh --delete --zookeeper localhost:2181 --topic test
-bin/kafka-console-producer.sh --broker-list hbase:9092 --topic 
+bin/kafka-console-producer.sh --broker-list hbase:9092 --topic  test
 bin/kafka-console-consumer.sh --bootstrap-server hbase:9092 --topic test --from-beginning
 #监听topic
 bin/kafka-console-consumer.sh \

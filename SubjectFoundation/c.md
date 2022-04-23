@@ -8,12 +8,206 @@
 
 3在properties配置c/c++  ->include files，Linker->additional lib,Linker->input ->additional dependencies
 
+# 基本用法
+
+## 指针
+
+>&符号用于取变量的地址，相当于一个指针。
+>
+>*符号用于从指针中取值，也就是从该指针变量存储的地址中取值。
+
+## 初始化
+
+>c中需要初始化空间，常见的函数包括malloc、memset、new等，都可以为引用创建内存空间。
+
+```
+#new关键字
+int *result = new int[100];
+#memset
+Dpelement path[100][100];
+memset(path, 0x00, sizeof(path));
+```
+
+## 结构体
+
+```c++
+struct Dpelement
+{
+	int state;
+	int start;
+};
+#定义结构体数组
+Dpelement path[100][100];
+memset(path, 0x00, sizeof(path));
+```
+
+## tsp示例
+
+```c++
+// tsp.cpp : Defines the entry point for the console application.
+//
+
+#include "stdafx.h"
+
+
+#include <stdio.h>
+#include <string.h>
+
+const int MAXN = 20 + 1;
+const int MAXS = 1000 + 1;//表示非法值
+
+int F[1 << (MAXN - 1)][MAXN];
+int S[MAXN][MAXN];
+
+int _min(int a, int b);
+
+struct Dpelement
+{
+	int state;
+	int start;
+};
+
+void bestPath(int state, int  start, int *result, Dpelement path[100][100], int * size) {
+	//printf("state: %d,start: %d \n",state,start);
+	if (state == 0) { return; }
+	result[*size] = path[state][start].start;
+	*size = *size + 1;
+	bestPath(path[state][start].state, path[state][start].start, result, path, size);
+}
+
+#pragma optimize("", off)
+int main() {
+	memset(F, 0x00, sizeof(F));
+	memset(S, 0x00, sizeof(S));
+	int n, s;
+	scanf_s("%d", &n);
+	for (int i = 0; i<n; i++) {
+		for (int j = 0; j<n; j++) {
+			scanf_s("%d", &s);
+			S[i][j] = s;
+		}
+	}
+	int maxn = (1 << n) - 1;
+	for (int i = 1; i <= maxn; i++) {
+		for (int c = 0; c<n; c++) {
+			F[i][c] = MAXS;
+		}
+	}
+	for (int c = 0; c<n; c++) {
+		F[0][c] = S[0][c];
+	}
+	int iters = 0;
+
+	Dpelement path[100][100];
+	memset(path, 0x00, sizeof(path));
+	/*dpelement **path=new dpelement* [100];
+	for (int i = 0; i < 100; ++i)
+	{
+		path[i] = new dpelement[100];
+	}*/
+
+	for (int state = 2; state <= maxn; state++) {
+		if (state & (1)) {
+			continue;
+		}
+		for (int c = 0; c<n; c++) {
+			// c must not in state
+			if (!(state & (1 << c))) {
+				for (int k = 1; k<n; k++) {
+					// k must in state
+					if ((state & (1 << k)) && (S[k][c]!=-1) && (F[state ^ (1 << k)][k]!=-1)) {
+						// delete k in state with xor
+						int current = state ^ (1 << k);
+						if (F[current][k] + S[k][c] < F[state][c])
+						{
+							path[state][c].state = current;
+							path[state][c].start = k;
+						}
+
+						F[state][c] = _min(F[state][c], F[current][k] + S[k][c]);
+						
+						iters += 1;
+					}
+				}
+			}
+		}
+	}
+	//记录当前state、start的最有子选择是什么 state` start`
+	// print for debug
+	printf("<< F >>\n");
+	for (int state = 0; state <= maxn; state++) {
+		if (state & (1)) {
+			continue;
+		}
+		printf("state: %d \n", state);
+		for (int c = 0; c<n; c++) {
+			if (F[state][c] == 1001) {
+				F[state][c] = -1;
+			}
+			printf("%d \t", F[state][c]);
+		}
+		printf("\n");
+	}
+	printf("<< F - End >>\n");
+	//
+	printf("%d\n", F[maxn - 1][0]);
+	//
+	int *result = new int[100];
+	int size = 0;
+	bestPath(14, 0, result,path,&size);
+	printf("bestPath: ");
+	printf("0 ");
+	for (int i = 0; i < size; i++)
+	{
+		printf("%d  ", result[i]);
+	}
+	printf("0 ");
+	scanf_s("%d", &n);
+}
+
+
+int _min(int a, int b) {
+	return a < b ? a : b;
+}
+
+
+/*
+4
+0 2 6 5
+2 0 4 4
+6 4 0 2
+5 4 2 0
+
+-1 10 15 -1
+10 -1 35 25
+15 35 -1 30
+-1 25 30 -1
+*/
+
+
+```
+
+
+
+# 其他
+
+## TSP问题
+
+>dp(state,start) = dp(state`,k) + dist(start,k)
+>
+>理解好状态转移公式后，在编写程序时要注意一些问题
+>
+>1距离问题，当dist为-1时，那么就是不可达，要处理状态转移公式中的这种情况
+>
+>2state点集合问题，点集合中必定不包含起始点0，跳过这些状态。
+>
+>3state和起始点冲突的问题，若start为3，那么state中包含3的点必定不合法，所以跳过。
+
 # problem
 
 ### c++的字符串与字符数组
 
 ```
-
 #include <iostream>
 #include <iomanip>
 #include <string>

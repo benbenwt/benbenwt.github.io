@@ -17,8 +17,6 @@ api document:https://www.elastic.co/guide/en/elasticsearch/reference/current/ind
 
 # python client
 
-
-
 ##### 查询所有id
 
 ```
@@ -637,27 +635,58 @@ elasticsearch -allow-root
 
 ### 数据管理语句
 
-创建空索引
+#### 创建空索引
 
 ```
 PUT /haoke
 {
-	"settiongs":{
+	"settings":{
 		"index":{
 			"number_of_shards": "2",
 			"number_of_replicas": "0"
 		}
 	}
+	
+}
+PUT /haoke
+{
+		"index":{
+			"number_of_shards": "2",
+			"number_of_replicas": "0"
+		}
+	
 }
 ```
 
-删除索引
+```
+PUT /topproduct
+{
+	"settings": { 
+ 	"number_of_shards": 3
+ },
+	"mappings": {
+		  "properties":{
+		     "productid":{
+		     	"type":"keyword"
+		     },
+		     "times":{
+		     	"type":"keyword"
+		     },
+		     "windowEnd":{
+		     	"type":"date"
+		     }
+		  }
+		}
+}
+```
+
+#### 删除索引
 
 ```
 DELETE /haoke
 ```
 
-查看索引
+#### 查看索引
 
 ```
 GET /cti
@@ -722,6 +751,28 @@ DELETE  /cti_txt/_doc/999999999999999999
 
 
 ```
+
+```
+POST 索引名称/文档名称/_delete_by_query   
+{
+  "query":{
+    "term":{
+      "_id":100000100
+    }
+  }
+}
+#删除所有
+POST /topproduct/_delete_by_query?pretty
+{
+    "query": {
+        "match_all": {
+        }
+    }
+}
+
+```
+
+
 
 #### 改
 
@@ -865,10 +916,20 @@ https://kb.objectrocket.com/elasticsearch/elasticsearch-and-scroll-in-python-953
 ## 画图
 
 >index pattern
+>
+>dashboard
+>
+>visualization
+>
+>map
+
+### dashboard
+
+>点击edit，才能编辑dashboard
 
 # 理论知识
 
-### 基本架构
+## 基本架构
 
 ##### shard
 
@@ -882,20 +943,48 @@ https://kb.objectrocket.com/elasticsearch/elasticsearch-and-scroll-in-python-953
 相当于
 ```
 
-### 基本数据类型
+## 基本数据类型
 
 >主要类型：text,keyword,float,double,boolean,date,byte,short,integer,long
 >#查看映射
 >GET /gb/_mapping/tweet
 
-### 性能
+### 数值类型
+
+### 字符类型
+
+>string,text,keyword
+
+##### string
+
+>旧版本的类型，现用text，keyword代替
+
+##### text
+
+>当一个字段要被全文检索，比如文本内容，如email内容、产品描述等，应使用text类型。设置成text类型，该字段内容会被分析器分成一个一个词项。text类型的字段不用于排序，很少用于聚合。
+
+##### keyword
+
+>keyword类型适用于索引结构化的字段，比如email地址、主机名、状态码等。keyword字段只能通过精确搜索得到。
+
+### 日期
+
+### 复合类型
+
+### 地理类型
+
+
+
+
+
+## 性能
 
 ### 适用场景及优缺点
 
 >适合全文检索，由给定字段查询所在文档，数据量大时需要特定api。适合灵活的节点水平扩展。
 >不适合深度分页，因为其跳页实现繁琐。不适合数据频繁的修改，其修改本质是删除加插入操作形成的，高频率的数据增删容易触发段合并，即数据的重新组装。不适合事务操作，没有关系型数据库的事务和锁，难以应对一致性要求较高的场景。
 
-### es分词器
+## es分词器
 
 ```
 #倒排索引
@@ -1178,12 +1267,6 @@ chmod -R 777 目录      //修改目录权限
 rm -rf data
 
 _shards_percent_as_number" : 100.0
-
-
-
-
-
-
 
 # Elasticsearch大量查询和深度分页
 

@@ -406,6 +406,10 @@ scan  'stu2',{COLUMNS => 'cf1:age', LIMMIT 10, STARTROW => 'xx'}
 #查询单个数据
 get 'test', 'row_key'
 
+list_namespace
+create_namespace "test"
+describe_namespace "test002""
+list_namespace_tables "test"
 ```
 
 ##### 主键查询
@@ -418,7 +422,6 @@ scan ‘test’, FILTER=>“RowFilter(=,‘binary:01’)”
 
 #过滤行键前缀过滤
 scan ‘表名’, FILTER => “PrefixFilter (‘行健前缀’)”
-
 
 #按照索引范围过滤
 scan 'tableName',{STARTROW=>'startRow',ENDROW=>'endRow'}

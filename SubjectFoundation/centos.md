@@ -215,6 +215,17 @@ systemctl set-default graphical.target
 
 ### 网络
 
+##### 查看网关
+
+```
+route -n
+ip route show 
+traceroute www.baidu.com -s 100
+netstat -r
+```
+
+
+
 ##### 查看网卡
 
 ```

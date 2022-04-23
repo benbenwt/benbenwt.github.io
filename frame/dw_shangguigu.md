@@ -2993,10 +2993,23 @@ ENTRYPOINT  ["/usr/local/entrypoint.sh"]
 /usr/local/kibana-7.11.1-linux-x86_64/bin/kibana
 ```
 
+## 迁移数据
+
+>mysql中的数据分为两块，一块是gmall_report，是数据仓库的的统计结果。
+>
+>一块是data_supervisor,是数据质量控制的统计结果。这两块借助navicate的导出导入功能迁移数据，然后手动填充一些数据，让superset的图形效果好一点。
+>
+>elasticsearch主要是spakrstreaming的统计结果，使用logstash将数据从集群采集到docker中的elasticsearch中。
+
 ## 花生壳映射
 
 ```
-elasticsearch的映射地址：http://49144m9k60.zicp.vip:52494/goto/a4e86e4a7460d926509c55f7fe258989
-superset的映射地址：http://49144m9k60.zicp.vip/r/5
+elasticsearch的映射地址：
+1.hive数仓可视化，http://49144m9k60.zicp.vip:52494/goto/a4e86e4a7460d926509c55f7fe258989
+2.flink实施推荐： http://49144m9k60.zicp.vip:52494/goto/dc86a6ffab6ae9334f6f910fb449ac1d
+superset的映射地址：
+1.hive数据仓库统计结果，http://49144m9k60.zicp.vip/r/5    
+2.数据质量控制统计结果， http://49144m9k60.zicp.vip/r/7  
+账号：visitor visitor
 ```
 
