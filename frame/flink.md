@@ -1133,7 +1133,7 @@ stream.keyBy(...)
 
 >**简单聚合是对一些特定统计需求的实现，那么reduce算子就是一个一般化的聚合统计操作**
 >
->1.归约函数
+>**1.归约函数**
 >
 >reduce操作会将keyedstream转换为datastream，调用reduce传入一个参数，此类需要实现reduceFunction接口。定义的方法有两个参数，是输入事件，将输入事件合并可以得到输出事件。
 >
@@ -1141,7 +1141,7 @@ stream.keyBy(...)
 
 >所有聚合的操作保存在flink的状态内存中，因为他需要跨越多条记录，需要根据key保存状态。数据流入的过程，就是不断计算并更新flink中保存的状态的过程。
 
->2.聚合函数
+>**2.聚合函数**
 >
 >aggregate需要指定一个aggregatefunction函数，可以看做reduce函数的通用版本，这里有三种类型IN,ACC,OUT,分别代表输入类型，累加器类型，输出类型。
 >
@@ -1157,9 +1157,117 @@ stream.keyBy(...)
 >
 >与reduce相比，aggregate的输入格式与输出格式可以不同。
 
+###### 全窗口函数
+
+>全窗口函数与增量聚合函数不同，全窗口函数需要先收集窗口中的所有数据，然后在计算全部数据。
+>
+>这种计算方式相比于流处理是低效的，但是有的时候必须获取到所有数据才能计算，或者需要获取窗口的起始时间等，那么就必须使用全窗口函数。这是典型的批处理思想。
+
+>1.窗口函数（WindowFunction）
+>
+>WindowFunction字面上就是“窗口函数”，他其实就是老版本的通用窗口函数接口。我们可以基于WindowedStream调用apply方法，传入一个WindowFunction的实现类。
+>
+>WindowFunction可用的功能较少，一般使用ProcessWindowFunction
+
+```
+stream
+      .keyBy(<key selector>)
+      .window(<window assigner>)
+      .apply(new MyWindowFunction());
+```
+
+>2.处理窗口函数（ProcessWindowFunction）
+>
+>ProcessWindowFunction是windowAPI中最底层的通用窗口函数接口。相比于WindowFunction，他可以拿到Context上下文对象，不仅能获得窗口信息，还能访问当前时间和内存状态。这里的时间包括当前时间和时间水位线。
+
+```
+stream
+      .keyBy(<key selector>)
+      .window(<window assigner>)
+      .process(UvCountByWindow())
+public static class UvCountByWindow extends ProcessWindowFunction<Event, 
+    String, Boolean, TimeWindow>{
+         @Override
+         public void process(Boolean aBoolean, Context context, Iterable<Event> 
+                elements, Collector<String> out) throws Exception {
+                 HashSet<String> userSet = new HashSet<>();
+                 // 遍历所有数据，放到 Set 里去重
+                 for (Event event: elements){
+                 userSet.add(event.user);
+                 }
+                 // 结合窗口信息，包装输出内容
+                 Long start = context.window().getStart();
+                 Long end = context.window().getEnd();
+                 out.collect(" 窗 口 : " + new Timestamp(start) + " ~ " + new 
+                Timestamp(end)
+                 + " 的独立访客数量是：" + userSet.size());
+    }
+}
+}
+
+```
+
+###### 增量窗口和全窗口函数的结合使用
+
+>对于reduce和aggregate函数，我们除了可以传入一个ReduceFunction 或 AggregateFunction 进行增量聚合，还可以传入WindowFunction获取更多丰富的信息，传入的可以是WindowFunction或ProcessWindowFunction。
+>
+>示例中apply的输入就是ReduceFunction 或 AggregateFunction 处理完的结果，当窗口到达结尾触发计算才会调用第二个窗口函数的apply方法，将其传入windowFunction处理后，作为aggregate函数的处理结果。
+
+```
+#可以借助aggregate函数调用窗口函数
+stream
+      .keyBy(<key selector>)
+      .window(<window assigner>)
+      .aggregate(new AggreagteFunction(),new WindowResultFunction())
+     
+public class WindowResultFunction
+        implements WindowFunction<Long, TopProductEntity, Tuple, TimeWindow> {
+    @Override
+    public void apply(Tuple key, TimeWindow window, Iterable<Long> aggregateResult, Collector<TopProductEntity> collector) throws Exception {
+		int itemId = key.getField(0);
+		Long count = aggregateResult.iterator().next();
+        collector.collect(TopProductEntity.of(itemId,window.getEnd(),count));
+    }
+}
+```
+
+##### 其他API
+
+>对于一个窗口算子，其由窗口分配器+窗口函数构成。flink还提供了其他可选的api，让我们灵活的控制窗口行为。
+
+###### 触发器
+
+>触发器主要用来控制窗口什么时候触发计算。所谓的触发计算，本质上就是执行窗口函数，所以可以认为是计算得到的结果。
+>
+>基于WindowedStream调用trigger
+>
+>Trigger 是窗口算子的内部属性，每个窗口分配器（WindowAssigner）都会对应一个默认 的触发器；对于 Flink 内置的窗口类型，它们的触发器都已经做了实现。例如，所有事件时间 窗口，默认的触发器都是 EventTimeTrigger；类似还有 ProcessingTimeTrigger 和 CountTrigger。 所以一般情况下是不需要自定义触发器的，不过我们依然有必要了解它的原理。
+
+```
+stream.keyBy(...)
+     .window(...)
+     .trigger(new MyTrigger())
+```
+
+```
+#Trigger是一个抽象类，自定义时需要实现如下四个抽象方法
+onElement（）：对元素的响应
+onEventTime（）：对事件时间的响应
+onProcessingTime（）：对处理时间的响应
+clear（）：窗口销毁时调用此方法
+前三个方法通过放回enum值，控制窗口行为。
+枚举值为：CONTINUE,FIRE,PURGE,FIRE_AND_PURGE
+如上的枚举值说明触发计算和窗口销毁是可以分开的，并不一定一起触发。
+
+```
+
+
+
 ### 迟到数据的处理
 
-## 多流操作
+## 处理函数
+
+## 多流转换
 
 ## 状态编程
 
@@ -1183,9 +1291,11 @@ stream.keyBy(...)
 >
 >返回想指定为key值的数据即可。
 
-### Flink CDC
+## 容错机制
 
-### Fink SQL
+## Fink SQL
+
+## Flink CEP
 
 ## problem
 

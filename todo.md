@@ -38,9 +38,9 @@
 20  推荐web模块
 22  es设计索引，不同索引类型。hadoop日志
 24  kerberos ，ranger
-24  spark
-25  flink
-25  简历，其他回顾
+24  spark理论
+25  flink理论
+25  简历，flink、spark练习题，其他回顾
 
 202203
 03 DW 66-
