@@ -361,8 +361,6 @@ sbin/start-history-server.sh
 4通过UI展示查询运行情况
 ```
 
-
-
 ### Executor
 
 ```
