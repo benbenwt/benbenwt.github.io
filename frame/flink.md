@@ -1979,33 +1979,275 @@ env.setStateBackend(new EmbeddedRocksDBStateBackend());
 
 ### 检查点
 
+>在有状态的流处理中，我们想恢复计算程序，并不需要之前的数据，只需要内存状态。故障恢复后的处理的结果应该与故障发生前一致。
+
 #### 检查点的保存
+
+>检查点的保存时机
+
+##### 周期性的触发保存
+
+>每隔一定时间间隔，将每个任务当前的状态复制一份，并持久化保存起来。
+
+##### 保存的时间点
+
+>当检查点触发时，任务可能正在处理某个数据，为了能进行快照恢复，我们需要让任务完成处理手头的数据，这样在恢复时，只通过内存状态和当前处理到哪个数据了，就能恢复任务。但是不同的并行子任务可能处理的进度不一样，所以我们必须等待所有任务都完成了该数据的处理。然后在恢复时，只需要根据偏移量重放需要继续处理的数据。
+>
+>那如果有些操作改变了下游数据库，又被重放了呢。
+
+##### 保存的具体流程
+
+>当需要保存时，等到所有任务将同一个数据处理完毕，然后将任务中的算子状态都保存起来。比如source的偏移量，聚合算子的内存状态。
 
 #### 从检查点恢复状态
 
+>当发生故障时，找到最近一次成功保存的检查点来恢复状态。
+>
+>1.重启应用，重启后所有状态会清空
+>
+>2.读取检查点，重置状态。将检查点中的状态填充到对应的状态中，将状态恢复到flink保存检查点的那一刻。
+>
+>3.重放数据，让source任务向外部数据源重新提交偏移量，这样整个系统就恢复到了保存快照的那一刻。
+>
+>4.继续处理数据
+
 #### 检查点算法
+
+>如何等待所有任务将同一个数据处理完毕呢，数据在算子间变换、合并，根本无法判断那些数据是同一个。较为简单的想法是，当需要快照时，将source算子暂停，然后等后续任务处理完所有数据，这样所有任务都将同一个数据处理完成了。但是这样效率很低，资源闲置。
+
+##### 检查点分界线 Barrier
+
+>如何让每个任务认出触发检查点保存的那条数据呢，我们可以借鉴流水线的思想，在数据中插入一个特殊的数据结构barrier，当下游算子处理barrier时，将此刻的状态保存进入快照。而后到来的数据不会被保存在这个快照中。barrier将数据流划分成了不同部分，也叫分界线checkpoint barrier。
+>
+>在 JobManager 中有一个“检查点协调器”（checkpoint coordinator），专门用来协调处理检 查点的相关工作。检查点协调器会定期向 TaskManager 发出指令，要求保存检查点（带着检查 点 ID）；TaskManager 会让所有的 Source 任务把自己的偏移量（算子状态）保存起来，并将带 有检查点 ID 的分界线（barrier）插入到当前的数据流中，然后像正常的数据一样像下游传递； 之后 Source 任务就可以继续读入新的数据了
+
+##### 分布式快照算法
+
+>通过在分界线barrier，我们可以明确地指示触发检查点保存的时间。但是，对于分布式数据流，数据是乱序的，如何保持数据的顺序，让barrier正确保存快照就不容易了。
+>
+>1jm发送指令，触发检查点保存。source任务保存状态，插入分界线。
+>
+>jm周期性的向tm发送带有新检查点id的消息，通过这种方式启动检查点。tm收到指令后，插入barrier，并将偏移量保存持久化。
+>
+>2.状态快照保存完成，分界线传递给下游
+>
+>状态存入持久化内存后，会返回通知给Source任务，source任务就会向jm确认检查点完成，然后将barrier传递给下游。
+>
+>3.向下游多个并行子任务广播分界线，执行分界线对齐
+>
+>4.对齐后，保存状态的持久化存储
+>
+>5.先处理缓存数据，然后继续正常处理。
+
+
 
 #### 检查点配置
 
+```
+StreamExecutionEnvironment env = 
+StreamExecutionEnvironment.getExecutionEnvironment();
+// 每隔 1 秒启动一次检查点保存
+env.enableCheckpointing(1000);
+
+// 配置存储检查点到 JobManager 堆内存
+env.getCheckpointConfig().setCheckpointStorage(new 
+JobManagerCheckpointStorage());
+// 配置存储检查点到文件系统
+env.getCheckpointConfig().setCheckpointStorage(new 
+FileSystemCheckpointStorage("hdfs://namenode:40010/flink/checkpoints"));
+
+```
+
+```
+StreamExecutionEnvironment env = 
+StreamExecutionEnvironment.getExecutionEnvironment();
+// 启用检查点，间隔时间 1 秒
+env.enableCheckpointing(1000);
+CheckpointConfig checkpointConfig = env.getCheckpointConfig();
+// 设置精确一次模式
+checkpointConfig.setCheckpointingMode(CheckpointingMode.EXACTLY_ONCE);
+// 最小间隔时间 500 毫秒
+checkpointConfig.setMinPauseBetweenCheckpoints(500);
+// 超时时间 1 分钟
+checkpointConfig.setCheckpointTimeout(60000);
+// 同时只能有一个检查点
+checkpointConfig.setMaxConcurrentCheckpoints(1);
+// 开启检查点的外部持久化保存，作业取消后依然保留
+checkpointConfig.enableExternalizedCheckpoints(
+ ExternalizedCheckpointCleanup.RETAIN_ON_CANCELLATION);
+// 启用不对齐的检查点保存方式
+checkpointConfig.enableUnalignedCheckpoints();
+292
+// 设置检查点存储，可以直接传入一个 String，指定文件系统的路径
+checkpointConfig.setCheckpointStorage("hdfs://my/checkpoint/dir")
+```
+
 #### 保存点
+
+>保存点与检查点最大的区别，就是触发的时机。检查点是由 Flink 自动管理的，定期创建， 发生故障之后自动读取进行恢复，这是一个“自动存盘”的功能；而保存点不会自动创建，必 须由用户明确地手动触发保存操作，所以就是“手动存盘”
+
+```
+DataStream<String> stream = env
+ .addSource(new StatefulSource())
+ .uid("source-id")
+ .map(new StatefulMapper())
+ .uid("mapper-id")
+ .print();
+
+bin/flink savepoint :jobId [:targetDirectory]
+#通过flink-conf.yaml设定保存路径
+state.savepoints.dir: hdfs:///flink/savepoints
+#通过程序设定保存路径
+env.setDefaultSavepointDir("hdfs:///flink/savepoints");
+#从保存点启动程序
+bin/flink run -s :savepointPath [:runArgs]
+```
 
 ### 状态一致性
 
+>flink中的一致性主要用于故障恢复的描述中
+>
+>对于分布式系统而言，强调的是不同节点中相同数据的副本应该总是一致的，也就是不同节点读取时总能取得相同的值。
+>
+>而对于事务而言，是要求提交更新操作后，能够读取到新的数据。
+>
+>对于flink来说，就是保证不漏掉任何一个数据，也不会重复处理同一个数据。
+
 #### 一致性的概念和级别
 
-#### 端到端的状态一致性
+>一般来说有三种级别：
+>
+>1最多一次
+>
+>2至少一次
+>
+>3精确一次
 
-### 端到端的精确一次
+#### 端到端的精确一次
 
-#### 输入端保证
+>我们可以保证状态的一致性
+>
+>但是对于输出端和输入端如何保证呢，包括了数据源、流处理器和外部存储系统三个部分。这个完 整应用的一致性，就叫作“端到端（end-to-end）的状态一致性”，它取决于三个组件中最弱的 那一环。
+>
+>一般来说，能否达到 at-least-once 一致性级别，主要看数据源能够重放数据；而能否 达到 exactly-once 级别，流处理器内部、数据源、外部存储都要有相应的保证机制。
 
-#### 输出端保证
+##### 输入端保证
+
+>想要在故障后不丢失数据，就需要重放数据，回到快照拍摄的那一刻的偏移量。达到至少一次的语义要求，也是精确一次的基本要求。
+
+##### 输出端保证
+
+>通过输入端重放已经能达到至少次的要求，但是精确一次仍有问题。
+>
+>当一个检查点保存后，后续到来的数据也会进行处理，并写入外部系统，如果此时出现故障，那么内存状态还没有改变，但是外部系统已经改变了。所以，当恢复应用时，就会回到之前的检查点，重复处理这些数据，再次计算并写入外部系统。虽然状态回滚了，保持了状态的一致性，但是写入了外部系统两次。
+>
+>为了实现端到端的一致性，还需要对外部存储系统、以及Sink连接器有额外的要求。有两种处理方式：
+>
+>1.幂等写入
+>
+>2.事务写入
+
+###### 幂等写入
+
+>幂等也就是，一个操作可以重复多次，但是只导致一次的结果更改，也就是说后边重复的操作不会对结果起作用。
+>
+>在数据处理领域就是hashmap，如果是相同的键值对，后边的插入就没有作用了
+>
+>数据存储中的redis键值存储，或者关系型数据库中满足查询条件的更新操作
+>
+>对于幂等写入，故障恢复时会出现短暂的不一致，因为保存点之后的数据其实已经写入数据库了，当恢复的任务执行到故障点时，就恢复正常了。
+
+###### 事务写入
+
+>就是当故障发生时，从上一个检查点到当前数据的操作，都不生效。只有当检查点完成提交后，再真正存入数据库中，让快照和数据库的数据保持一致性。
+>
+>具体来说有两种方式：预写日志WAL和两阶段提交2PC
+>
+>1.预写日志write-ahead-log，WAL
+>
+>对于不支持的事务的存储系统，借助WAL实现
+>
+>具体步骤是（
+>
+>（1）先把结果数据作为日志保存起来
+>
+>（2）进行检查点保存时，也会讲这些结果数据一并做持久化存储
+>
+>  (3)  在收到检查点完成的通知时，将所有结果一次性写入外部系统。
+>
+>这就相当于检查点完成时做一个批处理，flink中DataStream API提供了一个模板类GenericWriteAheadSink，用来实现事务型的写入方式。
+>
+>这种方式需要保存数据批量写入成功的信息，在故障恢复检查点时，必须有成功写入的信息对应。
+>
+>
+>
+>2.两阶段提交
+>
+>（1).当一条数据到来时，或者收到检查点的分界线时，sink都会启动一个事务
+>
+>  (2).接下来收到的所有数据，都可以通过这个事务写入外部系统；这时由于事务没有提交，所以数据尽管写入了外部系统，但是不可用，是“预提交”的状态。
+>
+>  (3).当sink任务收到jobmanager发来的检查点完成的通知时，正式提交事务，写入结果就可用了。
+>
+>flink提供了TwoPhaseCommitSinkFunction接口，方便实现两阶段提交的SinkFunction，提供了精确一次处理。
+>
+>但是其对外部系统有如下要求：
+>
+>1. 外部系统提供事务支持
+>2. 在检查点间隔期间，能开启一个事务并接收数据写入
+>3. 收到完成通知以前，都是等待提交状态。
+>4. sink任务必须能够在进程失败后恢复事务
+>5. 提交事务必须是幂等操作。也就是说，事务的重复提交应该是无效的。
 
 #### Flink和kafka连接时的精确一次消费
 
+##### Flink内部
 
+>借助检查点机制保证状态和处理结果的精确一次
+
+##### 输入端
+
+>可以重置偏移量，当故障发生后，恢复时从source算子状态中读取偏移量，重放数据。
+
+##### 输出端
+
+>flink实现的kafka连接器中，提供了kafka的flinkkafkaproducer，他就实现了twophasecommitsinkfunction接口。
+
+>需要的配置
+>
+>1.启用检查点
+>
+>2.在 FlinkKafkaProducer 的构造函数中传入参数 Semantic.EXACTLY_ONCE
+>
+>3.配置 Kafka 读取数据的消费者的隔离级别
+>
+>​      这里所说的 Kafka，是写入的外部系统。预提交阶段数据已经写入，只是被标记为“未提 交”（uncommitted），而 Kafka 中默认的隔离级别 isolation.level 是 read_uncommitted，也就是 可以读取未提交的数据。这样一来，外部应用就可以直接消费未提交的数据，对于事务性的保 证就失效了。所以应该将隔离级别配置
+>
+>为 read_committed，表示消费者遇到未提交的消息时，会停止从分区中消费数据，直到消 息被标记为已提交才会再次恢复消费。当然，这样做的话，外部应用消费数据就会有显著的延 迟。
+
+>Flink 的 Kafka连接器中配置的事务超时时间 transaction.timeout.ms 默认是 1小时，而Kafka 集群配置的事务最大超时时间 transaction.max.timeout.ms 默认是 15 分钟。所以在检查点保存 时间很长时，有可能出现 Kafka 已经认为事务超时了，丢弃了预提交的数据；而 Sink 任务认 为还可以继续等待。如果接下来检查点保存成功，发生故障后回滚到这个检查点的状态，这部 分数据就被真正丢掉了。所以这两个超时时间，前者应该小于等于后者。
 
 ## Fink SQL和Table API
+
+>Flink提供的多层级API中，核心是DataStream API，使我们开发的基本途径；底层则是处理函数，可以访问事件时间信息，内存状态，窗口信息，定时器等。
+>
+>在企业应用中，会有大量类似的处理逻辑，所以一般会将底层API包装成具体的应用级接口，也就是SQL，flink提供了Table API和SQL处理表结构数据。
+
+>spark，mapreduce，flink这些框架的流批处理功能和接口：
+>
+>mapreduce：基础批处理编程接口
+>
+>spark：基础批处理编程接口，spark streaming DStream流处理接口，spark sql结构化数据处理接口
+>
+>flink：DataStream流批一体接口，Table API和SQL 流批一体接口
+>
+>
+>
+>离线数仓的分层结构，不可能达到实时的处理速度，实时要求都是1秒甚至毫秒为单位，离线数仓的分层结构导致有大量的落盘操作，而且它是为单次大批量输入设计的，以天等时间单位为粒度。
+>
+>实时数仓只有处理的数据流，在最后阶段进行数据的sink。中间步骤一般使用kafka进行临时存储，统计的一般是当天的数据，用于一些实时的指标。
+
+
 
 ## Flink CEP
 
