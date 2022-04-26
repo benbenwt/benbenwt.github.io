@@ -2247,7 +2247,372 @@ bin/flink run -s :savepointPath [:runArgs]
 >
 >实时数仓只有处理的数据流，在最后阶段进行数据的sink。中间步骤一般使用kafka进行临时存储，统计的一般是当天的数据，用于一些实时的指标。
 
+### 示例
 
+```
+public class TableExample {
+ public static void main(String[] args) throws Exception {
+     // 获取流执行环境
+     StreamExecutionEnvironment env = 
+    StreamExecutionEnvironment.getExecutionEnvironment();
+     env.setParallelism(1);
+     // 读取数据源
+     SingleOutputStreamOperator<Event> eventStream = env
+     .fromElements(
+     new Event("Alice", "./home", 1000L),
+     new Event("Bob", "./cart", 1000L),
+     new Event("Alice", "./prod?id=1", 5 * 1000L),
+     new Event("Cary", "./home", 60 * 1000L),
+     new Event("Bob", "./prod?id=3", 90 * 1000L),
+     new Event("Alice", "./prod?id=7", 105 * 1000L)
+     );
+     // 获取表环境
+     StreamTableEnvironment tableEnv = StreamTableEnvironment.create(env);
+     // 将数据流转换成表
+     Table eventTable = tableEnv.fromDataStream(eventStream);
+     // 用执行 SQL 的方式提取数据
+     Table visitTable = tableEnv.sqlQuery("select url, user from " + eventTable);
+     // 将表转换成数据流，打印输出
+     tableEnv.toDataStream(visitTable).print();
+     // 执行程序
+     env.execute();
+ }
+}
+
+```
+
+### 基本API
+
+#### 程序架构
+
+```
+// 创建表环境
+TableEnvironment tableEnv = ...;
+// 创建输入表，连接外部系统读取数据
+tableEnv.executeSql("CREATE TEMPORARY TABLE inputTable ... WITH ( 'connector' 
+= ... )");
+// 注册一个表，连接到外部系统，用于输出
+tableEnv.executeSql("CREATE TEMPORARY TABLE outputTable ... WITH ( 'connector' 
+= ... )");
+// 执行 SQL 对表进行查询转换，得到一个新的表
+Table table1 = tableEnv.sqlQuery("SELECT ... FROM inputTable... ");
+// 使用 Table API 对表进行查询转换，得到一个新的表
+Table table2 = tableEnv.from("inputTable").select(...);
+// 将得到的结果写入输出表
+TableResult tableResult = table1.executeInsert("outputTable");
+```
+
+#### 创建表环境
+
+```
+ (1)注册catalog和表
+（2）执行 SQL 查询；
+（3）注册用户自定义函数（UDF）；
+（4）DataStream 和表之间的转换。
+
+#指定配置创建
+EnvironmentSettings settings = EnvironmentSettings
+ .newInstance()
+ .inStreamingMode() // 使用流处理模式
+ .build();
+TableEnvironment tableEnv = TableEnvironment.create(settings);
+
+```
+
+#### 创建表
+
+>表在环境中有一个唯一的ID，由三部分组成：目录catalog，数据库database，以及表名
+>
+>默认目录为default_catalog,数据库名为default_database,所以如果创建一个MyTable表，其ID为
+>
+>default_catalog.default_database.MyTable
+>
+>创建表的方式，有通过连接器和虚拟表两种
+
+##### 连接器表
+
+>连接到外部系统，我们可以从连接器的表中读取数据，他就会从外部系统读取数据并转换。而当我们向这张表写入数据，连接器就会sink到外部系统中。
+
+```
+tableEnv.executeSql("CRATE [TEMPORY] TABLE MyTable ... WITH ( 'connector' 
+= ... )");
+#设定catalog和database
+tEnv.useCatalog("custom_catalog");
+tEnv.useDatabase("custom_database");
+```
+
+##### 虚拟表
+
+>tableEnv.createTemporaryView("NewTable", newTable);
+>
+>上边将中间表注册到环境中，这样才能对其使用sql语句。虚拟表和视图非常相似。
+
+####  表的查询
+
+##### 执行SQL进行查询
+
+```
+#使用sqlQuery传入sql字符串
+TableEnvironment tableEnv = ...; 
+// 创建表
+tableEnv.executeSql("CREATE TABLE EventTable ... WITH ( 'connector' = ... )");
+// 查询用户 Alice 的点击事件，并提取表中前两个字段
+Table aliceVisitTable = tableEnv.sqlQuery(
+ "SELECT user, url " +
+ "FROM EventTable " +
+ "WHERE user = 'Alice' "
+ );
+
+#将中间表手动注册为虚拟表，或者直接在sql中插入新表，如下
+// 将查询结果输出到 OutputTable 中
+tableEnv.executeSql (
+    "INSERT INTO OutputTable " +
+     "SELECT user, url " +
+     "FROM EventTable " +
+     "WHERE user = 'Alice' "
+ );
+
+```
+
+##### 调用Table API进行查询
+
+```
+#获取表
+Table eventTable = tableEnv.from("EventTable");
+#
+Table maryClickTable = eventTable
+ .where($("user").isEqual("Alice"))
+ .select($("url"), $("user"));
+
+```
+
+
+
+#### 输出表
+
+```
+#调用executeInsert方法将一个table写入注册过的表中
+// 注册表，用于输出数据到外部系统
+tableEnv.executeSql("CREATE TABLE OutputTable ... WITH ( 'connector' = ... )");
+// 经过查询转换，得到结果表
+Table result = ...
+// 将结果表写入已注册的输出表中
+result.executeInsert("OutputTable");
+
+```
+
+#### 表和流的转换
+
+##### 表转换为流
+
+```
+#将表转换为流
+Table aliceVisitTable = tableEnv.sqlQuery(
+     "SELECT user, url " +
+     "FROM EventTable " +
+     "WHERE user = 'Alice' "
+ );
+// 将表转换成数据流
+tableEnv.toDataStream(aliceVisitTable).print();
+#调用toChangelogStream（）方法，对应聚合结果的表，无法直接调用toDataStream方法，因为它不是单纯的插入新的数据，而是当新数据到来后重新计算的动态表。
+Table urlCountTable = tableEnv.sqlQuery(
+     "SELECT user, COUNT(url) " +
+     "FROM EventTable " +
+     "GROUP BY user "
+ );
+
+tableEnv.toChangelogStream(urlCountTable).print()
+```
+
+##### 流转换为表
+
+```
+StreamExecutionEnvironment env = 
+StreamExecutionEnvironment.getExecutionEnvironment();
+// 获取表环境
+StreamTableEnvironment tableEnv = StreamTableEnvironment.create(env);
+// 读取数据源
+SingleOutputStreamOperator<Event> eventStream = env.addSource(...)
+// 将数据流转换成表
+Table eventTable = tableEnv.fromDataStream(eventStream);
+
+// 提取 Event 中的 timestamp 和 url 作为表中的列
+Table eventTable2 = tableEnv.fromDataStream(eventStream, $("timestamp"), 
+$("url"));
+
+// 将 timestamp 字段重命名为 ts
+Table eventTable2 = tableEnv.fromDataStream(eventStream, $("timestamp").as("ts"), 
+$("url"));
+
+#注册表名到环境中，方便使用sql
+tableEnv.createTemporaryView("EventTable", eventStream, 
+$("timestamp").as("ts"),$("url"));
+```
+
+##### 支持的数据类型
+
+###### 原子类型
+
+>1原子类型：基础数据类型（Integer，Double，String）和通用数据类型（不可拆分的）
+
+###### Tuple类型
+
+>2Tuple类型：将tuple分别解析为列名为f0，f1，f2... ....的表。
+
+```
+StreamTableEnvironment tableEnv = ...;
+DataStream<Tuple2<Long, Integer>> stream = ...;
+// 将数据流转换成只包含 f1 字段的表
+Table table = tableEnv.fromDataStream(stream, $("f1"));
+// 将数据流转换成包含 f0 和 f1 字段的表，在表中 f0 和 f1 位置交换
+Table table = tableEnv.fromDataStream(stream, $("f1"), $("f0"));
+// 将 f1 字段命名为 myInt，f0 命名为 myLong
+Table table = tableEnv.fromDataStream(stream, $("f1").as("myInt"), 
+$("f0").as("myLong"));
+
+```
+
+###### POJO类型
+
+>默认映射POJO的默认字段名
+
+```
+StreamTableEnvironment tableEnv = ...;
+DataStream<Event> stream = ...;
+Table table = tableEnv.fromDataStream(stream);
+Table table = tableEnv.fromDataStream(stream, $("user"));
+Table table = tableEnv.fromDataStream(stream, $("user").as("myUser"), 
+$("url").as("myUrl"));
+```
+
+###### ROW类型
+
+>Row在使用时必须指明具体的类型，Row类型长度固定，而且无法推断每个字段的类型。
+
+```
+DataStream<Row> dataStream =
+ env.fromElements(
+ Row.ofKind(RowKind.INSERT, "Alice", 12),
+ Row.ofKind(RowKind.INSERT, "Bob", 5),
+ Row.ofKind(RowKind.UPDATE_BEFORE, "Alice", 12),
+ Row.ofKind(RowKind.UPDATE_AFTER, "Alice", 100));
+// 将更新日志流转换为表
+Table table = tableEnv.fromChangelogStream(dataStream);
+
+```
+
+
+
+### 流处理中的表
+
+>一般来说，sql适合批处理的场景，如hive，msyql。流处理的概念域sql概念有些不符，这里对两者的概念进行对比。
+
+#### 动态表和持续查询
+
+##### 动态表
+
+>由于流数据不断增加，那么表也是动态变化的。
+>
+>实际上，传统关系型数据库中，表中的数据也是一系列INSERT,UPDATE,DELETE语句执行的结果，在关系型数据库中，一般称为更新日志流。Flink中的动态表，就类似用日志流形式维持动态表，在流和表之间搭建桥梁。
+
+##### 持续查询
+
+>每当有新的数据到来，就对表中的所有数据进行全体批处理查询，这种连续查询也会生成动态表。
+>
+>这么说，这是一种批处理了，岂不是和流处理相悖了。
+
+#### 将流转换为动态表
+
+```
+#借助只有插入操作的更新日志流维持一个动态表，每当新数据到来，生成一个插入日志流。
+tableEnv.createTemporaryView("EventTable", eventStream, $("user"), $("url"), 
+$("timestamp").as("ts"));
+```
+
+#### 使用SQL持续查询
+
+##### 更新查询
+
+```
+#这个表的日志流包含update的insert两种，所以这个查询结果也必须使用toChangelogStream方法转为DataStream
+Table urlCountTable = tableEnv.sqlQuery("SELECT user, COUNT(url) as cnt FROM
+EventTable GROUP BY user");
+```
+
+##### 追加查询
+
+```
+#如果我们执行简单的查询操作，就不会由update流操作，这种就被称为追加查询，因为结果表中只有INSERT操作，结果表只通过INSERT日志流就可以构建，所以能直接调用toDataStream（）方法。
+Table aliceVisitTable = tableEnv.sqlQuery("SELECT url, user FROM EventTable WHERE
+user = 'Cary'")
+```
+
+```
+#是不是所有的聚合操作都是更新查询呢，不是，如果时窗口聚合，那么窗口计算完成后就不会有update，只有insert。这就对应流处理中的全体聚合、窗口聚合，可以体会其中的差别。
+// 设置 1 小时滚动窗口，执行 SQL 统计查询
+ Table result = tableEnv
+ .sqlQuery(
+     "SELECT " +
+     "user, " +
+    "window_end AS endT, " + // 窗口结束时间
+     "COUNT(url) AS cnt " + // 统计 url 访问次数
+     "FROM TABLE( " +
+     "TUMBLE( TABLE EventTable, " + // 1 小时滚动窗口
+     "DESCRIPTOR(ts), " +
+     "INTERVAL '1' HOUR)) " +
+     "GROUP BY user, window_start, window_end "
+ );
+```
+
+##### 查询限制
+
+>1数据量变大，内存状态无法维持
+>
+>2每次计算复杂度很高，每次需要计算全量数据，例如RANK函数。
+
+#### 将动态表转换为流
+
+#### 时间属性和窗口
+
+### 聚合查询
+
+#### 分组聚合
+
+#### 窗口聚合
+
+#### 开窗聚合
+
+### 联结join查询
+
+#### 常规联结查询
+
+#### 间隔联结查询
+
+### 函数
+
+#### 系统函数
+
+#### 自定义函数
+
+#### 表函数
+
+#### 聚合函数
+
+#### 表聚合函数
+
+### SQL客户端
+
+### 连接到外部系统
+
+#### kafka
+
+#### 文件系统
+
+#### JDBC
+
+#### Elasticsearch
+
+#### Hive
 
 ## Flink CEP
 
