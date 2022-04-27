@@ -2568,53 +2568,826 @@ user = 'Cary'")
 
 >1数据量变大，内存状态无法维持
 >
->2每次计算复杂度很高，每次需要计算全量数据，例如RANK函数。
+>2每次计算复杂度很高，每次需要计算全量数据，例如RANK函数。这样的操作显然不适合在流处理中执行。
 
 #### 将动态表转换为流
 
+##### 仅追加流
+
+>仅通过插入更改来修改的动态表，可以转换为仅追加流。
+
+##### 撤回流
+
+>撤回流包含两类信息的流，添加消息和撤回消息。
+>
+>INSERT 插入操作编码为add消息；DELETE删除操作编码为retract消息。而UPDATE更新操作则编码为更改行的retract消息，和新行的add消息。
+
+##### 更新插入流
+
+>更新插入流只包含两种类型的信息：更新插入消息和删除消息
+>
+>更新插入upsert就是update和insert的合成词，所以对于更新插入流来说，INSERT插入操作和UPDATE更新操作，统一编码为upsert消息；而DELETE删除操作被编码为delete消息。
+>
+>那么如何区分的insert和update呢，实际上是通过key值确定的，如果key已存在就执行update操作。所以更新插入流需要有对应的key值支持。
+
 #### 时间属性和窗口
+
+##### 事件时间
+
+###### 在创建的DDL中定义
+
+>在创建表的DDL中，可以增加一个字段，通过WATERMARK语句来定义事件时间属性。WATERMARK语句主要用来定义水位线的生成表达式。
+
+```
+CREATE TABLE EventTable(
+     user STRING,
+     url STRING,
+     ts TIMESTAMP(3),
+     WATERMARK FOR ts AS ts - INTERVAL '5' SECOND
+    ) WITH (
+     ...
+);
+```
+
+>一般情况下如果数据中的时间戳是“年-月-日-时-分-秒”的形式，那就是不带时区信 息的，可以将事件时间属性定义为 TIMESTAMP 类型。 而如果原始的时间戳就是一个长整型的毫秒数，这时就需要另外定义一个字段来表示事件 时间属性，类型定义为 TIMESTAMP_LTZ 会更方便：
+
+```
+CREATE TABLE events (
+     user STRING,
+     url STRING,
+     ts BIGINT,
+     ts_ltz AS TO_TIMESTAMP_LTZ(ts, 3),
+     WATERMARK FOR ts_ltz AS time_ltz - INTERVAL '5' SECOND
+    ) WITH (
+     ...
+);
+```
+
+###### 在数据流转换为表时定义
+
+>可以在将DataStream转换为表的时候来定义,通过追加参数来定义表中的字段结构。这时可以给某个字段加上rowtime（）后缀，就相当于将其指定为事件时间属性。这个字段可以是数据中本不存在、额外追加上去的逻辑字段，就像之前DDL中定义的第二种情况。也可以是本身固有的字段，那么这个字段会被时间属性覆盖，类型转换为TIMESTAMP。
+>
+>注意这种方式只是生成时间属性，而水位线的生成应该在DataStream上定义。
+
+```
+// 方法一:
+// 流中数据类型为二元组 Tuple2，包含两个字段；需要自定义提取时间戳并生成水位线
+DataStream<Tuple2<String, String>> stream = 
+inputStream.assignTimestampsAndWatermarks(...);
+// 声明一个额外的逻辑字段作为事件时间属性
+Table table = tEnv.fromDataStream(stream, $("user"), $("url"), 
+$("ts").rowtime());
+
+// 方法二:
+// 流中数据类型为三元组 Tuple3，最后一个字段就是事件时间戳
+DataStream<Tuple3<String, String, Long>> stream = 
+inputStream.assignTimestampsAndWatermarks(...);
+// 不再声明额外字段，直接用最后一个字段作为事件时间属性
+Table table = tEnv.fromDataStream(stream, $("user"), $("url"), 
+$("ts").rowtime());
+```
+
+##### 处理时间
+
+###### 在创建表的DDL中定义
+
+```
+CREATE TABLE EventTable(
+ user STRING,
+ url STRING,
+ ts AS PROCTIME()
+) WITH (
+ ...
+);
+
+#转换时指定
+Table table = tEnv.fromDataStream(stream, $("user"), $("url"), 
+$("ts").proctime());
+```
+
+##### 窗口
+
+###### 分组窗口
+
+>包括常用的滚动窗口、滑动窗口、会话窗口
+>
+>具体调用TUMBLE()、HOP()、SESSION()  ,传入时间属性字段、窗口大小等参数就可以了。以滚动窗口为例：
+
+```
+TUMBLE(ts,INTERVAL '1' HOUR)
+#ts是定义好的时间属性字段，窗口大小用‘时间间隔’INTERVAL定义
+在进行窗口计算时，分组窗口是将窗口本身作为一个字段对数据进行分组的，可以对组内的数据进行聚合。
+Table result = tableEnv.sqlQuery(
+     "SELECT " +
+     "user, " +
+    "TUMBLE_END(ts, INTERVAL '1' HOUR) as endT, " +
+     "COUNT(url) AS cnt " +
+     "FROM EventTable " +
+     "GROUP BY " + // 使用窗口和用户名进行分组
+     "user, " +
+    "TUMBLE(ts, INTERVAL '1' HOUR)" // 定义 1 小时滚动窗口
+ );
+
+```
+
+###### 窗口表值函数
+
+>窗口表值函数式（Windowing table-valued functions， Windowing TVFs）是flink定义的多态表函数PTF，可以将表进行扩展后返回。表函数可以看做返回一个表的函数
+>
+>有如下几个TVF
+>
+>滚动窗口（Tumbling Windows）； 
+>
+>滑动窗口（Hop Windows，跳跃窗口）；
+>
+> 累积窗口（Cumulate Windows）； 
+>
+> 会话窗口（Session Windows，目前尚未完全支持）。
+>
+>在窗口 TVF 的返回值中，除去原始表中的所有列，还增加了用来描述窗口的额外 3 个列： “窗口起始点”（window_start）、“窗口结束点”（window_end）、“窗口时间”（window_time）。
+
+```
+#滚动窗口 TUMBLE
+TUMBLE(TABLE EventTable, DESCRIPTOR(ts), INTERVAL '1' HOUR)
+
+#滑动窗口 HOP
+滑动窗口的使用与滚动窗口类似，可以通过设置滑动步长来控制统计输出的频率。在SQL中通过调用HOP()来声明滑动窗口。
+HOP(TABLE EventTable, DESCRIPTOR(ts), INTERVAL '5' MINUTES, INTERVAL '1' HOURS));
+
+#累积窗口（CUMULATE）
+#比如我需要，当天累计至目前时刻的交易量，这就是累计窗口。如果用滑动和滚动只能计算固定窗口大小。
+#两个关键参数，最大窗口长度max window size和累计步长step
+CUMULATE(TABLE EventTable, DESCRIPTOR(ts), INTERVAL '1' HOURS, INTERVAL '1' DAYS))
+
+```
+
+
 
 ### 聚合查询
 
 #### 分组聚合
 
+>内置聚合函数：SUM()、MAX()、MIN()、AVG()以及 COUNT()
+>
+>在流处理中，分组聚合同样是一个持续查询，而且是 一个更新查询，得到的是一个动态表；每当流中有一个新的数据到来时，都会导致结果表的更 新操作。因此，想要将结果表转换成流或输出到外部系统，必须采用撤回流（retract stream） 或更新插入流（upsert stream）的编码方式；如果在代码中直接转换成 DataStream 打印输出， 需要调用 toChangelogStream()。
+
+```
+TableEnvironment tableEnv = ...
+// 获取表环境的配置
+TableConfig tableConfig = tableEnv.getConfig();
+// 配置状态保持时间
+tableConfig.setIdleStateRetention(Duration.ofMinutes(60));
+
+或者也可以直接设置配置项 table.exec.state.ttl：
+TableEnvironment tableEnv = ...
+Configuration configuration = tableEnv.getConfig().getConfiguration();
+configuration.setString("table.exec.state.ttl", "60 min");
+```
+
 #### 窗口聚合
 
+```
+Table result = tableEnv.sqlQuery(
+     "SELECT " +
+     "user, " +
+    "window_end AS endT, " +
+    "COUNT(url) AS cnt " +
+     "FROM TABLE( " +
+     "TUMBLE( TABLE EventTable, " +
+    "DESCRIPTOR(ts), " +
+    "INTERVAL '1' HOUR)) " +
+     "GROUP BY user, window_start, window_end "
+ );
+
+```
+
 #### 开窗聚合
+
+```
+开窗函数就是对每一行数据进行处理，over开窗可以进行分组，但是不进行聚合操作，借助rank，lag等函数可以操作这个窗口内的数据。开窗相当于为每一行开启了一个特定的窗口，每一行的窗口都可能不同。
+```
+
+```
+PARTITION BY（可选）
+ORDER BY:flink中必须是定义好的时间属性
+BETWEEN ... PRECEDING AND CURRENT ROW
+RANGE BETWEEN INTERVAL '1' HOUR PRECEDING AND CURRENT ROW
+ROWS BETWEEN 5 PRECEDING AND CURRENT ROW
+
+#使用实例
+SELECT user, ts,
+     COUNT(url) OVER (
+     PARTITION BY user
+     ORDER BY ts
+     RANGE BETWEEN INTERVAL '1' HOUR PRECEDING AND CURRENT ROW
+ ) AS cnt
+FROM EventTable
+
+#在外部定义窗口
+SELECT user, ts,
+ COUNT(url) OVER w AS cnt,
+ MAX(CHAR_LENGTH(url)) OVER w AS max_url
+FROM EventTable
+WINDOW w AS (
+ PARTITION BY user
+ ORDER BY ts
+ ROWS BETWEEN 2 PRECEDING AND CURRENT ROW)
+```
 
 ### 联结join查询
 
 #### 常规联结查询
 
+##### 等值内联结
+
+>INNER JOIN返回两表中符合联接条件的所有行的组合，也就是笛卡尔积。
+
+```
+SELECT *
+FROM Order
+INNER JOIN Product
+ON Order.product_id = Product.id
+```
+
+##### 等值外联结
+
+>找不到匹配行的记录也进行返回
+
+```
+SELECT *
+FROM Order
+LEFT JOIN Product
+ON Order.product_id = Product.id
+
+SELECT *
+FROM Order
+RIGHT JOIN Product
+ON Order.product_id = Product.id
+
+SELECT *
+FROM Order
+FULL OUTER JOIN Product
+ON Order.product_id = Product.id
+```
+
 #### 间隔联结查询
+
+```
+SELECT *
+FROM Order o, Shipment s
+WHERE o.id = s.order_id
+AND o.order_time BETWEEN s.ship_time - INTERVAL '4' HOUR AND s.ship_time
+```
 
 ### 函数
 
+>flink函数主要分为两类，一类是系统内置的函数，COUNT(),CHAR_LENGTH(),UPPER()等等。另一类则是用户自定义函数UDF。
+
 #### 系统函数
+
+##### 标量函数
+
+###### 比较函数（Comparison Functions）
+
+```
+（1）value1 = value2 判断两个值相等；
+（2）value1 <> value2 判断两个值不相等
+（3）value IS NOT NULL 判断 value 不为空
+```
+
+###### 逻辑函数（Logical Functions）
+
+```
+（1）boolean1 OR boolean2 布尔值 boolean1 与布尔值 boolean2 取逻辑或
+（2）boolean IS FALSE 判断布尔值 boolean 是否为 false
+（3）NOT boolean 布尔值 boolean 取逻辑非
+```
+
+###### 算术函数（Arithmetic Functions）
+
+```
+进行算术计算的函数，包括用算术符号连接的运算，和复杂的数学运算。例如：
+（1）numeric1 + numeric2 两数相加
+（2）POWER(numeric1, numeric2) 幂运算，取数 numeric1 的 numeric2 次方
+（3）RAND() 返回（0.0, 1.0）区间内的一个 double 类型的伪随机数
+```
+
+###### 字符串函数（String Functions）
+
+```
+（1）string1 || string2 两个字符串的连接
+（2）UPPER(string) 将字符串 string 转为全部大写
+（3）CHAR_LENGTH(string) 计算字符串 string 的长度
+```
+
+###### 时间函数（Temporal Functions）
+
+```
+（1）DATE string 按格式"yyyy-MM-dd"解析字符串 string，返回类型为 SQL Date
+（2）TIMESTAMP string 按格式"yyyy-MM-dd HH:mm:ss[.SSS]"解析，返回类型为 SQL 
+timestamp
+（3）CURRENT_TIME 返回本地时区的当前时间，类型为 SQL time（与 LOCALTIME
+等价）
+（4）INTERVAL string range 返回一个时间间隔。string 表示数值；range 可以是 DAY，
+MINUTE，DAT TO HOUR 等单位，也可以是 YEAR TO MONTH 这样的复合单位。如“2 年
+10 个月”可以写成：INTERVAL '2-10' YEAR TO MONTH
+```
+
+
+
+##### 聚合函数
+
+>COUNT,SUM,RANK,ROW_NUMBER
 
 #### 自定义函数
 
-#### 表函数
+>当前 UDF 主要有以下几类：
+>
+> 1.标量函数（Scalar Functions）：将输入的标量值转换成一个新的标量值；
+>
+> 2.表函数（Table Functions）：将标量值转换成一个或多个新的行数据，也就是 扩展成一个表； 
+>
+>3.聚合函数（Aggregate Functions）：将多行数据里的标量值转换成一个新的标 量值；
+>
+>4.表聚合函数（Table Aggregate Functions）：将多行数据里的标量值转换成一 个或多个新的行数据。
 
-#### 聚合函数
+>要想在代码中使用自定义的函数，我们需要首先自定义对应 UDF 抽象类的实现，并在表 环境中注册这个函数，然后就可以在 Table API 和 SQL 中调用了。
 
-#### 表聚合函数
+```
+tableEnv.createTemporarySystemFunction("MyFunction", MyFunction.class);
+tableEnv.from("MyTable").select(call("MyFunction", $("myField")));
+```
+
+##### 标量函数
+
+```
+public static class HashFunction extends ScalarFunction {
+ // 接受任意类型输入，返回 INT 型输出
+ public int eval(@DataTypeHint(inputGroup = InputGroup.ANY) Object o) {
+ return o.hashCode();
+ }
+}
+// 注册函数
+tableEnv.createTemporarySystemFunction("HashFunction", HashFunction.class);
+// 在 SQL 里调用注册好的函数
+tableEnv.sqlQuery("SELECT HashFunction(myField) FROM MyTable");
+
+```
+
+##### 表函数
+
+>与hive的lateral view类似，使用lateral table来生成扩展的侧向表。
+
+```
+// 注意这里的类型标注，输出是 Row 类型，Row 中包含两个字段：word 和 length。
+@FunctionHint(output = @DataTypeHint("ROW<word STRING, length INT>"))
+public static class SplitFunction extends TableFunction<Row> {
+ public void eval(String str) {
+ for (String s : str.split(" ")) {
+ // 使用 collect()方法发送一行数据
+ collect(Row.of(s, s.length()));
+ }
+ }
+}
+// 注册函数
+tableEnv.createTemporarySystemFunction("SplitFunction", SplitFunction.class);
+355
+// 在 SQL 里调用注册好的函数
+// 1. 交叉联结
+tableEnv.sqlQuery(
+ "SELECT myField, word, length " +
+ "FROM MyTable, LATERAL TABLE(SplitFunction(myField))");
+// 2. 带 ON TRUE 条件的左联结
+tableEnv.sqlQuery(
+ "SELECT myField, word, length " +
+ "FROM MyTable " +
+ "LEFT JOIN LATERAL TABLE(SplitFunction(myField)) ON TRUE");
+// 重命名侧向表中的字段
+tableEnv.sqlQuery(
+ "SELECT myField, newWord, newLength " +
+ "FROM MyTable " +
+ "LEFT JOIN LATERAL TABLE(SplitFunction(myField)) AS T(newWord, newLength) ON 
+TRUE");
+```
+
+##### 聚合函数
+
+>必须实现如下方法：
+>
+>createAccumulator：返回类型为累加器类型ACC
+>
+>accumulate:每来一行数据就调用，第一个参数位累加器，类型为ACC，表示当前聚合的中间状态。后面的参数则是聚合函数调用时传入的参数，可以有多个，类型可以不同
+>
+>getValue：得到最终返回值，输入参数是 ACC 类型的累加器，输出类型为 T
+
+>当需要对会话窗口聚合时，必须实现merger方法，定义累加器合并操作
+>
+>当需要在OVER窗口聚合时，必须实现retract方法，保证数据可以撤回
+>
+>resetAccumulator也是可选方法，有些场景用于重置累加器
+
+```
+// 累加器类型定义
+public static class WeightedAvgAccumulator {
+ public long sum = 0; // 加权和
+ public int count = 0; // 数据个数
+}
+// 自定义聚合函数，输出为长整型的平均值，累加器类型为 WeightedAvgAccumulator
+public static class WeightedAvg extends AggregateFunction<Long, 
+WeightedAvgAccumulator> {
+
+     @Override
+     public WeightedAvgAccumulator createAccumulator() {
+     return new WeightedAvgAccumulator(); // 创建累加器
+     }
+     
+     @Override
+     public Long getValue(WeightedAvgAccumulator acc) {
+     if (acc.count == 0) {
+     return null; // 防止除数为 0
+     } else {
+     return acc.sum / acc.count; // 计算平均值并返回
+     }
+     }
+     
+     // 累加计算方法，每来一行数据都会调用
+     public void accumulate(WeightedAvgAccumulator acc, Long iValue, Integer 
+    iWeight) {
+     acc.sum += iValue * iWeight;
+     acc.count += iWeight;
+     }
+}
+// 注册自定义聚合函数
+tableEnv.createTemporarySystemFunction("WeightedAvg", WeightedAvg.class);
+// 调用函数计算加权平均值
+Table result = tableEnv.sqlQuery(
+ "SELECT student, WeightedAvg(score, weight) FROM ScoreTable GROUP BY 
+student"
+);
+```
+
+##### 表聚合函数
+
+>createAccumulator() 创建累加器的方法，与 AggregateFunction 中用法相同。 
+>
+>accumulate() 聚合计算的核心方法，与 AggregateFunction 中用法相同。
+>
+>emitValue():输出最终计算结果的方法，没有输出类型，通过out的收集器，发送多行数据。
 
 ### SQL客户端
 
+```
+./bin/sql-client.sh
+
+#设置运行模式
+SET 'execution.runtime-mode' = 'streaming';
+
+#执行结果模式,table、changelog、tableau模式
+SET 'sql-client.execution.result-mode' = 'table';
+
+#执行 SQL 查询
+
+```
+
 ### 连接到外部系统
+
+```
+#连接到控制台
+CREATE TABLE ResultTable (
+    user STRING,
+    cnt BIGINT
+    WITH (
+    'connector' = 'print'
+);
+```
 
 #### kafka
 
+```
+<dependency>
+ <groupId>org.apache.flink</groupId>
+ <artifactId>flink-connector-kafka_${scala.binary.version}</artifactId>
+ <version>${flink.version}</version>
+</dependency>
+#根据连接器配置的格式，引入对应的格式
+<dependency>
+ <groupId>org.apache.flink</groupId>
+ <artifactId>flink-csv</artifactId>
+ <version>${flink.version}</version>
+</dependency>
+
+#创建链接
+CREATE TABLE KafkaTable (
+`user` STRING,
+ `url` STRING,
+ `ts` TIMESTAMP(3) METADATA FROM 'timestamp'
+) WITH (
+ 'connector' = 'kafka',
+ 'topic' = 'events',
+ 'properties.bootstrap.servers' = 'localhost:9092',
+ 'properties.group.id' = 'testGroup',
+ 'scan.startup.mode' = 'earliest-offset',
+ 'format' = 'csv'
+)
+
+```
+
+##### Upsert Kafka
+
+>正常情况下，kafka作为保持数据顺序的消息队列，读取和写入都应该是流式的数据，对应在表中就是仅追加模式。如果我们想要将有更新操作的结果表写入Kafka，就会因为Kafka无法识别撤回或更新插入消息而导致异常。
+>
+>将表格转换为流时，如果有删除，就插入null消息。如果碰到INSERT和UPDATE_AFTER就直接add操作。
+
+```
+CREATE TABLE pageviews_per_region (
+ user_region STRING,
+ pv BIGINT,
+ uv BIGINT,
+ PRIMARY KEY (user_region) NOT ENFORCED
+) WITH (
+ 'connector' = 'upsert-kafka',
+ 'topic' = 'pageviews_per_region',
+ 'properties.bootstrap.servers' = '...',
+ 'key.format' = 'avro',
+ 'value.format' = 'avro'
+);
+CREATE TABLE pageviews (
+ user_id BIGINT,
+ page_id BIGINT,
+ viewtime TIMESTAMP,
+ user_region STRING,
+ WATERMARK FOR viewtime AS viewtime - INTERVAL '2' SECOND
+) WITH (
+ 'connector' = 'kafka',
+ 'topic' = 'pageviews',
+ 'properties.bootstrap.servers' = '...',
+ 'format' = 'json'
+);
+-- 计算 pv、uv 并插入到 upsert-kafka 表中
+INSERT INTO pageviews_per_region
+SELECT
+ user_region,
+ COUNT(*),
+ COUNT(DISTINCT user_id)
+FROM pageviews
+GROUP BY user_region;
+
+```
+
 #### 文件系统
+
+```
+CREATE TABLE MyTable (
+ column_name1 INT,
+ column_name2 STRING,
+ ...
+ part_name1 INT,
+ part_name2 STRING
+) PARTITIONED BY (part_name1, part_name2) WITH (
+ 'connector' = 'filesystem', -- 连接器类型
+ 'path' = '...', -- 文件路径
+ 'format' = '...' -- 文件格式
+)
+
+```
 
 #### JDBC
 
+```
+<dependency>
+ <groupId>org.apache.flink</groupId>
+ <artifactId>flink-connector-jdbc_${scala.binary.version}</artifactId>
+ <version>${flink.version}</version>
+</dependency>
+
+#此外，为了连接到特定的数据库，我们还用引入相关的驱动器依赖，比如 MySQL：
+<dependency>
+ <groupId>mysql</groupId>
+ <artifactId>mysql-connector-java</artifactId>
+ <version>5.1.38</version>
+</dependency>
+
+-- 创建一张连接到 MySQL 的 表
+CREATE TABLE MyTable (
+ id BIGINT,
+ name STRING,
+ age INT,
+ status BOOLEAN,
+ PRIMARY KEY (id) NOT ENFORCED
+) WITH (
+ 'connector' = 'jdbc',
+ 'url' = 'jdbc:mysql://localhost:3306/mydatabase',
+ 'table-name' = 'users'
+);
+-- 将另一张表 T 的数据写入到 MyTable 表中
+INSERT INTO MyTable
+SELECT id, name, age, status FROM T;
+
+```
+
 #### Elasticsearch
+
+```
+<dependency>
+ <groupId>org.apache.flink</groupId> 
+<artifactId>flink-connector-elasticsearch6_${scala.binary.version}</artifact
+Id>
+<version>${flink.version}</version>
+</dependency>
+对于 Elasticsearch 7 以上的版本，引入的依赖则是：
+<dependency>
+ <groupId>org.apache.flink</groupId> 
+<artifactId>flink-connector-elasticsearch7_${scala.binary.version}</artifact
+Id>
+<version>${flink.version}</version>
+</dependency>
+
+-- 创建一张连接到 Elasticsearch 的 表
+CREATE TABLE MyTable (
+ user_id STRING,
+ user_name STRING
+ uv BIGINT,
+ pv BIGINT,
+ PRIMARY KEY (user_id) NOT ENFORCED
+) WITH (
+ 'connector' = 'elasticsearch-7',
+ 'hosts' = 'http://localhost:9200',
+ 'index' = 'users'
+);
+
+```
+
+#### HBase
+
+```
+<dependency>
+ <groupId>org.apache.flink</groupId>
+ <artifactId>flink-connector-hbase-1.4_${scala.binary.version}</artifactId>
+ <version>${flink.version}</version>
+</dependency>
+对于 HBase 2.2 版本，引入的依赖则是：
+<dependency>
+ <groupId>org.apache.flink</groupId>
+ <artifactId>flink-connector-hbase-2.2_${scala.binary.version}</artifactId>
+ <version>${flink.version}</version>
+</dependency>
+
+-- 创建一张连接到 HBase 的 表
+CREATE TABLE MyTable (
+rowkey INT,
+family1 ROW<q1 INT>,
+family2 ROW<q2 STRING, q3 BIGINT>,
+family3 ROW<q4 DOUBLE, q5 BOOLEAN, q6 STRING>,
+PRIMARY KEY (rowkey) NOT ENFORCED
+) WITH (
+'connector' = 'hbase-1.4',
+'table-name' = 'mytable',
+'zookeeper.quorum' = 'localhost:2181'
+);
+
+-- 假设表 T 的字段结构是 [rowkey, f1q1, f2q2, f2q3, f3q4, f3q5, f3q6]
+INSERT INTO MyTable
+SELECT rowkey, ROW(f1q1), ROW(f2q2, f2q3), ROW(f3q4, f3q5, f3q6) FROM T;
+```
 
 #### Hive
 
+```
+<!-- Flink 的 Hive 连接器-->
+<dependency>
+ <groupId>org.apache.flink</groupId>
+ <artifactId>flink-connector-hive_${scala.binary.version}</artifactId>
+ <version>${flink.version}</version>
+</dependency>
+<!-- Hive 依赖 -->
+<dependency>
+ <groupId>org.apache.hive</groupId>
+ <artifactId>hive-exec</artifactId>
+ <version>${hive.version}</version>
+</dependency>
+
+EnvironmentSettings settings = 
+EnvironmentSettings.newInstance().useBlinkPlanner().build();
+TableEnvironment tableEnv = TableEnvironment.create(settings);
+String name = "myhive";
+String defaultDatabase = "mydatabase";
+String hiveConfDir = "/opt/hive-conf";
+// 创建一个 HiveCatalog，并在表环境中注册
+HiveCatalog hive = new HiveCatalog(name, defaultDatabase, hiveConfDir);
+tableEnv.registerCatalog("myhive", hive);
+// 使用 HiveCatalog 作为当前会话的 catalog
+tableEnv.useCatalog("myhive");
+
+#sql客户端
+create catalog myhive with ('type' = 'hive', 'hive-conf-dir' = 
+'/opt/hive-conf');
+use catalog myhive;
+```
+
+##### SQL方言
+
+```
+set table.sql-dialect=hive;
+
+#通过配置文件配置
+execution:
+ planner: blink
+ type: batch
+ result-mode: table
+configuration:
+ table.sql-dialect: hive
+
+// 配置 hive 方言
+tableEnv.getConfig().setSqlDialect(SqlDialect.HIVE);
+// 配置 default 方言
+tableEnv.getConfig().setSqlDialect(SqlDialect.DEFAULT);
+```
+
+```
+-- 设置 SQL 方言为 hive，创建 Hive 表
+SET table.sql-dialect=hive;
+CREATE TABLE hive_table (
+ user_id STRING,
+ order_amount DOUBLE
+) PARTITIONED BY (dt STRING, hr STRING) STORED AS parquet TBLPROPERTIES (
+ 'partition.time-extractor.timestamp-pattern'='$dt $hr:00:00',
+ 'sink.partition-commit.trigger'='partition-time',
+ 'sink.partition-commit.delay'='1 h',
+ 'sink.partition-commit.policy.kind'='metastore,success-file'
+);
+-- 设置 SQL 方言为 default，创建 Kafka 表
+SET table.sql-dialect=default;
+CREATE TABLE kafka_table (
+ user_id STRING,
+ order_amount DOUBLE,
+ log_ts TIMESTAMP(3),
+ WATERMARK FOR log_ts AS log_ts - INTERVAL '5' SECOND – 定义水位线
+) WITH (...);
+-- 将 Kafka 中读取的数据经转换后写入 Hive 
+INSERT INTO TABLE hive_table 
+SELECT user_id, order_amount, DATE_FORMAT(log_ts, 'yyyy-MM-dd'), 
+DATE_FORMAT(log_ts, 'HH')
+FROM kafka_table;
+```
+
+
+
 ## Flink CEP
+
+>通过定义一串连续的filter，从而匹配流中对应的模式。
+
+```
+<dependency>
+ <groupId>org.apache.flink</groupId>
+ <artifactId>flink-cep_${scala.binary.version}</artifactId>
+ <version>${flink.version}</version>
+</dependency>
+```
+
+```
+// 1. 定义 Pattern，连续的三个登录失败事件
+ Pattern<LoginEvent, LoginEvent> pattern = Pattern
+ .<LoginEvent>begin("first") // 以第一个登录失败事件开始
+     .where(new SimpleCondition<LoginEvent>() {
+         @Override
+         public boolean filter(LoginEvent loginEvent) throws Exception {
+             return loginEvent.eventType.equals("fail");
+         }
+     })
+     .next("second") // 接着是第二个登录失败事件
+     .where(new SimpleCondition<LoginEvent>() {
+         @Override
+         public boolean filter(LoginEvent loginEvent) throws Exception {
+             return loginEvent.eventType.equals("fail");
+         }
+     })
+     .next("third") // 接着是第三个登录失败事件
+     .where(new SimpleCondition<LoginEvent>() {
+         @Override
+         public boolean filter(LoginEvent loginEvent) throws Exception {
+         	return loginEvent.eventType.equals("fail");
+         }
+     });
+ // 2. 将 Pattern 应用到流上，检测匹配的复杂事件，得到一个 PatternStream
+ PatternStream<LoginEvent> patternStream = CEP.pattern(stream, pattern);
+
+patternStream
+ .select(new PatternSelectFunction<LoginEvent, String>() {
+ @Override
+ public String select(Map<String, List<LoginEvent>> map) throws 
+Exception {
+ LoginEvent first = map.get("first").get(0);
+ LoginEvent second = map.get("second").get(0);
+ LoginEvent third = map.get("third").get(0);
+ return first.userId + " 连续三次登录失败！登录时间：" + 
+first.timestamp + ", " + second.timestamp + ", " + third.timestamp;
+ }
+ })
+ .print("warning");
+
+```
+
+
 
 ## problem
 
