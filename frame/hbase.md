@@ -363,18 +363,18 @@ pom
 ./bin/hbase shell启动shell
 ```
 
-### DDL
+### DDL (Data Define Language)
 
 ##### 建表
 
 ```
-create 'test', 'cf'
+create 'test', 'columnfamily1','columnfamily2'
 #展示表
 list 'test'
+
 #展示表结构
 describe 'test'
 desc 'test
-
 ```
 
 ##### 改表
@@ -392,7 +392,22 @@ alter 'stu2', NAME => 'cf1',METHOD => 'delete'
 alter 'stu2', 'delete' => 'f1'
 ```
 
-### DML
+##### 查看hbase状态
+
+```
+#查看hbase结点状态
+status
+#查看hbase版本
+version
+#查看当前登录用户
+whoami
+#查看数据库里有哪些表
+list
+```
+
+
+
+### DML (Data Manage Language)
 
 ##### 增删改查
 
@@ -405,6 +420,12 @@ scan 'test'
 scan  'stu2',{COLUMNS => 'cf1:age', LIMMIT 10, STARTROW => 'xx'}
 #查询单个数据
 get 'test', 'row_key'
+get 'test', 'row_key'，‘info:age'
+#删除数据
+deleteall 'student','1001'
+delete 'student','1001',‘info:age'
+#清空表数据
+truncate 'student'
 
 list_namespace
 create_namespace "test"
@@ -640,25 +661,172 @@ scan 'test',FILTER=>"FamilyFilter(=,'substring:name')"
 
 # HBase用法
 
-### hbase shell语法
+## Phoenix
+
+### 安装
+
+>官网quick start:https://phoenix.apache.org/Phoenix-in-15-minutes-or-less.htm
 
 ```
-#查看hbase结点状态
-status
-#查看hbase版本
-version
-#查看当前登录用户
-whoami
-#查看数据库里有哪些表
-list
+#解压压缩包
+#将其中的phoenix-server-hbase-2.3-5.1.2.jar拷贝到hbase/lib下，并重启hbase
+#启动交互shell
+bin/sqlline.py <your_zookeeper_quorum>
+#从csv导入数据到hbase，sql文件为建表语句，csv为数据。
+./psql.py <your_zookeeper_quorum> us_population.sql us_population.csv
+./psql.py 172.18.65.187 us_population.sql us_population.csv
+#登入shell
+bin/sqlline.py 172.18.65.187
+#查看从csv插入的数据
+SELECT state as "State",count(city) as "City Count",sum(population) as "Population Sum"
+FROM us_population
+GROUP BY state
+ORDER BY sum(population) DESC;
+#如果需要在其他客户端访问phoenix，引入phoenix-client-hbase-2.3-5.1.2.jar 即可。
 ```
 
-### Phoenix sql语法
+### DDL
+
+#### 建表
 
 ```
+create table test(host varchar not null primary key, description  varchar)salt_buckets=16;
+#查看表
+!table
+!describe tablename
+
 #查看数据库里有哪些表
 select distinct TABLE_NAME from SYSTEM."CATALOG"
+
+#查看sql执行历史
+!history
+!dbinfo
+!index tb
+help
+
+#删除表
+drop table if exists test;
 ```
+
+```
+create table gmall2020_province_info 
+       (id varchar primary key,info.name 
+        varchar,info.area_code varchar,info.iso_code varchar
+        )SALT_BUCKETS = 3
+        
+create table gmall2020_user_info 
+        (id varchar primary key ,user_level varchar, birthday varchar, 
+        gender varchar, age_group varchar , gender_name varchar
+        )SALT_BUCKETS = 3
+
+```
+
+
+
+### DML
+
+>语法介绍：https://blog.csdn.net/chenfeng_sky/article/details/103248398
+
+#### 插入数据
+
+```
+upsert into tb values('ak','hhh',222)
+```
+
+#### 删除数据
+
+```
+delete from tb; 清空表中所有记录，Phoenix中不能使用truncate table tb；
+delete from tb where city = 'kenai';
+```
+
+#### 查询数据
+
+```
+select * from test limit 1000;
+select * from test limit 1000 offset 100;
+
+#查看表
+show tables;
+
+```
+
+
+
+### JAVA API
+
+>https://blog.csdn.net/xwd127429/article/details/110483966
+
+```
+#添加依赖
+#phoenix依赖需要将phoenix-client-hbase加入到类路径中
+<dependency>
+    <groupId>org.apache.hbase</groupId>
+    <artifactId>hbase-client</artifactId>
+    <version>1.2.12</version>
+</dependency>
+
+<dependency>
+    <groupId>org.apache.hbase</groupId>
+    <artifactId>hbase-server</artifactId>
+    <version>1.2.12</version>
+</dependency>
+```
+
+
+
+```
+public static void main(String[] args) throws Throwable {
+
+	try {
+
+		Class.forName("org.apache.phoenix.jdbc.PhoenixDriver");
+
+		//这里配置zookeeper的地址，可单个，多个(用","分隔)可以是域名或者ip
+
+		String url = "jdbc:phoenix:hbase:2181";
+
+		Connection conn = DriverManager.getConnection(url);
+
+		Statement statement = conn.createStatement();
+
+		long time = System.currentTimeMillis();
+
+		ResultSet rs = statement.executeQuery("select * from test");
+
+		while (rs.next()) {
+			String myKey = rs.getString("MYKEY");
+			String myColumn = rs.getString("MYCOLUMN");
+
+			System.out.println("myKey=" + myKey + "myColumn=" + myColumn);
+		}
+
+		long timeUsed = System.currentTimeMillis() - time;
+
+		System.out.println("time " + timeUsed + "mm");
+
+		// 关闭连接
+		rs.close();
+		statement.close();
+		conn.close();
+
+	} catch (Exception e) {
+		e.printStackTrace();
+	}
+}
+```
+
+
+
+### sql练习
+
+```
+select * from us_population where city like 'Los%';
+select * from us_population where population>=1;
+select * from  test where TO_DATE(ttime,'yyyyMMddHHmmss')=TO_DATE('20141125','yyyyMMdd')
+```
+
+
 
 # 与关系型数据库基本结构对比
 

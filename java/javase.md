@@ -741,6 +741,7 @@ public String(String original) {
 
 ```
 #String重写了equals()，流程为先比较是否为同一栈对象，如果是同一栈对象，那么肯定内容也相等了，返回true。否则，字符串再比较长度，进而逐个比较字符数组内容，如果内容全部一样，则true。equals本质是在比较两个字符串内容是否相等。
+#==对于不同的类型有不同的意义，对于基础类型就是比较值，对于引用类型，就是比较栈对象是否指向同一个实例。
 public boolean equals(Object anObject) {
     if (this == anObject) {
         return true;
@@ -2059,6 +2060,106 @@ class A implements Runnable{
 (parameters)->expression
 (parameters)->{statements;}
 ```
+
+## JAVA时间类
+
+>类型：时间戳（long，string类型），日期（Date类型），日期字符串（String类型）
+>
+>时间戳可以转为Date类型，借助构造函数。也可以转成日期字符串，借助SimpleDateFormat。
+>
+>日期可以转为时间戳类型，借助getTime（）。可以转为日期字符串，借助SimpleDateFormat。
+>
+>日期字符串可以转为Date，借助SimpleDateFormat。可以转成时间戳，借助先转成Date
+>
+>也就是说，时间戳和Date都可以直接变成其他类型，但是日期字符串需要先转换为Date类型才行。
+
+### 时间戳转为日期格式字符串
+
+```
+ @Test
+    public void test1(){
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        // 获取当前系统时间戳
+        //long l = System.currentTimeMillis();
+        //如果你数据库存储的时间戳类型为string，就需要将string字符串转为long类型
+        String currentTime = "1602384121000";
+        long l = Long.parseLong(currentTime);
+        String format = sdf.format(l);
+        System.out.println("日期格式："+format);
+        //输出：日期格式：2020-10-11 10:42:01
+    }
+
+```
+
+### 日期格式转为时间戳
+
+```
+public void test2(){
+        SimpleDateFormat sdf =  new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        String time = "2020-10-11 10:42:01";
+        Date date = null;
+        try {
+            date = sdf.parse(time);
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
+        long time1 = date.getTime();
+        System.out.println("时间戳格式："+time1);
+        //输出：时间戳格式：1602384121000
+    }
+
+```
+
+### 时间推迟
+
+```
+    @Test
+    public void  test3(){
+        //创建Calendar实例
+        Calendar cal = Calendar.getInstance();
+        cal.setTime(new Date());   //设置当前时间
+        //推迟一天
+        //cal.add(Calendar.DATE, 1);
+        //推迟一个月
+       // cal.add(Calendar.MONTH, 1);
+        //时间推迟一年
+       cal.add(Calendar.YEAR,1);
+        long time = cal.getTime().getTime();
+        long time1 = new Date().getTime();
+
+        System.out.println("当前时间戳："+time1+"；推迟一年的时间戳："+time);
+        //输出：当前时间戳：1602501173582；推迟一年的时间戳：1634037173582
+    }
+```
+
+### Date转String
+
+```
+  @Test
+    public void test4(){
+        SimpleDateFormat sdf=new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        Date date=new Date();
+        String format = sdf.format(date);
+        System.out.println("时间String："+format);
+    }
+    //输出：时间String：2020-10-12 19:12:36
+
+```
+
+### 时间戳转date
+
+```
+   @Test
+    public void dateToStamp() {
+        long times = 1602731137125L;
+        Date date = new Date(times);
+        System.out.println("date格式："+date);
+        //输出：date格式：Thu Oct 15 11:05:37 CST 2020
+    }
+
+```
+
+
 
 # 并发编程基础
 

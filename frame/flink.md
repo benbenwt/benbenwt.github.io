@@ -1,5 +1,7 @@
 # 安装
 
+>flink的最新 稳定版本 是1.14，后边的1.7等都是开发、更新中的版本。
+
 ## 集群搭建
 
 >解压安装包
@@ -9,6 +11,8 @@
 >workers
 >
 >bin/start-cluster.sh
+
+>安装在172.18.65.188,172.18.65.186,172.18.65.184三台机器上，master在186:8081
 
 ## 开发环境
 
@@ -183,7 +187,7 @@ parallelism.default: 2
 
 >web ui界面给出的数据流图会把多个任务连接在一起，形成一个大的任务。
 >
->这实际上涉及到一对一、充分区的问题，类似shuffle
+>这实际上涉及到一对一、重分区的问题，类似shuffle
 
 ##### 一对一
 
@@ -241,7 +245,7 @@ taskmanager.numberOfTaskSlots: 8
 >
 >应用模式，application mode
 
-### 会话模式
+### 会话模式（所有应用、作业共享一个集群）
 
 >先启动一个集群然后通过客户端提交作业到集群，提交的作业竞争集群中的资源。这样的好处是，集群的生命周期是超越于作业之上的，作业结束就释放资源，集群依然运转。
 >
@@ -249,13 +253,25 @@ taskmanager.numberOfTaskSlots: 8
 >
 >会话模式比较适合于单个规模小、执行时间短的大量作业
 
-### 单作业模式
+### 单作业模式（每个作业一个集群）
 
 >单作业模式可以更好的隔离资源，我们可以考虑为每一个提交的作业启动一个集群，也就是所谓的单作业模式。作业完成集群就关闭，释放资源。即便它的taskmanager发生故障，也不会影响其他作业。这些特性使得单作业模式在生产环境更加稳定，是实际应用的首选模式。flink本身无法直接这样运行，所以单作业需要借助一些工具，如yarn，kubernetes。
 
-### 应用模式
+>单作业与应用模式都是提交作业后才创建集群的。单作业模式时通过客户端提交的，客户端解析出的每一个作业对应一个集群；而应用模式下，只创建要给集群，直接由jobmanager执行应用程序的main函数，在jobmanager上调用main方法。
+
+### 应用模式（每个main应用一个集群）
 
 >此模式不适用客户端，而是为每个应用启动一个jobmanager，也就是创建一个集群。执行结束时jobmanager关闭。单作业模式通过客户端提交，客户端解析出每一个作业对应一个集群。而应用模式下，直接由jobmanager执行，即使一个应用包含了多个job，也只创建一个集群。
+
+```
+#一个应用配置多个作业的方式:配置多个source，并在source产生的流上编写作业。
+StreamExecutionEnvironment env= StreamExecutionEnvironment.getExecutionEnvironment();
+SingleOutputStreamOperator<LogEntity> sourceStream=env.addSource(source1())......
+SingleOutputStreamOperator<LogEntity> sourceStream=env.addSource(source2())......
+env.execute()
+#如上的代码在java main方法中执行，该应用共有两个作业，如果在单作业模式提交，那么每个作业启动一个集群，但是如果在应用模式提交，那么就只启动一个集群，两个作业共享集群的资源。
+应用模式和资源共享和资源隔离的一个均衡措施，只在应用层面进行了隔离，但又没有为每个作业启动一个集群造成过多的资源消耗。
+```
 
 ## 独立模式 Standalone
 
@@ -388,6 +404,23 @@ parallelism.default: 1
 
 ### TaskManager
 
+## 集权配置文件
+
+#### flink-conf.yaml
+
+>jobmanager.memory.process.size：对 JobManager 进程可使用到的全部内存进行配置，
+>包括 JVM 元空间和其他开销，默认为 1600M，可以根据集群规模进行适当调整。
+>
+>taskmanager.memory.process.size：对 TaskManager 进程可使用到的全部内存进行配置，
+>包括 JVM 元空间和其他开销，默认为 1600M，可以根据集群规模进行适当调整。
+>
+>taskmanager.numberOfTaskSlots：对每个 TaskManager 能够分配的 Slot 数量进行配置，
+>默认为 1，可根据 TaskManager 所在的机器能够提供给 Flink 的 CPU 数量决定。所谓
+>Slot 就是 TaskManager 中具体运行一个任务所分配的计算资源。
+>
+>parallelism.default：Flink 任务执行的默认并行度，优先级低于代码中进行的并行度配
+>置和任务提交时使用参数指定的并行度数量。
+
 ## 其他八股文
 
 ### flink怎么实现exactly once（几乎是flink必问问题）
@@ -395,6 +428,8 @@ parallelism.default: 1
 ### **flink和spark streaming的区别**
 
 ### **详细说一下flink checkpointing吧，最好底层一些**
+
+### flink如何进行cpu隔离  cgroup，为什么要cpu隔离
 
 # Flink 用法
 
@@ -673,6 +708,9 @@ open（）方法，是RichFunciton的初始化方法，也就是开启一个算�
 close（）方法，是生命周期中的最后一个调用的方法，类似于解构方法。一般用来做一些清理工作。
 #这里的生命周期方法对于一个并行子任务来说只会调用一次，而对应的实际工作方法，例如RichMapFunction中的map（），在每条数据到来后都会触发一次调用
 #getRuntimeContext（）方法，可以获取到运行时上下文的信息，如并行度、任务名称、甚至状态（state）。这对应了后续的状态管理和状态编程。
+#实际上一个富含数类的声明周期对应于一个子任务的声明周期，即一个slot，即一个分区，即一个并行度。当一个子任务创建，在初次执行map函数或process函数前，会执行open方法。在一个子任务销毁时，执行close方法。
+#由于process类继承了RichFunction接口，他也有此特性，可以实现open方法，close方法，可以使用getRuntimeContext方法。
+所以说，关键的几个函数类：富含数、窗口函数、处理函数，富含数有open，close，getRuntimeContext方法，可以操作内存状态，获取并行度等信息。窗口函数可以访问窗口信息。处理函数最全能和底层。
 ```
 
 
@@ -680,6 +718,18 @@ close（）方法，是生命周期中的最后一个调用的方法，类似于
 ##### 物理分区
 
 >与keyBy区别，这是直接控制物理上的分布
+>
+>1随即分区
+>
+>2轮询分区
+>
+>3重缩放分区
+>
+>4广播
+>
+>5全局分区
+>
+>6自定义分区：继承Partitioner接口，实现partition方法
 
 ### 输出算子 Sink
 
@@ -702,10 +752,7 @@ StreamingFileSink<String> fileSink = StreamingFileSink
  .build();
  // 将 Event 转换成 String 写入文件
  stream.map(Event::toString).addSink(fileSink);
-
 ```
-
-
 
 #### 输出到kafka
 
@@ -1255,7 +1302,7 @@ public static class UvCountByWindow extends ProcessWindowFunction<Event,
 
 ```
 
-###### 增量窗口和全窗口函数的结合使用
+###### 增量聚合函数和全窗口函数的结合使用
 
 >对于reduce和aggregate函数，我们除了可以传入一个ReduceFunction 或 AggregateFunction 进行增量聚合，还可以传入WindowFunction获取更多丰富的信息，传入的可以是WindowFunction或ProcessWindowFunction。
 >
@@ -1408,8 +1455,6 @@ DataStream,KeyStream,WindowedStream,singleOutputStream
 #### 功能和使用
 
 >基本的转换算子，都是针对某种具体操作来定义的，能够拿到的信息比较有限。比如map算子，我们实现的MapFunction中，只能获取到当前的数据，定义它转换之后的形式。而像AggregateFunction，还可以获取到当前的状态Accumulator。RichMapFunction可以拿到getRuntimeContext，得到并行度，任务名称等。
->
->
 >
 >但是，这些算子都无法访问事件时间戳，水位线信息。处理函数提供这些功能，包括定时服务，流中的事件，时间戳，水位线，甚至可以注册定时事件，并且具有富函数类的所有特性，同样可以访问state和其他运行时信息。
 
@@ -2052,7 +2097,7 @@ env.enableCheckpointing(1000);
 // 配置存储检查点到 JobManager 堆内存
 env.getCheckpointConfig().setCheckpointStorage(new 
 JobManagerCheckpointStorage());
-// 配置存储检查点到文件系统
+// 也可以配置存储检查点到文件系统
 env.getCheckpointConfig().setCheckpointStorage(new 
 FileSystemCheckpointStorage("hdfs://namenode:40010/flink/checkpoints"));
 
@@ -3512,7 +3557,6 @@ first.timestamp + ", " + second.timestamp + ", " + third.timestamp;
 #从getRuntimeContext中获取state，放入类的属性，供map函数使用
 @Override
     public void open(Configuration parameters) throws Exception {
-
         // 设置 state 的过期时间为100s
         StateTtlConfig ttlConfig = StateTtlConfig
                 .newBuilder(Time.seconds(100L))
@@ -3627,15 +3671,9 @@ PUT /topproduct
 }
 ```
 
-
-
 ## web模块
 
-### 前台用户
-
->该页面返回给用户推荐的产品list，使用html编写
-
->前端的推荐模块主要分为三块：1热榜推荐2基于协同过滤3产品画像
+### 前台功能
 
 #### 热榜
 
@@ -3671,23 +3709,614 @@ PUT /topproduct
 
 ##### 用户兴趣
 
+>这属于一个自定义的规则，可能不太有意义，可以忽略这个指标。
+>
 >先根据用户兴趣表u_interest计算每个用户的相近的用户，并记录数据到hbase的表。
 
 >用户兴趣的定义，
 
-### 后台监控
+### 后台功能
 
 >使用superset，es kibana查看效果
 
 >该页面返回给管理员指标监控，主要包括热榜产品，日志接入量
 
-## 推荐引擎说明
+# Flink练习题
 
-## 前台推荐页面
+## Flink尚硅谷案例
 
->分为三列，分别是热度榜推荐，协同过滤推荐和产品画像推荐
+>窗口处理的方法由以下元素：窗口函数、
+>
+>1不使用keyBy函数，使用windowAll和窗口处理函数，处理对应窗口的所有key数据
+>
+>2使用keyBy函数，再window开窗，使用aggregate函数聚合key、窗口唯一对应的数据。
+>
+>3使用keyBy函数，再window开窗，使用窗口处理函数（或全窗口函数）聚合key、窗口唯一对应的数据。
+>
+>等同地位的几种窗口函数：1增量聚合函数（归约、聚合）2全窗口函数 3窗口处理函数
 
-## 后台数据大屏
+### Top N商品
 
->包含热度榜和1小时日志接入量两个指标，其真实数据位置在resource/database.sql
+>每10s进行一次统计，统计1分钟内的商品热度排行，找出当前热门的Top N对象
+
+#### windowAll
+
+>不进行keyBy
+
+```
+#原始的想法为，不进行keyBy，直接在一个分区上执行，通过维护一个hashMap，key是url，value是改url的热门程度，用访问次数等进行表示。
+#这里借助windowAll直接开窗，然后在窗口中使用窗口处理函数进行全量计算。
+public class ProcessAllWindowTopN {
+    public static void main(String[] args) throws Exception {
+        StreamExecutionEnvironment env= StreamExecutionEnvironment.getExecutionEnvironment();
+        SingleOutputStreamOperator<LogEntity> sourceStream=env.addSource(new ClickSource())
+                .assignTimestampsAndWatermarks(
+                        WatermarkStrategy.<LogEntity>forMonotonousTimestamps()
+                           .withTimestampAssigner(new SerializableTimestampAssigner<LogEntity>() {
+                               @Override
+                               public long extractTimestamp(LogEntity element, long recordTimestamp) {
+                                   return element.getTime();
+                               }
+                           })
+                );
+
+//        SingleOutputStreamOperator<Integer> result=sourceStream.map(new MapFunction<LogEntity, Integer>() {
+//            @Override
+//            public Integer map(LogEntity value) throws Exception {
+//                return value.getProductId();
+//            }
+//        });
+        SingleOutputStreamOperator<TopProductEntity> result=sourceStream.map(logEntity->logEntity.getProductId())
+                .windowAll(SlidingEventTimeWindows.of(Time.seconds(60),Time.seconds(10)))
+                .process(new ProcessAllWindowFunction<Integer, TopProductEntity, TimeWindow>() {
+                             @Override
+                             public void process(Context context, Iterable<Integer> iterable, Collector<TopProductEntity> collector) throws Exception {
+                                 HashMap<Integer,Long> productCountMap=new HashMap<>();
+
+                                 for(Integer productId:iterable){
+                                     if(productCountMap.containsKey(productId))
+                                     {
+                                         Long oldValue=productCountMap.get(productId);
+                                         productCountMap.put(productId,oldValue+1L);
+                                     }
+                                     else{
+                                         productCountMap.put(productId,1L);
+                                     }
+                                 }
+
+                                 ArrayList<Tuple2<Integer,Long>> productIdCountList=new ArrayList<>();
+                                 for(Map.Entry<Integer,Long> entry:productCountMap.entrySet()){
+                                     productIdCountList.add(Tuple2.of(entry.getKey(),entry.getValue()));
+                                 }
+                                 productIdCountList.sort(new Comparator<Tuple2<Integer, Long>>() {
+                                     @Override
+                                     public int compare(Tuple2<Integer, Long> o1, Tuple2<Integer, Long> o2) {
+                                         return o2.f1.intValue()-o1.f1.intValue();
+                                     }
+                                 });
+                                for(int i=0;i<10;i++){
+                                    Tuple2<Integer,Long> temp=productIdCountList.get(i);
+                                    collector.collect(TopProductEntity.of(temp.f0,context.window().getEnd(),temp.f1));
+                                }
+
+                             }
+                         }
+                );
+        result.print();
+        env.execute();
+    }
+}
+```
+
+##### 实时处理速度
+
+>在window主机上运行，其占用了i7-9700 cpu 的60%,和16GB的内存，处理的数据量为每分钟704万*10=7000万条数据。使用自定义的sourceFunction定义的输出源，每分钟输出7000万条模拟日志数据，程序能够实时的统计出1分钟Top N热榜，而且滑动窗口每10s滑动一次进行计算。
+>
+>如果在用集群测试，处理速度会更加强大。
+
+```
+2> TopProductEntity{productId=110, actionTimes=7022101, windowEnd=1651199620000, rankName='1651199620000'}
+6> TopProductEntity{productId=104, actionTimes=7049810, windowEnd=1651199630000, rankName='1651199630000'}
+7> TopProductEntity{productId=108, actionTimes=7049275, windowEnd=1651199630000, rankName='1651199630000'}
+8> TopProductEntity{productId=102, actionTimes=7049250, windowEnd=1651199630000, rankName='1651199630000'}
+5> TopProductEntity{productId=105, actionTimes=7049997, windowEnd=1651199630000, rankName='1651199630000'}
+3> TopProductEntity{productId=106, actionTimes=7047867, windowEnd=1651199630000, rankName='1651199630000'}
+1> TopProductEntity{productId=109, actionTimes=7048695, windowEnd=1651199630000, rankName='1651199630000'}
+2> TopProductEntity{productId=101, actionTimes=7048377, windowEnd=1651199630000, rankName='1651199630000'}
+5> TopProductEntity{productId=107, actionTimes=7045300, windowEnd=1651199630000, rankName='1651199630000'}
+4> TopProductEntity{productId=103, actionTimes=7051025, windowEnd=1651199630000, rankName='1651199630000'}
+4> TopProductEntity{productId=110, actionTimes=7047220, windowEnd=1651199630000, rankName='1651199630000'}
+1> TopProductEntity{productId=101, actionTimes=7075255, windowEnd=1651199640000, rankName='1651199640000'}
+```
+
+```
+#集群中以会话模式提交作业
+#由于该应用只有一个作业，所以单作业模式与应用模式差别不大，在资源隔离上是近似的。而且搭建的是测试用的集群，没有其他任务抢占cpu等资源，就只测试会话模式。
+bin/flink run -h
+#stanalone模式提交：指定提交什么包，执行什么类，提交到哪
+#yarn模式直接指定会话、单作业模式、应用模式，不用指定jobmanager地址。-m 指定jobmaster，-c指定类路径，-d指定后台运行。
+bin/flink run  -m hbase1:8081  -c com.demo.task.practice.ProcessAllWindowTopN  /opt/software/jars/flink-2-hbase-1.0-SNAPSHOT.jar
+```
+
+#### 窗口处理函数 Top N
+
+>对产品的频次进行统计，然后进行排序。
+>
+>keyBy Top N，先用keyBy按照produceId分组，然后开滑动窗口计算。
+>
+>计算完成后，再把同一个窗口的keyBy到一起，然后使用KeyedProcessFunction处理排名，并输出。
+>
+>对于同一个窗口的数据，都将数据存储到一个内存状态中，并设置一个定时器，当水位线到达窗口结束时，触发计算，统计每个商品的频次，排名后得到热门商品。
+
+```
+DataStream<TopProductEntity> topProduct = dataStream.map(new TopProductMapFunction()).
+                // 抽取时间戳做watermark 以 秒 为单位
+                assignTimestampsAndWatermarks(new AscendingTimestampExtractor<LogEntity>() {
+                    @Override
+                    public long extractAscendingTimestamp(LogEntity logEntity) {
+                        return logEntity.getTime() * 1000;
+                    }
+                })
+                // 按照productId 按滑动窗口
+                .keyBy("productId").timeWindow(Time.seconds(60),Time.seconds(5))
+//                统计传入数据的总数 并封装为topProduceEntity  ，要windowsend干嘛
+                .aggregate(new CountAgg(), new WindowResultFunction())
+//                同一时间窗口的分到一起
+                .keyBy("windowEnd")
+//                如果到达windowEnd，那么触发timer计时器，进行排序，并输出为arrayList
+//                flatmap就是用于处理arrayList，它将每个arrayList读取后，为每个string生成一个TopProductEntity，并写入排名。
+//                发往下游的数据是一个windowEnd所对应的arrayList，不是累积状态。
+                .process(new TopNHotItems(topSize))
+                .flatMap(new FlatMapFunction<List<TopProductEntity>, TopProductEntity>() {
+                    @Override
+                    public void flatMap(List<TopProductEntity> TopProductEntitys, Collector<TopProductEntity> collector) throws Exception {
+                        System.out.println("-------------Top N Product------------");
+                        for (int i = 0; i < TopProductEntitys.size(); i++) {
+                            TopProductEntity top = TopProductEntitys.get(i);
+                            // 输出排名结果
+                            System.out.println(top);
+                            collector.collect(top);
+                        }
+                    }
+                });
+```
+
+### 用户日活
+
+>每到来一条数据，判断今日是否登陆过，如果是新登录则记录下来，然后统计日后数量。
+>
+>统计当日累计共有多少不重复的用户登录，需要对用户进行去重，使用Hashset或外部的redis等即可。
+>
+>保留用户的统计结果。
+
+```
+#日活所有用户id
+#查询redis状态是否创建。未创建则创建。已创建则根据用户id读出状态，然后过滤出新登录的用户。将新登陆的用户写入状态，并插入到ES外部存储。
+    public static void main(String[] args) throws Exception {
+        StreamExecutionEnvironment env=StreamExecutionEnvironment.getExecutionEnvironment();
+        env.setParallelism(8);
+        SingleOutputStreamOperator<LogEntity> sourceStream=env.addSource(new ClickSource())
+                .process(new ProcessFunction<LogEntity, LogEntity>() {
+                    @Override
+                    public void open(Configuration parameters) throws Exception {
+                        super.open(parameters);
+                        jedis= RedisUtil.connectRedis(Property.getStrValue("redis.host"));
+                        if(jedis!=null){
+                            System.out.println("jedis连接成功"+jedis);
+                        }
+                        simpleDateFormat=new SimpleDateFormat("yyyy-MM-dd");
+                    }
+                    private Jedis jedis;
+                    private SimpleDateFormat simpleDateFormat;
+                    @Override
+                    public void processElement(LogEntity value, Context ctx, Collector<LogEntity> out) throws Exception {
+//                        查询内存状态
+                        int userId=value.getUserId();
+                        Long time=value.getTime();
+//                        dt
+                        Date date=new Date(time);
+                        Long flag=jedis.sadd("flinkdau"+simpleDateFormat.format(date), String.valueOf(userId));
+//
+                        if(jedis.ttl("flinkdau"+String.valueOf(date))==-1L)
+                        {
+                            jedis.expire("flinkdau"+String.valueOf(date), 3600 * 24);
+                        }
+                        if(flag==1){
+                            out.collect(value);
+                        }
+                    }
+
+                    @Override
+                    public void close() throws Exception {
+                        super.close();
+                        jedis.close();
+                    }
+                });
+        sourceStream.print();
+
+//        httppost
+//elasticsearchSinkFunction
+        ElasticsearchSinkFunction<LogEntity> elasticsearchSinkFunction=new ElasticsearchSinkFunction<LogEntity>() {
+            @Override
+            public void process(LogEntity element, RuntimeContext ctx, RequestIndexer indexer) {
+                Map<String,String> result=new HashMap<>();
+                result.put("userId",Integer.valueOf(element.getUserId()).toString());
+                result.put("productId",Integer.valueOf(element.getProductId()).toString());
+                result.put("action",Integer.valueOf(element.getAction()).toString());
+                result.put("time",Long.valueOf(element.getTime()).toString());
+                IndexRequest indexRequest= Requests.indexRequest().index("flinkdau").type("logEntity").source(result).id(Integer.valueOf(element.getUserId()).toString());
+                indexer.add(indexRequest);
+            }
+        };
+        List<HttpHost> httpPosts=new ArrayList<>();
+        httpPosts.add(new HttpHost("hbase",9200,"http"));
+        ElasticsearchSink.Builder<LogEntity> builder=new ElasticsearchSink.Builder<LogEntity>(httpPosts, elasticsearchSinkFunction);
+        builder.setBulkFlushMaxActions(1);
+        sourceStream.addSink(builder.build());
+        env.execute("flinkdau");
+    }       
+```
+
+### 当日首单用户数量
+
+>在电商中，需求是记录今天的首单用户有哪些，共有多少。需要对非首单的用户去重，为什么不用redis。
+>
+>在内容平台中，就是今天首次消费用户数量。
+>
+>由于是否首单，需要一直保存其标记，用redis不合适。所以使用hbase记录是否首单。
+
+```
+#使用phoenix建表
+create table newpurchaseuser(userid varchar not null primary,flag v)salt_buckets=16;
+upsert into npuser values('101','1')
+#查询是否首单，若是首单，则保留，并使用phoenix插入到hbase。
+package com.demo.task.practice;
+
+import com.demo.domain.LogEntity;
+import org.apache.flink.api.common.functions.RichMapFunction;
+import org.apache.flink.api.common.functions.RuntimeContext;
+import org.apache.flink.api.java.ExecutionEnvironment;
+import org.apache.flink.configuration.Configuration;
+import org.apache.flink.streaming.api.datastream.SingleOutputStreamOperator;
+import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
+import org.apache.flink.streaming.api.functions.ProcessFunction;
+import org.apache.flink.streaming.connectors.elasticsearch.ElasticsearchSinkFunction;
+import org.apache.flink.streaming.connectors.elasticsearch.RequestIndexer;
+import org.apache.flink.streaming.connectors.elasticsearch7.ElasticsearchSink;
+import org.apache.flink.util.Collector;
+import org.apache.http.HttpHost;
+import org.elasticsearch.action.index.IndexRequest;
+import org.elasticsearch.client.Requests;
+
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.ResultSet;
+import java.sql.Statement;
+import java.util.*;
+import java.util.concurrent.Executors;
+
+public class NewPurchaseUser {
+    public static void main(String[] args) throws Exception {
+        StreamExecutionEnvironment env= StreamExecutionEnvironment.getExecutionEnvironment();
+        env.setParallelism(4);
+        SingleOutputStreamOperator<LogEntity> sourceStream=env.addSource(new ClickSource())
+//                过滤
+                .process(new ProcessFunction<LogEntity, LogEntity>() {
+                    private Connection conn;
+                    @Override
+                    public void open(Configuration parameters) throws Exception {
+                        super.open(parameters);
+                        Class.forName("org.apache.phoenix.jdbc.PhoenixDriver");
+                        String url = "jdbc:phoenix:hbase,hbase1,hbase2:2181";
+                        conn = DriverManager.getConnection(url);
+                    }
+
+                    @Override
+                    public void close() throws Exception {
+                        super.close();
+                        conn.close();
+                    }
+
+                    @Override
+                    public void processElement(LogEntity value, Context ctx, Collector<LogEntity> out) throws Exception {
+                        int userId=value.getUserId();
+//                        首单
+                        Statement statement=conn.createStatement();
+                        String sql="select userid from npuser where userid ='"+userId+"'";
+                        ResultSet resultSet=statement.executeQuery(sql);
+
+//                        收集
+                        if(!resultSet.next()){
+                            Statement insertStatement=conn.createStatement();
+                            String insertsql="upsert into npuser values('"+userId+"','"+"1')";
+                            System.out.println(insertsql);
+                            insertStatement.execute(insertsql);
+                            conn.commit();
+                            out.collect(value);
+                        }
+                    }
+
+                });
+        sourceStream.print();
+
+        ElasticsearchSinkFunction<LogEntity> elasticsearchSinkFunction=new ElasticsearchSinkFunction<LogEntity>() {
+            @Override
+            public void process(LogEntity element, RuntimeContext ctx, RequestIndexer indexer) {
+                Map<String,String> result=new HashMap<>();
+                result.put("userId",Integer.valueOf(element.getUserId()).toString());
+                result.put("productId",Integer.valueOf(element.getProductId()).toString());
+                result.put("action",Integer.valueOf(element.getAction()).toString());
+                result.put("time",Long.valueOf(element.getTime()).toString());
+                IndexRequest indexRequest= Requests.indexRequest().index("flinknpuser").type("logEntity").source(result).id(Integer.valueOf(element.getUserId()).toString());
+                indexer.add(indexRequest);
+            }
+        };
+
+        List<HttpHost> httpPosts=new ArrayList<>();
+        httpPosts.add(new HttpHost("hbase",9200,"http"));
+        ElasticsearchSink.Builder<LogEntity> builder=new ElasticsearchSink.Builder<LogEntity>(httpPosts, elasticsearchSinkFunction);
+        builder.setBulkFlushMaxActions(1);
+
+        sourceStream.addSink(builder.build());
+        env.execute("npuser");
+    }
+}
+
+```
+
+### UV PV
+
+>User View，对应页面的distinct用户浏览量，独立访客数。
+>
+>Page View，对应页面的浏览量，页面浏览量。
+>
+>PV/UV表示人均重复访问量，也就是每个用户平均访问多少次一面，这在一定程度上代表了用户的粘度。
+>
+>uv pv也是对对象进行频次统计，不过是对页面进行统计，其中UV需要另外处理，进行去重。
+
+```
+package com.demo.task.practice;
+
+import akka.stream.impl.fusing.Sliding;
+import com.demo.domain.LogEntity;
+import org.apache.flink.api.common.eventtime.SerializableTimestampAssigner;
+import org.apache.flink.api.common.eventtime.WatermarkStrategy;
+import org.apache.flink.api.common.functions.AggregateFunction;
+import org.apache.flink.api.common.functions.RuntimeContext;
+import org.apache.flink.api.java.tuple.Tuple2;
+import org.apache.flink.streaming.api.datastream.DataStream;
+import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
+import org.apache.flink.streaming.api.functions.windowing.WindowFunction;
+import org.apache.flink.streaming.api.windowing.assigners.SlidingEventTimeWindows;
+import org.apache.flink.streaming.api.windowing.time.Time;
+import org.apache.flink.streaming.api.windowing.windows.TimeWindow;
+import org.apache.flink.streaming.connectors.elasticsearch.ElasticsearchSinkFunction;
+import org.apache.flink.streaming.connectors.elasticsearch.RequestIndexer;
+import org.apache.flink.streaming.connectors.elasticsearch7.ElasticsearchSink;
+import org.apache.flink.util.Collector;
+import org.apache.http.HttpHost;
+import org.elasticsearch.action.index.IndexRequest;
+import org.elasticsearch.client.Requests;
+
+import java.util.*;
+
+public class UVPV {
+    public static void main(String[] args) throws Exception {
+        StreamExecutionEnvironment env=StreamExecutionEnvironment.getExecutionEnvironment();
+        DataStream<Tuple2<Integer,Double>> stream=env.addSource(new ClickSource())
+                .assignTimestampsAndWatermarks(
+                        WatermarkStrategy.<LogEntity>forMonotonousTimestamps()
+                        .withTimestampAssigner(
+                                new SerializableTimestampAssigner<LogEntity>() {
+                                    @Override
+                                    public long extractTimestamp(LogEntity element, long recordTimestamp) {
+                                        return element.getTime();
+                                    }
+                                }
+                        )
+                )
+                .keyBy(LogEntity-> LogEntity.getProductId())
+                .window( SlidingEventTimeWindows.of(Time.seconds(60),Time.seconds(10)))
+                .aggregate(new AggregateFunction<LogEntity, Tuple2<HashSet<String>, Long>, Double>() {
+                    @Override
+                    public Tuple2<HashSet<String>, Long> createAccumulator() {
+                        return Tuple2.of(new HashSet<String>(), 0L);
+                    }
+
+                    @Override
+                    public Tuple2<HashSet<String>, Long> add(LogEntity value, Tuple2<HashSet<String>, Long> accumulator) {
+                        accumulator.f0.add(Integer.valueOf(value.getUserId()).toString());
+                        return Tuple2.of(accumulator.f0, accumulator.f1 + 1L);
+                    }
+
+                    @Override
+                    public Double getResult(Tuple2<HashSet<String>, Long> accumulator) {
+                        return (double) accumulator.f1 / accumulator.f0.size();
+                    }
+
+                    @Override
+                    public Tuple2<HashSet<String>, Long> merge(Tuple2<HashSet<String>, Long> a, Tuple2<HashSet<String>, Long> b) {
+                        return null;
+                    }
+                }, new WindowFunction<Double, Tuple2<Integer,Double>, Integer, TimeWindow>() {
+                    @Override
+                    public void apply(Integer integer, TimeWindow window, Iterable<Double> input, Collector<Tuple2<Integer,Double>> out) throws Exception {
+                        out.collect(Tuple2.of(integer,input.iterator().next()));
+                    }
+                });
+
+        ElasticsearchSinkFunction<Tuple2<Integer,Double>> elasticsearchSinkFunction=new ElasticsearchSinkFunction<Tuple2<Integer,Double>>() {
+            @Override
+            public void process(Tuple2<Integer,Double> element, RuntimeContext ctx, RequestIndexer indexer) {
+                Map<String,String> result=new HashMap<>();
+                result.put("productId",Integer.valueOf(element.f0).toString());
+                result.put("pvuv",Double.valueOf(element.f1).toString());
+                IndexRequest indexRequest= Requests.indexRequest().index("flinkpvuv").type("logEntity").source(result).id(Integer.valueOf(element.f0).toString());
+                indexer.add(indexRequest);
+            }
+        };
+
+        List<HttpHost> httpPosts=new ArrayList<>();
+        httpPosts.add(new HttpHost("hbase",9200,"http"));
+        ElasticsearchSink.Builder<Tuple2<Integer,Double>> builder=new ElasticsearchSink.Builder<Tuple2<Integer,Double>>(httpPosts, elasticsearchSinkFunction);
+        builder.setBulkFlushMaxActions(1);
+        stream.print();
+        stream.addSink(builder.build());
+        env.execute("UVPV");
+    }
+}
+
+```
+
+```
+#flink sql写法
+```
+
+### CEP连续登录失败
+
+>接下来我们考虑一个具体的需求：检测用户行为，如果连续三次登录失败，就输出报警信 息。很显然，这是一个复杂事件的检测处理，我们可以使用 Flink CEP 来实现。
+
+#### 检查点
+
+>在CEP这个例子中使用了检查点
+
+>1需要停止stream流处理任务的场景，完成检查点的保存      2完成检查点的恢复，确保故障恢复到正确的内存状态和外部存储系统状态。
+
+```
+package com.demo.task.practice;
+
+import com.demo.domain.LogEntity;
+import com.typesafe.config.ConfigIncluderFile;
+import org.apache.flink.api.common.eventtime.SerializableTimestampAssigner;
+import org.apache.flink.api.common.eventtime.WatermarkStrategy;
+import org.apache.flink.api.common.functions.RuntimeContext;
+import org.apache.flink.api.java.tuple.Tuple3;
+import org.apache.flink.api.java.tuple.Tuple4;
+import org.apache.flink.cep.PatternSelectFunction;
+import org.apache.flink.cep.PatternStream;
+import org.apache.flink.cep.pattern.Pattern;
+import org.apache.flink.cep.CEP;
+import org.apache.flink.cep.pattern.conditions.SimpleCondition;
+import org.apache.flink.streaming.api.CheckpointingMode;
+import org.apache.flink.streaming.api.datastream.DataStream;
+import org.apache.flink.streaming.api.environment.CheckpointConfig;
+import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
+import org.apache.flink.streaming.connectors.elasticsearch.ElasticsearchSinkFunction;
+import org.apache.flink.streaming.connectors.elasticsearch.RequestIndexer;
+import org.apache.flink.streaming.connectors.elasticsearch7.ElasticsearchSink;
+import org.apache.http.HttpHost;
+import org.apache.kafka.common.protocol.types.Field;
+import org.elasticsearch.action.index.IndexRequest;
+import org.elasticsearch.client.Requests;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+public class FailBehavior {
+    public static void main(String[] args) throws Exception {
+        StreamExecutionEnvironment env=StreamExecutionEnvironment.getExecutionEnvironment();
+        System.setProperty("HADOOP_USER_NAME", "root");
+        System.setProperty("user.name", "root");
+
+        env.setParallelism(4);
+//        checkpoint
+        env.enableCheckpointing(1000);
+        CheckpointConfig config=env.getCheckpointConfig();
+        config.setCheckpointingMode(CheckpointingMode.EXACTLY_ONCE);
+        config.setMinPauseBetweenCheckpoints(500);
+        config.setCheckpointTimeout(60000);
+        config.setMaxConcurrentCheckpoints(1);
+        config.enableExternalizedCheckpoints(CheckpointConfig.ExternalizedCheckpointCleanup.RETAIN_ON_CANCELLATION);
+        config.enableUnalignedCheckpoints();
+        config.setCheckpointStorage("hdfs://hbase:9000/flink/checkpoints");
+
+        DataStream<LogEntity> sourceStream=env.addSource(new ClickSource())
+                .assignTimestampsAndWatermarks(
+                        WatermarkStrategy.<LogEntity>forMonotonousTimestamps()
+                                .withTimestampAssigner(
+                                        new SerializableTimestampAssigner<LogEntity>() {
+                                            @Override
+                                            public long extractTimestamp(LogEntity value, long l)
+                                            {
+                                                return value.getTime();
+                                            }
+                                        }
+                                )
+                )
+                .keyBy(LogEntity->LogEntity.getUserId());
+//        sourceStream.print();
+        Pattern<LogEntity,LogEntity> pattern=Pattern
+                .<LogEntity>begin("first")
+                .where(new SimpleCondition<LogEntity>() {
+                    @Override
+                    public boolean filter(LogEntity value) throws Exception {
+                        return value.getAction().equals("1");
+                    }
+                })
+                .next("second")
+                .where(new SimpleCondition<LogEntity>() {
+                    @Override
+                    public boolean filter(LogEntity value) throws Exception {
+                        return value.getAction().equals("1");
+
+                    }
+                })
+                .next("third")
+                .where(new SimpleCondition<LogEntity>() {
+                    @Override
+                    public boolean filter(LogEntity value) throws Exception {
+                        return value.getAction().equals("2");
+                    }
+                });
+        PatternStream<LogEntity> patternStream=CEP.pattern(sourceStream,pattern);
+        DataStream<Tuple4<Integer,Long,Long,Long>> stream=patternStream.select(new PatternSelectFunction<LogEntity, Tuple4<Integer,Long,Long,Long>>() {
+            @Override
+            public Tuple4<Integer,Long,Long,Long> select(Map<String, List<LogEntity>> map) throws Exception {
+                LogEntity first=map.get("first").get(0);
+                LogEntity second=map.get("second").get(0);
+                LogEntity third=map.get("third").get(0);
+                return Tuple4.of(first.getUserId(),first.getTime(),second.getTime(),third.getTime());
+            }
+        });
+        stream.print("warning");
+//        sinkfunciton
+//        httphost
+//        essinkbulder
+        ElasticsearchSinkFunction<Tuple4<Integer,Long,Long,Long>> elasticsearchSinkFunction=new ElasticsearchSinkFunction<Tuple4<Integer,Long,Long,Long>>() {
+            @Override
+            public void process(Tuple4<Integer,Long,Long,Long> element, RuntimeContext ctx, RequestIndexer indexer) {
+                Map<String,String> result=new HashMap<>();
+                result.put("userId",Integer.valueOf(element.f0).toString());
+                result.put("first",Long.valueOf(element.f1).toString());
+                result.put("second",Long.valueOf(element.f2).toString());
+                result.put("third",Long.valueOf(element.f3).toString());
+                IndexRequest indexRequest= Requests.indexRequest().index("flinkwarning").type("logEntity").source(result).id(Integer.valueOf(element.f0).toString());
+                indexer.add(indexRequest);
+            }
+        };
+        List<HttpHost> httpPosts=new ArrayList<>();
+        httpPosts.add(new HttpHost("hbase",9200,"http"));
+        ElasticsearchSink.Builder<Tuple4<Integer,Long,Long,Long>> builder=new ElasticsearchSink.Builder<Tuple4<Integer,Long,Long,Long>>(httpPosts, elasticsearchSinkFunction);
+        builder.setBulkFlushMaxActions(1);
+        stream.addSink(builder.build());
+
+        env.execute("FailBehavior");
+    }
+}
+
+```
+
+### 广播状态
+
+>借助广播状态进行全局配置，对于一些可能需要变动的配置，使用广播变量全局配置。本例中使用广播变量配置，定义任务的处理规则。
+>
+>https://blog.csdn.net/wangpei1949/article/details/99698978
+>
+>通过周期性的从mysql获取信息，将配置进行广播。
+
+
+
+
 

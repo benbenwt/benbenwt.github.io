@@ -867,6 +867,25 @@ val rdd:RDD[String]=sparkContext.textFile("input")
 
 ##### RDD并行度与分区
 
+>并行度不指定时是多少？
+>
+>并行度由那几个关键配置参数共同决定？
+
+```
+#shuffle默认使用此参数，如reduce
+spark.default.parallelism 指定RDD任务的默认并行度，也就是RDD中的分区数，即RDD中的task数。
+
+#本地模式
+依赖于指定的参数，如local,local[K],local[*]
+
+#集群模式
+默认并行度取决于所有executor上的总核数。
+```
+
+>shuffle阶段的分区，可以由spark.default.parallelism、reduceByKey控制。
+>
+>初始数据的分区，可以通过makeRDD指定。
+
 ```
 #设定partion数量为4
 spark.text.makeRDD(List(1,2,3,4),4)
