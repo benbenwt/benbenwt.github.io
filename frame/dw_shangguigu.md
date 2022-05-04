@@ -2607,6 +2607,126 @@ bash null_id.sh -t dim_user_info -d "$DT" -c id -s 0 -x 10 -l 0
 >
 >msg:错误信息
 
+#### 数据埋点
+
+>主流埋点方式：代码埋点（前段）、可视化埋点、全埋点三种
+>
+>当离开页面时，上传所有日志（页面、事件、曝光、错误）
+
+#### 普通日志
+
+>common，action，page，display，error
+
+```
+{
+  "common": {                  -- 公共信息
+    "ar": "230000",              -- 地区编码
+    "ba": "iPhone",              -- 手机品牌
+    "ch": "Appstore",            -- 渠道
+    "is_new": "1",--是否首日使用，首次使用的当日，该字段值为1，过了24:00，该字段置为0。
+	"md": "iPhone 8",            -- 手机型号
+    "mid": "YXfhjAYH6As2z9Iq", -- 设备id
+    "os": "iOS 13.2.9",          -- 操作系统
+    "uid": "485",                 -- 会员id
+    "vc": "v2.1.134"             -- app版本号
+  },
+"actions": [                     --动作(事件)  
+    {
+      "action_id": "favor_add",   --动作id
+      "item": "3",                   --目标id
+      "item_type": "sku_id",       --目标类型
+      "ts": 1585744376605           --动作时间戳
+    }
+  ],
+  "displays": [
+    {
+      "displayType": "query",        -- 曝光类型
+      "item": "3",                     -- 曝光对象id
+      "item_type": "sku_id",         -- 曝光对象类型
+      "order": 1,                      --出现顺序
+      "pos_id": 2                      --曝光位置
+    },
+    {
+      "displayType": "promotion",
+      "item": "6",
+      "item_type": "sku_id",
+      "order": 2, 
+      "pos_id": 1
+    },
+    {
+      "displayType": "promotion",
+      "item": "9",
+      "item_type": "sku_id",
+      "order": 3, 
+      "pos_id": 3
+    },
+    {
+      "displayType": "recommend",
+      "item": "6",
+      "item_type": "sku_id",
+      "order": 4, 
+      "pos_id": 2
+    },
+    {
+      "displayType": "query ",
+      "item": "6",
+      "item_type": "sku_id",
+      "order": 5, 
+      "pos_id": 1
+    }
+  ],
+  "page": {                       --页面信息
+    "during_time": 7648,        -- 持续时间毫秒
+    "item": "3",                  -- 目标id
+    "item_type": "sku_id",      -- 目标类型
+    "last_page_id": "login",    -- 上页类型
+    "page_id": "good_detail",   -- 页面ID
+    "sourceType": "promotion"   -- 来源类型
+  },
+"err":{                     --错误
+"error_code": "1234",      --错误码
+    "msg": "***********"       --错误信息
+},
+  "ts": 1585744374423  --跳入时间戳
+}
+
+```
+
+#### 启动日志
+
+>common,error,start
+
+```
+{
+  "common": {
+    "ar": "370000",
+    "ba": "Honor",
+    "ch": "wandoujia",
+    "is_new": "1",
+    "md": "Honor 20s",
+    "mid": "eQF5boERMJFOujcp",
+    "os": "Android 11.0",
+    "uid": "76",
+    "vc": "v2.1.134"
+  },
+  "start": {   
+    "entry": "icon",         --icon手机图标  notice 通知   install 安装后启动
+    "loading_time": 18803,  --启动加载时间
+    "open_ad_id": 7,        --广告页ID
+    "open_ad_ms": 3449,    -- 广告总共播放时间
+    "open_ad_skip_ms": 1989   --  用户跳过广告时点
+  },
+"err":{                     --错误
+"error_code": "1234",      --错误码
+    "msg": "***********"       --错误信息
+},
+  "ts": 1585744304000
+}
+
+```
+
+
+
 ### Logback
 
 >1创建logback.xml，在其中控制日志的输出级别的输出节点root，logger，以及输出源appender。
