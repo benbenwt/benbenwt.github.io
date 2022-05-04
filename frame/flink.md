@@ -1584,7 +1584,6 @@ public class SplitStreamByOutputTag {
          ctx.output(MaryTag, new Tuple3<>(value.user, value.url, 
         value.timestamp));
          } else if (value.user.equals("Bob")){
-        213
          ctx.output(BobTag, new Tuple3<>(value.user, value.url, 
         value.timestamp));
          } else {
@@ -2144,9 +2143,14 @@ bin/flink savepoint :jobId [:targetDirectory]
 state.savepoints.dir: hdfs:///flink/savepoints
 #通过程序设定保存路径
 env.setDefaultSavepointDir("hdfs:///flink/savepoints");
-#从保存点启动程序
+#从保存点启动程序,增加一个-s参数
 bin/flink run -s :savepointPath [:runArgs]
+
+#flink可能无法访问hdfs文件系统，添加此jar包到flink的lib目录下
+https://repo.maven.apache.org/maven2/org/apache/flink/flink-shaded-hadoop-2-uber/2.8.3-9.0/
 ```
+
+
 
 ### 状态一致性
 
@@ -3463,7 +3467,18 @@ first.timestamp + ", " + second.timestamp + ", " + third.timestamp;
         topProduct.addSink(builder.build());
 ```
 
+### PID
 
+>vim config.sh
+>
+>找到PID_DIR
+
+### flink savepoint无法访问hdfs文件系统
+
+````
+添加此jar包到flink的lib目录下
+https://repo.maven.apache.org/maven2/org/apache/flink/flink-shaded-hadoop-2-uber/2.8.3-9.0/
+````
 
 # Fink zhihu
 
@@ -3734,6 +3749,22 @@ PUT /topproduct
 >3使用keyBy函数，再window开窗，使用窗口处理函数（或全窗口函数）聚合key、窗口唯一对应的数据。
 >
 >等同地位的几种窗口函数：1增量聚合函数（归约、聚合）2全窗口函数 3窗口处理函数
+
+### 日志结构设计
+
+```
+登录日志
+登录失败日志
+
+#页面数据，事件数据，启动数据和错误数据
+```
+
+#### 页面结构设计
+
+```
+```
+
+
 
 ### Top N商品
 
@@ -4315,6 +4346,185 @@ public class FailBehavior {
 >https://blog.csdn.net/wangpei1949/article/details/99698978
 >
 >通过周期性的从mysql获取信息，将配置进行广播。
+
+```
+#主函数
+package com.demo.task.practice;
+
+import com.demo.domain.LogEntity;
+import org.apache.flink.api.common.state.MapStateDescriptor;
+import org.apache.flink.api.common.typeinfo.Types;
+import org.apache.flink.streaming.api.datastream.BroadcastConnectedStream;
+import org.apache.flink.streaming.api.datastream.BroadcastStream;
+import org.apache.flink.streaming.api.datastream.DataStream;
+import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
+import org.apache.flink.streaming.api.functions.ProcessFunction;
+import org.apache.flink.streaming.api.functions.co.BroadcastProcessFunction;
+import org.apache.flink.util.Collector;
+
+import javax.xml.crypto.Data;
+
+public class KeywordsFilter {
+    public static void main(String[] args) throws Exception {
+        StreamExecutionEnvironment env=StreamExecutionEnvironment.getExecutionEnvironment();
+        DataStream<LogEntity> sourceStream=env.addSource(new ClickSource());
+        DataStream<String> configStream=env.addSource(new MysqlSource("hbase",3306,"con","root","root",1));
+
+        MapStateDescriptor<String,String> configStateDescriptor=new MapStateDescriptor<String, String>("config", Types.STRING,Types.STRING);
+        BroadcastStream<String> broadcastConfigStream=configStream.broadcast(configStateDescriptor);
+        BroadcastConnectedStream<LogEntity,String> broadcastConnectedStream=sourceStream.connect(broadcastConfigStream);
+
+        DataStream<LogEntity> filterStream=broadcastConnectedStream.process(new BroadcastProcessFunction<LogEntity,String,LogEntity>(){
+            private String keyword="-1";
+
+            @Override
+            public void processElement(LogEntity value, ReadOnlyContext ctx, Collector<LogEntity> out) throws Exception {
+                if(value.getProductId()==Integer.parseInt(keyword))
+                {
+                    out.collect(value);
+                }
+            }
+
+            @Override
+            public void processBroadcastElement(String value, Context ctx, Collector<LogEntity> out) throws Exception {
+                keyword=value;
+            }
+        });
+        filterStream.print();
+        env.execute("keywordFilter");
+    }
+}
+
+```
+
+```
+#自定义的mysqlsource
+package com.demo.task.practice;
+
+
+import org.apache.flink.api.java.tuple.Tuple3;
+import org.apache.flink.configuration.Configuration;
+import org.apache.flink.streaming.api.functions.source.RichSourceFunction;
+import org.apache.flink.streaming.api.functions.source.SourceFunction;
+
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+
+public class MysqlSource extends RichSourceFunction<String> {
+    private boolean running=true;
+    private Connection connection;
+
+    private String host;
+    private Integer port;
+    private String db;
+    private String user;
+    private String passwd;
+    private Integer secondInterval;
+    private PreparedStatement preparedStatement;
+
+    public MysqlSource(String host, Integer port, String db, String user, String passwd, Integer secondInterval) {
+        this.host = host;
+        this.port = port;
+        this.db = db;
+        this.user = user;
+        this.passwd = passwd;
+        this.secondInterval = secondInterval;
+    }
+
+    @Override
+    public void open(Configuration parameters) throws Exception {
+        super.open(parameters);
+        Class.forName("com.mysql.jdbc.Driver");
+        connection= DriverManager.getConnection("jdbc:mysql://"+host+":"+port+"/"+db+"?useUnicode=true&characterEncoding=UTF-8",user,passwd);
+        String sql="select keyword from config";
+        preparedStatement=connection.prepareStatement(sql);
+    }
+
+    @Override
+    public void run(SourceContext<String> ctx) throws Exception {
+        while (running){
+            ResultSet resultset=preparedStatement.executeQuery();
+            String keyword;
+            while (resultset.next()){
+//                action1=resultset.getString("action1");
+//                action2=resultset.getString("action2");
+//                action3=resultset.getString("action3");
+                keyword=resultset.getString("keyword");
+                ctx.collect(keyword);
+            }
+            Thread.sleep(1000*secondInterval);
+        }
+    }
+
+    @Override
+    public void cancel() {
+        running=false;
+    }
+
+    @Override
+    public void close() throws Exception {
+        super.close();
+        if(connection!=null){
+            connection.close();
+        }
+        if(preparedStatement!=null){
+            preparedStatement.close();
+        }
+    }
+}
+
+```
+
+### 保存点
+
+>检查点启用后，配置检查点保存间隔，检查点保存到堆内存还是外部hdfs等存储，设置精确一次消费模式。检查点是由flink自行管理，到达触发时机自动保存程序内存状态等信息，如果发生故障，就会使用保存的checkpoint恢复应用状态，并继续执行，达到故障恢复的目的，提高容错性。
+>
+>而保存点必须由用户手动配置并管理，包括触发时机，以及如何使用，我们可以计划性的对应用设置保存点，然后从保存点恢复应用。为了能够直接恢复应用，保存点相比于检查点多保存了一些元数据，如算子ID。
+>
+>常用场景：
+>
+>1版本管理归档
+>
+>2更新flink版本
+>
+>3更新应用程序
+>
+>4调整并行度
+>
+>5暂停应用
+>
+>注意程序的更改兼容是有条件的，就是状态的拓扑结构和数据类型不能改变。如果使用保存点，需要设置算子的ID。
+
+```
+package com.demo.task.practice;
+
+import com.demo.domain.LogEntity;
+import org.apache.flink.streaming.api.datastream.DataStream;
+import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
+
+public class SavePoint {
+    public static void main(String[] args) throws Exception {
+        StreamExecutionEnvironment env=StreamExecutionEnvironment.getExecutionEnvironment();
+        env.addSource(new ClickSource())
+                .uid("source-id")
+                .map(LogEntity->LogEntity)
+                .uid("mapper-id")
+                .print();
+        env.execute("savepoint");
+    }
+}
+```
+
+```
+bin/flink run -m hbase1:8081 -c com.demo.task.practice.SavePoint /opt/software/jars/flink-2-hbase-1.0-SNAPSHOT.jar
+bin/flink savepoint jobId  file:///opt/module/flink/savepoints
+bin/flink savepoint jobId  hdfs://hbase:9000/flink/savepoints
+
+#从savepoint恢复
+bin/flink run -s hdfs://hbase:9000/flink/savepoints -c com.demo.task.practice.SavePoint /opt/software/jars/flink-2-hbase-1.0-SNAPSHOT.jar
+```
 
 
 

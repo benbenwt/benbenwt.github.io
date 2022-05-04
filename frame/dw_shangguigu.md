@@ -2531,6 +2531,82 @@ bash null_id.sh -t dim_user_info -d "$DT" -c id -s 0 -x 10 -l 0
 {"common":{"ar":"110000","ba":"Redmi","ch":"oppo","md":"Redmi k30","mid":"mid_168","os":"Android 11.0","uid":"337","vc":"v2.1.132"},"start":{"entry":"notice","loading_time":17874,"open_ad_id":2,"open_ad_ms":2467,"open_ad_skip_ms":0},"ts":1594652955000}
 ```
 
+### 日志结构设计
+
+```
+登录日志
+登录失败日志
+
+#页面数据，事件数据，启动数据和错误数据
+```
+
+#### 页面
+
+>页面数据主要是记录一个页面的用户访问情况，包括访问时间，停留时间，页面路径等。
+>
+>page_id:属于哪一种页面，如首页、商品详情、下单结算等。
+>
+>sourceType:页面来源类型，商品推广，查询结果，促销活动等
+>
+>during_time:停留时间
+>
+>ts:跳入时间
+>
+>
+>
+>last_page_id:上页
+>
+>page_item_type:页面对象类型，如活动、购物券等
+>
+>page_item:页面对象id
+>
+
+#### 事件
+
+>事件数据主要记录应用内一个具体操作行为，包括操作类型，操作对象，操作对象描述
+>
+>action_id:动作id，表示具体动作，如添加收藏、取消收藏、添加购物车、删除购物车、领取优惠券
+>
+>item_type:动作目标类型，sku_id商品，coupon_id购物券。
+>
+>item:动作目标id
+>
+>ts：动作时间
+
+#### 曝光
+
+>曝光主要记录页面所曝光的内容，包括曝光对象，曝光类型等信息。
+>
+>displayType：曝光类型，商品推广、促销活动、查询结果商品
+>
+>item_type:曝光对象，sku_id商品id，activity_id活动id
+>
+>item:曝光对象id
+>
+>order：曝光顺序
+
+#### 启动
+
+>启动信息
+>
+>entry:启动入口，图标、通知、安装后启动
+>
+>loading_time:启动加载时间
+>
+>open_ad_id:开屏广告id
+>
+>open_ad_ms:广告时间
+>
+>open_ad_skip_ms:跳过时间
+>
+>ts:时间
+
+#### 错误
+
+>error_code:错误码
+>
+>msg:错误信息
+
 ### Logback
 
 >1创建logback.xml，在其中控制日志的输出级别的输出节点root，logger，以及输出源appender。
@@ -3005,8 +3081,8 @@ ENTRYPOINT  ["/usr/local/entrypoint.sh"]
 
 ```
 elasticsearch的映射地址：
-1.hive数仓可视化，http://49144m9k60.zicp.vip:52494/goto/a4e86e4a7460d926509c55f7fe258989
-2.flink实施推荐： http://49144m9k60.zicp.vip:52494/goto/dc86a6ffab6ae9334f6f910fb449ac1d
+1.spark实时数仓可视化，http://49144m9k60.zicp.vip:52494/goto/a4e86e4a7460d926509c55f7fe258989
+2.flink实时推荐： http://49144m9k60.zicp.vip:52494/goto/dc86a6ffab6ae9334f6f910fb449ac1d
 superset的映射地址：
 1.hive数据仓库统计结果，http://49144m9k60.zicp.vip/r/5    
 2.数据质量控制统计结果， http://49144m9k60.zicp.vip/r/7  
