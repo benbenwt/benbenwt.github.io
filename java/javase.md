@@ -1653,14 +1653,14 @@ System.out.println(filepath);
 
 ```
 new File("").getAbsolutePath（）得到jar包放置的目录。使用idea运行得到项目根目录。
-
 打包后无src->main等路径，如果访问jar包内文件，要通过如下方式访问。
 以main和resources为合并的根目录，再加上META-INF文件夹组成根目录。输入相对路径访问即可。
 如果访问外部，通过绝对路径访问。
 #访问jar包内
-this.getClass().getResource("/library.properties").getPath();
-this.getClass().getClassLoader().getResource()；
+
 this.getClass().getClassLoader().getResourceAsStream("logback.xml");
+#这个才有效，读取resources
+InputStream in = Thread.currentThread().getContextClassLoader().getResourceAsStream(CONF_NAME);
 ```
 
 ##### 自定义外部配置文件

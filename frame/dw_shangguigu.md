@@ -3202,7 +3202,7 @@ ENTRYPOINT  ["/usr/local/entrypoint.sh"]
 ```
 elasticsearch的映射地址：
 1.spark实时数仓可视化，http://49144m9k60.zicp.vip:52494/goto/a4e86e4a7460d926509c55f7fe258989
-2.flink实时推荐： http://49144m9k60.zicp.vip:52494/goto/dc86a6ffab6ae9334f6f910fb449ac1d
+2.flink实时推荐： http://49144m9k60.zicp.vip:52494/goto/9a28407cd50d220628602a36ddd95795
 superset的映射地址：
 1.hive数据仓库统计结果，http://49144m9k60.zicp.vip/r/5    
 2.数据质量控制统计结果， http://49144m9k60.zicp.vip/r/7  

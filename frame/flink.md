@@ -3761,10 +3761,11 @@ PUT /topproduct
 
 #### 页面结构设计
 
-```
-```
-
-
+>对于事件、页面、曝光、错误、启动几个模块，在flink的项目中，我们需要事件（用于协同过滤），页面（用于UVPV分析）、曝光（用于曝光量计算）、启动日志（用于记录日活信息）
+>
+>除此之外还需要商品的交易信息业务日志，用于计算topn商品、用户首单信息
+>
+>有一些数据是业务数据库和行为日志都可以提供的，例如添加购物车、点击收藏，这些行为既可以通过前段日志记录，也可以通过业务数据库获得。
 
 ### Top N商品
 
@@ -3923,11 +3924,37 @@ DataStream<TopProductEntity> topProduct = dataStream.map(new TopProductMapFuncti
 ```
 #日活所有用户id
 #查询redis状态是否创建。未创建则创建。已创建则根据用户id读出状态，然后过滤出新登录的用户。将新登陆的用户写入状态，并插入到ES外部存储。
+package com.demo.task.practice;
+
+import com.demo.domain.LogEntity;
+import com.demo.util.Property;
+import com.demo.util.RedisUtil;
+import org.apache.flink.api.common.functions.RuntimeContext;
+import org.apache.flink.configuration.Configuration;
+import org.apache.flink.streaming.api.datastream.SingleOutputStreamOperator;
+import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
+import org.apache.flink.streaming.api.functions.ProcessFunction;
+import org.apache.flink.streaming.api.functions.source.SourceFunction;
+import org.apache.flink.streaming.connectors.elasticsearch.ElasticsearchSinkFunction;
+import org.apache.flink.streaming.connectors.elasticsearch.RequestIndexer;
+import org.apache.flink.streaming.connectors.elasticsearch7.ElasticsearchSink;
+import org.apache.flink.util.Collector;
+
+import org.apache.http.HttpHost;
+import org.apache.http.client.methods.HttpPost;
+import org.elasticsearch.action.index.IndexRequest;
+import org.elasticsearch.client.Requests;
+import redis.clients.jedis.Jedis;
+
+import java.text.SimpleDateFormat;
+import java.util.*;
+
+public class DailyActiveUser {
     public static void main(String[] args) throws Exception {
         StreamExecutionEnvironment env=StreamExecutionEnvironment.getExecutionEnvironment();
-        env.setParallelism(8);
-        SingleOutputStreamOperator<LogEntity> sourceStream=env.addSource(new ClickSource())
-                .process(new ProcessFunction<LogEntity, LogEntity>() {
+        env.setParallelism(4);
+        SingleOutputStreamOperator<StartLog> sourceStream=env.addSource(new StartLogSource())
+                .process(new ProcessFunction<StartLog, StartLog>() {
                     @Override
                     public void open(Configuration parameters) throws Exception {
                         super.open(parameters);
@@ -3940,10 +3967,10 @@ DataStream<TopProductEntity> topProduct = dataStream.map(new TopProductMapFuncti
                     private Jedis jedis;
                     private SimpleDateFormat simpleDateFormat;
                     @Override
-                    public void processElement(LogEntity value, Context ctx, Collector<LogEntity> out) throws Exception {
+                    public void processElement(StartLog value, Context ctx, Collector<StartLog> out) throws Exception {
 //                        查询内存状态
-                        int userId=value.getUserId();
-                        Long time=value.getTime();
+                        Long userId=value.getUserId();
+                        Long time=value.getTs();
 //                        dt
                         Date date=new Date(time);
                         Long flag=jedis.sadd("flinkdau"+simpleDateFormat.format(date), String.valueOf(userId));
@@ -3963,29 +3990,31 @@ DataStream<TopProductEntity> topProduct = dataStream.map(new TopProductMapFuncti
                         jedis.close();
                     }
                 });
-        sourceStream.print();
+//        sourceStream.print();
 
 //        httppost
 //elasticsearchSinkFunction
-        ElasticsearchSinkFunction<LogEntity> elasticsearchSinkFunction=new ElasticsearchSinkFunction<LogEntity>() {
+        ElasticsearchSinkFunction<StartLog> elasticsearchSinkFunction=new ElasticsearchSinkFunction<StartLog>() {
             @Override
-            public void process(LogEntity element, RuntimeContext ctx, RequestIndexer indexer) {
+            public void process(StartLog element, RuntimeContext ctx, RequestIndexer indexer) {
                 Map<String,String> result=new HashMap<>();
-                result.put("userId",Integer.valueOf(element.getUserId()).toString());
-                result.put("productId",Integer.valueOf(element.getProductId()).toString());
-                result.put("action",Integer.valueOf(element.getAction()).toString());
-                result.put("time",Long.valueOf(element.getTime()).toString());
-                IndexRequest indexRequest= Requests.indexRequest().index("flinkdau").type("logEntity").source(result).id(Integer.valueOf(element.getUserId()).toString());
+                result.put("userId",Long.valueOf(element.getUserId()).toString());
+                result.put("entry",element.getEntry());
+                result.put("ts",Long.valueOf(element.getTs()).toString());
+                IndexRequest indexRequest= Requests.indexRequest().index("flinkdaustartlog").type("startLog").source(result).id(Long.valueOf(element.getUserId()).toString());
                 indexer.add(indexRequest);
             }
         };
         List<HttpHost> httpPosts=new ArrayList<>();
         httpPosts.add(new HttpHost("hbase",9200,"http"));
-        ElasticsearchSink.Builder<LogEntity> builder=new ElasticsearchSink.Builder<LogEntity>(httpPosts, elasticsearchSinkFunction);
+        ElasticsearchSink.Builder<StartLog> builder=new ElasticsearchSink.Builder<StartLog>(httpPosts, elasticsearchSinkFunction);
         builder.setBulkFlushMaxActions(1);
         sourceStream.addSink(builder.build());
+        sourceStream.print();
         env.execute("flinkdau");
-    }       
+    }
+}
+
 ```
 
 ### 当日首单用户数量
@@ -3997,6 +4026,29 @@ DataStream<TopProductEntity> topProduct = dataStream.map(new TopProductMapFuncti
 >由于是否首单，需要一直保存其标记，用redis不合适。所以使用hbase记录是否首单。
 
 ```
+elasticsearch建表：
+PUT /newpurchaseuser
+{
+	"settings": { 
+ 	"number_of_shards": 3
+ },
+	"mappings": {
+		  "properties":{
+		     "userId":{
+		     	"type":"keyword"
+		     },
+		     "productId":{
+		     	"type":"keyword"
+		     },
+		     "time":{
+		     	"type":"date"
+		     }
+		  }
+		}
+}
+```
+
+```
 #使用phoenix建表
 create table newpurchaseuser(userid varchar not null primary,flag v)salt_buckets=16;
 upsert into npuser values('101','1')
@@ -4004,6 +4056,7 @@ upsert into npuser values('101','1')
 package com.demo.task.practice;
 
 import com.demo.domain.LogEntity;
+import com.demo.util.Property;
 import org.apache.flink.api.common.functions.RichMapFunction;
 import org.apache.flink.api.common.functions.RuntimeContext;
 import org.apache.flink.api.java.ExecutionEnvironment;
@@ -4068,7 +4121,6 @@ public class NewPurchaseUser {
                     }
 
                 });
-        sourceStream.print();
 
         ElasticsearchSinkFunction<LogEntity> elasticsearchSinkFunction=new ElasticsearchSinkFunction<LogEntity>() {
             @Override
@@ -4076,19 +4128,19 @@ public class NewPurchaseUser {
                 Map<String,String> result=new HashMap<>();
                 result.put("userId",Integer.valueOf(element.getUserId()).toString());
                 result.put("productId",Integer.valueOf(element.getProductId()).toString());
-                result.put("action",Integer.valueOf(element.getAction()).toString());
                 result.put("time",Long.valueOf(element.getTime()).toString());
-                IndexRequest indexRequest= Requests.indexRequest().index("flinknpuser").type("logEntity").source(result).id(Integer.valueOf(element.getUserId()).toString());
+                IndexRequest indexRequest= Requests.indexRequest().index("newpurchaseuser").source(result).id(Integer.valueOf(element.getUserId()).toString());
                 indexer.add(indexRequest);
             }
         };
 
         List<HttpHost> httpPosts=new ArrayList<>();
-        httpPosts.add(new HttpHost("hbase",9200,"http"));
+        httpPosts.add(new HttpHost(new Property().getElasProperties().getProperty("host"),9201,"http"));
         ElasticsearchSink.Builder<LogEntity> builder=new ElasticsearchSink.Builder<LogEntity>(httpPosts, elasticsearchSinkFunction);
         builder.setBulkFlushMaxActions(1);
 
         sourceStream.addSink(builder.build());
+        sourceStream.print();
         env.execute("npuser");
     }
 }
@@ -4104,6 +4156,29 @@ public class NewPurchaseUser {
 >PV/UV表示人均重复访问量，也就是每个用户平均访问多少次一面，这在一定程度上代表了用户的粘度。
 >
 >uv pv也是对对象进行频次统计，不过是对页面进行统计，其中UV需要另外处理，进行去重。
+
+```
+elasticsearch建表：
+PUT /uvpv
+{
+	"settings": { 
+ 	"number_of_shards": 3
+ },
+	"mappings": {
+		  "properties":{
+		     "uvpv":{
+		     	"type":"keyword"
+		     },
+		     "productId":{
+		     	"type":"keyword"
+		     },
+		     "ts":{
+		     	"type":"date"
+		     }
+		  }
+		}
+}
+```
 
 ```
 package com.demo.task.practice;
@@ -4212,6 +4287,33 @@ public class UVPV {
 >在CEP这个例子中使用了检查点
 
 >1需要停止stream流处理任务的场景，完成检查点的保存      2完成检查点的恢复，确保故障恢复到正确的内存状态和外部存储系统状态。
+
+```
+PUT /cepFailBehavior
+{
+	"settings": { 
+ 	"number_of_shards": 3
+ },
+	"mappings": {
+		  "properties":{
+		     "userId":{
+		     	"type":"keyword"
+		     },
+		     "first":{
+		     	"type":"date"
+		     },
+		     "second":{
+		     	"type":"date"
+		     },
+		     "third":{
+		     	"type":"date"
+		     }
+		  }
+		}
+}
+```
+
+
 
 ```
 package com.demo.task.practice;
@@ -4339,13 +4441,40 @@ public class FailBehavior {
 
 ```
 
-### 广播状态
+### 广播状态过滤keyword
 
 >借助广播状态进行全局配置，对于一些可能需要变动的配置，使用广播变量全局配置。本例中使用广播变量配置，定义任务的处理规则。
 >
 >https://blog.csdn.net/wangpei1949/article/details/99698978
 >
 >通过周期性的从mysql获取信息，将配置进行广播。
+
+```
+PUT /boradcastf
+{
+	"settings": { 
+ 	"number_of_shards": 3
+ },
+	"mappings": {
+		  "properties":{
+		     "userId":{
+		     	"type":"keyword"
+		     },
+		     "first":{
+		     	"type":"date"
+		     },
+		     "second":{
+		     	"type":"date"
+		     },
+		     "third":{
+		     	"type":"date"
+		     }
+		  }
+		}
+}
+```
+
+
 
 ```
 #主函数
