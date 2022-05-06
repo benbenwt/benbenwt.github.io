@@ -1113,40 +1113,71 @@ def saveAsSequenceFile(
 
 ## spark sql
 
+>无论是hadoop、spark、flink其都具备一些共性的功能，都试图不断完善自己的功能。
+>
+>包括：离线批处理api，离线批处理sql编写能力，实时处理能力
+>
+>Hadoop：只有离线批处理api  hive：离线批处理sql编写能力，对hadoop进行功能进行完善
+>
+>Spark：离线批处理api，离线批处理sql编写能力，实时处理能力
+>
+>Flink：不区分批处理和流处理，同一表编写程序。其只区分了基础底层datastream api，以及高级槟城table和sql api
+
 >三者都是分布式弹性数据集**Resilient** 
 >
 >RDD相比DataFrame不支持sql操作，一般与mlib一起使用。DataFrame是指定了列名的，可以通过列名访问。
 >
 >DataFrame是Dataset的一个特例，其类型为Dataset[Row]。两者都支持sql操作，比如select，groupby。
 
-#### DataFrame
+### spark sql 与hive集成
 
-##### 创建DataFrame
+>https://blog.csdn.net/Clown_34/article/details/122421267
+>
+>共用几种方案：
+>
+>1将hive的执行引擎配置为spark
+>
+>2使用spark sql编程接口读取hive表内容,并清洗
+
+### DataFrame
+
+#### 创建DataFrame
 
 ```scala
-#查看支持的数据源格式
-spark.read
+#从本地文件系统的json文件创建dataframe
 val df=spark.read.json("data/user.json")
+#从RDD创建dataframe
+#从hive table进行查询返回
 ```
 
-##### SQL语法
+#### SQL语法
+
+>sql语法风格是指查询数据时使用sql语句来查询，这种风格的查询必须要有临时试图或者全局视图来辅助
 
 ```
 #对DataFrame创建一个临时表，这样可以使用sql进行操作
-df.createOrReplaceTempView('user')
-val sqlDF=spark.sql("SELECT * FROM user")
+val df=spark.read.json("data/user.json")
+df.createOrReplaceTempView("people")
+val sqlDF=spark.sql("SELECT * FROM people")
 sqlDF.show()
+
+#普通临时表是 Session 范围内的，如果想应用范围内有效，可以使用全局临时表。使
+用全局临时表时需要全路径访问，如：global_temp.people
+
 #创建全局表
-df.createGlobalTempView("user")
-spark.sql("SELECT * FROM global_temp.user").show()
+df.createGlobalTempView("people")
+spark.sql("SELECT * FROM global_temp.people").show()
+spark.newSession().sql("SELECT * FROM global_temp.people").show()
 ```
 
-##### DSL语法
+#### DSL语法
 
 >domain-specific language，DSL语法用于管理结构化数据，可以使用scala、java、python等编写DSL语法语句，无需创建临时视图使用sql了。
+>
+>无需编写符合sql规范的语句，可以灵活的与编程语言粘合。
 
 ```
-#等同于sql的select语句
+#等同于sql的select语句，注意:涉及到运算的时候, 每列都必须使用$, 或者采用引号表达式：单引号+字段名
 df.select($"username",$"age" + 1).show
 df.select('username, 'age + 1).show()
 #
@@ -1154,18 +1185,35 @@ df.filter($"age">30).show
 df.groupBy("age").count.show
 ```
 
-##### RDD转换为DataFrame
+#### RDD与DataFrame互相转换
 
 >在IDEA开发程序时，如果需要将RDD于DF和DS之间互相操作，需要import spark.implicits._
+>
+>这里的 spark 不是 Scala 中的包名，而是创建的 sparkSession 对象的变量名称，所以必 须先创建 SparkSession 对象再导入。这里的 spark 对象不能使用 var 声明，因为 Scala 只支持 val 修饰的对象的引入。
 
 ```
 val idRDD=sc.textFile("id.txt")
 idRDD.toDF("id").show
+
 #DataFrame转RDD
-df.rdd
+val df = sc.makeRDD(List(("zhangsan",30), ("lisi",40))).map(t=>User(t._1, 
+t._2)).toDF
+val rdd = df.rdd
+val array = rdd.collect
+array(0)
+array(0)(0)
+array(0).getAs[String]("name")
 ```
 
-#### Dataset
+```
+#开发中，常常通过样例类将rdd转换为dataframe,如果是一个样例类，那么可以直接取属性名作为dataframe的列名
+case class User(name:String,age:Int)
+sc.makeRDD(List(("zhangsan",30),("lisi",40))).map(t=>User(t._1,t._2)).toDF.show
+```
+
+
+
+### Dataset
 
 >Dataset是具有强类型的数据集合，需要提供对应的类型信息。
 
@@ -1176,20 +1224,105 @@ df.rdd
 case class Person(name:String,age:Long)
 val caseClassDS=Seq(Person("zhangsan",2)).toDS()
 caseClassDS.show
+
 #使用基本类型的序列创建DataSet
 val ds=Seq(1,2,3,4,5).toDS
 ds.show
+```
+
+##### Dataset与其他类型之间的转换
+
+```
+#注意：在实际使用的时候，很少用到把序列转换成DataSet，更多的是通过RDD来得到DataSet
 #RDD转DataSet
 ds1=sc.makeRDD(List(("zhangsna",30),("lisa",60))).map(t=>User(t._1,t._2)).toDS
+
 #Dataset转RDD
 ds1.rdd
+
 #DataFrame和DataSet转换
-val df=sc.makeRDD(List(("zhangsan"，30)))
+val df=sc.makeRDD(List(("zhangsan"，30))).toDF("name","age")
 val ds=df.as[User]
 VAL df=ds.toDF
 ```
 
-#### 用户自定义函数
+### 三者的共性
+
+>1.都是spark平台下的分布式弹性数据集，为处理大型数据提供便利。
+>
+>2.三者都有惰性机制，在创建、转换，如map方法时，不会立即执行，只有碰到action如foreach时，三者才会开始遍历运算。
+>
+>3.三者有一些共同的函数，如filter，排序等。
+>
+>4.在对 DataFrame 和 Dataset 进行操作许多操作都需要这个包:import spark.implicits._（在 创建好 SparkSession 对象后尽量直接导入）
+>
+>5.都有partition的概念
+>
+>Dataframe相比于rdd，多了列名，可以方便进行sql。rdd无法直接查看每一列的值，必须通过解析。
+>
+>Dataframe时Dataset的特例，相当于指定类型为Row，类型可以为person、teacher等。
+
+### IDEA开发SparkSQL
+
+```
+#添加依赖
+<dependency>
+ <groupId>org.apache.spark</groupId>
+ <artifactId>spark-sql_2.12</artifactId>
+ <version>3.0.0</version>
+</dependency>
+
+
+object SparkSQL01_Demo {
+ def main(args: Array[String]): Unit = {
+ //创建上下文环境配置对象
+ val conf: SparkConf = new 
+SparkConf().setMaster("local[*]").setAppName("SparkSQL01_Demo")
+ //创建 SparkSession 对象
+ val spark: SparkSession = SparkSession.builder().config(conf).getOrCreate()
+ //RDD=>DataFrame=>DataSet 转换需要引入隐式转换规则，否则无法转换
+ //spark 不是包名，是上下文环境对象名
+ import spark.implicits._
+ //读取 json 文件 创建 DataFrame {"username": "lisi","age": 18}
+ val df: DataFrame = spark.read.json("input/test.json")
+ //df.show()
+ //SQL 风格语法
+ df.createOrReplaceTempView("user")
+ //spark.sql("select avg(age) from user").show
+ //DSL 风格语法
+ //df.select("username","age").show()
+ //*****RDD=>DataFrame=>DataSet*****
+ //RDD
+ val rdd1: RDD[(Int, String, Int)] = 
+spark.sparkContext.makeRDD(List((1,"zhangsan",30),(2,"lisi",28),(3,"wangwu",
+20)))
+ //DataFrame
+ val df1: DataFrame = rdd1.toDF("id","name","age")
+ //df1.show()
+ //DateSet
+ val ds1: Dataset[User] = df1.as[User]
+ //ds1.show()
+ //*****DataSet=>DataFrame=>RDD*****
+ //DataFrame
+ val df2: DataFrame = ds1.toDF()
+ //RDD 返回的 RDD 类型为 Row，里面提供的 getXXX 方法可以获取字段值，类似 jdbc 处理结果集，
+但是索引从 0 开始
+ val rdd2: RDD[Row] = df2.rdd
+ //rdd2.foreach(a=>println(a.getString(1)))
+ //*****RDD=>DataSet*****
+ rdd1.map{
+ case (id,name,age)=>User(id,name,age)
+ }.toDS()
+ //*****DataSet=>=>RDD*****
+ ds1.rdd
+ //释放资源
+ spark.stop()
+ }
+}
+case class User(id:Int,name:String,age:Int)
+```
+
+### 用户自定义函数
 
 >可以使用spark.udf添加自定义函数
 
@@ -1199,12 +1332,145 @@ df.createOrReplaceTempView("people")
 spark.sql("Select addName(name),age from people").show()
 ```
 
-#### 数据保存和加载
+```
+#udaf弱类型
+/*
+定义类继承 UserDefinedAggregateFunction，并重写其中方法
+*/
+class MyAveragUDAF extends UserDefinedAggregateFunction {
+ // 聚合函数输入参数的数据类型
+ def inputSchema: StructType = 
+StructType(Array(StructField("age",IntegerType)))
+ // 聚合函数缓冲区中值的数据类型(age,count)
+ def bufferSchema: StructType = {
+ 
+StructType(Array(StructField("sum",LongType),StructField("count",LongType)))
+ }
+// 函数返回值的数据类型
+ def dataType: DataType = DoubleType
+ // 稳定性：对于相同的输入是否一直返回相同的输出。
+ def deterministic: Boolean = true
+ // 函数缓冲区初始化
+ def initialize(buffer: MutableAggregationBuffer): Unit = {
+ // 存年龄的总和
+ buffer(0) = 0L
+ // 存年龄的个数
+ buffer(1) = 0L
+ }
+ // 更新缓冲区中的数据
+ def update(buffer: MutableAggregationBuffer,input: Row): Unit = {
+ if (!input.isNullAt(0)) {
+ buffer(0) = buffer.getLong(0) + input.getInt(0)
+ buffer(1) = buffer.getLong(1) + 1
+ }
+ }
+ // 合并缓冲区
+ def merge(buffer1: MutableAggregationBuffer,buffer2: Row): Unit = {
+ buffer1(0) = buffer1.getLong(0) + buffer2.getLong(0)
+ buffer1(1) = buffer1.getLong(1) + buffer2.getLong(1)
+ }
+ // 计算最终结果
+ def evaluate(buffer: Row): Double = buffer.getLong(0).toDouble / 
+buffer.getLong(1)
+}
+。。。
+//创建聚合函数
+var myAverage = new MyAveragUDAF
+//在 spark 中注册聚合函数
+spark.udf.register("avgAge",myAverage)
+spark.sql("select avgAge(age) from user").show()
+```
+
+```
+#udaf强类型
+//输入数据类型
+case class User01(username:String,age:Long)
+//缓存类型
+case class AgeBuffer(var sum:Long,var count:Long)
+/**
+ * 定义类继承 org.apache.spark.sql.expressions.Aggregator
+ * 重写类中的方法
+ */
+class MyAveragUDAF1 extends Aggregator[User01,AgeBuffer,Double]{
+ override def zero: AgeBuffer = {
+ AgeBuffer(0L,0L)
+ }
+ override def reduce(b: AgeBuffer, a: User01): AgeBuffer = {
+b.sum = b.sum + a.age
+ b.count = b.count + 1
+ b
+ }
+ override def merge(b1: AgeBuffer, b2: AgeBuffer): AgeBuffer = {
+ b1.sum = b1.sum + b2.sum
+ b1.count = b1.count + b2.count
+ b1
+ }
+ override def finish(buff: AgeBuffer): Double = {
+ buff.sum.toDouble/buff.count
+ }
+ //DataSet 默认额编解码器，用于序列化，固定写法
+ //自定义类型就是 product 自带类型根据类型选择
+ override def bufferEncoder: Encoder[AgeBuffer] = {
+ Encoders.product
+ }
+ override def outputEncoder: Encoder[Double] = {
+ Encoders.scalaDouble
+ }
+}
+。。。
+//封装为 DataSet
+val ds: Dataset[User01] = df.as[User01]
+//创建聚合函数
+var myAgeUdaf1 = new MyAveragUDAF1
+//将聚合函数转换为查询的列
+val col: TypedColumn[User01, Double] = myAgeUdaf1.toColumn
+//查询
+ds.select(col).show()
+```
+
+```
+#使用
+// TODO 创建 UDAF 函数
+val udaf = new MyAvgAgeUDAF
+// TODO 注册到 SparkSQL 中
+spark.udf.register("avgAge", functions.udaf(udaf))
+// TODO 在 SQL 中使用聚合函数
+// 定义用户的自定义聚合函数
+spark.sql("select avgAge(age) from user").show
+// **************************************************
+case class Buff( var sum:Long, var cnt:Long )
+// totalage, count
+class MyAvgAgeUDAF extends Aggregator[Long, Buff, Double]{
+ override def zero: Buff = Buff(0,0)
+ override def reduce(b: Buff, a: Long): Buff = {
+ b.sum += a
+ b.cnt += 1
+ b
+ }
+override def merge(b1: Buff, b2: Buff): Buff = {
+ b1.sum += b2.sum
+ b1.cnt += b2.cnt
+ b1
+ }
+ override def finish(reduction: Buff): Double = {
+ reduction.sum.toDouble/reduction.cnt
+ }
+ override def bufferEncoder: Encoder[Buff] = Encoders.product
+ override def outputEncoder: Encoder[Double] = Encoders.scalaDouble
+}
+```
+
+
+
+### 数据保存和加载
 
 ```
 #数据加载通用方式，format设置类型：csv，jdbc，json，parquet
+format("…")：指定加载的数据类型，包括"csv"、"jdbc"、"json"、"orc"、"parquet"和
+"textFile"。
 load：在csv，jdbc，json，parquet格式下需要传入数据的路径
 option：在jdbc格式下，需要传入jdbc相应参数，url、user、password和dbtable
+
 spark.read.format("…")[.option("…")].load("…")
 
 #保存数据
@@ -1213,6 +1479,196 @@ df.write.
 df.write.format("")[.option("...")].save("...")
 
 ```
+
+```
+#parquet
+val df = spark.read.load("examples/src/main/resources/users.parquet")
+df.write.mode("append").save("/opt/module/data/output")
+
+#json
+val path = "/opt/module/spark-local/people.json"
+val peopleDF = spark.read.json(path)
+
+#csv
+spark.read.format("csv").option("sep", ";").option("inferSchema", 
+"true").option("header", "true").load("data/user.csv")
+```
+
+```
+#MYSQL
+#添加依赖
+<dependency>
+ <groupId>mysql</groupId>
+ <artifactId>mysql-connector-java</artifactId>
+ <version>5.1.27</version>
+</dependency>
+
+val conf: SparkConf = new 
+SparkConf().setMaster("local[*]").setAppName("SparkSQL")
+//创建 SparkSession 对象
+val spark: SparkSession = SparkSession.builder().config(conf).getOrCreate()
+import spark.implicits._
+//方式 1：通用的 load 方法读取
+spark.read.format("jdbc")
+ .option("url", "jdbc:mysql://linux1:3306/spark-sql")
+ .option("driver", "com.mysql.jdbc.Driver")
+.option("user", "root")
+ .option("password", "123123")
+ .option("dbtable", "user")
+ .load().show
+//方式 2:通用的 load 方法读取 参数另一种形式
+spark.read.format("jdbc")
+ .options(Map("url"->"jdbc:mysql://linux1:3306/spark-sql?user=root&password=
+123123",
+ "dbtable"->"user","driver"->"com.mysql.jdbc.Driver")).load().show
+//方式 3:使用 jdbc 方法读取
+val props: Properties = new Properties()
+props.setProperty("user", "root")
+props.setProperty("password", "123123")
+val df: DataFrame = spark.read.jdbc("jdbc:mysql://linux1:3306/spark-sql", 
+"user", props)
+df.show
+//释放资源
+spark.stop()
+```
+
+写入数据
+
+```
+case class User2(name: String, age: Long)
+。。。
+val conf: SparkConf = new 
+SparkConf().setMaster("local[*]").setAppName("SparkSQL")
+//创建 SparkSession 对象
+val spark: SparkSession = SparkSession.builder().config(conf).getOrCreate()
+import spark.implicits._
+val rdd: RDD[User2] = spark.sparkContext.makeRDD(List(User2("lisi", 20), 
+User2("zs", 30)))
+val ds: Dataset[User2] = rdd.toDS
+//方式 1：通用的方式 format 指定写出类型
+ds.write
+ .format("jdbc")
+ .option("url", "jdbc:mysql://linux1:3306/spark-sql")
+ .option("user", "root")
+ .option("password", "123123")
+ .option("dbtable", "user")
+ .mode(SaveMode.Append)
+ .save()
+//方式 2：通过 jdbc 方法
+val props: Properties = new Properties()
+props.setProperty("user", "root")
+props.setProperty("password", "123123")
+ds.write.mode(SaveMode.Append).jdbc("jdbc:mysql://linux1:3306/spark-sql", 
+"user", props)
+//释放资源
+spark.stop()
+
+```
+
+#### hive
+
+>若要把 Spark SQL 连接到一个部署好的 Hive 上，你必须把 hive-site.xml 复制到 Spark 的配置文件目录中($SPARK_HOME/conf)。即使没有部署好 Hive，Spark SQL 也可以 运行。 需要注意的是，如果你没有部署好 Hive，Spark SQL 会在当前的工作目录中创建出 自己的 Hive 元数据仓库，叫作 metastore_db。此外，如果你尝试使用 HiveQL 中的 CREATE TABLE (并非 CREATE EXTERNAL TABLE)语句来创建表，这些表会被放在你默 认的文件系统中的 /user/hive/warehouse 目录中(如果你的 classpath 中有配好的 hdfs-site.xml，默认的文件系统就是 HDFS，否则就是本地文件系统)。
+>
+>spark-shell 默认是 Hive 支持的；代码中是默认不支持的，需要手动指定（加一个参数即可）。
+
+##### 代码内嵌hive
+
+```
+#spark内嵌hive
+#hive的元数据存储在derby中，默认仓库地址为$SPARK_HOME/spark-warehouse
+spark.sql("show tables").show
+spark.sql("show tables").show
+spark.sql("load data local inpath 'input/ids.txt' into table aa")
+spark.sql("select * from aa").show
+#生产环境中不会使用内置hive
+```
+
+##### 外部hive连接
+
+>如果想连接外部已经部署好的 Hive，需要通过以下几个步骤：
+>
+> ➢ Spark 要接管 Hive 需要把 hive-site.xml 拷贝到 conf/目录下 
+>
+>➢ 把 Mysql 的驱动 copy 到 jars/目录下 
+>
+>➢ 如果访问不到 hdfs，则需要把 core-site.xml 和 hdfs-site.xml 拷贝到 conf/目录下
+>
+> ➢ 重启 spark-shell
+
+```
+#外部hive
+spark.sql("show tables").show
+
+#spark-sql可以方便的执行任务
+bin/spark-sql用于从本地运行hive以及执行查询任务
+```
+
+##### spark thriftserver
+
+>使用thrift提供了直接执行sql的功能
+>
+>否则，需要通过java程序连接hive表，并进行数据处理。
+>
+>https://www.cnblogs.com/zz-ksw/p/11912273.html
+
+```
+#运行spark beeline
+sbin/start-thriftserver.sh
+bin/beeline -u jdbc:hive2://linux1:10000 -n root
+```
+
+>Spark Thrift Server 是 Spark 社区基于 HiveServer2 实现的一个 Thrift 服务。旨在无缝兼容 HiveServer2。因为 Spark Thrift Server 的接口和协议都和 HiveServer2 完全一致，因此我们部 署好 Spark Thrift Server 后，可以直接使用 hive 的 beeline 访问 Spark Thrift Server 执行相关 语句。Spark Thrift Server 的目的也只是取代 HiveServer2，因此它依旧可以和 Hive Metastore 进行交互，获取到 hive 的元数据。 如果想连接 Thrift Server，需要通过以下几个步骤：
+>
+>➢ Spark 要接管 Hive 需要把 hive-site.xml 拷贝到 conf/目录下 
+>
+>➢ 把 Mysql 的驱动 copy 到 jars/目录下 
+>
+>➢ 如果访问不到 hdfs，则需要把 core-site.xml 和 hdfs-site.xml 拷贝到 conf/目录下 
+>
+>➢ 启动 Thrift Server
+>
+>会出现无法处理lzo压缩文件的情况，将hadoop中share/common下的lzo依赖包拷贝到spark的jars目录下。
+
+##### 代码操作hive
+
+>如果报了用户相关的权限问题，通过设置环境变量将hadoop user指定为root：
+>
+>System.setProperty("HADOOP_USER_NAME", "root")
+
+```
+#导入依赖
+<dependency>
+ <groupId>org.apache.spark</groupId>
+ <artifactId>spark-hive_2.12</artifactId>
+ <version>3.0.0</version>
+</dependency>
+<dependency>
+ <groupId>org.apache.hive</groupId>
+ <artifactId>hive-exec</artifactId>
+ <version>1.2.1</version>
+</dependency>
+<dependency>
+ <groupId>mysql</groupId>
+ <artifactId>mysql-connector-java</artifactId>
+ <version>5.1.27</version>
+</dependency>
+
+//将 hive-site.xml 文件拷贝到项目的 resources 目录中
+//创建 SparkSession
+val spark: SparkSession = SparkSession
+ .builder()
+ .enableHiveSupport()
+ .master("local[*]")
+ .appName("sql")
+ .getOrCreate()
+
+#在开发工具中创建数据库默认是在本地仓库，通过参数修改数据库仓库的地址: 
+System.setProperty("HADOOP_USER_NAME", "root")
+config("spark.sql.warehouse.dir", "hdfs://linux1:8020/user/hive/warehouse")
+
+```
+
+
 
 >core-site.xml   hdfs-site.xml  mapred-site.xml  yarn-site.xml
 >

@@ -1437,6 +1437,10 @@ where students.class = class.class
 
 ##### join
 
+>共有七种结果，其中inner join，full join，left join，right join是基本的结果
+>
+>再通过添加where可以取到另外三种不同的集合结果。
+
 | 连接方式   | 逻辑说明                                         |
 | ---------- | ------------------------------------------------ |
 | JOIN       | 即 INNER JOIN                                    |
@@ -1444,6 +1448,8 @@ where students.class = class.class
 | FULL JOIN  | 包含左右两表的所有行， 对应左右表没有的都为 Null |
 | LEFT JOIN  | 左表的全集及右表有的值，无值则为 Null            |
 | RIGHT JOIN | 与 LEFT JOIN 相反                                |
+
+![sql_join](../resources/images/sql_join.png)
 
 ![sql-join](../resources/images/sql-join.png)
 
