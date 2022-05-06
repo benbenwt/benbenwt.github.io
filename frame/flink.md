@@ -2550,8 +2550,6 @@ Table table = tableEnv.fromChangelogStream(dataStream);
 
 ```
 
-
-
 ### 流处理中的表
 
 >一般来说，sql适合批处理的场景，如hive，msyql。流处理的概念域sql概念有些不符，这里对两者的概念进行对比。

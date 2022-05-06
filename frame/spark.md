@@ -280,8 +280,6 @@ sbin/start-all/sh
 </property>
 ```
 
-
-
 ```
 修改spark-env.sh
 vim spark-en.sh
@@ -307,17 +305,6 @@ spark.history.ui.port=18080
 
 sbin/start-history-server.sh
 ```
-
-### hive配置spark引擎
-
-```
-#修改hive-site.xml并重启
-<property>
-<name>execute.engine</name>
-</property>
-```
-
-
 
 ### scala安装
 
@@ -1135,9 +1122,9 @@ def saveAsSequenceFile(
 >
 >共用几种方案：
 >
->1将hive的执行引擎配置为spark
+>1将hive的配置文件链接到spark的conf文件夹，还有mysql connector、hdfs的配置文件等。使用spark-shell或spark程序的sparkcontext，借助spark.sql执行sql语句。
 >
->2使用spark sql编程接口读取hive表内容,并清洗
+>2将hive的配置文件链接到spark的conf文件夹，还有mysql connector、hdfs的配置文件等。spark-sql执行sql语句。也可以开启thriftserver，使用beeline直接执行sql语句，和hiveserver2形式一样。
 
 ### DataFrame
 
@@ -1912,6 +1899,14 @@ application-jar ，打包好的jar，此url全局可见，比如hdfs。
 application-arguments，jar包该类main方法所需要的参数
 ```
 
+# Spark和Flink对比
+
+## 编程方式
+
+>spark streaming主要使用函数式编程，主要使用scala编程，写起来比较简洁，但是可读性差。其编程思想是微批处理。
+>
+>flink主要使用匿名类和继承实现接口、抽象类的形式，代码量多，但是较为直观，可读性好。而且其编程思想是流式处理。
+
 # 生产经验
 
 ## spark数据倾斜
@@ -1919,4 +1914,12 @@ application-arguments，jar包该类main方法所需要的参数
 # SparkStreaming练习题
 
 ## 最近一小时广告点击量
+
+```
+DStream.keyBy()
+		.window()
+        .aggregate()
+```
+
+
 
