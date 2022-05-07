@@ -8,7 +8,12 @@
 04 flink sql练习
 05 spark 练习，主要是对比flink
 06 spark sql
+07	有条理，全面的覆盖。按照主题和分层进行整理
+07 flume为离线数仓和实时数仓采集数据
+07 电商的五层级表
 07 用sql重写一遍flink
+
+
 202204
 01 kafka理论知识博客
 02  hbase

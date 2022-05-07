@@ -2051,7 +2051,202 @@ zookeeper,kafka,flume,sqoop,superset
 
 ## 采集
 
-#### flume用法
+### 日志结构设计
+
+```
+登录日志
+登录失败日志
+
+#页面数据，事件数据，启动数据和错误数据
+```
+
+#### 页面
+
+>页面数据主要是记录一个页面的用户访问情况，包括访问时间，停留时间，页面路径等。
+>
+>page_id:属于哪一种页面，如首页、商品详情、下单结算等。
+>
+>sourceType:页面来源类型，商品推广，查询结果，促销活动等
+>
+>during_time:停留时间
+>
+>ts:跳入时间
+>
+>
+>
+>last_page_id:上页
+>
+>page_item_type:页面对象类型，如活动、购物券等
+>
+>page_item:页面对象id
+
+#### 事件
+
+>事件数据主要记录应用内一个具体操作行为，包括操作类型，操作对象，操作对象描述
+>
+>action_id:动作id，表示具体动作，如添加收藏、取消收藏、添加购物车、删除购物车、领取优惠券
+>
+>item_type:动作目标类型，sku_id商品，coupon_id购物券。
+>
+>item:动作目标id
+>
+>ts：动作时间
+
+#### 曝光
+
+>曝光主要记录页面所曝光的内容，包括曝光对象，曝光类型等信息。
+>
+>displayType：曝光类型，商品推广、促销活动、查询结果商品
+>
+>item_type:曝光对象，sku_id商品id，activity_id活动id
+>
+>item:曝光对象id
+>
+>order：曝光顺序
+
+#### 启动
+
+>启动信息
+>
+>entry:启动入口，图标、通知、安装后启动
+>
+>loading_time:启动加载时间
+>
+>open_ad_id:开屏广告id
+>
+>open_ad_ms:广告时间
+>
+>open_ad_skip_ms:跳过时间
+>
+>ts:时间
+
+#### 错误
+
+>error_code:错误码
+>
+>msg:错误信息
+
+#### 数据埋点
+
+>主流埋点方式：代码埋点（前段）、可视化埋点、全埋点三种
+>
+>当离开页面时，上传所有日志（页面、事件、曝光、错误）
+
+#### 普通日志
+
+>common，action，page，display，error
+
+```
+{
+  "common": {                  -- 公共信息
+    "ar": "230000",              -- 地区编码
+    "ba": "iPhone",              -- 手机品牌
+    "ch": "Appstore",            -- 渠道
+    "is_new": "1",--是否首日使用，首次使用的当日，该字段值为1，过了24:00，该字段置为0。
+	"md": "iPhone 8",            -- 手机型号
+    "mid": "YXfhjAYH6As2z9Iq", -- 设备id
+    "os": "iOS 13.2.9",          -- 操作系统
+    "uid": "485",                 -- 会员id
+    "vc": "v2.1.134"             -- app版本号
+  },
+"actions": [                     --动作(事件)  
+    {
+      "action_id": "favor_add",   --动作id
+      "item": "3",                   --目标id
+      "item_type": "sku_id",       --目标类型
+      "ts": 1585744376605           --动作时间戳
+    }
+  ],
+  "displays": [
+    {
+      "displayType": "query",        -- 曝光类型
+      "item": "3",                     -- 曝光对象id
+      "item_type": "sku_id",         -- 曝光对象类型
+      "order": 1,                      --出现顺序
+      "pos_id": 2                      --曝光位置
+    },
+    {
+      "displayType": "promotion",
+      "item": "6",
+      "item_type": "sku_id",
+      "order": 2, 
+      "pos_id": 1
+    },
+    {
+      "displayType": "promotion",
+      "item": "9",
+      "item_type": "sku_id",
+      "order": 3, 
+      "pos_id": 3
+    },
+    {
+      "displayType": "recommend",
+      "item": "6",
+      "item_type": "sku_id",
+      "order": 4, 
+      "pos_id": 2
+    },
+    {
+      "displayType": "query ",
+      "item": "6",
+      "item_type": "sku_id",
+      "order": 5, 
+      "pos_id": 1
+    }
+  ],
+  "page": {                       --页面信息
+    "during_time": 7648,        -- 持续时间毫秒
+    "item": "3",                  -- 目标id
+    "item_type": "sku_id",      -- 目标类型
+    "last_page_id": "login",    -- 上页类型
+    "page_id": "good_detail",   -- 页面ID
+    "sourceType": "promotion"   -- 来源类型
+  },
+"err":{                     --错误
+"error_code": "1234",      --错误码
+    "msg": "***********"       --错误信息
+},
+  "ts": 1585744374423  --跳入时间戳
+}
+
+```
+
+#### 启动日志
+
+>common,error,start
+
+```
+{
+  "common": {
+    "ar": "370000",
+    "ba": "Honor",
+    "ch": "wandoujia",
+    "is_new": "1",
+    "md": "Honor 20s",
+    "mid": "eQF5boERMJFOujcp",
+    "os": "Android 11.0",
+    "uid": "76",
+    "vc": "v2.1.134"
+  },
+  "start": {   
+    "entry": "icon",         --icon手机图标  notice 通知   install 安装后启动
+    "loading_time": 18803,  --启动加载时间
+    "open_ad_id": 7,        --广告页ID
+    "open_ad_ms": 3449,    -- 广告总共播放时间
+    "open_ad_skip_ms": 1989   --  用户跳过广告时点
+  },
+"err":{                     --错误
+"error_code": "1234",      --错误码
+    "msg": "***********"       --错误信息
+},
+  "ts": 1585744304000
+}
+
+```
+
+
+
+### flume用法
 
 ##### flume自定义拦截器
 
@@ -2110,7 +2305,7 @@ a1.sources.r1.channels = c1
 a1.sinks.k1.channel= c1
 ```
 
-#### sqoop用法
+### sqoop用法
 
 ```
 #导入数据到hdfs
@@ -2131,7 +2326,13 @@ $sqoop import \
 
 ## hive仓库
 
-##### ODS
+>每一层有哪些表
+>
+>每一个主题有那些表
+>
+>每个表的内容是什么，粒度是什么
+
+### ODS
 
 >使用sqoop和flume采集到hdfs目录，在导入到ods表中，ods表的设计不用维度建模，参考采集的数据即可。
 >
@@ -2139,11 +2340,603 @@ $sqoop import \
 >
 >时间是常用的列，如创建，使用，取消，支付等
 
-##### DIM
+#### 用户行为日志
+
+##### ods_log
+
+>当日志服务器接收到日志后，将日志输出到本地文件系统的log文件中，然后再使用flume采集到hdfs上。
+>
+>用于存储行为日志信息，将hdfs上的日志导入该表。
+>
+>如果需要实时处理，日志服务器还需要将信息发送到kafka队列，可以通过日志服务编程直接发送，或者通过flume采集到kafka，方便后续的实时处理程序读取。
+
+```
+#需要指定存储位置、分区、存储格式
+#该表存储每日的原始日志数据，以date为分区。
+drop table if exists ods_log;
+CREATE EXTERNAL TABLE ods_log (`line` string)
+PARTITIONED BY (`dt` string) -- 按照时间创建分区
+STORED AS -- 指定存储方式，读数据采用LzoTextInputFormat；
+  INPUTFORMAT 'com.hadoop.mapred.DeprecatedLzoTextInputFormat'
+  OUTPUTFORMAT 'org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat'
+LOCATION '/warehouse/gmall/ods/ods_log'  -- 指定数据在hdfs上的存储位置
+;
+```
+
+#### 业务数据
+
+>按照大块划分，主要有购物车、收藏、下单、支付、退单、退款、活动、商品、评论表、优惠券、用户、省份、地区，都是从业务数据库中迁移过来的。
+
+##### 活动信息表
+
+>记录活动的基本属性，类型、开始结束时间等
+
+```
+DROP TABLE IF EXISTS ods_activity_info;
+CREATE EXTERNAL TABLE ods_activity_info(
+    `id` STRING COMMENT '编号',
+    `activity_name` STRING  COMMENT '活动名称',
+    `activity_type` STRING  COMMENT '活动类型',
+    `start_time` STRING  COMMENT '开始时间',
+    `end_time` STRING  COMMENT '结束时间',
+    `create_time` STRING  COMMENT '创建时间'
+) COMMENT '活动信息表'
+PARTITIONED BY (`dt` STRING)
+ROW FORMAT DELIMITED FIELDS TERMINATED BY '\t'
+STORED AS
+  INPUTFORMAT 'com.hadoop.mapred.DeprecatedLzoTextInputFormat'
+  OUTPUTFORMAT 'org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat'
+LOCATION '/warehouse/gmall/ods/ods_activity_info/';
+```
+
+##### 活动规则表
+
+>活动规则，记录活动规则的基本信息，如即满减的金额、满减件数、优惠金额、优惠折扣
+
+```
+DROP TABLE IF EXISTS ods_activity_rule;
+CREATE EXTERNAL TABLE ods_activity_rule(
+    `id` STRING COMMENT '编号',
+    `activity_id` STRING  COMMENT '活动ID',
+    `activity_type` STRING COMMENT '活动类型',
+    `condition_amount` DECIMAL(16,2) COMMENT '满减金额',
+    `condition_num` BIGINT COMMENT '满减件数',
+    `benefit_amount` DECIMAL(16,2) COMMENT '优惠金额',
+    `benefit_discount` DECIMAL(16,2) COMMENT '优惠折扣',
+    `benefit_level` STRING COMMENT '优惠级别'
+) COMMENT '活动规则表'
+PARTITIONED BY (`dt` STRING)
+ROW FORMAT DELIMITED FIELDS TERMINATED BY '\t'
+STORED AS
+  INPUTFORMAT 'com.hadoop.mapred.DeprecatedLzoTextInputFormat'
+  OUTPUTFORMAT 'org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat'
+LOCATION '/warehouse/gmall/ods/ods_activity_rule/';
+```
+
+##### 一级品类表
+
+>记录一级品类的id、name
+
+```
+DROP TABLE IF EXISTS ods_base_category1;
+CREATE EXTERNAL TABLE ods_base_category1(
+    `id` STRING COMMENT 'id',
+    `name` STRING COMMENT '名称'
+) COMMENT '商品一级分类表'
+PARTITIONED BY (`dt` STRING)
+ROW FORMAT DELIMITED FIELDS TERMINATED BY '\t'
+STORED AS
+  INPUTFORMAT 'com.hadoop.mapred.DeprecatedLzoTextInputFormat'
+  OUTPUTFORMAT 'org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat'
+LOCATION '/warehouse/gmall/ods/ods_base_category1/';
+```
+
+##### 二级品类
+
+>二级品类id、name、对应的一级品类id
+
+```
+DROP TABLE IF EXISTS ods_base_category2;
+CREATE EXTERNAL TABLE ods_base_category2(
+    `id` STRING COMMENT ' id',
+    `name` STRING COMMENT '名称',
+    `category1_id` STRING COMMENT '一级品类id'
+) COMMENT '商品二级分类表'
+PARTITIONED BY (`dt` STRING)
+ROW FORMAT DELIMITED FIELDS TERMINATED BY '\t'
+STORED AS
+  INPUTFORMAT 'com.hadoop.mapred.DeprecatedLzoTextInputFormat'
+  OUTPUTFORMAT 'org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat'
+LOCATION '/warehouse/gmall/ods/ods_base_category2/';
+
+```
+
+##### 三级品类
+
+>三级品类id、name、二级品类id
+
+```
+DROP TABLE IF EXISTS ods_base_category3;
+CREATE EXTERNAL TABLE ods_base_category3(
+    `id` STRING COMMENT ' id',
+    `name` STRING COMMENT '名称',
+    `category2_id` STRING COMMENT '二级品类id'
+) COMMENT '商品三级分类表'
+PARTITIONED BY (`dt` STRING)
+ROW FORMAT DELIMITED FIELDS TERMINATED BY '\t'
+STORED AS
+  INPUTFORMAT 'com.hadoop.mapred.DeprecatedLzoTextInputFormat'
+  OUTPUTFORMAT 'org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat'
+LOCATION '/warehouse/gmall/ods/ods_base_category3/';
+```
+
+##### 编码字典表
+
+>某些变量在多个地方使用，但是其值比较固定，但是随着系统升级和后期变化，可能需要改变。为了方便维护，将这些变量抽离出来作为编码字典。
+
+```
+DROP TABLE IF EXISTS ods_base_dic;
+CREATE EXTERNAL TABLE ods_base_dic(
+    `dic_code` STRING COMMENT '编号',
+    `dic_name` STRING COMMENT '编码名称',
+    `parent_code` STRING COMMENT '父编码',
+    `create_time` STRING COMMENT '创建日期',
+    `operate_time` STRING COMMENT '操作日期'
+) COMMENT '编码字典表'
+PARTITIONED BY (`dt` STRING)
+ROW FORMAT DELIMITED FIELDS TERMINATED BY '\t'
+STORED AS
+  INPUTFORMAT 'com.hadoop.mapred.DeprecatedLzoTextInputFormat'
+  OUTPUTFORMAT 'org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat'
+LOCATION '/warehouse/gmall/ods/ods_base_dic/';
+```
+
+##### 省份表
+
+>省份基本信息，如编号、省份名称、地区ID、地区编码、ISO-3166编码、ISO-3166-2编码
+
+```
+DROP TABLE IF EXISTS ods_base_province;
+CREATE EXTERNAL TABLE ods_base_province (
+    `id` STRING COMMENT '编号',
+    `name` STRING COMMENT '省份名称',
+    `region_id` STRING COMMENT '地区ID',
+    `area_code` STRING COMMENT '地区编码',
+    `iso_code` STRING COMMENT 'ISO-3166编码，供可视化使用',
+    `iso_3166_2` STRING COMMENT 'IOS-3166-2编码，供可视化使用'
+)  COMMENT '省份表'
+ROW FORMAT DELIMITED FIELDS TERMINATED BY '\t'
+STORED AS
+  INPUTFORMAT 'com.hadoop.mapred.DeprecatedLzoTextInputFormat'
+  OUTPUTFORMAT 'org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat'
+LOCATION '/warehouse/gmall/ods/ods_base_province/';
+```
+
+##### 地区表
+
+>地区名称、编号
+
+```
+DROP TABLE IF EXISTS ods_base_region;
+CREATE EXTERNAL TABLE ods_base_region (
+    `id` STRING COMMENT '编号',
+    `region_name` STRING COMMENT '地区名称'
+)  COMMENT '地区表'
+ROW FORMAT DELIMITED FIELDS TERMINATED BY '\t'
+STORED AS
+  INPUTFORMAT 'com.hadoop.mapred.DeprecatedLzoTextInputFormat'
+  OUTPUTFORMAT 'org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat'
+LOCATION '/warehouse/gmall/ods/ods_base_region/';
+```
+
+##### 品牌表
+
+>编号、品牌名称
+
+```
+DROP TABLE IF EXISTS ods_base_trademark;
+CREATE EXTERNAL TABLE ods_base_trademark (
+    `id` STRING COMMENT '编号',
+    `tm_name` STRING COMMENT '品牌名称'
+)  COMMENT '品牌表'
+PARTITIONED BY (`dt` STRING)
+ROW FORMAT DELIMITED FIELDS TERMINATED BY '\t'
+STORED AS
+  INPUTFORMAT 'com.hadoop.mapred.DeprecatedLzoTextInputFormat'
+  OUTPUTFORMAT 'org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat'
+LOCATION '/warehouse/gmall/ods/ods_base_trademark/';
+```
+
+##### 购物车表
+
+>编号、用户id、skuid、创建时间、下单时间、修改时间
+
+```
+DROP TABLE IF EXISTS ods_cart_info;
+CREATE EXTERNAL TABLE ods_cart_info(
+    `id` STRING COMMENT '编号',
+    `user_id` STRING COMMENT '用户id',
+    `sku_id` STRING COMMENT 'skuid',
+    `cart_price` DECIMAL(16,2)  COMMENT '放入购物车时价格',
+    `sku_num` BIGINT COMMENT '数量',
+    `sku_name` STRING COMMENT 'sku名称 (冗余)',
+    `create_time` STRING COMMENT '创建时间',
+    `operate_time` STRING COMMENT '修改时间',
+    `is_ordered` STRING COMMENT '是否已经下单',
+    `order_time` STRING COMMENT '下单时间',
+    `source_type` STRING COMMENT '来源类型',
+    `source_id` STRING COMMENT '来源编号'
+) COMMENT '加购表'
+PARTITIONED BY (`dt` STRING)
+ROW FORMAT DELIMITED FIELDS TERMINATED BY '\t'
+STORED AS
+  INPUTFORMAT 'com.hadoop.mapred.DeprecatedLzoTextInputFormat'
+  OUTPUTFORMAT 'org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat'
+LOCATION '/warehouse/gmall/ods/ods_cart_info/';
+```
+
+##### 评论表
+
+>用户id、商品sku、商品spu、订单id、评价id、评价
+
+```
+DROP TABLE IF EXISTS ods_comment_info;
+CREATE EXTERNAL TABLE ods_comment_info(
+    `id` STRING COMMENT '编号',
+    `user_id` STRING COMMENT '用户ID',
+    `sku_id` STRING COMMENT '商品sku',
+    `spu_id` STRING COMMENT '商品spu',
+    `order_id` STRING COMMENT '订单ID',
+    `appraise` STRING COMMENT '评价',
+    `create_time` STRING COMMENT '评价时间'
+) COMMENT '商品评论表'
+PARTITIONED BY (`dt` STRING)
+ROW FORMAT DELIMITED FIELDS TERMINATED BY '\t'
+STORED AS
+  INPUTFORMAT 'com.hadoop.mapred.DeprecatedLzoTextInputFormat'
+  OUTPUTFORMAT 'org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat'
+LOCATION '/warehouse/gmall/ods/ods_comment_info/';
+
+```
+
+##### 优惠券信息表
+
+>编号、名称、优惠券类型、满减件数、满减金额、范围类型、范围、优惠金额、优惠折扣、开始结束时间、过期时间、最多领用次数、当前领用次数。
+
+```
+DROP TABLE IF EXISTS ods_coupon_info;
+CREATE EXTERNAL TABLE ods_coupon_info(
+    `id` STRING COMMENT '购物券编号',
+    `coupon_name` STRING COMMENT '购物券名称',
+    `coupon_type` STRING COMMENT '购物券类型 1 现金券 2 折扣券 3 满减券 4 满件打折券',
+    `condition_amount` DECIMAL(16,2) COMMENT '满额数',
+    `condition_num` BIGINT COMMENT '满件数',
+    `activity_id` STRING COMMENT '活动编号',
+    `benefit_amount` DECIMAL(16,2) COMMENT '减金额',
+    `benefit_discount` DECIMAL(16,2) COMMENT '折扣',
+    `create_time` STRING COMMENT '创建时间',
+    `range_type` STRING COMMENT '范围类型 1、商品 2、品类 3、品牌',
+    `limit_num` BIGINT COMMENT '最多领用次数',
+    `taken_count` BIGINT COMMENT '已领用次数',
+    `start_time` STRING COMMENT '开始领取时间',
+    `end_time` STRING COMMENT '结束领取时间',
+    `operate_time` STRING COMMENT '修改时间',
+    `expire_time` STRING COMMENT '过期时间'
+) COMMENT '优惠券表'
+PARTITIONED BY (`dt` STRING)
+ROW FORMAT DELIMITED FIELDS TERMINATED BY '\t'
+STORED AS
+  INPUTFORMAT 'com.hadoop.mapred.DeprecatedLzoTextInputFormat'
+  OUTPUTFORMAT 'org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat'
+LOCATION '/warehouse/gmall/ods/ods_coupon_info/';
+
+```
+
+##### 优惠券领用表
+
+>编号、优惠券ID、skuid、spuid、领取时间、使用时间下单、使用时间支付、过期时间、优惠券状态
+
+```
+DROP TABLE IF EXISTS ods_coupon_use;
+CREATE EXTERNAL TABLE ods_coupon_use(
+    `id` STRING COMMENT '编号',
+    `coupon_id` STRING  COMMENT '优惠券ID',
+    `user_id` STRING  COMMENT 'skuid',
+    `order_id` STRING  COMMENT 'spuid',
+    `coupon_status` STRING  COMMENT '优惠券状态',
+    `get_time` STRING  COMMENT '领取时间',
+    `using_time` STRING  COMMENT '使用时间(下单)',
+    `used_time` STRING  COMMENT '使用时间(支付)',
+    `expire_time` STRING COMMENT '过期时间'
+) COMMENT '优惠券领用表'
+PARTITIONED BY (`dt` STRING)
+ROW FORMAT DELIMITED FIELDS TERMINATED BY '\t'
+STORED AS
+  INPUTFORMAT 'com.hadoop.mapred.DeprecatedLzoTextInputFormat'
+  OUTPUTFORMAT 'org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat'
+LOCATION '/warehouse/gmall/ods/ods_coupon_use/';
+
+```
+
+##### 收藏表
+
+>用户id、skuid、spuid、收藏时间、取消收藏时间
+
+```
+DROP TABLE IF EXISTS ods_favor_info;
+CREATE EXTERNAL TABLE ods_favor_info(
+    `id` STRING COMMENT '编号',
+    `user_id` STRING COMMENT '用户id',
+    `sku_id` STRING COMMENT 'skuid',
+    `spu_id` STRING COMMENT 'spuid',
+    `is_cancel` STRING COMMENT '是否取消',
+    `create_time` STRING COMMENT '收藏时间',
+    `cancel_time` STRING COMMENT '取消时间'
+) COMMENT '商品收藏表'
+PARTITIONED BY (`dt` STRING)
+ROW FORMAT DELIMITED FIELDS TERMINATED BY '\t'
+STORED AS
+  INPUTFORMAT 'com.hadoop.mapred.DeprecatedLzoTextInputFormat'
+  OUTPUTFORMAT 'org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat'
+LOCATION '/warehouse/gmall/ods/ods_favor_info/';
+
+```
+
+##### 订单表
+
+```
+#订单信息，包括订单号、用户id、支付方式、支付流水号、订单原价金额、运费、运费减免、活动减免、优惠券减免
+DROP TABLE IF EXISTS ods_order_info;
+CREATE EXTERNAL TABLE ods_order_info (
+    `id` STRING COMMENT '订单号',
+    `final_amount` DECIMAL(16,2) COMMENT '订单最终金额',
+    `order_status` STRING COMMENT '订单状态',
+    `user_id` STRING COMMENT '用户id',
+    `payment_way` STRING COMMENT '支付方式',
+    `delivery_address` STRING COMMENT '送货地址',
+    `out_trade_no` STRING COMMENT '支付流水号',
+    `create_time` STRING COMMENT '创建时间',
+    `operate_time` STRING COMMENT '操作时间',
+    `expire_time` STRING COMMENT '过期时间',
+    `tracking_no` STRING COMMENT '物流单编号',
+    `province_id` STRING COMMENT '省份ID',
+    `activity_reduce_amount` DECIMAL(16,2) COMMENT '活动减免金额',
+    `coupon_reduce_amount` DECIMAL(16,2) COMMENT '优惠券减免金额',
+    `original_amount` DECIMAL(16,2)  COMMENT '订单原价金额',
+    `feight_fee` DECIMAL(16,2)  COMMENT '运费',
+    `feight_fee_reduce` DECIMAL(16,2)  COMMENT '运费减免'
+) COMMENT '订单表'
+PARTITIONED BY (`dt` STRING)
+ROW FORMAT DELIMITED FIELDS TERMINATED BY '\t'
+STORED AS
+  INPUTFORMAT 'com.hadoop.mapred.DeprecatedLzoTextInputFormat'
+  OUTPUTFORMAT 'org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat'
+LOCATION '/warehouse/gmall/ods/ods_order_info/';
+
+```
+
+##### 订单明细表
+
+```
+#订单号、商品id、商品名称、商品价格、商品数量、分摊金额、分摊活动优惠、分摊优惠券优惠。
+DROP TABLE IF EXISTS ods_order_detail;
+CREATE EXTERNAL TABLE ods_order_detail(
+    `id` STRING COMMENT '编号',
+    `order_id` STRING  COMMENT '订单号',
+    `sku_id` STRING COMMENT '商品id',
+    `sku_name` STRING COMMENT '商品名称',
+    `order_price` DECIMAL(16,2) COMMENT '商品价格',
+    `sku_num` BIGINT COMMENT '商品数量',
+    `create_time` STRING COMMENT '创建时间',
+    `source_type` STRING COMMENT '来源类型',
+    `source_id` STRING COMMENT '来源编号',
+    `split_final_amount` DECIMAL(16,2) COMMENT '分摊最终金额',
+    `split_activity_amount` DECIMAL(16,2) COMMENT '分摊活动优惠',
+    `split_coupon_amount` DECIMAL(16,2) COMMENT '分摊优惠券优惠'
+) COMMENT '订单详情表'
+PARTITIONED BY (`dt` STRING)
+ROW FORMAT DELIMITED FIELDS TERMINATED BY '\t'
+STORED AS
+  INPUTFORMAT 'com.hadoop.mapred.DeprecatedLzoTextInputFormat'
+  OUTPUTFORMAT 'org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat'
+LOCATION '/warehouse/gmall/ods/ods_order_detail/';
+
+```
+
+##### 订单明细活动关联表
+
+```
+#订单编号、活动id、订单明细id、活动规则id
+DROP TABLE IF EXISTS ods_order_detail_activity;
+CREATE EXTERNAL TABLE ods_order_detail_activity(
+    `id` STRING COMMENT '编号',
+    `order_id` STRING  COMMENT '订单号',
+    `order_detail_id` STRING COMMENT '订单明细id',
+    `activity_id` STRING COMMENT '活动id',
+    `activity_rule_id` STRING COMMENT '活动规则id',
+    `sku_id` BIGINT COMMENT '商品id',
+    `create_time` STRING COMMENT '创建时间'
+) COMMENT '订单详情活动关联表'
+PARTITIONED BY (`dt` STRING)
+ROW FORMAT DELIMITED FIELDS TERMINATED BY '\t'
+STORED AS
+  INPUTFORMAT 'com.hadoop.mapred.DeprecatedLzoTextInputFormat'
+  OUTPUTFORMAT 'org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat'
+LOCATION '/warehouse/gmall/ods/ods_order_detail_activity/';
+```
+
+##### 订单明细优惠券关联表
+
+```
+#订单id、订单明细id、优惠券id、优惠券领用id、商品id
+DROP TABLE IF EXISTS ods_order_detail_coupon;
+CREATE EXTERNAL TABLE ods_order_detail_coupon(
+    `id` STRING COMMENT '编号',
+    `order_id` STRING  COMMENT '订单号',
+    `order_detail_id` STRING COMMENT '订单明细id',
+    `coupon_id` STRING COMMENT '优惠券id',
+    `coupon_use_id` STRING COMMENT '优惠券领用记录id',
+    `sku_id` STRING COMMENT '商品id',
+    `create_time` STRING COMMENT '创建时间'
+) COMMENT '订单详情活动关联表'
+PARTITIONED BY (`dt` STRING)
+ROW FORMAT DELIMITED FIELDS TERMINATED BY '\t'
+STORED AS
+  INPUTFORMAT 'com.hadoop.mapred.DeprecatedLzoTextInputFormat'
+  OUTPUTFORMAT 'org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat'
+LOCATION '/warehouse/gmall/ods/ods_order_detail_coupon/';
+```
+
+##### 退单表
+
+```
+#用户id、订单id、退单原因、商品id
+DROP TABLE IF EXISTS ods_order_refund_info;
+CREATE EXTERNAL TABLE ods_order_refund_info(
+    `id` STRING COMMENT '编号',
+    `user_id` STRING COMMENT '用户ID',
+    `order_id` STRING COMMENT '订单ID',
+    `sku_id` STRING COMMENT '商品ID',
+    `refund_type` STRING COMMENT '退单类型',
+    `refund_num` BIGINT COMMENT '退单件数',
+    `refund_amount` DECIMAL(16,2) COMMENT '退单金额',
+    `refund_reason_type` STRING COMMENT '退单原因类型',
+    `refund_status` STRING COMMENT '退单状态',--退单状态应包含买家申请、卖家审核、卖家收货、退款完成等状态。此处未涉及到，故该表按增量处理
+    `create_time` STRING COMMENT '退单时间'
+) COMMENT '退单表'
+PARTITIONED BY (`dt` STRING)
+ROW FORMAT DELIMITED FIELDS TERMINATED BY '\t'
+STORED AS
+  INPUTFORMAT 'com.hadoop.mapred.DeprecatedLzoTextInputFormat'
+  OUTPUTFORMAT 'org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat'
+LOCATION '/warehouse/gmall/ods/ods_order_refund_info/';
+```
+
+##### 订单状态日志表
+
+```
+#订单状态、订单id、修改时间
+DROP TABLE IF EXISTS ods_order_status_log;
+CREATE EXTERNAL TABLE ods_order_status_log (
+    `id` STRING COMMENT '编号',
+    `order_id` STRING COMMENT '订单ID',
+    `order_status` STRING COMMENT '订单状态',
+    `operate_time` STRING COMMENT '修改时间'
+)  COMMENT '订单状态表'
+PARTITIONED BY (`dt` STRING)
+ROW FORMAT DELIMITED FIELDS TERMINATED BY '\t'
+STORED AS
+  INPUTFORMAT 'com.hadoop.mapred.DeprecatedLzoTextInputFormat'
+  OUTPUTFORMAT 'org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat'
+LOCATION '/warehouse/gmall/ods/ods_order_status_log/';
+
+```
+
+##### 支付表
+
+```
+#订单id、用户id、支付金额、创建时间、回调时间
+DROP TABLE IF EXISTS ods_payment_info;
+CREATE EXTERNAL TABLE ods_payment_info(
+    `id` STRING COMMENT '编号',
+    `out_trade_no` STRING COMMENT '对外业务编号',
+    `order_id` STRING COMMENT '订单编号',
+    `user_id` STRING COMMENT '用户编号',
+    `payment_type` STRING COMMENT '支付类型',
+    `trade_no` STRING COMMENT '交易编号',
+    `payment_amount` DECIMAL(16,2) COMMENT '支付金额',
+    `subject` STRING COMMENT '交易内容',
+    `payment_status` STRING COMMENT '支付状态',
+    `create_time` STRING COMMENT '创建时间',
+    `callback_time` STRING COMMENT '回调时间'
+)  COMMENT '支付流水表'
+PARTITIONED BY (`dt` STRING)
+ROW FORMAT DELIMITED FIELDS TERMINATED BY '\t'
+STORED AS
+  INPUTFORMAT 'com.hadoop.mapred.DeprecatedLzoTextInputFormat'
+  OUTPUTFORMAT 'org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat'
+LOCATION '/warehouse/gmall/ods/ods_payment_info/';
+```
+
+##### 退款表
+
+```
+#订单编号、交易编号、支付金额、创建时间、回调时间
+DROP TABLE IF EXISTS ods_refund_payment;
+CREATE EXTERNAL TABLE ods_refund_payment(
+    `id` STRING COMMENT '编号',
+    `out_trade_no` STRING COMMENT '对外业务编号',
+    `order_id` STRING COMMENT '订单编号',
+    `sku_id` STRING COMMENT 'SKU编号',
+    `payment_type` STRING COMMENT '支付类型',
+    `trade_no` STRING COMMENT '交易编号',
+    `refund_amount` DECIMAL(16,2) COMMENT '支付金额',
+    `subject` STRING COMMENT '交易内容',
+    `refund_status` STRING COMMENT '支付状态',
+    `create_time` STRING COMMENT '创建时间',
+    `callback_time` STRING COMMENT '回调时间'
+)  COMMENT '支付流水表'
+PARTITIONED BY (`dt` STRING)
+ROW FORMAT DELIMITED FIELDS TERMINATED BY '\t'
+STORED AS
+  INPUTFORMAT 'com.hadoop.mapred.DeprecatedLzoTextInputFormat'
+  OUTPUTFORMAT 'org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat'
+LOCATION '/warehouse/gmall/ods/ods_refund_payment/';
+```
+
+##### 商品平台属性表
+
+```
+#sku的平台属性，属性id、属性值id、平台属性名称、平台属性值名称、商品id
+DROP TABLE IF EXISTS ods_sku_attr_value;
+CREATE EXTERNAL TABLE ods_sku_attr_value(
+    `id` STRING COMMENT '编号',
+    `attr_id` STRING COMMENT '平台属性ID',
+    `value_id` STRING COMMENT '平台属性值ID',
+    `sku_id` STRING COMMENT '商品ID',
+    `attr_name` STRING COMMENT '平台属性名称',
+    `value_name` STRING COMMENT '平台属性值名称'
+) COMMENT 'sku平台属性表'
+PARTITIONED BY (`dt` STRING)
+ROW FORMAT DELIMITED FIELDS TERMINATED BY '\t'
+STORED AS
+  INPUTFORMAT 'com.hadoop.mapred.DeprecatedLzoTextInputFormat'
+  OUTPUTFORMAT 'org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat'
+LOCATION '/warehouse/gmall/ods/ods_sku_attr_value/';
+
+```
+
+##### 商品表
+
+```
+#商品名称、skuid、spuid、品牌id、品类id
+DROP TABLE IF EXISTS ods_sku_info;
+CREATE EXTERNAL TABLE ods_sku_info(
+    `id` STRING COMMENT 'skuId',
+    `spu_id` STRING COMMENT 'spuid',
+    `price` DECIMAL(16,2) COMMENT '价格',
+    `sku_name` STRING COMMENT '商品名称',
+    `sku_desc` STRING COMMENT '商品描述',
+    `weight` DECIMAL(16,2) COMMENT '重量',
+    `tm_id` STRING COMMENT '品牌id',
+    `category3_id` STRING COMMENT '品类id',
+    `is_sale` STRING COMMENT '是否在售',
+    `create_time` STRING COMMENT '创建时间'
+) COMMENT 'SKU商品表'
+PARTITIONED BY (`dt` STRING)
+ROW FORMAT DELIMITED FIELDS TERMINATED BY '\t'
+STORED AS
+  INPUTFORMAT 'com.hadoop.mapred.DeprecatedLzoTextInputFormat'
+  OUTPUTFORMAT 'org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat'
+LOCATION '/warehouse/gmall/ods/ods_sku_info/';
+
+```
+
+### DIM
 
 >描述几个topic的维度表：用户，商品，活动，优惠，时间，地区。和ads基本一致
 
-##### DWD
+### DWD
 
 >DIM层DWD层需构建维度模型，一般采用星型模型，呈现的状态一般为星座模型。
 >
@@ -2158,9 +2951,25 @@ $sqoop import \
 确认事实：事实就是度量值（次数、个数、件数、金额，可以进行累加），暂时理解为一种特殊的列，也就是特殊的维度。
 ```
 
-##### DWS
+#### DWD层（用户行为日志）
 
-##### DWT
+>主要是从ods_log表读出json，然后使用get_json_object获取json字段填入对应表。
+
+##### 启动日志
+
+##### 动作日志
+
+##### 页面日志
+
+##### 曝光日志
+
+##### 错误日志
+
+#### DWD层（业务数据）
+
+### DWS
+
+### DWT
 
 >DWS层和DWT层统称宽表层，这两层的设计思想大致相同。
 >
@@ -2172,11 +2981,47 @@ $sqoop import \
 >
 >2.宽表里面的字段：是站在不同维度的角度去看事实表，重点关注事实表聚合后的度量值。
 
-##### ADS
+### ADS
 
 >对电商系统各大主题指标分别进行分析。
 >
 >最终需要将统计的数据放入mysql、es等，方便其他分析人员使用。
+
+#### 访客主题
+
+>ods:
+>
+>dwd:
+>
+>dws:
+>
+>dwt:
+>
+>ads:
+
+#### 用户主题
+
+>用户新增
+>
+>用户流失
+>
+>用户回流
+
+#### 商品主题
+
+>品牌复购率
+
+#### 订单主题
+
+>订单省份分布
+
+#### 优惠券主题
+
+>优惠金额，原始金额，补贴率
+
+#### 活动主题
+
+>优惠金额，原始金额，补贴率
 
 ## 迁移数据
 

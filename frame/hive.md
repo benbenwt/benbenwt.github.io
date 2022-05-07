@@ -572,7 +572,6 @@ select
 >
 >复购率的含义，至少买过2次及以上的人所占的比列，即（买两次的用户数）/(买两次的用户数+买一次的用户数)
 >
->
 
 ```sql
 #利用explode将dwd_order_detail表的数据复制三份，分别用于1、7、30的recent_days的select，然后借助date_add(now_date,-recent_days+1)对三组数据进行筛选。
@@ -889,8 +888,6 @@ sku_id：商品 ID，其中 1111 是拉新的活动商品
 #创建lzo索引
 hadoop jar /path/to/jar/hadoop-lzo-cdh4-0.4.15-gplextras.jar com.hadoop.compression.lzo.LzoIndexer /path/to/HDFS/dir/ contains/lzo/files
 ```
-
-
 
 ### 分区
 
@@ -3369,6 +3366,13 @@ group by sku_id
 
 ## HIVE窗口函数
 
+```
+select id,cost,rank()  over(partition by id order by dt rows between unbounded preceding and 1 preceding) rk from 
+select id,cost,lag(dt,1,0)  over(partition by id order by dt rows between unbounded preceding and 1 preceding) rk from 
+```
+
+
+
 ### window 字句
 
 >PRECEDING
@@ -3385,9 +3389,9 @@ group by sku_id
 
 ```
 #开始行到当前行的前一行
-ROWS BETWEEN UNBOUNDED PRECEDING 1 PRECEDING
+ROWS BETWEEN UNBOUNDED PRECEDING AND 1 PRECEDING
 #当前行到结束行
-ROWS BETWEEN  CURRENT ROW UNBOUNDED FOLLOWING
+ROWS BETWEEN  CURRENT ROW AND  UNBOUNDED FOLLOWING
 ```
 
 ### windowing 函数
