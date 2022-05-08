@@ -506,7 +506,7 @@ select
 ```
 
 ```
-将5大板块通过dt加sku_id分组查询出来后，没有使用join，而是使用union all合并，不存在的字段使用0，方便后续的sum求和。union的优势，
+将5大板块通过dt加sku_id分组查询出来后，没有使用join，而是使用union all合并，不存在的字段使用0，方便后续的sum求和。union的优势
 ```
 
 ###### dwt_sku_topic
@@ -1623,9 +1623,8 @@ ListSink
 ##### explode_json
 
 ```
+
 ```
-
-
 
 ### 触发器
 
@@ -3205,6 +3204,10 @@ select id,ts,sum(if(tsdiff>=60,1,0)) over(partition by id order by ts) groupid f
 
 ### 间隔连续问题
 
+>默认情况下 sum over计算从起始行到当前行的数据，如果需要计算其他数据，可以使用PROCEDDINGH和FOLLOWING指定范围。
+>
+>lag lead first_value last_value
+
 ```
 某游戏公司记录的用户每日登录数据
 id dt
@@ -3225,7 +3228,7 @@ id dt
 #间隔连续的判定条件为，diff>2。lag函数解法
 select id,max(continous_days) max_days+1 from
     (select id,dt, datediff(max(dt),min(dt)) continous_days from
-        (select id,dt,sum(if(dtdiff>2,1,0)) groupid from 
+        (select id,dt,sum(if(dtdiff>2,1,0)) over(partition by id order by dt) groupid from 
             (select id,dt,dt-prev_dt dtdiff from
                 (select id,dt,lag(dt,1,0) prev_dt from test_table
                 )t1

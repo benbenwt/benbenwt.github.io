@@ -4653,6 +4653,20 @@ bin/flink savepoint jobId  hdfs://hbase:9000/flink/savepoints
 bin/flink run -s hdfs://hbase:9000/flink/savepoints -c com.demo.task.practice.SavePoint /opt/software/jars/flink-2-hbase-1.0-SNAPSHOT.jar
 ```
 
+# 项目难点
+
+## 实时更改配置
+
+>自定义sourceFunciton，读取数据源并广播
+>
+>广播连接流读取其中的配置并更新，处理流访问配置状态，动态变更规则。
+
+### 优雅停止任务
+
+>通过读取文件路径，当文件路径存在时，将任务停止。
+
+
+
 
 
 
