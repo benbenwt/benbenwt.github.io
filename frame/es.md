@@ -945,35 +945,191 @@ https://kb.objectrocket.com/elasticsearch/elasticsearch-and-scroll-in-python-953
 
 ## 基本数据类型
 
->主要类型：text,keyword,float,double,boolean,date,byte,short,integer,long
->#查看映射
->GET /gb/_mapping/tweet
+>数值类型，字符类型，布尔类型，日期类型，复合类型，地理类型
+>
+>主要类型：text,keyword,boolean,,byte,short,integer,long
 
 ### 数值类型
+
+>byte，short，integer，long，这四个整数类型对应1,2,4,8个字节，每个字节8位，都是有符号整数。
+>
+>float,double，half_flot,scaled_float，float和double分别对应64位和32位浮点数。half_float是16位半精度浮点数。scaled_float是缩放浮点数，通过一个缩放因子表示浮点，如57.34的缩放因子为100，存储为5734。
 
 ### 字符类型
 
 >string,text,keyword
 
-##### string
+#### string
 
 >旧版本的类型，现用text，keyword代替
 
-##### text
+#### text
 
 >当一个字段要被全文检索，比如文本内容，如email内容、产品描述等，应使用text类型。设置成text类型，该字段内容会被分析器分成一个一个词项。text类型的字段不用于排序，很少用于聚合。
 
-##### keyword
+#### keyword
 
 >keyword类型适用于索引结构化的字段，比如email地址、主机名、状态码等。keyword字段只能通过精确搜索得到。
 
 ### 日期
 
+>date
+>
+>一般表中必须带有一个date字段，因为在使用kibana可视化时，需要date类型的变量作为时间戳，来确定可视化的时间范围。
+>
+>有如下几种：
+>
+>1日志格式字符串
+>
+>2long类型的毫秒数
+>
+>3integer的秒数
+
 ### 复合类型
+
+#### array
+
+```
+字符数组
+整数数组
+对象数组
+```
+
+
 
 ### 地理类型
 
+#### geo_point
 
+>记录地点的经纬度用于可视化地图使用
+
+### Mapping设计原则
+
+>https://www.elastic.co/guide/en/elasticsearch/reference/current/index-modules.html
+>
+>https://www.jianshu.com/p/01f489c46c38
+
+#### 动态映射
+
+>当不手动创建mapping时，我们如果插入一条json数据，那么elasticsearch会自动映射字段。
+>
+>例如，常见的date类型、float、double如果通过了类型detection，那么就会创建为对应类型的字段。
+
+```
+#开启动态映射
+PUT  myidnex
+{
+	"mappings": {
+	    "dynamic": "true"
+	}
+}
+#dynamic可取三种字段，true、false、strict
+```
+
+##### 自定义类型检查
+
+>用户可以自定义是否开启类型检查，以及检查规则是什么，通过正则指定。
+
+```
+#关闭date detection
+PUT my-index-000001
+{
+  "mappings": {
+    "date_detection": false
+  }
+}
+#开启数值detection
+PUT my-index-000001
+{
+  "mappings": {
+    "numeric_detection": true
+  }
+}
+#正则指定检查规则
+PUT my-index-000001
+{
+  "mappings": {
+    "dynamic_date_formats": ["MM/dd/yyyy"]
+  }
+}
+```
+
+#### 显示映射
+
+>创建索引时手动指定字段类型
+
+```
+PUT /my-index-000001
+{
+  "mappings": {
+    "properties": {
+      "age":    { "type": "integer" },  
+      "email":  { "type": "keyword"  }, 
+      "name":   { "type": "text"  }     
+    }
+  }
+}
+
+#向已经存在的索引添加字段
+PUT /my-index-000001/_mapping
+{
+  "properties": {
+    "employee-id": {
+      "type": "keyword",
+      "index": false
+    }
+  }
+}
+#查看具体字段映射
+GET /my-index-000001/_mapping/field/employee-id
+```
+
+#### 运行时字段
+
+>指定为运行时字段，es不会为运行时字段构建索引，这样能节省运行内存，减少内存的需要。但是这牺牲了一定的查询性能。
+>
+>https://www.elastic.co/guide/en/elasticsearch/reference/current/runtime-mapping-fields.html
+
+```
+#指定字段为runtime
+PUT my-index-000001/
+{
+  "mappings": {
+    "runtime": {
+      "day_of_week": {
+        "type": "keyword",
+        "script": {
+          "source": "emit(doc['@timestamp'].value.dayOfWeekEnum.getDisplayName(TextStyle.FULL, Locale.ROOT))"
+        }
+      }
+    },
+    "properties": {
+      "@timestamp": {"type": "date"}
+    }
+  }
+}
+
+#让其自动映射为runtime
+PUT my-index-000001
+{
+  "mappings": {
+    "dynamic": "runtime",
+    "properties": {
+      "@timestamp": {
+        "type": "date"
+      }
+    }
+  }
+}
+
+#移除runtime字段
+PUT my-index-000001/_mapping
+{
+ "runtime": {
+   "day_of_week": null
+ }
+}
+```
 
 
 

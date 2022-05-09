@@ -93,8 +93,6 @@ update user set host="%" where user="root";
 source create_table.sql
 ```
 
-
-
 ### 批量PrepareStatement插入
 
 >时间花费=网络传输时间（传输的数据量，建立的连接次数）+数据库向应时间（索引结构、存储原理）

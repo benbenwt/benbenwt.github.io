@@ -1110,7 +1110,7 @@ public boolean equals(Object obj) {
 >ReentrantLock:阻塞所，可重入，操作由程序员编写。可实现非公平锁。
 >automaticInteger乐观锁，如原子变量就是乐观锁的应用。
 >wait(),notify(),sleep()：wait使一个线程处于等待状态，释放所有lock。sleep保留锁。
->3(易变的):确保每次都重新取值，而不是使用寄存器的值。
+>volatile(易变的):确保每次都重新取值，而不是使用寄存器的值。
 
 ### 线程池
 
@@ -1319,29 +1319,19 @@ JAVA常用的节点流：
 可以只关闭处理流，不用关闭节点流。处理流关闭的时候，会调用其处理的节点流的关闭方法。
 ```
 
-
-
-##### File
+## File
 
 >用来描述文件并进行基础性操作的类，方法有renameTo,delete(),exists,isFile,isDirectory,getName,getPath
 
-
-
-##### InputStreamReader类
+## InputStreamReader类
 
 >他是字节流到字符流的桥梁，读取字节并用特定字符集节码，字符集默认使用平台字符集。要保证效率使用BufferReader。其定义的属性有StreamDecoder，方法有getEncode,read,ready,close。
 
-##### BufferedReader
+## BufferedReader
 
 >BufferedReader继承自Reader，提供高效字符读取,其定义了Reader,char,nChars,nextChar,ensureOpen(),read(),readline()。缓冲区的大小可以指定，否则使用默认大小。大多数情况下默认大小就够用的。 每次Reader的读取请求都会产生相应的对字符或字节流的读取请求，所以最好用BufferedReader包装那些read操作影响效率的Reader，比如FileReader和InputStreamReader。
 
-
-
-
-
 # NET
-
-
 
 # DB
 
@@ -2219,7 +2209,7 @@ public void test2(){
 
 ## 锁对象
 
->当多线程并发访问对象时，会导致数据的不一致性。java提供了sychronized关键字、ReentrantLocak类
+>当多线程并发访问对象时，会导致数据的不一致性。java提供了sychronized关键字、ReentrantLock类
 
 ```java
 #ReentrantLock方法可以保护代码块临界区，它确保任何时候只有一个线程进入临界区。当一个线程成功调用Lock方法后，其他线程只能等待。
@@ -2257,8 +2247,9 @@ var bankLock=new ReentrantLock(false);
 private Condition sufficientFunds=bankLock.newCondition()
 bankLock.lock()
 try{
-whiel(accounts[from]<amount)
+while(accounts[from]<amount)
     sufficientFunds.await();
+//处理转账操作
 sufficientFunds.singnalAll()
 }finally
 {

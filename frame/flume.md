@@ -45,6 +45,23 @@ a1.sources.r1.channels = c1
 
 ```
 
+```
+#练习
+a2.sources=t2
+a2.channels=k2
+
+a2.sources.t2.type= TAILDIR
+a2.sources.t2.filegroups= f1 f2
+a2.sources.t2.filegroups.f1= /var/log/*.log
+a2.sources.t2.filegroups.f2= /var/log2/*test.log
+
+a2.channels.k2.type= org.apache.flume.channel.kafka.KafkaChannel
+a2.channels.k2.kafka.bootstrap.servers= host1:9092,host2:9092,host3:9092
+a2.channels.k2.topic= test
+
+a2.sources.t2.channels= k2
+```
+
 ##### 编写kafka-hdfs配置文件
 
 >hdfs.roolInterval=3600,flume在hdfs创建的文件时间超过3600时，使用新的文件装后续数据。

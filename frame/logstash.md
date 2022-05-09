@@ -36,6 +36,26 @@ output {
 ```
 
 ```
+input {
+  elasticsearch {
+    hosts => ["172.18.65.187:9200"]
+    index => "gmall0523_order_info_20220410"
+    size => 1000
+    scroll => "5m"
+  }
+}
+filter {}
+output {
+    elasticsearch{
+      hosts => ["172.42.1.12:9200"]
+      index => "gmall0523_order_info_20220410"
+    }
+}
+```
+
+
+
+```
 PUT /gmall2020_dau_info_20220418
 {
  "settings": { 
