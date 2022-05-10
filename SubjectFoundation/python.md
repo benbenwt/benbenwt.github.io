@@ -43,6 +43,12 @@ for row in my_reader
 
 >https://blog.csdn.net/enter89/article/details/99681716
 
+# numpy
+
+## nan值和inf值的检查及替换
+
+>https://www.jianshu.com/p/a91246e6b83b
+
 # venv
 
 ```

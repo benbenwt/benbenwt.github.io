@@ -1902,6 +1902,8 @@ https://github.com/ymcui/Chinese-ELECTRA
 >
 >最新版本:https://github.com/LAMDA-NJU/Deep-Forest
 >
+>多标签知识背景:https://www.cnblogs.com/yifanrensheng/p/12355009.html
+>
 >特点：使用较少的超参数，模型的复杂程度可根据情况自动调整，默认参数效果往往也不错。比较适合并行，和cpu计算。
 >
 >DNN的缺点，调参难度大，超参数多，需要较大数据集，难以解释黑盒，需要设计网络结构，GBDT效果更好。
