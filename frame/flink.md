@@ -2332,6 +2332,34 @@ public class TableExample {
 
 ### 基本API
 
+#### 依赖
+
+```
+<dependency>
+ <groupId>org.apache.flink</groupId>
+<artifactId>flink-table-api-java-bridge_${scala.binary.version}</artifactId>
+ <version>${flink.version}</version>
+</dependency>
+<dependency>
+ <groupId>org.apache.flink</groupId>
+<artifactId>flink-table-planner-blink_${scala.binary.version}</artifactId>
+ <version>${flink.version}</version>
+</dependency>
+<dependency>
+ <groupId>org.apache.flink</groupId>
+ <artifactId>flink-streaming-scala_${scala.binary.version}</artifactId>
+ <version>${flink.version}</version>
+</dependency>
+#如果想实现自定义的数据格式来做序列化，可以引入下面的依赖
+<dependency>
+ <groupId>org.apache.flink</groupId>
+ <artifactId>flink-table-common</artifactId>
+ <version>${flink.version}</version>
+</dependency>
+```
+
+
+
 #### 程序架构
 
 ```

@@ -170,10 +170,24 @@ mapPartion为每个partion上的数据分别调用train函数，train函数定�
 
 ### problem
 
+#### Exception: Python in worker has different version 3.9 than that in driver 3.7, PySpark cannot run with different minor versions. Please check environment variables 
+
 ```
 Exception: Python in worker has different version 3.9 than that in driver 3.7, PySpark cannot run with different minor versions. Please check environment variables PYSPARK_PYTHON and PYSPARK_DRIVER_PYTHON are correctly set.
 worker,driver的python版本不匹配，但是两者不都是本机嘛。
 在环境变量中指定PYSPARK_PYTHON，PYSPARK_DRIVER_PYTHON，值设定唯python的位置.或在代码中使用config("PYSPARK_PYTHON","/anaconda/env/env_name/python")
+```
+
+#### FileNotFoundError: [WinError 2] 系统找不到指定的文件。
+
+```
+环境变量没设置好，pycharm打开后对环境变量有缓冲，需要重启才会刷新环境变量。
+```
+
+#### Exception: Java gateway process exited before sending its port number
+
+```
+应该是虚拟机创建失败，离谱啊。我是设定了executor.memory为1.5G，好像因为1.5不合法，导致创建失败，要指定整数的G内存空间。
 ```
 
 
