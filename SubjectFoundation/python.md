@@ -43,6 +43,22 @@ for row in my_reader
 
 >https://blog.csdn.net/enter89/article/details/99681716
 
+# sklearn
+
+## 保存模型
+
+```
+#使用pickle或者joblib
+#使用pickle
+f=open(f"models/{self.layer_index}_{global_number}.pickle","wb")
+pickle.dump(clf, f)
+f.close()
+```
+
+
+
+>https://blog.csdn.net/comli_cn/article/details/107519413
+
 # numpy
 
 ## nan值和inf值的检查及替换
