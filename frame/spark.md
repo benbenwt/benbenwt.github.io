@@ -5,6 +5,8 @@
 
 # pysaprk
 
+>https://spark.apache.org/docs/latest/api/python/reference/api/pyspark.RDD.mapPartitionsWithIndex.html
+
 ```
 sc = SparkSession.builder.master("local[1]").appName("myApp").config("spark.executor.memory", "5g").config(
         "spark.driver.memory", "5g").config("spark.driver.maxResultSize", "0").getOrCreate().sparkContext

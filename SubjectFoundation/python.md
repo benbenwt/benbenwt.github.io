@@ -43,6 +43,24 @@ for row in my_reader
 
 >https://blog.csdn.net/enter89/article/details/99681716
 
+# json
+
+```
+json.dump() #dict到文件
+json.dumps  #dict到str
+json.load   #文件到dict
+json.loads  #字符串到dict
+
+with open('test.json', 'w') as f:
+    json.dump(data, f)
+ 
+with open('test.json', 'r') as f:
+    data = json.load(f)
+
+```
+
+
+
 # sklearn
 
 ## 保存模型

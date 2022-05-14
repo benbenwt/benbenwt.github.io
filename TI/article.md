@@ -1927,7 +1927,7 @@ https://github.com/ymcui/Chinese-ELECTRA
 >作者邮箱：yangl@lamda.nju.edu.cn
 >```
 
->1allreduce 2分区数目
+>1allreduce 2分区数目 3置信度确定，不同置信度结果差别大，0.3置信度为76%的macro-auc准确率，精确率和f1分别为76和51
 
 ###### 并行思路
 
@@ -1974,6 +1974,8 @@ k_fold_dataset_output_vector=rdd1.mapPartition(calculate_on_k_fold_dataset).coll
 扫描生成的多个实例，单个样本放入后得到  实例数目*label_num  条输出向量，这些输出向量拼接成一条即可。
 那平均怎么计算的，平均就是这
 spark如何allreduce，如果可以维护全局rdd，那么能减少传输输出向量的时间，无需传输到driver
+
+多粒度扫描只是在第一层进行，后边不再进行MGS，不然维度会快速上升的。后边的CF级联层，只用按照给定的多粒度特征训练，并拼接正常的向量即可。
 ```
 
 ###### yeast
@@ -2029,9 +2031,10 @@ Average Precision(平均准确度)：该指标表示预测标签集的平均准�
 ##### 实验部分
 
 ```
-MGS时间在程序中可以很好统计，直接计算即可。MGS不是每层计算一次吧.....，no，是每层MGS一次，因为特征都变了。每一层相加得到总的MGS时间
-级联时间也很好计算，开始时间是MGS结束时间，结束时间是fit结束。每一层相加得到总的级联时间。
-训练总时间就是MGS+级联时间（fit时间+网络传输时间）。
+训练总时间就是MGS+cf级联时间。
+gcforset  sparkdf 总时间
+sparkml   sparkdf 总时间
+sparkml  sparkdf MGS时间（第一层MGS级联层时间）+CF时间（后续CF级联层的时间）
 ```
 
 
