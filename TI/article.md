@@ -2050,15 +2050,28 @@ tfidf       s    %       s   %      x
 yeast       s        	s           x   x
 tfidf       s        	s           x   x
 
-3.各结点
-node
+3.不同数量的executor结点 ，图，扩展性加速比
+共有16个核*5=80个核
+           executor node   1,3,5，9，17，33
+图  yeast       s        	s           x   x
+图  tfidf       s        	s           x   x
 
-4.sparkml   sparkdf 总时间
-        gcforset              sparkdf              speedup 
-          MGS CF overall      MGS CF overall     MGS CF overall
-yeast       s        	s           x   x
-tfidf       s        	s           x   x
+4，优化策略的消融
+                 时间    speed up
+               mgs  cf   mgs   cf
+不使用延迟扫描
+不使用部分传输
+使用两个策略
 
+5，执行时间核网络传输时间均衡
+executor？ 看看数据合不合适
+
+6.sparkml   sparkdf 总时间
+        sparkml gcforset              sparkdf        speedup 
+          MGS   CF  overall      MGS CF overall     MGS CF overall
+yeast       s    s    	s       x      x   x          x  x   x
+tfidf       s    s    	s       x      x   x          x  x    x
+ 
 sparkml  sparkdf MGS时间（第一层MGS级联层时间）+CF时间（后续CF级联层的时间）
 ```
 

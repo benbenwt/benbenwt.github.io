@@ -204,6 +204,10 @@ cat
 
 #### gnome
 
+##### 安装
+
+>https://www.jianshu.com/p/b8ac516074c7
+
 ##### gnome-shell
 
 登录之后，桌面卡住时找到pid杀死即可。系统会自动重启gnome，类似windows的explorer。
@@ -227,21 +231,15 @@ systemctl set-default graphical.target
 
 # 网络
 
-##### 查看网关
-
-```
-route -n
-ip route show 
-traceroute www.baidu.com -s 100
-netstat -r
-```
-
-
-
 ##### 查看网卡
 
 ```
 netstat -i
+ip addr
+route -n
+ip route show 
+traceroute www.baidu.com -s 100
+netstat -r
 ```
 
 ##### 查看端口占用
@@ -271,16 +269,6 @@ kill -9 6832
 sudo ifconfig ens33:0  192.169.0.100 up
 sudo ifconfig ens33:0  down
 ```
-
-
-
-##### 网卡文件
-
-```
-cd /etc/sysconfig/network-scripts/
-```
-
-
 
 ##### ssh连接与ftp
 
@@ -409,6 +397,73 @@ rsync     -rvl  /tmp   root@hbae:/tmp
 ##### xsync
 
 复制到所有节点相同目录下。
+
+## 网卡文件
+
+>详细的参数解析：https://blog.csdn.net/zhangchao_cn/article/details/85246558
+>
+>网卡文件一般在/etc/sysconfig/network-scripts下边，其中的ens33或ensxx表示其默认网卡，我们可以在其中配置网卡信息。
+
+```
+#其中关键的参数
+NM_CONTROLLED=no #这个参数表示不使用Networkmanager管理网络，使用此配置文件。当我们关闭NetworkManager后，必须修改此选项。
+ONBOOT=yes #是否开机自启
+BOOTPROTO=static #是dhcp还是静态static
+```
+
+## 配置一个静态ip网卡
+
+```
+参数解释
+DEVICE     接口名（设备,网卡）
+USERCTL    [yes|no]（非root用户是否可以控制该设备）
+BOOTPROTO  IP的配置方法[none|static|bootp|dhcp]（引导时不使用协议|静态分配IP|BOOTP协议|DHCP协议）
+HWADDR     MAC地址   
+ONBOOT     系统启动的时候网络接口是否有效（yes/no）   
+TYPE       网络类型（通常是Ethemet）   
+NETMASK    网络掩码   
+IPADDR     IP地址   
+IPV6INIT   IPV6是否有效（yes/no）   
+GATEWAY    默认网关IP地址
+BROADCAST  广播地址
+NETWORK    网络地址
+
+```
+
+```
+ #########start设置静态地址例子 这一段在文件中一般默认就有#########
+TYPE="Ethernet"
+PROXY_METHOD="none"
+BROWSER_ONLY="no"
+#BOOTPROTO="dhcp"
+DEFROUTE="yes"
+IPV4_FAILURE_FATAL="no"
+IPV6INIT="yes"
+IPV6_AUTOCONF="yes"
+IPV6_DEFROUTE="yes"
+IPV6_FAILURE_FATAL="no"
+IPV6_ADDR_GEN_MODE="stable-privacy"
+NAME="ens33"
+UUID="ac9b66bf-74fb-4bda-b89f-c66ff84c9571"
+DEVICE="ens33"
+
+ 
+##static assignment 这一段是需要自己修改的，后边的静态ip配置也需要自己追加，特别是新安装的centos系统，没有这些参数的模板##
+NM_CONTROLLED=no #表示该接口将通过该配置文件进行设置，而不是通过网络管理器进行管理
+ONBOOT=yes #开机启动
+
+BOOTPROTO=static #静态IP
+IPADDR=192.168.59.134 #本机地址
+NETMASK=255.255.255.0 #子网掩码
+GATEWAY=192.168.59.2 #默认网关
+DNS1=8.8.8.8
+DNS2=8.8.4.4
+ 
+#########end设置静态地址例子#########
+service network restart
+```
+
+
 
 # 服务进程
 
