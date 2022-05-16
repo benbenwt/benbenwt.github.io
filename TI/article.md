@@ -1928,6 +1928,12 @@ https://github.com/ymcui/Chinese-ELECTRA
 >```
 
 >1allreduce 2分区数目 3置信度确定，不同置信度结果差别大，0.3置信度为76%的macro-auc准确率，精确率和f1分别为76和51
+>
+>```
+># 清空占用的大量内存，提升执行速度，不然随着广播变量增多，内存变少，执行速度下降。
+>old_traindata.unpersist
+>old_trainlabel.unpersist
+>```
 
 ###### 并行思路
 
@@ -2032,8 +2038,27 @@ Average Precision(平均准确度)：该指标表示预测标签集的平均准�
 
 ```
 训练总时间就是MGS+cf级联时间。
-gcforset  sparkdf 总时间
-sparkml   sparkdf 总时间
+1.总时间
+          gcforset    sparkdf    speedup 
+          time  auc     time auc
+yeast       s    %       s   %      x 
+tfidf       s    %       s   %      x     
+
+2.分阶段时间，MGS、CF
+          gcforset    sparkdf     speedup 
+          MGS CF       MGS CF      MGS CF
+yeast       s        	s           x   x
+tfidf       s        	s           x   x
+
+3.各结点
+node
+
+4.sparkml   sparkdf 总时间
+        gcforset              sparkdf              speedup 
+          MGS CF overall      MGS CF overall     MGS CF overall
+yeast       s        	s           x   x
+tfidf       s        	s           x   x
+
 sparkml  sparkdf MGS时间（第一层MGS级联层时间）+CF时间（后续CF级联层的时间）
 ```
 
@@ -2049,6 +2074,60 @@ sparkml  sparkdf MGS时间（第一层MGS级联层时间）+CF时间（后续CF�
 4不同配置，本模型测试时间
 5treereduce和allreduce：https://www.cnblogs.com/jeasonit/p/10533748.html，对比网络传输时间
 6任务的调度，每个节点花费多久时间，谁拖后腿（treereduce可以直接开始reduce那些计算好的节点）。
+```
+
+##### pyspark提交
+
+```
+spark-submit  --master spark://172.18.65.187:7077  --py-files /opt/software/sparkdf.zip  --conf "spark.pyhspark.driver.python=/root/miniconda3/envs/elephas1/bin/python"   --conf "spark.pyspark.python=/root/miniconda3/envs/elephas1/bin/python"   /opt/software/sparkdf/TestSparkDFMGS.py
+```
+
+
+
+##### 修改记录
+
+```
+1.linux要使用正斜杠
+2.取消指定pyspark interpreter
+3.结果数据保存到hdfs
+
+```
+
+```]
+3.结果数据保存到hdfs
+python读写hdfs:
+
+#! coding=utf-8
+from config.sparkdf_config import hdfs_url
+from hdfs import *
+
+def write_to_hdfs(dst_path: str,content: str):
+    client = Client(hdfs_url, root="/")
+    str = bytes(content, encoding="utf-8")
+    client.write(dst_path, str)  # 创建新文件，写入字符串
+
+def read_from_hdfs(src_path):
+    client = Client(hdfs_url, root="/")
+    with client.read(src_path) as reader:
+        content_bytes = reader.read()
+        content_str=str(content_bytes,encoding="utf-8")
+        print(content_str)
+    return content_str
+
+def hdfs_path_exits(path):
+    client = Client(hdfs_url, root="/")
+    status=client.status(path,strict=False)
+    print("status",status)
+    return (not status==None)
+if __name__=="__main__":
+    read_from_hdfs("/result/py.txt")
+    exist=hdfs_path_exits("/result/py.txt")
+    print(exist)
+```
+
+```
+4.pickle序列化到hdfs，从hdfs反序列化
+driver端借助sc读取:https://www.cnblogs.com/cupleo/p/16248904.html
 ```
 
 

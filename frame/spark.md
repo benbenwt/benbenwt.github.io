@@ -49,7 +49,7 @@ spark-submit
 --py-files  2.py,3.py
 main.py
 
-注意打包时进入要打包的文件夹内，然后，zip -r test.zip ./*。再外部打包会多一层文件夹，导致无法访问。
+注意打包时进入要打包的文件夹内，然后，zip -r test.zip ./*。在外部打包会多一层文件夹，导致无法访问。
 访问路径
 --py-files用于提交多个单一的py文件
 --files用于提交打包的zip
@@ -60,6 +60,8 @@ open('test/1.json','r') as f
 对于提交的zip中的py文件，要使用如下方式访问
 对于test.zip根下的util.py：
 from util  import start
+
+#还是无法访问提交的数据，如果数据是在driver端读取的，可以直接读取本地文件系统。也可以读取hdfs文件，这样在其他executor也可以访问。
 ```
 
 ```
@@ -78,6 +80,22 @@ spark-submit
 --conf "spark.pyspark.python=/root/miniconda3/envs/elephas1/bin/python"  
 /root/software/spark-elephas/myModel.py
 ```
+
+```
+spark-submit 
+--master spark://172.18.65.187:7077
+--py-files /opt/software/sparkdf.zip 
+--conf "spark.pyhspark.driver.python=/root/miniconda3/envs/elephas1/bin/python" 
+--conf "spark.pyspark.python=/root/miniconda3/envs/elephas1/bin/python"  
+/opt/software/sparkdf/TestSparkDFM
+```
+
+```
+使用os.listdir("/"),结果：
+['boot', 'dev', 'proc', 'run', 'sys', 'etc', 'root', 'var', 'tmp', 'usr', 'bin', 'sbin', 'lib', 'lib64', 'home', 'media', 'mnt', 'opt', 'srv', 'ssh_genarate', 'ssh_genarate.pub', '.config', '.Xauthority']
+```
+
+
 
 ### 创建sparkcontext
 

@@ -8,7 +8,15 @@ gpu
 lspci | grep -i vga
 ```
 
-### cpu
+# 镜像
+
+>https://mirrors.bfsu.edu.cn/centos/7/isos/x86_64/
+
+>https://blog.csdn.net/frank1998819/article/details/84774176
+>
+>minimal是精简版本，dvd是最完整的，体积达到了4G。
+
+# cpu
 
 ```
 https://blog.csdn.net/sflsgfs/article/details/9129307
@@ -17,7 +25,7 @@ grep "model name" /proc/cpuinfo
 grep "CPU" /proc/cpuinfo  
 ```
 
-### sshd
+# sshd
 
 ```
 查看状态：
@@ -38,13 +46,17 @@ systemctl enable sshd.service
 
 
 
-### 磁盘
+# 磁盘
+
+
+
+## 常用命令
 
 ```
 df -h 查看磁盘容量
 ```
 
-### 开机启动
+# 开机启动
 
 ```
 vim /etc/rc.d/rc.local
@@ -53,7 +65,7 @@ vim /etc/rc.d/rc.local
 
 
 
-### 用户管理
+# 用户管理
 
 ```
 useradd -d  /home/username  username
@@ -66,7 +78,7 @@ cut -d : -f 1 /etc/passwd
 
 
 
-### 环境变量
+# 环境变量
 
 ##### 登录shell与非登录shell
 
@@ -76,7 +88,7 @@ cut -d : -f 1 /etc/passwd
 
 
 
-### 软件安装
+# 软件安装
 
 ##### 自动yes
 
@@ -136,7 +148,7 @@ http://mirror.centos.org/centos/7/os/x86_64/Packages/
 
 
 
-### 常用命令
+# 常用命令
 
 ##### 时间设定
 
@@ -166,7 +178,7 @@ sudo hwclock --systohc //非常重要，如果没有这一步的话，后面时�
 
 ```
 
-### 修改时区
+# 修改时区
 
 >###### https://www.jianshu.com/p/b67f3f3c6926
 
@@ -188,7 +200,7 @@ pwd
 
 cat
 
-### 图形界面
+# 图形界面
 
 #### gnome
 
@@ -213,7 +225,7 @@ systemctl set-default graphical.target
 
 
 
-### 网络
+# 网络
 
 ##### 查看网关
 
@@ -398,7 +410,7 @@ rsync     -rvl  /tmp   root@hbae:/tmp
 
 复制到所有节点相同目录下。
 
-### 服务进程
+# 服务进程
 
 ```
 #
@@ -409,7 +421,7 @@ ps -ef|grep "hadoop"
 
 
 
-### 文件
+# 文件
 
 ##### 查看磁盘和文件夹
 
@@ -508,7 +520,7 @@ tar
 
 
 
-### problem
+# problem
 
 ##### 当前用户不是root用户，修改etc文件。
 
