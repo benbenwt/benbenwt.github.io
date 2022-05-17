@@ -1947,6 +1947,13 @@ application-arguments，jar包该类main方法所需要的参数
 
 ## 参数调优
 
+>#示例
+>https://blog.csdn.net/xuehuagongzi000/article/details/103081319
+>https://blog.csdn.net/wx1528159409/article/details/102838531
+>https://blog.csdn.net/maomaoqiukqq/article/details/105442159
+>
+>https://blog.csdn.net/lovetechlovelife/article/details/111026182spark-submit --conf spark.default.parallelism=12 --num-executors 3 --executor-cores 2 --executor-memory 2G --master yarn --class com.heroking.spark.WordCount spark-word-count.jar
+
 >https://blog.csdn.net/qq_41018861/article/details/108950954#:~:text=%E5%9B%A0%E6%AD%A4Spark%E5%AE%98%E7%BD%91%E5%BB%BA%E8%AE%AE%E7%9A%84%E8%AE%BE%E7%BD%AE%E5%8E%9F%E5%88%99%E6%98%AF%EF%BC%8C%E8%AE%BE%E7%BD%AE%E8%AF%A5%E5%8F%82%E6%95%B0%E4%B8%BAnum-executors%20%2A,executor-cores%E7%9A%842~3%E5%80%8D%E8%BE%83%E4%B8%BA%E5%90%88%E9%80%82%20%EF%BC%8C%E6%AF%94%E5%A6%82Executor%E7%9A%84%E6%80%BBCPU%20core%E6%95%B0%E9%87%8F%E4%B8%BA300%E4%B8%AA%EF%BC%8C%E9%82%A3%E4%B9%88%E8%AE%BE%E7%BD%AE1000%E4%B8%AAtask%E6%98%AF%E5%8F%AF%E4%BB%A5%E7%9A%84%EF%BC%8C%E6%AD%A4%E6%97%B6%E5%8F%AF%E4%BB%A5%E5%85%85%E5%88%86%E5%9C%B0%E5%88%A9%E7%94%A8Spark%E9%9B%86%E7%BE%A4%E7%9A%84%E8%B5%84%E6%BA%90%E3%80%82
 
 # SparkStreaming练习题

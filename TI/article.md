@@ -1913,6 +1913,8 @@ https://github.com/ymcui/Chinese-ELECTRA
 >
 >多标签知识背景:https://www.cnblogs.com/yifanrensheng/p/12355009.html
 >
+>详细解读:https://blog.csdn.net/baidu_36161077/article/details/81058016
+>
 >特点：使用较少的超参数，模型的复杂程度可根据情况自动调整，默认参数效果往往也不错。比较适合并行，和cpu计算。
 >
 >DNN的缺点，调参难度大，超参数多，需要较大数据集，难以解释黑盒，需要设计网络结构，GBDT效果更好。
@@ -2036,6 +2038,51 @@ Average Precision(平均准确度)：该指标表示预测标签集的平均准�
 
 ##### 实验部分
 
+>为了方便，让一个executor只能执行一个task，所有cpu都给一个task，所以最大允许的并行度就是executor数量，再使用并行度控制实际并行数
+>
+>–num-executors   28
+>
+>spark.executor.cores     2
+>
+>spark.executor.memory   2
+>
+>spark.task.cores    2
+>
+>
+>
+>parallel_num  4
+>
+>spark.driver.memory
+
+###### 常用命令
+
+```
+zip -r sparkdf.zip ./*
+mv ./sparkdf.zip ../
+```
+
+###### 设置executor
+
+```
+#设置5个executor节点
+spark-submit  --master spark://172.18.65.175:7077  --py-files /root/module/sparkdf.zip  --conf "spark.pyhspark.driver.python=/root/miniconda3/envs/elephas1/bin/python"   --conf "spark.pyspark.python=/root/miniconda3/envs/elephas1/bin/python"   /root/module/sparkdf/TestSparkDFMGS.py --num-executors 5 --executor-cores 4 --executor-memory 4G  --task-cores 4 --driver-memory 8G
+
+#9个
+spark-submit  --master spark://172.18.65.175:7077  --py-files /root/module/sparkdf.zip  --conf "spark.pyhspark.driver.python=/root/miniconda3/envs/elephas1/bin/python"   --conf "spark.pyspark.python=/root/miniconda3/envs/elephas1/bin/python"   /root/module/sparkdf/TestSparkDFMGS.py --num-executors 9 --executor-cores 2 --executor-memory 2G  --task-cores 2 --driver-memory 4G
+
+
+```
+
+```
+#示例
+https://blog.csdn.net/xuehuagongzi000/article/details/103081319
+https://blog.csdn.net/wx1528159409/article/details/102838531
+https://blog.csdn.net/maomaoqiukqq/article/details/105442159
+spark-submit --conf spark.default.parallelism=12 --num-executors 3 --executor-cores 2 --executor-memory 2G --master yarn --class com.heroking.spark.WordCount spark-word-count.jar
+```
+
+
+
 ```
 训练总时间就是MGS+cf级联时间。
 1.总时间
@@ -2089,11 +2136,47 @@ sparkml  sparkdf MGS时间（第一层MGS级联层时间）+CF时间（后续CF�
 6任务的调度，每个节点花费多久时间，谁拖后腿（treereduce可以直接开始reduce那些计算好的节点）。
 ```
 
-##### pyspark提交
+###### pyspark提交
 
 ```
-spark-submit  --master spark://172.18.65.187:7077  --py-files /opt/software/sparkdf.zip  --conf "spark.pyhspark.driver.python=/root/miniconda3/envs/elephas1/bin/python"   --conf "spark.pyspark.python=/root/miniconda3/envs/elephas1/bin/python"   /opt/software/sparkdf/TestSparkDFMGS.py
+spark-submit  --master spark://172.18.65.187:7077  --py-files /opt/software/sparkdf.zip  --conf "spark.pyspark.driver.python=/root/miniconda3/envs/elephas1/bin/python"   --conf "spark.pyspark.python=/root/miniconda3/envs/elephas1/bin/python"   /opt/software/sparkdf/TestSparkDFMGS.py
+cd /root/module/sparkdf/
+spark-submit  --master spark://172.18.65.175:7077  --py-files /root/module/sparkdf.zip  --conf "spark.pyhspark.driver.python=/root/miniconda3/envs/elephas1/bin/python"   --conf "spark.pyspark.python=/root/miniconda3/envs/elephas1/bin/python"   /root/module/sparkdf/TestSparkDFMGS.py
 ```
+
+###### 运行很慢的可能原因
+
+>1有个文件已存在，导致该task执行失败，所以在其他executor重试了该task，导致时间变长
+>
+>该问题解决后，仍然很长时间，可能是由于：
+>
+>1内存不够，频繁垃圾回收
+>
+>2数据量小，计算时间占比少
+>
+>3可能是hdfs读写的问题，将hdfs读写去掉试试。跑了指标后，将保存model注释掉。
+>
+>4时间花费是逐步上升，说明某些东西累积导致了此问题。
+
+>广播变量的时候发送大量数据
+>
+>collect时也有大量的请求核数据量
+>
+>blockmanager info
+>
+>added broadcastin memory on ip;por
+>
+>updated broadcast in memory on ip;port size:4M,free:2M
+>
+>好像有落盘操作，这可能是速度降低的主要原因。
+>
+>added broadcast_  on disk on ip:port size:131M
+>
+>由于无论创建多少分区，分区的执行时间固定，说明网络时间决定了执行时间，因为不广播的闭包检测会向每个分区发送数据，所以时间都相似，使用广播后只向executor发送。
+>
+>既然广播要花费这么久，那么增加executor根本无法提升速度，因为计算占比太少了。
+
+>可能是save model导致的时间消耗。
 
 
 
@@ -2141,6 +2224,14 @@ if __name__=="__main__":
 ```
 4.pickle序列化到hdfs，从hdfs反序列化
 driver端借助sc读取:https://www.cnblogs.com/cupleo/p/16248904.html
+```
+
+```
+关闭可能耗时的代码
+1hdfs存储读取
+2复制iterator
+3广播变量错误注销
+4错误的task数量
 ```
 
 

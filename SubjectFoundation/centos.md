@@ -42,6 +42,20 @@ systemctl restart sshd.service
 systemctl enable sshd.service
 ```
 
+```
+##### sshd
+
+ssh-keygen -t rsa 
+
+ssh-copy-id -i /root/.ssh/id_rsa.pub  "-p2222 root@192.168.10.31"
+
+ssh -p 2222 root@192.168.10.31
+
+less secure
+
+cat /var/log/secure
+```
+
 
 
 
@@ -216,6 +230,8 @@ cat
 
 ```
 命令行手动startx，启动图形界面。确保开启了sshd自启，不然ssh都连接不上。
+ps -ef|grep gnome-shell
+kill -9 
 ```
 
 ##### 开机进入命令行
@@ -277,18 +293,6 @@ ssh连接和ftp使用系统中已创建的用户名及密码，加上ip和端口
 ssh默认在22，ftp默认在21,sftp，默认在22端口。修改ssh在etc/ssh/ssh_config中修改。
 
 notepad配置好sftp插件，填写参数即可上传。
-
-##### sshd
-
-ssh-keygen -t rsa 
-
-ssh-copy-id -i /root/.ssh/id_rsa.pub  "-p2222 root@192.168.10.31"
-
-ssh -p 2222 root@192.168.10.31
-
-less secure
-
-cat /var/log/secure
 
 ##### 网卡
 
