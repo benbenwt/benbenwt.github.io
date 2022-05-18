@@ -7,6 +7,10 @@
 
 >https://spark.apache.org/docs/latest/api/python/reference/api/pyspark.RDD.mapPartitionsWithIndex.html
 
+>pyspark总结资源：
+>
+>https://sparkbyexamples.com/pyspark/pyspark-partitionby-example/#:~:text=PySpark%20partition%20is%20a%20way%20to%20split%20a,main%20advantages%20of%20PySpark%20DataFrame%20over%20Pandas%20DataFrame.
+
 ```
 sc = SparkSession.builder.master("local[1]").appName("myApp").config("spark.executor.memory", "5g").config(
         "spark.driver.memory", "5g").config("spark.driver.maxResultSize", "0").getOrCreate().sparkContext
@@ -863,6 +867,8 @@ Driver项rm申请资源，rm分配资源后在合适的机器上启动AM，AM再
 >使用内存维持一个小顶堆，逐个处理。当然也可以划分后分治，然后再merge分治的小顶堆。
 
 # spark用法
+
+>rdd:https://spark.apache.org/docs/latest/rdd-programming-guide.html
 
 ## spark scala api
 
@@ -1947,6 +1953,18 @@ application-arguments，jar包该类main方法所需要的参数
 
 ## 参数调优
 
+>实际上spark的不同部署模式，参数调整方式不同。
+>
+>详情见下边的job scheduling，比如--num-executors在standalone就不生效，在yarn模式才生效。
+>
+>讲解executors的设置方式：https://www.jianshu.com/p/75b13c720451
+
+### Job Scheduling
+
+>官网文档
+>
+>https://spark.apache.org/docs/2.0.0/job-scheduling.html#:~:text=YARN%3A%20The%20--num-executors%20option%20to%20the%20Spark%20YARN,spark.executor.cores%20configuration%20property%29%20control%20the%20resources%20per%20executor.
+
 >#示例
 >https://blog.csdn.net/xuehuagongzi000/article/details/103081319
 >https://blog.csdn.net/wx1528159409/article/details/102838531
@@ -1955,6 +1973,10 @@ application-arguments，jar包该类main方法所需要的参数
 >https://blog.csdn.net/lovetechlovelife/article/details/111026182spark-submit --conf spark.default.parallelism=12 --num-executors 3 --executor-cores 2 --executor-memory 2G --master yarn --class com.heroking.spark.WordCount spark-word-count.jar
 
 >https://blog.csdn.net/qq_41018861/article/details/108950954#:~:text=%E5%9B%A0%E6%AD%A4Spark%E5%AE%98%E7%BD%91%E5%BB%BA%E8%AE%AE%E7%9A%84%E8%AE%BE%E7%BD%AE%E5%8E%9F%E5%88%99%E6%98%AF%EF%BC%8C%E8%AE%BE%E7%BD%AE%E8%AF%A5%E5%8F%82%E6%95%B0%E4%B8%BAnum-executors%20%2A,executor-cores%E7%9A%842~3%E5%80%8D%E8%BE%83%E4%B8%BA%E5%90%88%E9%80%82%20%EF%BC%8C%E6%AF%94%E5%A6%82Executor%E7%9A%84%E6%80%BBCPU%20core%E6%95%B0%E9%87%8F%E4%B8%BA300%E4%B8%AA%EF%BC%8C%E9%82%A3%E4%B9%88%E8%AE%BE%E7%BD%AE1000%E4%B8%AAtask%E6%98%AF%E5%8F%AF%E4%BB%A5%E7%9A%84%EF%BC%8C%E6%AD%A4%E6%97%B6%E5%8F%AF%E4%BB%A5%E5%85%85%E5%88%86%E5%9C%B0%E5%88%A9%E7%94%A8Spark%E9%9B%86%E7%BE%A4%E7%9A%84%E8%B5%84%E6%BA%90%E3%80%82
+
+#### standalone
+
+>此模式如果使用参数进行配置，必须在spark-defaults.conf中配置，然后重启集群，因为它的executor的数量在启动后是固定的，在启动时就已经确认了，所以在spark-submit时指定是无效的。
 
 # SparkStreaming练习题
 

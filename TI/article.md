@@ -2040,6 +2040,8 @@ Average Precision(平均准确度)：该指标表示预测标签集的平均准�
 
 >为了方便，让一个executor只能执行一个task，所有cpu都给一个task，所以最大允许的并行度就是executor数量，再使用并行度控制实际并行数
 >
+>spark.cores.max
+>
 >–num-executors   28
 >
 >spark.executor.cores     2
@@ -2063,12 +2065,63 @@ mv ./sparkdf.zip ../
 
 ###### 设置executor
 
+>只能通过spark.default.conf设置并重启集群
+>
+>spark.driver.memory=8G
+>
+>spark.cores.max=56
+>spark.executor.memory=4G
+>spark.executor.cores=4
+>spark.task.cores=4
+>
+>将会启动14个executor，14*4=56个核心
+
 ```
-#设置5个executor节点
-spark-submit  --master spark://172.18.65.175:7077  --py-files /root/module/sparkdf.zip  --conf "spark.pyhspark.driver.python=/root/miniconda3/envs/elephas1/bin/python"   --conf "spark.pyspark.python=/root/miniconda3/envs/elephas1/bin/python"   /root/module/sparkdf/TestSparkDFMGS.py --num-executors 5 --executor-cores 4 --executor-memory 4G  --task-cores 4 --driver-memory 8G
+#window_size=30 n_features/3  slide=5  window_size/6  n_estimators=500时
+这个时候，random执行时间已经到达了10s，而extra的时间还停留在2s，这时候加权入球就有意义了。
 
 #9个
-spark-submit  --master spark://172.18.65.175:7077  --py-files /root/module/sparkdf.zip  --conf "spark.pyhspark.driver.python=/root/miniconda3/envs/elephas1/bin/python"   --conf "spark.pyspark.python=/root/miniconda3/envs/elephas1/bin/python"   /root/module/sparkdf/TestSparkDFMGS.py --num-executors 9 --executor-cores 2 --executor-memory 2G  --task-cores 2 --driver-memory 4G
+spark-submit  --master spark://172.18.65.175:7077  --py-files /root/module/sparkdf.zip  --conf "spark.pyhspark.driver.python=/root/miniconda3/envs/elephas1/bin/python"   --conf "spark.pyspark.python=/root/miniconda3/envs/elephas1/bin/python"   /root/module/sparkdf/TestSparkDFMGS.py  
+time_all=594
+
+#7个
+time_all=670s speedup=
+
+#5个
+
+#3个
+```
+
+
+
+```
+要让数据量分到多个分区后，导致执行时间变短，理论是可以的，因为分区多后，每个分区拿到的数据少，需要训练的树少，循环少，每个循环和树花费1s。
+查看3个executors和5个executors的job执行对比，发现它们的stage阶段不同task有倾斜。
+3个executors的min=23,media=24,max=25
+5个executors的min=14,media=14,max=18
+
+#单机
+time-all=581s
+
+#设置3个executor节点
+spark-submit  --master spark://172.18.65.175:7077  --py-files /root/module/sparkdf.zip  --conf "spark.pyhspark.driver.python=/root/miniconda3/envs/elephas1/bin/python"   --conf "spark.pyspark.python=/root/miniconda3/envs/elephas1/bin/python"   /root/module/sparkdf/TestSparkDFMGS.py  --executor-cores 2 --executor-memory 2G  --task-cores 2 --driver-memory 4G
+parallem_num=3
+time-all=243s          speedup=2.3
+
+#设置5个executor节点
+spark-submit  --master spark://172.18.65.175:7077  --py-files /root/module/sparkdf.zip  --conf "spark.pyhspark.driver.python=/root/miniconda3/envs/elephas1/bin/python"   --conf "spark.pyspark.python=/root/miniconda3/envs/elephas1/bin/python"   /root/module/sparkdf/TestSparkDFMGS.py  --executor-cores 2 --executor-memory 2G  --task-cores 2 --driver-memory 4G
+parallem_num=5
+time-all=173s  speedup=3.3x
+
+#设置7个executor节点
+spark-submit  --master spark://172.18.65.175:7077  --py-files /root/module/sparkdf.zip  --conf "spark.pyhspark.driver.python=/root/miniconda3/envs/elephas1/bin/python"   --conf "spark.pyspark.python=/root/miniconda3/envs/elephas1/bin/python"   /root/module/sparkdf/TestSparkDFMGS.py  --executor-cores 2 --executor-memory 2G  --task-cores 2 --driver-memory 4G
+parallem_num=7
+time-all=129s  speedup=4.5x
+
+#9个
+spark-submit  --master spark://172.18.65.175:7077  --py-files /root/module/sparkdf.zip  --conf "spark.pyhspark.driver.python=/root/miniconda3/envs/elephas1/bin/python"   --conf "spark.pyspark.python=/root/miniconda3/envs/elephas1/bin/python"   /root/module/sparkdf/TestSparkDFMGS.py  
+parallem_num=9
+time-all=125s  speedup=4.5x
 
 
 ```
@@ -2177,6 +2230,52 @@ spark-submit  --master spark://172.18.65.175:7077  --py-files /root/module/spark
 >既然广播要花费这么久，那么增加executor根本无法提升速度，因为计算占比太少了。
 
 >可能是save model导致的时间消耗。
+>
+>那么我需要两个数据，一个是models，一个是运行时间信息，需要跑两遍。
+>
+>第一遍保存models，记录精确度。
+>
+>第二遍不再保存models，注释掉对应的代码，记录执行时间。
+
+###### 加速比达不到原因
+
+>查看3个executors和5个executors的job执行对比，发现它们的stage阶段不同task有倾斜。
+>3个executors的min=23,media=24,max=25
+>5个executors的min=14,media=14,max=18
+>
+>找到负载的分区，executor，确认差距在哪。
+>
+>发现有一个分区获得了9+3=12条数据，所以比其他分区慢3秒左右。
+>
+>其他分区都是9条数据以下，共6*8=48条数据，合理的分配应该是，48=10+10+10+9+9
+>
+>ray forest中简略论证了为什么子森林数目要平均。
+
+###### 两种森林的训练时间差异
+
+>如果两种模型训练时间有很大差异，其实如果达到1s以上，那么10棵树就会达到10s的差距，造成倾斜，那么就有了分区优化的意义，使用新定义的轮询算法优化数据的倾斜。
+>
+>打印clf的名称，方便观察。
+>
+>两种模型的介绍
+>
+>https://cloud.tencent.com/developer/article/1822531
+>
+>实际上发现，extraTree的训练时间更长，因为其随机选择特征进行生长，一般其树的规模比随机森林都大。
+>
+>这个可以作为分区优化的点。
+>
+>模型的大小如何表示，MGS和CF分别累积分布区间的数量，表现真实性。
+>
+>两个，一个msg，一个cf阶段。这个时间怎么统计，什么时间作为两种树的花费时间。只记录了结点和层的数据。如果具体到树，就会只有1s左右。
+>
+>​                                              MGS                                      CF                     平均大小    总耗时  每层平均耗时
+>
+>​                                   xM--x+10M      yM--y+10M           ....         ....
+>
+>random                    100                            0                                               *                    -                 
+>
+>extratree                      0                            100                                           *                    -
 
 
 
