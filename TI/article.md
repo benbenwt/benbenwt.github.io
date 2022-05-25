@@ -1929,6 +1929,8 @@ https://github.com/ymcui/Chinese-ELECTRA
 >作者邮箱：yangl@lamda.nju.edu.cn
 >```
 
+>1借助索引列，延迟扫描2借助加权球合理分配任务 3借助rdd缓存，切分向量，优化传输的数据量。
+
 >1allreduce 2分区数目 3置信度确定，不同置信度结果差别大，0.3置信度为76%的macro-auc准确率，精确率和f1分别为76和51
 >
 >```
@@ -1936,6 +1938,20 @@ https://github.com/ymcui/Chinese-ELECTRA
 >old_traindata.unpersist
 >old_trainlabel.unpersist
 >```
+
+###### 关键过程
+
+```
+扫描粒度，决定了第一层mgs的collect数据量，时间，决定了第一层cf的广播时间，以及cf的所有森林训练时间。
+交叉折数决定了森林的数量，任务划分的粒度element，影响task的调度。影响collect的次数。
+森林数决定了生成的拼接向量数量，
+森林的树数决定了计算时间复杂度。
+影响拼接向量的有sample数量，label数量，森林数量。
+
+折数会影响速度，
+```
+
+
 
 ###### 并行思路
 
@@ -1985,6 +2001,33 @@ spark如何allreduce，如果可以维护全局rdd，那么能减少传输输出
 
 多粒度扫描只是在第一层进行，后边不再进行MGS，不然维度会快速上升的。后边的CF级联层，只用按照给定的多粒度特征训练，并拼接正常的向量即可。
 ```
+
+>延迟多粒度扫描
+
+###### 加权分区
+
+>默认spark是hash分区，分配不均，而且树的时间花费有差异，要加权
+
+###### 缓存原始数据
+
+>这个地方就是，多粒度扫描的结果越大，那么延迟扫描的优化效果越好，缓存数据的优化效果越好，但是不能太大，当随着机器增多其时间也不下降就不行。可能导致mgs层collect时加速比低，以及第一次cf层广播时加速比低。应该整体不会太低，因为优化后，只有cf第一层需要传输，那么后边每一层都节省了，优化是没问题的。至于加速比，就是正因为后边每一层都将网络传输时间节省了，所以加速比应该提高。实际上只节省了广播变量的部分，cf层collect时仍然需要获得n_forest x n_samples x n_lalbes的数据量。可以不collect吧，直接与缓存的原始rdd join呀，但是分区要按照原始rdd分区。
+
+>用rdd缓存cf层的原始重复部分特征，然后用拼接值处理，最后分配任务。
+>
+>```
+>#每个分区需要什么   全部样本原始特征、拼接特征维度、分配的任务index
+># 之前是用闭包或广播将整个拼接后的向量发送到每个分区，然后用rdd分配任务index
+># 需要实现原始特征rdd cache，每个分区都有完整的整个dataset数据。然后闭包发送拼接值到每个分区，借助rdd拼接，获得拼接后的rdd。
+># 分区任务怎么办，已经使用了rdd存储数据。额，任务单位是一折及一棵树。自己设计好index和forest然后拼接上去，这样就强行指定了每个分区干什么。
+># 确定这样不会改变分区数据嘛。
+># 那消融怎么办，开启cache，关闭cache。
+># 分区则是用hash或加权，不用spark的分区器分配数据。
+># 如果这种方法不用cache呢，它发送的数据量和使用广播闭包的数据量一样。但是广播的不用手动分配任务到具体分区。
+>```
+
+###### join替代收集到driver
+
+>原始情况下，完成一层cf计算后，需要将生成的类向量收集起来，并拼接为新的类向量。借助join，我们可以将数据直接shuffle到需要拼接的结点，不用拉取到driver再处理。但是要注意分区的变化。
 
 ###### yeast
 
@@ -2077,24 +2120,231 @@ mv ./sparkdf.zip ../
 >将会启动14个executor，14*4=56个核心
 
 ```
-#window_size=30 n_features/3  slide=5  window_size/6  n_estimators=500时
-这个时候，random执行时间已经到达了10s，而extra的时间还停留在2s，这时候加权入球就有意义了。
+#yeast数据集，试试10折交叉，窗口30 10,num_forst=8
 
-#9个
-spark-submit  --master spark://172.18.65.175:7077  --py-files /root/module/sparkdf.zip  --conf "spark.pyhspark.driver.python=/root/miniconda3/envs/elephas1/bin/python"   --conf "spark.pyspark.python=/root/miniconda3/envs/elephas1/bin/python"   /root/module/sparkdf/TestSparkDFMGS.py  
-time_all=594
-
-#7个
-time_all=670s speedup=
+#6个
+time=1080s  18min       speedup_single=4.67x  
 
 #5个
+time=1253.10s    20.88min    speedup_single=4.02x  speedup=4.05x
+
+#4个
+time=1423s    23.71min   speedup_single=3.54x  speedup=3.57x
 
 #3个
+time=1742.30s      29.03min       speedup_single=2.89x   speedup=2.91x
+
+#2个
+time=2524刚好是2x speedup
+time=2538.79  42.31min  speedup_single=1.98x   speedup=2.0x
+time=2518.79s 41.79min speedup_single=2.0x    speedup=2.01x
+
+#1个
+time=5087.21s  84.78min        
+
+#single
+time=5048.21s  84.13min
+
 ```
 
 
 
 ```
+#scene数据集
+
+#16
+time=262.8658661842346,相比8的加了0.3x....
+
+#8 
+time=342
+```
+
+
+
+```
+#yeast数据集只用一层，kfold 用10折
+
+#single
+all=617.2471952438354
+
+#12个
+all=103                        speedup=
+
+#10个
+all=108.30933117866516  speedup=5.71x
+```
+
+
+
+```
+#资源设置有问题，设置的task.cores只是控制task会不会共用executors，但是实际使用时，是由代码中控制的。
+jobs都写4，但是就是在spark中运行慢很多，1倍多，一个4s，一个10s多。网络传输collect到driver又需要28s左右，时间占了1/3，但是计算效率是缩水了的，本来不应该花费10s。
+
+spark verbose=1: layer=2
+[Parallel(n_jobs=4)]: Done  42 tasks      | elapsed:    1.1s
+[Parallel(n_jobs=4)]: Done 192 tasks      | elapsed:    5.8s
+[Parallel(n_jobs=4)]: Done 442 tasks      | elapsed:   13.1s
+[Parallel(n_jobs=4)]: Done 500 out of 500 | elapsed:   14.4s finished
+
+single verbose=1: layer=2
+[Parallel(n_jobs=4)]: Using backend ThreadingBackend with 4 concurrent workers.
+[Parallel(n_jobs=4)]: Done  42 tasks      | elapsed:    0.5s
+[Parallel(n_jobs=4)]: Done 192 tasks      | elapsed:    2.2s
+[Parallel(n_jobs=4)]: Done 442 tasks      | elapsed:    5.1s
+[Parallel(n_jobs=4)]: Done 500 out of 500 | elapsed:    5.7s finished
+
+```
+
+```
+#yeast数据集，试试10折交叉，窗口30 10,num_forst=4
+
+#16exe
+time=6.3 min
+
+#8exe
+time=7.7 min
+```
+
+
+
+```
+#yeast数据集，试试10折交叉，窗口30 10,num_forst=8
+#就算cpu，内存隔离了，但是他们共用了内存、磁盘的读写带宽，可能影响fit的效果。
+#随着parallel增加，单个fit的执行时间还变长了，是互相竞争造成的嘛。
+#有没有发现加速比都是到达5x不动了，这不刚好是机器的数量，难道它是使用了整个机器的cpu，可是它运行的速度也不快呀。是当parallel为5时，已经使用了所有cpu嘛。如果我加一台机器，是不是为9就有提升...如果我缩减机器，是不是加速比也会下跌....
+
+#16个  
+time_all=658s  fit=18s->16s  speedup=6.09
+
+#12个
+time_all=12min fit=12s->15s->21s->30s  speedup=
+
+#10个
+time_all=697.75           speedup=
+
+#9个
+time_all=693.0416853427887s   speedup=5.78x
+
+#8个，给14jobs
+
+
+#8个
+time_all=12min fit=12s  speedup=5.56x
+
+#8个，关了05,04两台机器
+#机器减少并不影响执行时间，fit时间，单纯的因为executors增多，fit时间上升。
+
+
+#6个
+time_all=873s   speedup=4.59x
+
+#四个
+time_all=19min   fit=8s  speedup=3.5x
+time_all=1118s     fit=8s
+
+#四个,关了05,04两台机器
+#如果变慢了，低于3x，说明就是使用了非4个核心，使用了主机的其他资源。
+time_all=   fit=8s
+
+#4个
+
+
+#single
+/root/miniconda3/envs/elephas1/bin/python  TestSingleDF.py
+time_all=4010.705105304718 fit=8s
+```
+
+
+
+```
+试试三折交叉
+
+#16个  
+
+#9个
+time_all=196s    5.27x
+
+#single
+/root/miniconda3/envs/elephas1/bin/python  TestSingleDF.py
+single=1033s
+```
+
+
+
+```
+#window_size=30 n_features/3  slide=10  window_size/3  n_estimators=500时 Kfold=6
+#加了broadcast 且采用延迟扫描，平均分区，部分传输三个策略
+
+#16个
+time_all=404.84s  speedup=5.64
+
+#9个 random_state=3
+/root/miniconda3/envs/elephas1/bin/python  TestSingleDF.py
+time_all=411.59  speedup=5.53x
+
+#7个
+time_all=467.38（461.84）  speedup=4.878x
+
+#5个
+time_all=475.63   speedup=4.8x
+
+#3个
+time_all=624.47   speedup=5.17
+
+#single random_state=0
+/root/miniconda3/envs/elephas1/bin/python   TestSingleDF.py
+time_all=2280.98s        
+
+```
+
+
+
+```
+使用rdd cache,效果不好
+#9个
+spark-submit  --master spark://172.18.65.175:7077  --py-files /root/module/sparkdf.zip  --conf "spark.pyhspark.driver.python=/root/miniconda3/envs/elephas1/bin/python"   --conf "spark.pyspark.python=/root/miniconda3/envs/elephas1/bin/python"   /root/module/sparkdf/myTest/TestSparkDFMGSBroadcast.py
+
+
+```
+
+
+
+```
+#window_size=30 n_features/3  slide=10  window_size/3  n_estimators=500时  k_fold=6
+#这是只使用了延迟扫描，和平均分区
+这个时候，random执行时间已经到达了10s，而extra的时间还停留在2s，这时候加权入球就有意义了。
+
+#single,单机当然也是4核了
+#15 random_state=3
+/root/miniconda3/envs/elephas1/bin/python  TestSingleDF.py
+
+time_all=558s  speedup=5.7
+
+#11
+time_all=601s   .....离谱
+
+#9个 random_state=3
+spark-submit  --master spark://172.18.65.175:7077  --py-files /root/module/sparkdf.zip  --conf "spark.pyhspark.driver.python=/root/miniconda3/envs/elephas1/bin/python"   --conf "spark.pyspark.python=/root/miniconda3/envs/elephas1/bin/python"   /root/module/sparkdf/TestSparkDFMGS.py  
+time_all=594s   speedup=5.4
+
+#7个 random_state=3
+time_all=670s speedup=4.8
+
+#5个  random_state=3
+time_all=784s  speedup=4.12
+
+#3个  random_state=3
+time_all=1143s   speedup=2.8
+
+#single random_state=0
+/root/miniconda3/envs/elephas1/bin/python   TestSingleDF.py
+time_all=3231s   
+```
+
+
+
+```
+window_size=50 slide=10
 要让数据量分到多个分区后，导致执行时间变短，理论是可以的，因为分区多后，每个分区拿到的数据少，需要训练的树少，循环少，每个循环和树花费1s。
 查看3个executors和5个executors的job执行对比，发现它们的stage阶段不同task有倾斜。
 3个executors的min=23,media=24,max=25
@@ -2160,7 +2410,7 @@ tfidf       s        	s           x   x
                  时间    speed up
                mgs  cf   mgs   cf
 不使用延迟扫描
-不使用部分传输
+不使用分区策略
 使用两个策略
 
 5，执行时间核网络传输时间均衡
@@ -2276,6 +2526,34 @@ spark-submit  --master spark://172.18.65.175:7077  --py-files /root/module/spark
 >random                    100                            0                                               *                    -                 
 >
 >extratree                      0                            100                                           *                    -
+
+###### 关于sparkml
+
+>他已经封装为一个基于rdd的操作，此操作只能在driver端调用。如果我想让多个ml的模型同时运行呢，然后获取他们的返回结果，这如何实现。应该可以吧，就像多个并行的流应用。
+>
+>同一个application的多个job并行的提交执行
+>
+>同一个application可以使用rdd缓存。广播变量局限性很大，它局限在一个rdd的范围内可使用，优化的是同一个executors的，使用同一个广播变量的task。
+>
+>
+>
+>使用同一个应用，多个job：
+>
+>是可以的，对于一个应用多个job，每个job对应一个tasksetmanager。
+>
+>我们可以借助多线程向sparkcontext提交多个job，当有空闲executors时，会从job种挑选taskset进行执行，具体挑选策略有FIFO，FAIR等策略。
+>
+>但是在此场景，并行多个job和顺序job效率是一样的，因为一个job需求假设是4个executors，就算你再并行提交一个job，集群也没有空闲资源去执行其他并行job，只能等当前的执行完，所以说和顺序提交结果是一样的。并行提交，只有在集群可用资源可以支撑多个job时，是有意义的，可以利用闲置的资源。
+>
+>使用缓存：
+>
+>rdd1=重复使用的数据
+>
+>rdd2=rdd1.map(拼接函数(拼接的新变量))
+>
+>rdd2.fit()
+>
+>这样就实现了一个应用内，多个rdd（job）共享，优化的是同一个应用节点，使用同一个rdd的task。
 
 
 

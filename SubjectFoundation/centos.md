@@ -23,6 +23,15 @@ https://blog.csdn.net/sflsgfs/article/details/9129307
 more /proc/cpuinfo | grep "model name"  
 grep "model name" /proc/cpuinfo  
 grep "CPU" /proc/cpuinfo  
+
+#查看物理cpu数量
+cat /proc/cpuinfo | grep name | cut -f2 -d: | uniq -c
+
+#查看逻辑cpu数量
+cat /proc/cpuinfo | grep "processor" |wc -l
+
+#查看物理cpu是几个核心的
+cat /proc/cpuinfo | grep "cores"|uniq
 ```
 
 # sshd
