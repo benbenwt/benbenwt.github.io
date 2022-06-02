@@ -869,6 +869,8 @@ Driver项rm申请资源，rm分配资源后在合适的机器上启动AM，AM再
 # spark用法
 
 >rdd:https://spark.apache.org/docs/latest/rdd-programming-guide.html
+>
+>web ui documets:https://spark.apache.org/docs/latest/web-ui.html
 
 ## spark scala api
 

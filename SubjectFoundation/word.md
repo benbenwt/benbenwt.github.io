@@ -75,3 +75,6 @@ pdf convert:https://www.freepdfconvert.com/zh-tw/pdf-to-word
 右键对象，设置图表选项，控制横纵坐标轴名称
 ```
 
+#### 平面柱状图
+
+>
