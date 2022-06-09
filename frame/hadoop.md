@@ -1870,6 +1870,18 @@ setup，cleanup每个mapper只执行一次。
 
 通过重写InputFormat类，实现自己的类。重写RecordReader中的NextKeyValue控制map一次读取的行数。
 
+# Hadoop-Streaming
+
+>hadoop-streaming并不是一个流式处理api，而是一个用于调用任意语言程序的api，我们可以借助这个jar包提交各种类型的程序，比如python、shell作为mapper、reducer，那这些语言如何交流呢，就是通过stdin和stdout传输数据，也就是说无法传输语言内部的数据结构，只能通过输入输出传输原生字符串。mapreduce和spark等分布式程序，本质就是在各个节点启动对应语言的程序执行，然后再将结果处理collect，如果提供了特定语言的api，那么数据的collect及序列化反序列化就已经实现了，只用直接编写程序。但是hadoop-streaming这种方式，就是没有实现序列化和反序列化，只能通过输入输出字符串传递需要的信息，自己进行数据的序列化和反序列化。
+>
+>https://zhuanlan.zhihu.com/p/34036056
+>
+>官方document:https://hadoop.apache.org/docs/stable/hadoop-streaming/HadoopStreaming.html
+>
+>https://blog.csdn.net/liang_biao/article/details/51909326
+
+
+
 # problem
 
 ##### There are 25866 missing blocks. The following files may be corrupted:
