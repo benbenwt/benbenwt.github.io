@@ -52,6 +52,10 @@ pdf convert:https://www.freepdfconvert.com/zh-tw/pdf-to-word
 
 在布局中选择分栏->栏数
 
+### 引用域
+
+>更新引用域的编号的快捷键：
+
 ### 多级编号
 
 在头部栏点击自定义多级编号，点击更多。将编号绑定到对应标题格式，并设置编号样式。

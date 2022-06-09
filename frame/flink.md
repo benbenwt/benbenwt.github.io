@@ -404,7 +404,7 @@ parallelism.default: 1
 
 ### TaskManager
 
-## 集权配置文件
+## 集群配置文件
 
 #### flink-conf.yaml
 
