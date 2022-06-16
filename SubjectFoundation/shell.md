@@ -158,6 +158,25 @@ unset name
 
 创建后变量只读
 
+### 时间
+
+```
+https://www.cnblogs.com/hencins/p/12273259.html
+#!/bin/bash
+
+startTime=`date +%Y%m%d-%H:%M:%S`
+startTime_s=`date +%s`
+
+endTime=`date +%Y%m%d-%H:%M:%S`
+endTime_s=`date +%s`
+
+sumTime=$[ $endTime_s - $startTime_s ]
+
+echo "$startTime ---> $endTime" "Total:$sumTime seconds"
+```
+
+
+
 ## 变量使用范围
 
 **本地变量**：只能在shell内使用
@@ -468,7 +487,7 @@ do
 
 ​	fi
 
-echo "b"
+echo ":b"
 
 ((i++))
 

@@ -1880,6 +1880,10 @@ setup，cleanup每个mapper只执行一次。
 >
 >https://blog.csdn.net/liang_biao/article/details/51909326
 
+## 搭建wordcount
+
+>编写两个文件，mapper.py和reducer.py，然后提交到hadoop。掌握基本使用方式，搞清楚如何控制mapTask数量，如何控制map数据的分区，如果是从hdfs读取就很好控制，由block的原则计算即可。但是这个情况是所有mapTask都要拿到全量的数据，然后确定验证集的索引，返回时也要返回这些。数据和索引如何传递给mapper。
+
 
 
 # problem

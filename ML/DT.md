@@ -3,3 +3,5 @@
 #### gini
 
 #### 熵
+
+![sklearn](../resources/images/sklearn.png)

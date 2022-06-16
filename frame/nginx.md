@@ -121,6 +121,10 @@ location @app {
 
 # nginx用法
 
+### 常见错误码
+
+>502 bad gateway
+
 ### shell常用命令
 
 ```nginx
