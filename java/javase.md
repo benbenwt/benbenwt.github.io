@@ -1967,6 +1967,53 @@ class A implements Runnable{
 
 # JAVA理论知识
 
+## 异常与错误
+
+>在java中，所有异常都有一个共同的祖先Throwable。Throwable有两个重要的子类：Exception和Error
+>
+>Exception：是应用程序可预测可恢复的问题，是在特定环境下产生的，出现在特定的场景和代码，是轻度的问题。例如IOException，NullPointerException，ArrayIndexOutOfBoundException。Exception还有一个RuntimeException子类，表示JVM常用操作引发的错误。
+>
+>Error：表示较为严重的问题，大多数与程序逻辑无关，表示运行时jvm出现问题，例如OutOfMemoryError，StackOverFlowError。
+
+### 常见异常
+
+#### 文件磁盘操作异常
+
+```
+IOException
+FileNOt Exist
+```
+
+#### 数据相关异常
+
+```
+connection fail
+```
+
+#### 数据结构操作异常
+
+```
+#Array
+ArrayIndexOutOfBound
+
+#object
+NullPointExcepiton
+```
+
+#### 网络相关异常
+
+```
+host not reached
+```
+
+### 常见Error
+
+```
+OSError
+StackOverFlowError
+OutofMemoryError
+```
+
 ## 并发容器
 
 >https://www.jianshu.com/p/67076450de38

@@ -1,3 +1,17 @@
+### 日志
+
+```
+import logging,sys
+log = logging.getLogger()
+fmt1 = logging.Formatter(fmt="%(asctime)s - %(levelname)-9s - %(filename)-8s : %(lineno)s line - %(message)s")
+sh=logging.StreamHandler(sys.stdout)
+sh.setFormatter(fmt1)
+log.addHandler(sh)
+log.setLevel(logging.INFO)
+```
+
+
+
 ### 字节与字符串转换
 
 >https://blog.csdn.net/zengNLP/article/details/95385390
@@ -6,7 +20,6 @@
 import pickle
 import base64
 import json
-
 
 a = [[1, ['a']], [2, ['a', 'c']], [3, ['d']], [4, ['b']]] #可以是图像cv2的image的对象，或者组合的更复杂的数据结构
 
