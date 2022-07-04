@@ -15,19 +15,6 @@ DockerFile编写时分层应该按照功能，基础的功能放在前边，需�
 只要说urllib相关的错误，极有可能是没启动docker服务端，导致docker客户端发发送请求失败。
 ```
 
-
-
-# dcoker离线镜像
-
-```
-#image
-docker save 0fdf2b4c26d3 > hangge_server.tar
-docker load < hangge_server.tar
-#container
-docker export f299f501774c > hangger_server.tar
-docker import - new_hangger_server < hangger_server.tar
-```
-
 # docker网络
 
 ```
@@ -724,4 +711,65 @@ docker system prune -a
 ```
 使用sudo chmod -R 777 ./data，允许所有人访问
 ```
+
+# Docker离线环境使用
+
+>由于某些情况，在部署环境无法连接到互联网，那么docker就无法在线拉取镜像，并且DockerFile中编写的apt命令、pip命令等网络请求都会无法工作，导致镜像无法构建。
+>
+>可用的解决方案有：1自己针对需要的apt、python包下载好离线版本，然后让apt和pip离线安装，这样在离线环境也可以成功构建，但这种方式工作量很大，费时费力。
+>
+>2将原本的dockerfile拆分为两部分，有网络请求下载依赖的作为第一部分，其他的容易变动的代码部分作为第二部分。第一部分，仍然在dockerfile中使用apt和pip命令请求网络资源，然后构建镜像，将构建好的镜像导出为tar。然后在第二部分的Dockerfile中引入此tar镜像(FROM part1-image:1.0)，就得到了拥有完整运行依赖的环境。当在离线环境中部署时，需要携带第一部分的tar文件和第二部分的Dockerfile文件，然后就可以对第二部分进行构建了。
+
+## 第一部分镜像
+
+>首先编写es_search_base第一部分镜像的Dockerfile
+
+```
+FROM python:3.6-slim
+WORKDIR /usr/local
+
+RUN cp /etc/apt/sources.list /etc/apt/sources.list.bak  && \
+echo 'deb http://mirrors.ustc.edu.cn/debian stable main contrib non-free' >>/etc/apt/sources.list  && \
+echo 'deb http://mirrors.ustc.edu.cn/debian stable-updates main contrib non-free' >>/etc/apt/sources.list
+
+RUN useradd -m platform \
+&&pip install flask_sqlalchemy==2.5.1\
+ sqlalchemy==1.4.17\
+ pymysql==1.0.2\
+ flask==1.1.2\
+ elasticsearch==7.11.0\
+ tornado\
+ urllib3  -i https://pypi.douban.com/simple    \
+&&echo "finished downloading python libs"
+```
+
+>然后构建第一部分镜像并导出为tar
+
+```
+docker build -t es_search_base:0.1 .
+docker save  es_search_base:0.1  > es_search_base.tar
+```
+
+## 第二部分镜像
+
+>首先编写第二部分镜像es_search的Dockerfile，引入第一部分镜像
+
+```
+FROM es_search_base:0.1
+RUN echo "Copying  code"
+COPY  --chown=platform:platform  ./entrypoint.sh /usr/local/entrypoint.sh
+COPY  --chown=platform:platform  ./es_search /usr/local/es_search
+WORKDIR /usr/local/es_search
+CMD ["/usr/local/entrypoint.sh"]
+```
+
+>然后load第一部分镜像的tar文件，这样才能构建第二部分的dockerfile
+
+```
+docker load <  es_search_base.tar
+#进入第二部分Dockerfile所在目录，构建镜像
+docker build  es_search:1.0  .
+```
+
+
 

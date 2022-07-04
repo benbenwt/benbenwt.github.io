@@ -4041,14 +4041,13 @@ window(windowDuration,slideDuration)
 foreachRDD
 ```
 
-# 拆分可视化服务
+# 搭建docker可视化
 
->为了方便展示项目效果，将可视化的模块与庞大的数仓集群独立出来，只保留关键的ads数据库、后端、前段可视化展示。包括如下服务：es，mysql，clickhouse，superset，springboot，echarts。为了方便管理这些零散的服务，使用docker-compose将其制作成镜像，方便展示。
+>由于集群在内网，无法展示效果，且出于安全等因素考虑，不搭建内网穿透。所以，将可视化的模块从庞大的数仓集群独立出来，在个人电脑上使用docker搭建一个小服务，对外开放。只保留关键的ads数据库、后端、前段可视化展示。包括如下服务：es，mysql，superset。为了方便管理这些零散的服务，使用docker-compose将其制作成镜像。
 >
->可能问题：1集群和项目的服务是在服务器上，只是将清洗结果和可视化服务迁移到本机。
->2实验室没有其他项目嘛，有一些小项目，与当前职位关系很小。
-
->mysql的数据用navicate导出为sql，再导入新的数据库
+>服务搭建完成后，进行数据导入。
+>
+>mysql的数据用navicate导出为sql，再导入docker中的新数据库。
 >
 >elasticsearch借助logstash导入到新的es数据库。
 
@@ -4118,7 +4117,7 @@ networks:
 
 ### mysql
 
->platform.sql中是建表语句
+>platform.sql中是自己的建表语句
 
 ```
 FROM mariadb:latest
@@ -4127,9 +4126,11 @@ COPY ./platform.sql /docker-entrypoint-initdb.d
 RUN chown -R mysql:mysql /docker-entrypoint-initdb.d/
 ```
 
+>platform.sql创建ads表，sql内容较长，放到结尾。
+
 ### superset
 
->如下的dockerfile主要是为了安装python的编译依赖，将python和pip编译并安装好。然后使用pip安装superset及其依赖。
+>如下的dockerfile主要是为了安装python的依赖，将python和pip编译并安装好。然后使用pip安装superset及gunicorn其依赖。其中gunicorn是superset的后端http服务
 
 ```
 FROM centos:7
@@ -4142,6 +4143,8 @@ python-devel python-pip python-wheel python-setuptools\
 gdbm-devel readline-devel sqlite-devel automake  autoconf libtool make \
 libffi-devel wget
 RUN cd /usr/local/ \
+
+#编译安装python
 && wget https://www.python.org/ftp/python/3.7.0/Python-3.7.0.tgz\
 &&tar -zxvf Python-3.7.0.tgz \
 && cd /usr/local/Python-3.7.0/ \
@@ -4153,41 +4156,39 @@ RUN cd /usr/local/ \
 && wget https://bootstrap.pypa.io/get-pip.py\
 &&  python get-pip.py\
 &&ln -s /usr/local/python3/bin/pip3 /usr/bin/pip
+
+
 Run  pip install --upgrade setuptools pip -i https://pypi.douban.com/simple/ 
 Run pip install apache-superset==0.36.0  -i https://pypi.douban.com/simple/ \
 markupsafe==2.0.1 -i https://pypi.douban.com/simple/ \
 WTForms==2.3.3 \
 sqlalchemy==1.3.24  \
 pymysql
-#Run superset db upgrade \
-#&&superset fab create-admin \
-#&&superset init \
-#&&pip install gunicorn -i https://pypi.douban.com/simple/ \
-#&&gunicorn --workers 5 --timeout 120 --bind hadoop102:8787  "superset.app:create_app()" --daemon 
-#COPY   --chown=platform:platform  ./superset /home/platform/
 COPY   --chown=platform:platform  ./entrypoint.sh /home/platform/
-#CMD ["python3","-m","http.server","8888"]
 USER root
 CMD ["sh","/home/platform/entrypoint.sh"]
+#CMD ["python3","-m","http.server","8888"]
 ```
 
 ```
 #第一次启动还要进行如下操作
-#关于为什么可以直接使用superset命令，因为它将site-packages/superset/bin/superset软连接到了/usr/bin或添加了环境变量。有时候不是放在对应安装包的bin目录下，而是在python环境的目录，gunicorn就是这样，如conda/env/my_python/bin/gunicorn
 #superset需要创建数据库，指定登陆web界面的用户和密码，及后续的gunicorn这一部分需要如下手动完成。
-先使用ln -s将superset、gunicorn的可执行文件链接到/usr/bin
+先使用ln -s将superset、gunicorn的可执行文件链接到/usr/bin，然后：
 superset db upgrade
 export FLASK_APP=superset
 superset fab create-admin
 superset init
-#配置前端页面
+
+#配置前端页面,其中ip为容器ip
 pip install gunicorn -i https://pypi.douban.com/simple/
-gunicorn --workers 5 --timeout 120 --bind hadoop102:8787  "superset.app:create_app()"
+gunicorn --workers 5 --timeout 120 --bind ip:8787  "superset.app:create_app()"
+
+#关于为什么可以直接在终端使用superset命令，因为它将site-packages/superset/bin/superset软连接到了/usr/bin或添加了环境变量。有时候其可执行文件不是放在对应安装包的bin目录下，而是在python环境的bin目录，gunicorn就是这样，其可执行文件放在conda/env/my_python/bin/gunicorn
 ```
 
 ### elasticsearch kibana
 
->将es拷贝进去，修改配置文件，启动
+>将elasticsearch拷贝进去，修改配置文件，启动
 >
 >导入数据
 
@@ -4200,12 +4201,8 @@ ENV PATH $JAVA_HOME/bin:$PATH
 RUN useradd -m elasticsearch
 ADD ./kibana-7.11.1-linux-x86_64.tar.gz  /usr/local
 COPY --chown=elasticsearch:elasticsearch ./elasticsearch /usr/share/elasticsearch
-#COPY  --chown=elasticsearch:elasticsearch  ./elasticsearch.yml /usr/share/elasticsearch/config/elasticsearch.yml
 COPY --chown=elasticsearch:elasticsearch ./kibana.yml /usr/local/kibana-7.11.1-linux-x86_64/config
 COPY  --chown=elasticsearch:elasticsearch  ./entrypoint.sh /usr/local
-#USER root
-#ENTRYPOINT ["/usr/local/entrypoint.sh"]
-#CMD ["/usr/local/kibana-7.11.1-linux-x86_64/bin/kibana ","--allow-root"]
 USER elasticsearch
 ENTRYPOINT  ["/usr/local/entrypoint.sh"]
 ```
@@ -4220,23 +4217,231 @@ ENTRYPOINT  ["/usr/local/entrypoint.sh"]
 
 ## 迁移数据
 
->mysql中的数据分为两块，一块是gmall_report，是数据仓库的的统计结果。
+>mysql中的数据分为两块，
 >
->一块是data_supervisor,是数据质量控制的统计结果。这两块借助navicate的导出导入功能迁移数据，然后手动填充一些数据，让superset的图形效果好一点。
+>一块是gmall_report，是数据仓库的的统计结果ads。
 >
->elasticsearch主要是spakrstreaming的统计结果，使用logstash将数据从集群采集到docker中的elasticsearch中。
+>另一块是data_supervisor,是数据质量控制的统计结果。这两块借助navicate的导出导入功能迁移数据
+>
+>elasticsearch主要是spakrstreaming的统计结果，可以使用logstash将数据从集群采集到docker中的elasticsearch中。
+
+```
+#mysql
+使用navicate选中数据库，右键转储为sql文件。
+或使用终端，mysqldump --opt -h<ip>  -uusername -ppassword --skip-lock-tables databasename>database.sql
+#然后到docker的myql中执行该sql
+source database.sql
+```
+
+```
+#elasticsearch使用其配套的logstash导入,host1,host2分别是源ip和目的ip
+vim demo.conf
+#添加如下内容
+input {
+  elasticsearch {
+    hosts => ["host1:9200"]
+    index => "gmall0523_order_info_20220410"
+    size => 1000
+    scroll => "5m"
+  }
+}
+filter {}
+output {
+    elasticsearch{
+      hosts => ["host2:9200"]
+      index => "gmall0523_order_info_20220410"
+    }
+}
+
+#创建好文件后，执行logstash
+bin/logstash -f config/demo.conf
+```
 
 ## 花生壳映射
 
+>到官网下载软件并安装，免费用户可以使用两个映射，并且只能使用http，每个月有1G免费流量。
+>
+>点击添加映射，输入服务所在的ip和端口，然后开启映射，就可以复制它的映射地址，通过公网访问了。
+>
+>如果你是在window电脑上创建虚拟机，然后在虚拟机内部使用的docker，需要将docker的端口映射到外部的虚拟机端口，然后将花生壳映射配置为虚拟机的端口。
+
+## 其他
+
+>platform.sql
+
 ```
-elasticsearch的映射地址：
-1.spark实时数仓可视化，http://49144m9k60.zicp.vip:52494/goto/97163d82d55cb968ef79599d864032c2
-2.flink实时推荐： http://49144m9k60.zicp.vip:52494/goto/c25c8c3593c6ed62582aae6ee79da8a0
-superset的映射地址：
-1.hive数据仓库统计结果，http://49144m9k60.zicp.vip/r/5    
-2.数据质量控制统计结果， http://49144m9k60.zicp.vip/r/7  
-账号：visitor visitor
+#用户(访客，用户流失，回流)，页面浏览（浏览路径），商品（sku销量），订单（下单，支付，退单，退款），    时间，地区    活动，优惠券(与商品销量组合)
+
+use gmall_report;
+DROP TABLE IF EXISTS ads_visit_stats;
+
+访客
+CREATE TABLE `ads_visit_stats` (
+  `dt` DATE NOT NULL COMMENT '统计日期',
+  `is_new` VARCHAR(255) NOT NULL COMMENT '新老标识,1:新,0:老',
+  `recent_days` INT NOT NULL COMMENT '最近天数,1:最近1天,7:最近7天,30:最近30天',
+  `channel` VARCHAR(255) NOT NULL COMMENT '渠道',
+  `uv_count` BIGINT(20) DEFAULT NULL COMMENT '日活(访问人数)',
+  `duration_sec` BIGINT(20) DEFAULT NULL COMMENT '页面停留总时长',
+  `avg_duration_sec` BIGINT(20)  DEFAULT NULL COMMENT '一次会话，页面停留平均时长',
+  `page_count` BIGINT(20) DEFAULT NULL COMMENT '页面总浏览数',
+  `avg_page_count` BIGINT(20) DEFAULT NULL COMMENT '一次会话，页面平均浏览数',
+  `sv_count` BIGINT(20) DEFAULT NULL COMMENT '会话次数',
+  `bounce_count` BIGINT(20) DEFAULT NULL COMMENT '跳出数',
+  `bounce_rate` DECIMAL(16,2) DEFAULT NULL COMMENT '跳出率',
+  PRIMARY KEY (`dt`,`recent_days`,`is_new`,`channel`)
+) ENGINE=INNODB DEFAULT CHARSET=utf8;
+
+用户页面行为
+DROP TABLE IF EXISTS ads_page_path;
+CREATE TABLE `ads_page_path` (      
+  `dt` DATE NOT NULL COMMENT '统计日期',
+  `recent_days` BIGINT(20) NOT NULL COMMENT '最近天数,1:最近1天,7:最近7天,30:最近30天',
+  `source` VARCHAR(255) DEFAULT NULL COMMENT '跳转起始页面',
+  `target` VARCHAR(255) DEFAULT NULL COMMENT '跳转终到页面',
+  `path_count` BIGINT(255) DEFAULT NULL COMMENT '跳转次数',
+  UNIQUE KEY (`dt`,`recent_days`,`source`,`target`) USING BTREE     
+) ENGINE=INNODB DEFAULT CHARSET=utf8 ROW_FORMAT=DYNAMIC;
+
+所有用户
+DROP TABLE IF EXISTS ads_user_total;
+CREATE TABLE `ads_user_total` (          
+  `dt` DATE NOT NULL COMMENT '统计日期',
+  `recent_days` BIGINT(20) NOT NULL COMMENT '最近天数,0:累积值,1:最近1天,7:最近7天,30:最近30天',
+  `new_user_count` BIGINT(20) DEFAULT NULL COMMENT '新注册用户数',
+  `new_order_user_count` BIGINT(20) DEFAULT NULL COMMENT '新增下单用户数',
+  `order_final_amount` DECIMAL(16,2) DEFAULT NULL COMMENT '下单总金额',
+  `order_user_count` BIGINT(20) DEFAULT NULL COMMENT '下单用户数',
+  `no_order_user_count` BIGINT(20) DEFAULT NULL COMMENT '未下单用户数(具体指活跃用户中未下单用户)',
+  PRIMARY KEY (`dt`,`recent_days`)           
+) ENGINE=INNODB DEFAULT CHARSET=utf8;
+
+用户流失和回流
+DROP TABLE IF EXISTS ads_user_change;
+CREATE TABLE `ads_user_change` (
+  `dt` DATE NOT NULL COMMENT '统计日期',
+  `user_churn_count` BIGINT(20) DEFAULT NULL  COMMENT '流失用户数',
+  `user_back_count` BIGINT(20) DEFAULT NULL  COMMENT '回流用户数',
+  PRIMARY KEY (`dt`)
+) ENGINE=INNODB DEFAULT CHARSET=utf8;
+
+用户行为
+DROP TABLE IF EXISTS ads_user_action;
+CREATE TABLE `ads_user_action` (
+  `dt` DATE NOT NULL COMMENT '统计日期',
+  `recent_days` BIGINT(20) NOT NULL COMMENT '最近天数,1:最近1天,7:最近7天,30:最近30天',
+  `home_count` BIGINT(20) DEFAULT NULL COMMENT '浏览首页人数',
+  `good_detail_count` BIGINT(20) DEFAULT NULL COMMENT '浏览商品详情页人数',
+  `cart_count` BIGINT(20) DEFAULT NULL COMMENT '加入购物车人数',
+  `order_count` BIGINT(20) DEFAULT NULL COMMENT '下单人数',
+  `payment_count` BIGINT(20) DEFAULT NULL COMMENT '支付人数',
+  PRIMARY KEY (`dt`,`recent_days`) USING BTREE
+) ENGINE=INNODB DEFAULT CHARSET=utf8 ROW_FORMAT=DYNAMIC;
+
+用户留存
+DROP TABLE IF EXISTS ads_user_retention;
+CREATE TABLE `ads_user_retention` (      
+  `dt` DATE DEFAULT NULL COMMENT '统计日期',
+  `create_date` VARCHAR(255) NOT NULL COMMENT '用户新增日期',
+  `retention_day` BIGINT(20) NOT NULL COMMENT '截至当前日期留存天数',
+  `retention_count` BIGINT(20) DEFAULT NULL COMMENT '留存用户数量',
+  `new_user_count` BIGINT(20) DEFAULT NULL COMMENT '新增用户数量',
+  `retention_rate` DECIMAL(16,2) DEFAULT NULL COMMENT '留存率',
+  PRIMARY KEY (`create_date`,`retention_day`) USING BTREE        
+) ENGINE=INNODB DEFAULT CHARSET=utf8 ROW_FORMAT=DYNAMIC;
+
+订单所有
+DROP TABLE IF EXISTS ads_order_total;
+ CREATE TABLE `ads_order_total` (   
+  `dt` DATE NOT NULL COMMENT '统计日期', 
+  `recent_days` BIGINT(20) NOT NULL COMMENT '最近天数,1:最近1天,7:最近7天,30:最近30天',
+  `order_count` BIGINT(255) DEFAULT NULL COMMENT '订单数', 
+  `order_amount` DECIMAL(16,2) DEFAULT NULL COMMENT '订单金额', 
+  `order_user_count` BIGINT(255) DEFAULT NULL COMMENT '下单人数',
+  PRIMARY KEY (`dt`,`recent_days`)  
+) ENGINE=INNODB DEFAULT CHARSET=utf8 ROW_FORMAT=DYNAMIC;
+
+订单省份
+DROP TABLE IF EXISTS ads_order_by_province;
+CREATE TABLE `ads_order_by_province` (
+  `dt` DATE NOT NULL,
+  `recent_days` BIGINT(20) NOT NULL COMMENT '最近天数,1:最近1天,7:最近7天,30:最近30天',
+  `province_id` VARCHAR(255) NOT NULL COMMENT '统计日期',
+  `province_name` VARCHAR(255) DEFAULT NULL COMMENT '省份名称',
+  `area_code` VARCHAR(255) DEFAULT NULL COMMENT '地区编码',
+  `iso_code` VARCHAR(255) DEFAULT NULL COMMENT '国际标准地区编码',
+  `iso_code_3166_2` VARCHAR(255) DEFAULT NULL COMMENT '国际标准地区编码',
+  `order_count` BIGINT(20) DEFAULT NULL COMMENT '订单数',
+  `order_amount` DECIMAL(16,2) DEFAULT NULL COMMENT '订单金额',
+  PRIMARY KEY (`dt`, `recent_days` ,`province_id`) USING BTREE       
+) ENGINE=INNODB DEFAULT CHARSET=utf8 ROW_FORMAT=DYNAMIC;
+
+复购
+DROP TABLE IF EXISTS ads_repeat_purchase;
+CREATE TABLE `ads_repeat_purchase` (         
+  `dt` DATE NOT NULL COMMENT '统计日期',
+  `recent_days` BIGINT(20) NOT NULL COMMENT '最近天数,1:最近1天,7:最近7天,30:最近30天',
+  `tm_id` VARCHAR(255) NOT NULL COMMENT '品牌ID',
+  `tm_name` VARCHAR(255) DEFAULT NULL COMMENT '品牌名称',
+  `order_repeat_rate` DECIMAL(16,2) DEFAULT NULL COMMENT '复购率',
+  PRIMARY KEY (`dt` ,`recent_days`,`tm_id`)          
+) ENGINE=INNODB DEFAULT CHARSET=utf8 ROW_FORMAT=DYNAMIC;
+
+spu销量订单等
+DROP TABLE IF EXISTS ads_order_spu_stats;
+CREATE TABLE `ads_order_spu_stats` (
+  `dt` DATE NOT NULL COMMENT '统计日期',
+  `recent_days` BIGINT(20) NOT NULL COMMENT '最近天数,1:最近1天,7:最近7天,30:最近30天',
+  `spu_id` VARCHAR(255) NOT NULL COMMENT '商品ID',
+  `spu_name` VARCHAR(255) DEFAULT NULL COMMENT '商品名称',
+  `tm_id` VARCHAR(255) NOT NULL COMMENT '品牌ID',
+  `tm_name` VARCHAR(255) DEFAULT NULL COMMENT '品牌名称',
+  `category3_id` VARCHAR(255) NOT NULL COMMENT '三级品类ID',
+  `category3_name` VARCHAR(255) DEFAULT NULL COMMENT '三级品类名称',
+  `category2_id` VARCHAR(255) NOT NULL COMMENT '二级品类ID',
+  `category2_name` VARCHAR(255) DEFAULT NULL COMMENT '二级品类名称',
+  `category1_id` VARCHAR(255) NOT NULL COMMENT '一级品类ID',
+  `category1_name` VARCHAR(255) NOT NULL COMMENT '一级品类名称',
+  `order_count` BIGINT(20) DEFAULT NULL COMMENT '订单数',
+  `order_amount` DECIMAL(16,2) DEFAULT NULL COMMENT '订单金额', 
+  PRIMARY KEY (`dt`,`recent_days`,`spu_id`)  
+) ENGINE=INNODB DEFAULT CHARSET=utf8;
+
+活动
+DROP TABLE IF EXISTS ads_activity_stats;
+CREATE TABLE `ads_activity_stats` (
+  `dt` DATE NOT NULL COMMENT '统计日期',
+  `activity_id` VARCHAR(255) NOT NULL COMMENT '活动ID',
+  `activity_name` VARCHAR(255) DEFAULT NULL COMMENT '活动名称',
+  `start_date` DATE DEFAULT NULL COMMENT '开始日期',
+  `order_count` BIGINT(11) DEFAULT NULL COMMENT '参与活动订单数',
+  `order_original_amount` DECIMAL(16,2) DEFAULT NULL COMMENT '参与活动订单原始金额',
+  `order_final_amount` DECIMAL(16,2) DEFAULT NULL COMMENT '参与活动订单最终金额',
+  `reduce_amount` DECIMAL(16,2) DEFAULT NULL COMMENT '优惠金额',
+  `reduce_rate` DECIMAL(16,2) DEFAULT NULL COMMENT '补贴率',
+  PRIMARY KEY (`dt`,`activity_id` )
+) ENGINE=INNODB DEFAULT CHARSET=utf8 ROW_FORMAT=DYNAMIC;
+
+优惠券
+DROP TABLE IF EXISTS ads_coupon_stats;
+CREATE TABLE `ads_coupon_stats` (
+  `dt` DATE NOT NULL COMMENT '统计日期',
+  `coupon_id` VARCHAR(255) NOT NULL COMMENT '优惠券ID',
+  `coupon_name` VARCHAR(255) DEFAULT NULL COMMENT '优惠券名称',
+  `start_date` DATE DEFAULT NULL COMMENT '开始日期',  
+  `rule_name`  VARCHAR(200) DEFAULT NULL COMMENT '优惠规则',
+  `get_count`  BIGINT(20) DEFAULT NULL COMMENT '领取次数',
+  `order_count` BIGINT(20) DEFAULT NULL COMMENT '使用(下单)次数',
+  `expire_count`  BIGINT(20) DEFAULT NULL COMMENT '过期次数',
+  `order_original_amount` DECIMAL(16,2) DEFAULT NULL COMMENT '使用优惠券订单原始金额',
+  `order_final_amount` DECIMAL(16,2) DEFAULT NULL COMMENT '使用优惠券订单最终金额',
+  `reduce_amount` DECIMAL(16,2) DEFAULT NULL COMMENT '优惠金额',
+  `reduce_rate` DECIMAL(16,2) DEFAULT NULL COMMENT '补贴率',
+  PRIMARY KEY (`dt`,`coupon_id` )
+) ENGINE=INNODB DEFAULT CHARSET=utf8 ROW_FORMAT=DYNAMIC;
 ```
+
+
 
 # 项目困难
 

@@ -1874,7 +1874,7 @@ setup，cleanup每个mapper只执行一次。
 
 >hadoop-streaming并不是一个流式处理api，而是一个用于调用任意语言程序的api，我们可以借助这个jar包提交各种类型的程序，比如python、shell作为mapper、reducer，那这些语言如何交流呢，就是通过stdin和stdout传输数据，也就是说无法传输语言内部的数据结构，只能通过输入输出传输原生字符串。mapreduce和spark等分布式程序，本质就是在各个节点启动对应语言的程序执行，然后再将结果处理collect，如果提供了特定语言的api，那么数据的collect及序列化反序列化就已经实现了，只用直接编写程序。但是hadoop-streaming这种方式，就是没有实现序列化和反序列化，只能通过输入输出字符串传递需要的信息，自己进行数据的序列化和反序列化。
 >
->https://zhuanlan.zhihu.com/p/34036056
+>知乎详细教程：https://zhuanlan.zhihu.com/p/34036056
 >
 >官方document:https://hadoop.apache.org/docs/stable/hadoop-streaming/HadoopStreaming.html
 >
@@ -1882,7 +1882,69 @@ setup，cleanup每个mapper只执行一次。
 
 ## 搭建wordcount
 
->编写两个文件，mapper.py和reducer.py，然后提交到hadoop。掌握基本使用方式，搞清楚如何控制mapTask数量，如何控制map数据的分区，如果是从hdfs读取就很好控制，由block的原则计算即可。但是这个情况是所有mapTask都要拿到全量的数据，然后确定验证集的索引，返回时也要返回这些。数据和索引如何传递给mapper。
+>#编写mapper.py
+
+```
+#! /root/miniconda3/envs/elephas1/bin/python
+#! coding=utf-8
+
+import sys,logging,re
+
+seperator_pattern=re.compile(r'[^a-zA-Z0-9]+')
+
+def main():
+    for line in sys.stdin:
+        for word in seperator_pattern.split(line):
+            if word:
+                print(f"{word.lower()}\t1")
+if __name__ == '__main__':
+    main()
+```
+
+>#编写reducer.py
+
+```
+#! /root/miniconda3/envs/elephas1/bin/python
+#! coding=utf-8
+
+import sys,logging,re
+
+def main():
+    last_key = None
+    last_sum = 0
+
+    for line in sys.stdin:
+        key,value=line.split("\t")
+        if last_key is None:
+            last_key=key
+            last_sum=int(value.strip())
+        elif last_key==key:
+            last_sum+=int(value)
+        else:
+            print(f"{last_key}\t{last_sum}")
+            last_sum=int(value)
+            last_key=key
+    if last_key:
+        print(f"{last_key}\t{last_sum}")
+if __name__ == '__main__':
+    main()
+```
+
+>提交程序，格式为 hadoop jar   /hadoop-3.1.4/share/hadoop/tools/lib/hadoop-streaming-3.1.4.jar  -参数
+>
+>必须的参数有：
+>
+>-files  提交上传需要使用的mapper.py,reducer.py
+>
+>-input -output 输入输出文件
+>
+>-mapper -reducer 指定mapper和reducer 
+
+```
+/root/module/hadoop-3.1.4/bin/hadoop jar /root/module/hadoop-3.1.4/share/hadoop/tools/lib/hadoop-streaming-3.1.4.jar  -files 'mapper.py,reducer.py'  -numReduceTasks 1  -input /user/root/wordcount/input/  -output /user/root/wordcount/output -mapper "/root/miniconda3/envs/elephas1/bin/python mapper.py" -reducer "/root/miniconda3/envs/elephas1/bin/python reducer.py"
+```
+
+
 
 
 
