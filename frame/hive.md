@@ -1,5 +1,5 @@
+[TOC]
 # HIVE用法
-
 >hive(hdfs)+hive sql(mr)
 >
 >hive本质是hdfs文件，对于文件变动和查询性能很差，增删改。它唯一的作用就是存储，它的存储作用是由hdfs分布式文件体现的，与它无关。另一个作用就是将sql翻译为执行引擎的语言，所以说它不能称为存储组件，而是辅助分析插件，因为其没有添加存储架构，没有修改文件的增删改查性能，其性能与hdfs文件完全相同。
@@ -148,7 +148,7 @@ update
 
 ### JAVA API
 
-#hive java api:https://cwiki.apache.org/confluence/display/Hive/HiveServer2+Clients
+hive java api:https://cwiki.apache.org/confluence/display/Hive/HiveServer2+Clients
 
 ### 
 
@@ -296,7 +296,54 @@ drop [temporary] function [if exists] [dbname.]function_name;
 >
 >更多练习：https://www.gairuo.com/p/hive-sql-case
 
-### gmall项目
+## 日常练习
+
+### 220714
+
+>非技术快速入门板块
+
+```
+#数据去重
+#方法1
+select  distinct university from user_profile;
+select  university from user_profile group by university;
+```
+
+```
+#分组后字段使用having过滤，且挑选字段时需要聚合函数，比如下边的max函数，除非该字段是唯一分组字段。
+select max(gender),max(university),count(gender) user_num,avg(active_days_within_30) avg_active_days_within_30,avg(question_cnt) avg_question_cnt from user_profile group by gender,university;
+```
+
+### 220715
+
+>非技术快速入门板块
+
+```
+#查找去重后个数，使用count(distinct device_id)
+select university,count(*)/count(distinct device_id)  from (select  question_practice_detail.device_id,question_practice_detail.question_id,question_practice_detail.result,university from question_practice_detail  
+left join  (select device_id,university from user_profile) t2  on question_practice_detail.device_id=t2.device_id) t3 group by university;
+```
+
+```
+```
+### 220716
+```
+SQL23：多表联查，注意要将表名.字段的格式重命名，方便groupby，例如： max(t4.university) university
+select max(t4.university) university,max(t3.difficult_level) difficult_level,count(t3.device_id)/count(distinct t3.device_id)  device_id from 
+   (select device_id,t1.question_id,result,difficult_level from  
+        question_practice_detail t1 
+    left join (select question_id,difficult_level from question_detail) t2 on t1.question_id=t2.question_id) t3   
+left join  user_profile t4 on t3.device_id=t4.device_id group by university,difficult_level
+```
+
+```
+SQL24:多表联查，确定表的链接字段和需要聚合的字段。inner join确保不出现None。
+select max(t3.university) university,max(t4.difficult_level) difficult_level,count(*)/count(distinct t3.device_id) avg_answer_cnt from (select t1.device_id device_id,t1.question_id question_id,t2.university university from question_practice_detail t1 inner join 
+    (select device_id,university from user_profile where university="山东大学")t2  on t1.device_id=t2.device_id)t3
+left join (select question_id,difficult_level from question_detail)t4 on  t3.question_id=t4.question_id group by university,difficult_level
+    ;
+```
+## gmall项目
 
 ##### ads_order_spu_status 商品主题详细流程
 
@@ -307,15 +354,15 @@ drop [temporary] function [if exists] [dbname.]function_name;
 >             dws_sku_action_daycount，dim_sku_info   
 >                   dwt_sku_topic，dim_sku_info
 >                      ads_order_spu_stats
->#订单，订单明细，订单活动关联，订单优惠券关联         
->#交易的订单信息，退款订单信息，支付信息，退款顺序
+>订单，订单明细，订单活动关联，订单优惠券关联         
+>交易的订单信息，退款订单信息，支付信息，退款顺序
 >dwd层的工作量很大，需要聚合很多表，整合成单条记录形式，最小粒度。后边的dws，dwt基本基于dwd处理，不会连接太多表。
->#sku行为以天为粒度，列和DWS一样的。sku维度表
->#sku主题表，下单次数（是否参与活动，是否使用优惠券），下单件数（是否参与活动，是否使用优惠券），下单原始金额（活动优惠金额，优惠券优惠金额），下单最终金额，退款，评价（好评，差评，中评），购物车，收藏，以及1，7，30粒度的统计。sku维度表
+>sku行为以天为粒度，列和DWS一样的。sku维度表
+>sku主题表，下单次数（是否参与活动，是否使用优惠券），下单件数（是否参与活动，是否使用优惠券），下单原始金额（活动优惠金额，优惠券优惠金额），下单最终金额，退款，评价（好评，差评，中评），购物车，收藏，以及1，7，30粒度的统计。sku维度表
 >dwt这一层太宽了吧，这么多列。
->#spu的订单聚合信息，对于指定spu商品，其订单金额，订单数目，最近天数（1，7，30）
+>spu的订单聚合信息，对于指定spu商品，其订单金额，订单数目，最近天数（1，7，30）
 
-######  dwd_order_detail
+###### dwd_order_detail
 
 ```
 #首先确定一下每一列来自那个ods表
@@ -787,7 +834,7 @@ select coupon_id,order_original_amount,order_final_amount,order_reduce_amount,
 
 
 
-### 聚合查询
+## 聚合查询
 
 ##### 指定商品带来的复购
 
@@ -814,7 +861,7 @@ sku_id：商品 ID，其中 1111 是拉新的活动商品
 数据表是一个以订单-商品为粒度的流水表。
 ```
 
-### sql优化
+## sql优化
 
 # 仓库规范
 
@@ -1204,7 +1251,7 @@ FROM tab
 ORDER BY 1;
 ```
 
-#####  sort by
+##### sort by
 
 >hive支持,reduce局部排序，比order by性能消耗少。
 
@@ -2079,7 +2126,7 @@ cluster by 可以看做是一个特殊的distribute by+sort by，它具备二者
 
 >使用hive自带的Derby数据库存储元数据
 
-#####  本地模式
+##### 本地模式
 
 >配置了mysql，但是依赖于hive的服务无法远程访问metastore
 
@@ -2954,7 +3001,7 @@ show tables;
 
 >使用hive自带的Derby数据库存储元数据
 
-#####  本地模式
+##### 本地模式
 
 >配置了mysql，但是依赖于hive的服务无法远程访问metastore
 
