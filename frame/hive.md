@@ -343,6 +343,64 @@ select max(t3.university) university,max(t4.difficult_level) difficult_level,cou
 left join (select question_id,difficult_level from question_detail)t4 on  t3.question_id=t4.question_id group by university,difficult_level
     ;
 ```
+
+### 220717
+
+```sql
+sql27
+case when then end as 语法
+select device_id,gender,case  
+            when age<20  then "20岁以下"
+            when age<=24 then "20-24岁"
+            when age>=25 then "25岁及以上"
+            else "其他"
+            end   as  age_cnt
+from user_profile;
+```
+```sql
+sql28
+https://zhuanlan.zhihu.com/p/257002408 日期函数，字符串、时间戳、日期的转换，日期的运算比较等
+select day(`date`) `day`,count(*) from question_practice_detail where `date`>=str_to_date("2021-08-01","%Y-%m-%d") group by `day`;
+```
+
+```sql
+sql29 注意使用distinct去重，保证用户和日期的唯一性
+select avg((if(datediff(next_date,date)=1,1,0))) from(select device_id,`date`,lead(date,1,0) over(partition by device_id order by date) next_date  from (select distinct device_id,date from question_practice_detail)t)t1;
+```
+
+```sql
+sql30 字符串切分函数
+select substring_index(profile,",",-1) gender,count(*) from user_submit group by gender;
+```
+
+```sql
+sql33 in可以用于查找复合元素的列表
+select device_id,university,gpa from user_profile where (university,gpa) in (select university,min(gpa) from user_profile group by university) order by university;
+```
+
+```sql
+sql34 注意限制条件，比如未出现的用户也要处理，ISNULL函数用法。
+select t2.device_id device_id,t2.university university,sum(if(ISNULL(`date`),0,1)),sum(if(result="right",1,0)) right_question_cnt from 
+    question_practice_detail as t1 right join user_profile as  t2 on t1.device_id=t2.device_id 
+    where university="复旦大学" and (date>=str_to_date("2021-08-01","%Y-%m-%d") or ISNULL(`date`))
+    group by device_id;
+```
+
+```sql
+sql35 join多表并过滤，然后分组聚合求正确率
+select t4.difficult_level difficult_level,avg(if(t3.result="right",1,0)) correct_rate from
+    (select t1.device_id device_id,t1.result result,t1.question_id question_id from question_practice_detail t1 left join user_profile t2 on t1.device_id=t2.device_id where university="浙江大学")t3
+    left join 
+    question_detail t4 on t3.question_id=t4.question_id
+    group by difficult_level order by correct_rate;
+```
+
+>sql必知必会板块
+```sql
+sql60
+
+```
+
 ## gmall项目
 
 ##### ads_order_spu_status 商品主题详细流程
