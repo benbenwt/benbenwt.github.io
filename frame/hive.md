@@ -397,10 +397,63 @@ select t4.difficult_level difficult_level,avg(if(t3.result="right",1,0)) correct
 
 >sql必知必会板块
 ```sql
-sql60
 
 ```
 
+### 220718
+```
+#limit 给delete 用,按照顺序删除前边的指定条数，unix_timestamp获取日期的时间戳秒数。
+delete from exam_record where unix_timestamp(submit_time)-unix_timestamp(start_time)<300 or isnull(submit_time) order by start_time asc limit 3;
+```
+
+```sql
+建表语句
+CREATE TABLE 
+user_info_vip(
+id int(11) not null primary key auto_increment comment "自增ID",
+uid int(11) not null unique comment "用户ID",
+nick_name varchar(64) comment "昵称",
+achievement int(11) default 0 comment "成就值",
+level int(11) comment "用户等级",
+job varchar(32) comment "职业方向",
+register_time datetime default CURRENT_TIMESTAMP comment"注册时间"
+)
+```
+
+```sql
+#数据操作语言，修改表结构
+drop table if exists exam_record_2011,exam_record_2012,exam_record_2013,exam_record_2014;
+```
+
+```sql
+数据定义语言，操作表索引
+create index idx_duration on examination_info(duration);
+create unique index uniq_idx_exam_id on examination_info(exam_id);
+create fulltext index full_idx_tag on examination_info(tag);
+```
+
+```sql
+注意有的score这一列有的行为null，如果使用count(*)会将为null的行也统计，使用coutn(score)只会统计score存在的行。
+select tag,difficulty,(sum(score)-max(score)-min(score))/(count(score)-2) clip_avg_score from 
+examination_info t1  join exam_record t2  on t1.exam_id=t2.exam_id 
+where tag="SQL" and difficulty="hard"  
+```
+
+```sql
+sql125 不知道为什么这样写，有一个样例过不了
+select min(t3.score) as min_score_over_avg 
+from (select score,avg(if(isnull(score),0,score)) over() avg_score  from exam_record t1 join  examination_info t2 on t1.exam_id=t2.exam_id 
+where tag="SQL" and score is not null) t3 
+where t3.score>avg_score and t3.score is not null
+
+```
+
+```sql
+对一个活跃天数的定义是distinct uid,date，不同用户同一天活跃也计算多次，另外，对于submit_time为空的记录不计入活跃天数。
+select date_format(start_time,"%Y%m") month,round(count(distinct date_format(start_time,"%Y-%m-%d"),uid)/count(distinct uid),2) avg_active_days,count(distinct uid) mau 
+from exam_record 
+where start_time>="2021-01-01" and submit_time is not null group by month
+```
 ## gmall项目
 
 ##### ads_order_spu_status 商品主题详细流程

@@ -1,3 +1,4 @@
+[TOC]
 # 安装
 
 >flink的最新 稳定版本 是1.14，后边的1.7等都是开发、更新中的版本。
@@ -433,7 +434,7 @@ parallelism.default: 1
 
 # Flink 用法
 
-## Flink Data Stream API 
+## Flink Data Stream API
 
 >基本流程
 >
@@ -2424,7 +2425,7 @@ tEnv.useDatabase("custom_database");
 >
 >上边将中间表注册到环境中，这样才能对其使用sql语句。虚拟表和视图非常相似。
 
-####  表的查询
+#### 表的查询
 
 ##### 执行SQL进行查询
 
