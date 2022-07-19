@@ -5,8 +5,9 @@ mysql有快照嘛
 
 
 ### DDL
-
 constraint用于防止非法信息进入
+#### 索引
+#### 表结构
 
 ##### 指定外键
 
@@ -22,9 +23,20 @@ Id_P int FOREIGN KEY REFERENCES Persons(Id_P)
 
 
 ### DML
+插入
+#### 常用函数
+##### 日期函数
+```sql
+date_format(date_var,"%Y-%m-%d %H:%m:%s")
+str_to_date("2022-02-02","%Y-%m-%d %H:%m:%s")
+```
+##### 数学运算
+##### 逻辑运算
 
+```
+isnull
+```
 ### DCL
-
 
 
 ### platform相关sql

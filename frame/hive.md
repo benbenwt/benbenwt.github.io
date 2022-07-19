@@ -1,8 +1,21 @@
 [TOC]
 # HIVE用法
+> 关键字(distinct)   函数（isnull，nvl，coalesce,窗口函数窗口字句） 运算符号（逻辑，数字，比较）
 >hive(hdfs)+hive sql(mr)
 >
 >hive本质是hdfs文件，对于文件变动和查询性能很差，增删改。它唯一的作用就是存储，它的存储作用是由hdfs分布式文件体现的，与它无关。另一个作用就是将sql翻译为执行引擎的语言，所以说它不能称为存储组件，而是辅助分析插件，因为其没有添加存储架构，没有修改文件的增删改查性能，其性能与hdfs文件完全相同。
+
+###### lateral view
+
+>默认的explode函数是处理map结构的。
+>
+>lateral view首先为原始表的每行调用UDTF，UTDF会把一行拆分成一或者多行，lateral view再把结果组合，产生一个支持别名表的虚拟表。
+>
+>如下语句表示将displays拆成多行，并组成一个名为tmp的表，列名为display。
+
+```
+lateral view explode_json_array(get_json_object(line,'$.displays')) tmp as display
+```
 
 ### DDL数据定义语言
 
@@ -988,7 +1001,27 @@ sku_id：商品 ID，其中 1111 是拉新的活动商品
 >
 >ADS Application Data Store
 
+### ods层表设计
+>表的同步策略可以分为全量同步，增量同步，新增及变化
+>全量就是，每天一个分区，该分区拥有全量数据。适用于数据量不大，每天既有新数据插入，也有旧数据的修改的场景。例如，活动，优惠券，品牌表等。
+>增量就是，每天一个分区，该分区拥有该天新增的数据。适用于数据量大，只有新增。例如，评论表，退单，支付流水，订单详情。
+>新增及变化就是，每天一个分区，该分区拥有该天新增的数据及该天变化的数据。适用于数据量大，有新增有修改。例如，用户表，订单表，优惠券领用。
+### 数据埋点
 
+#### 主流埋点方式
+>目前主流的埋点方式，有代码埋点（前端/后端）、可视化埋点、全埋点三种。
+代码埋点是通过调用埋点SDK函数，在需要埋点的业务逻辑功能位置调用接口，上报埋点数据。例如，我们对页面中的某个按钮埋点后，当这个按钮被点击时，可以在这个按钮对应的 OnClick 函数里面调用SDK提供的数据发送接口，来发送数据。
+可视化埋点只需要研发人员集成采集 SDK，不需要写埋点代码，业务人员就可以通过访问分析平台的“圈选”功能，来“圈”出需要对用户行为进行捕捉的控件，并对该事件进行命名。圈选完毕后，这些配置会同步到各个用户的终端上，由采集 SDK 按照圈选的配置自动进行用户行为数据的采集和发送。
+全埋点是通过在产品中嵌入SDK，前端自动采集页面上的全部用户行为事件，上报埋点数据，相当于做了一个统一的埋点。然后再通过界面配置哪些数据需要在系统里面进行分析。
+
+#### 埋点数据上报时机
+>埋点数据上报时机包括两种方式。
+方式一，在离开该页面时，上传在这个页面产生的所有数据（页面、事件、曝光、错误等）。优点，批处理，减少了服务器接收数据压力。缺点，不是特别及时。
+方式二，每个事件、动作、错误等，产生后，立即发送。优点，响应及时。缺点，对服务器接收数据压力比较大。
+本次项目采用方式一埋点。
+
+#### 埋点数据日志结构
+>为了收集行为信息，要采集包括页面，事件，曝光，错误，启动等信息。
 
 ### 范式理论
 
@@ -1299,6 +1332,49 @@ select chinese+math from students
 | named_struct         | (name1, val1, name2, val2, ...)   | Creates a struct with the given field names and values. (As of Hive [0.8.0](https://issues.apache.org/jira/browse/HIVE-1360).) |
 | array                | (val1, val2, ...)                 | Creates an array with the given elements.                    |
 | create_union         | (tag, val1, val2, ...)            | Creates a union type with the value that is being pointed to by the tag parameter. |
+
+
+###### date_format
+
+```
+date_format('2020-06-14','yyyy-MM')
+```
+
+###### date_add
+
+```
+date_add('2020-06-14',-1)
+```
+
+###### next_day
+
+```
+#取下一个周一
+next_day('2020-06-14','MO')
+#取当前周的周一
+date_add(next_day('2020-06-14','MO'),-7)
+```
+
+###### last_day
+
+```
+#当月最后一天
+select last_day('2020-06-14')
+```
+
+###### 复杂数据类型
+
+```
+#map结构数据定义
+map<string,string>
+#array结构数据定义
+array<string>
+#struct结构数据定义
+struct<id:int,name:string,age:int>
+#struct和array嵌套定义
+array<struct<id:int,name:string,age:int>>
+```
+
 
 ##### 复杂类型的运算符
 
