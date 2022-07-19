@@ -441,7 +441,7 @@ dwd的表类型与ods的更新策略相对应，对于全量更新可以周期�
 >将hdfs上的origion_data load进入表中，填充ods。
 
 #### 典型sql场景
-##### 从hdfs加载数据到hive
+#### 从hdfs加载数据到hive
 >-n 如果字符串长度不为0，为真
 >
 >-z:长度为0，为真
@@ -686,8 +686,9 @@ and get_json_object(line,'$.start') is not null;
 
 ## ads
 
+### 典型sql场景
 
-### 订单
+#### 订单总量
 
 #### ads_order_total
 
@@ -709,7 +710,7 @@ ORDER BY `SUM(order_count)` DESC
 LIMIT 50000;
 ```
 
-#### ads_order_by_province
+#### 订单在省份上的分布
 
 >统计订单在省份上的分布，包括地区编码、身份名称、国际标准地区编码、订单数、订单金额
 
@@ -724,9 +725,8 @@ ORDER BY `SUM(order_count)` DESC
 LIMIT 50000;
 ```
 
-### 用户
+#### 访客数量
 
-#### ads_visit_stats
 
 >访客统计
 
@@ -743,7 +743,7 @@ ORDER BY `SUM(uv_count)` DESC
 LIMIT 10000;
 ```
 
-#### ads_user_total
+#### 用户活跃量，新增量
 
 >用户统计，包括新增用户、新增下单用户数、下单用户数、下单金额、活跃用户未下单用户数
 
@@ -760,7 +760,7 @@ ORDER BY `SUM(new_user_count)` DESC
 LIMIT 50000;
 ```
 
-#### ads_user_change
+#### 用户流失，回流
 
 >用户变动统计，包括流失用户数、回流用户数
 
@@ -776,7 +776,7 @@ ORDER BY `SUM(user_back_count)` DESC
 LIMIT 25;
 ```
 
-#### ads_user_action
+#### 用户行为漏斗
 
 >用户行为漏斗分析，浏览首页人数、浏览商品详情页人数、加入购物车人数、下单人数、支付人数
 
@@ -795,7 +795,7 @@ ORDER BY `SUM(home_count)` DESC
 LIMIT 10000;
 ```
 
-#### ads_user_retention
+#### 用户留存
 
 >用户留存率分析，包括留存用户数量、新增用户数量、留存率
 
@@ -809,9 +809,8 @@ ORDER BY `SUM(retention_rate)` DESC
 LIMIT 10000;
 ```
 
-### 商品
 
-#### ads_repeat_purchase
+#### 商品复购率
 
 >品牌复购率，品牌ID、品牌名称、复购率
 
@@ -827,7 +826,7 @@ ORDER BY `SUM(order_repeat_rate)` DESC
 LIMIT 10000;
 ```
 
-#### ads_order_spu_stats
+#### 商品销量
 
 >商品统计，包括商品ID、商品名称、品牌ID、品牌名称、三级品类ID、三级品类名称、二级品类ID、二级品类名称、一级品类ID、一级品类名称、订单数、订单金额。
 
@@ -842,9 +841,8 @@ ORDER BY `SUM(order_count)` DESC
 LIMIT 10000;
 ```
 
-### 页面
 
-#### ads_page_path
+#### 页面路径分析
 
 >页面路径分析
 
@@ -852,9 +850,8 @@ LIMIT 10000;
 
 ```
 
-### 优惠
 
-#### ads_coupon_stats
+#### 优惠金额，次数
 
 >优惠券统计，包括优惠券ID、优惠券名称、开始日期、优惠规则、领用次数、使用次数、使用优惠券订单原始金额、优惠金额、补贴率
 
@@ -867,9 +864,7 @@ ORDER BY `SUM(order_original_amount)` DESC
 LIMIT 25;
 ```
 
-### 活动
-
-#### ads_activity_stats
+#### 活动订单金额
 
 >活动统计，包括活动ID、活动名称、参与活动订单数、参与活动订单金额、参与活动订单最终金额、补贴率。
 
@@ -882,52 +877,6 @@ ORDER BY `SUM(order_original_amount)` DESC
 LIMIT 10000;
 ```
 
-
-
-
-```
-
-#### 访客主题
-
->ods:
->
->dwd:
->
->dws:
->
->dwt:
->
->ads:
-
-#### 用户主题
-
->用户新增
->
->用户流失
->
->用户回流
-
-#### 商品主题
-
->品牌复购率
-
-#### 订单主题
-
->订单省份分布
-
-#### 优惠券主题
-
->优惠金额，原始金额，补贴率
-
-#### 活动主题
-
->优惠金额，原始金额，补贴率
-
-## 迁移数据
-
-##### sqoop用法
-
-```
 
 ## 导出数据到mysql
 ```
