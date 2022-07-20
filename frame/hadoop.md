@@ -1104,7 +1104,7 @@ Secondary NameNode用于解决fsimage过旧的问题，它定时拉取、合并N
 此外，该调度器是一个可插拔的组件，用户可根据自己的需求设计新的调度器，YARN 提供了多种直接可用的调度器，比如 Fair Scheduler 和 Capacity Schedule 等。
 ```
 
-###### FIFO 
+###### FIFO
 
 ```
 队列式，先来后到，阻塞严重。
@@ -2066,7 +2066,7 @@ ip addr查看网卡
 
 单节点配置文件
 
-#####  is running 626469376B beyond the 'VIRTUAL' memory limit. Current usage: 208.7 MB of 1 GB physical memory used; 2.7 GB of 2.1 GB virtual memory used. Killing container.
+##### is running 626469376B beyond the 'VIRTUAL' memory limit. Current usage: 208.7 MB of 1 GB physical memory used; 2.7 GB of 2.1 GB virtual memory used. Killing container.
 
 mapreduce
 

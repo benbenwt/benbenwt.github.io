@@ -91,7 +91,7 @@ bin/kafka-console-consumer.sh \
 
 >用户请求服务后需等待服务完成再得到结果信息，这是同步处理。对于异步处理，用户提交请求后，请求放入消息队列后，无需等待执行完成，用户即可结束进程。异步处理可以实现解耦，异步通信，缓冲缓解服务器压力，提高灵活性和峰值处理能力。
 
-##  消息队列的两种模式
+## 消息队列的两种模式
 
 ### 1点对点模式
 
@@ -151,7 +151,7 @@ kafka是基于发布订阅模式的消费者拉取。
 
 ## Producer Consumer工作原理
 
-##### Producer 
+##### Producer
 
 >main线程将数据存储到RecordAccumulator，sender不断读取RecordAccumulator并发送到broker。sender根据两个参数发送数据，batch.size，linger.ms，当超过时间或达到了batchsize会进行发送。
 
@@ -538,7 +538,7 @@ kibana 5601,es 9200
 
 >用户请求服务后需等待服务完成再得到结果信息，这是同步处理。对于异步处理，用户提交请求后，请求放入消息队列后，无需等待执行完成，用户即可结束进程。异步处理可以实现解耦，异步通信，缓冲缓解服务器压力，提高灵活性和峰值处理能力。
 
-##  消息队列的两种模式
+## 消息队列的两种模式
 
 ### 1点对点模式
 
@@ -596,7 +596,7 @@ kafka是基于发布订阅模式的消费者拉取。
 
 ## Producer Consumer工作原理
 
-##### Producer 
+##### Producer
 
 >main线程将数据存储到RecordAccumulator，sender不断读取RecordAccumulator并发送到broker。sender根据两个参数发送数据，batch.size，linger.ms，当超过时间或达到了batchsize会进行发送。
 
