@@ -1,22 +1,4 @@
-# NoSQL
-
-有四类
-
-## 文档类
-
-如moongodb。mongodb是一个基于分布式存储的数据库，c++编写。mongodb介于关系型和非关系型数据库之间。
-
-## key，value类
-
-如redis（remote Dictionary server）
-
-## 图形数据库  
-
- 存储社交关系，应用在广告推荐。node4j
-
-## 列存储数据库
-
- HBase  应用在分布式文件系统
+[TOC]
 
 # 应用场景
 1内存持久化
@@ -25,17 +7,62 @@
 4地图信息分析
 5计数器
 
-# 特性
+## NoSQL
+
+有四类
+
+### 文档类
+
+如moongodb。mongodb是一个基于分布式存储的数据库，c++编写。mongodb介于关系型和非关系型数据库之间。
+
+### key，value类
+
+如redis（remote Dictionary server）
+
+### 图形数据库
+
+ 存储社交关系，应用在广告推荐。node4j
+
+### 列存储数据库
+
+ HBase  应用在分布式文件系统
+
+## 特性
 多样的数据类型，持久化，集群，事务。
 redis是基于内存操作，性能与cpu无关，只受内存和网络宽带影响，所以使用单线程。
 
 # redis用法
+## 安装
 
 >1解压后make编译，进入src 使用make install安装。redis-server  redis.conf启动
 >2redis.cli 启动客户端，ping测试连接
 >3基本操作：set，get，keys *
 >redis.conf配置访问端口，能否远程等。
 
+## Scala API
+>scala的 object相当于 java class中的 static作用，如果你编写了一个object，你可以直接用object.func1()进行调用，也就是说这是属于类的方法，不用new对象出来，其没有构造函数，无法传递初始化参数。你也可以理解为这是一个单例对象。
+```
+import redis.clients.jedis.{Jedis, JedisPool, JedisPoolConfig}
+
+private var jedisPool:JedisPool=new JedisPoolConfig
+jedisPoolConfig.setMaxTotal(100)  //最大连接数
+jedisPoolConfig.setMaxIdle(20)   //最大空闲
+jedisPoolConfig.setMinIdle(20)     //最小空闲
+jedisPoolConfig.setBlockWhenExhausted(true)  //忙碌时是否等待
+jedisPoolConfig.setMaxWaitMillis(5000)//忙碌时等待时长 毫秒
+jedisPoolConfig.setTestOnBorrow(true) //每次获得连接的进行测试
+
+jedisPool=new JedisPool(jedisPoolConfig,host,port.toInt)
+client=jedisPool.getResource
+```
+
+### List
+### Hash
+```
+client.hset("test","21","21value")
+client.hgetAll("test")
+client.del("test")
+```
 ## JAVA 原生API
 
 >https://blog.csdn.net/qq_34826261/article/details/105977430
@@ -404,10 +431,6 @@ import java.util.concurrent.TimeUnit;
 
 /**
  * 基于spring和redis的redisTemplate工具类
- * 针对所有的hash 都是以h开头的方法
- * 针对所有的Set 都是以s开头的方法                    不含通用方法
- * 针对所有的List 都是以l开头的方法
- * 引用自how2java网站
  */
 @Component
 public class RedisUtil {
@@ -946,7 +969,7 @@ c为并发客户端量，n为请求数量。
 ## redis-cli
 redis客户端
 
-##  数据库
+## 数据库
 默认16个数据库
 ​select 7  切换数据库
 DBSIZE 查看dbsize
@@ -1048,13 +1071,13 @@ hsetnx myhash field1 hello
 
 >有序set
 
-# 持久化RDB
+## 持久化RDB
 
-## 机制描述
+### 机制描述
 
 >隔一段时间保存数据快照snapshot到硬盘
 
-## 触发时机
+### 触发时机
 
 ### 基于默认配置
 
@@ -1084,7 +1107,7 @@ dir  redis工作目录，存放持久化文件的目录，指定为目录不是�
 
 dump。rdb保存二进制数据，可以用来备份恢复。
 
-# 持久化AOF
+## 持久化AOF
 
 >保存数据操作命令，恢复时执行一遍命令。
 
