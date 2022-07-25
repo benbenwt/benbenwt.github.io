@@ -3763,9 +3763,8 @@ PUT /topproduct
 
 >该页面返回给管理员指标监控，主要包括热榜产品，日志接入量
 
-# Flink练习题
 
-## Flink尚硅谷案例
+# Flink尚硅谷案例
 
 >窗口处理的方法由以下元素：窗口函数、
 >
@@ -4682,9 +4681,9 @@ bin/flink savepoint jobId  hdfs://hbase:9000/flink/savepoints
 bin/flink run -s hdfs://hbase:9000/flink/savepoints -c com.demo.task.practice.SavePoint /opt/software/jars/flink-2-hbase-1.0-SNAPSHOT.jar
 ```
 
-# 项目难点
+## 项目难点
 
-## 实时更改配置
+### 实时更改配置
 
 >自定义sourceFunciton，读取数据源并广播
 >

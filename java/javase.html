@@ -1,0 +1,3228 @@
+<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><style>body {
+  max-width: 980px;
+  outline: 1300px solid #fff;
+  margin: 16px auto;
+}
+
+body .markdown-body
+{
+  padding: 45px;
+}
+
+@font-face {
+  font-family: fontawesome-mini;
+  src: url(data:font/woff;charset=utf-8;base64,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) format('woff');
+}
+
+.markdown-body {
+  font-family: sans-serif;
+  -ms-text-size-adjust: 100%;
+  -webkit-text-size-adjust: 100%;
+  color: #333333;
+  overflow: hidden;
+  font-family: "Helvetica Neue", Helvetica, "Segoe UI", Arial, freesans, sans-serif;
+  font-size: 16px;
+  line-height: 1.6;
+  word-wrap: break-word;
+}
+
+.markdown-body a {
+  background: transparent;
+}
+
+.markdown-body a:active,
+.markdown-body a:hover {
+  outline: 0;
+}
+
+.markdown-body b,
+.markdown-body strong {
+  font-weight: bold;
+}
+
+.markdown-body mark {
+  background: #ff0;
+  color: #000;
+  font-style: italic;
+  font-weight: bold;
+}
+
+.markdown-body sub,
+.markdown-body sup {
+  font-size: 75%;
+  line-height: 0;
+  position: relative;
+  vertical-align: baseline;
+}
+.markdown-body sup {
+  top: -0.5em;
+}
+.markdown-body sub {
+  bottom: -0.25em;
+}
+
+.markdown-body h1 {
+  font-size: 2em;
+  margin: 0.67em 0;
+}
+
+.markdown-body img {
+  border: 0;
+}
+
+.markdown-body hr {
+  -moz-box-sizing: content-box;
+  box-sizing: content-box;
+  height: 0;
+}
+
+.markdown-body pre {
+  overflow: auto;
+}
+
+.markdown-body code,
+.markdown-body kbd,
+.markdown-body pre,
+.markdown-body samp {
+  font-family: monospace, monospace;
+  font-size: 1em;
+}
+
+.markdown-body input {
+  color: inherit;
+  font: inherit;
+  margin: 0;
+}
+
+.markdown-body html input[disabled] {
+  cursor: default;
+}
+
+.markdown-body input {
+  line-height: normal;
+}
+
+.markdown-body input[type="checkbox"] {
+  box-sizing: border-box;
+  padding: 0;
+}
+
+.markdown-body table {
+  border-collapse: collapse;
+  border-spacing: 0;
+}
+
+.markdown-body td,
+.markdown-body th {
+  padding: 0;
+}
+
+.markdown-body .codehilitetable,
+.markdown-body .highlighttable {
+  border: 0;
+  border-spacing: 0;
+}
+
+.markdown-body .codehilitetable tr,
+.markdown-body .highlighttable {
+  border: 0;
+}
+
+.markdown-body .codehilitetable pre,
+.markdown-body .codehilitetable div.codehilite,
+.markdown-body .highlighttable pre,
+.markdown-body .highlighttable div.highlight {
+  margin: 0;
+}
+
+.markdown-body .linenos,
+.markdown-body .code,
+.markdown-body .codehilitetable td,
+.markdown-body .highlighttable td {
+  border: 0;
+  padding: 0;
+}
+
+.markdown-body td:not(.linenos) .linenodiv {
+  padding: 0 !important;
+}
+
+.markdown-body .code {
+  width: 100%;
+}
+
+.markdown-body .linenos div pre,
+.markdown-body .linenodiv pre,
+.markdown-body .linenodiv {
+  border: 0;
+  -webkit-border-radius: 0;
+  -moz-border-radius: 0;
+  border-radius: 0;
+  -webkit-border-top-left-radius: 3px;
+  -webkit-border-bottom-left-radius: 3px;
+  -moz-border-radius-topleft: 3px;
+  -moz-border-radius-bottomleft: 3px;
+  border-top-left-radius: 3px;
+  border-bottom-left-radius: 3px;
+}
+
+.markdown-body .code div pre,
+.markdown-body .code div {
+  border: 0;
+  -webkit-border-radius: 0;
+  -moz-border-radius: 0;
+  border-radius: 0;
+  -webkit-border-top-right-radius: 3px;
+  -webkit-border-bottom-right-radius: 3px;
+  -moz-border-radius-topright: 3px;
+  -moz-border-radius-bottomright: 3px;
+  border-top-right-radius: 3px;
+  border-bottom-right-radius: 3px;
+}
+
+.markdown-body * {
+  -moz-box-sizing: border-box;
+  box-sizing: border-box;
+}
+
+.markdown-body input {
+  font: 13px Helvetica, arial, freesans, clean, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol";
+  line-height: 1.4;
+}
+
+.markdown-body a {
+  color: #4183c4;
+  text-decoration: none;
+}
+
+.markdown-body a:hover,
+.markdown-body a:focus,
+.markdown-body a:active {
+  text-decoration: underline;
+}
+
+.markdown-body hr {
+  height: 0;
+  margin: 15px 0;
+  overflow: hidden;
+  background: transparent;
+  border: 0;
+  border-bottom: 1px solid #ddd;
+}
+
+.markdown-body hr:before,
+.markdown-body hr:after {
+  display: table;
+  content: " ";
+}
+
+.markdown-body hr:after {
+  clear: both;
+}
+
+.markdown-body h1,
+.markdown-body h2,
+.markdown-body h3,
+.markdown-body h4,
+.markdown-body h5,
+.markdown-body h6 {
+  margin-top: 15px;
+  margin-bottom: 15px;
+  line-height: 1.1;
+}
+
+.markdown-body h1 {
+  font-size: 30px;
+}
+
+.markdown-body h2 {
+  font-size: 21px;
+}
+
+.markdown-body h3 {
+  font-size: 16px;
+}
+
+.markdown-body h4 {
+  font-size: 14px;
+}
+
+.markdown-body h5 {
+  font-size: 12px;
+}
+
+.markdown-body h6 {
+  font-size: 11px;
+}
+
+.markdown-body blockquote {
+  margin: 0;
+}
+
+.markdown-body ul,
+.markdown-body ol {
+  padding: 0;
+  margin-top: 0;
+  margin-bottom: 0;
+}
+
+.markdown-body ol ol,
+.markdown-body ul ol {
+  list-style-type: lower-roman;
+}
+
+.markdown-body ul ul ol,
+.markdown-body ul ol ol,
+.markdown-body ol ul ol,
+.markdown-body ol ol ol {
+  list-style-type: lower-alpha;
+}
+
+.markdown-body dd {
+  margin-left: 0;
+}
+
+.markdown-body code,
+.markdown-body pre,
+.markdown-body samp {
+  font-family: Consolas, "Liberation Mono", Menlo, Courier, monospace;
+  font-size: 12px;
+}
+
+.markdown-body pre {
+  margin-top: 0;
+  margin-bottom: 0;
+}
+
+.markdown-body kbd {
+  background-color: #e7e7e7;
+  background-image: -moz-linear-gradient(#fefefe, #e7e7e7);
+  background-image: -webkit-linear-gradient(#fefefe, #e7e7e7);
+  background-image: linear-gradient(#fefefe, #e7e7e7);
+  background-repeat: repeat-x;
+  border-radius: 2px;
+  border: 1px solid #cfcfcf;
+  color: #000;
+  padding: 3px 5px;
+  line-height: 10px;
+  font: 11px Consolas, "Liberation Mono", Menlo, Courier, monospace;
+  display: inline-block;
+}
+
+.markdown-body>*:first-child {
+  margin-top: 0 !important;
+}
+
+.markdown-body>*:last-child {
+  margin-bottom: 0 !important;
+}
+
+.markdown-body .headerlink {
+  font: normal 400 16px fontawesome-mini;
+  vertical-align: middle;
+  margin-left: -16px;
+  float: left;
+  display: inline-block;
+  text-decoration: none;
+  opacity: 0;
+  color: #333;
+}
+
+.markdown-body .headerlink:focus {
+  outline: none;
+}
+
+.markdown-body h1 .headerlink {
+  margin-top: 0.8rem;
+}
+
+.markdown-body h2 .headerlink,
+.markdown-body h3 .headerlink {
+  margin-top: 0.6rem;
+}
+
+.markdown-body h4 .headerlink {
+  margin-top: 0.2rem;
+}
+
+.markdown-body h5 .headerlink,
+.markdown-body h6 .headerlink {
+  margin-top: 0;
+}
+
+.markdown-body .headerlink:hover,
+.markdown-body h1:hover .headerlink,
+.markdown-body h2:hover .headerlink,
+.markdown-body h3:hover .headerlink,
+.markdown-body h4:hover .headerlink,
+.markdown-body h5:hover .headerlink,
+.markdown-body h6:hover .headerlink {
+  opacity: 1;
+  text-decoration: none;
+}
+
+.markdown-body h1 {
+  padding-bottom: 0.3em;
+  font-size: 2.25em;
+  line-height: 1.2;
+  border-bottom: 1px solid #eee;
+}
+
+.markdown-body h2 {
+  padding-bottom: 0.3em;
+  font-size: 1.75em;
+  line-height: 1.225;
+  border-bottom: 1px solid #eee;
+}
+
+.markdown-body h3 {
+  font-size: 1.5em;
+  line-height: 1.43;
+}
+
+.markdown-body h4 {
+  font-size: 1.25em;
+}
+
+.markdown-body h5 {
+  font-size: 1em;
+}
+
+.markdown-body h6 {
+  font-size: 1em;
+  color: #777;
+}
+
+.markdown-body p,
+.markdown-body blockquote,
+.markdown-body ul,
+.markdown-body ol,
+.markdown-body dl,
+.markdown-body table,
+.markdown-body pre,
+.markdown-body .admonition {
+  margin-top: 0;
+  margin-bottom: 16px;
+}
+
+.markdown-body hr {
+  height: 4px;
+  padding: 0;
+  margin: 16px 0;
+  background-color: #e7e7e7;
+  border: 0 none;
+}
+
+.markdown-body ul,
+.markdown-body ol {
+  padding-left: 2em;
+}
+
+.markdown-body ul ul,
+.markdown-body ul ol,
+.markdown-body ol ol,
+.markdown-body ol ul {
+  margin-top: 0;
+  margin-bottom: 0;
+}
+
+.markdown-body li>p {
+  margin-top: 16px;
+}
+
+.markdown-body dl {
+  padding: 0;
+}
+
+.markdown-body dl dt {
+  padding: 0;
+  margin-top: 16px;
+  font-size: 1em;
+  font-style: italic;
+  font-weight: bold;
+}
+
+.markdown-body dl dd {
+  padding: 0 16px;
+  margin-bottom: 16px;
+}
+
+.markdown-body blockquote {
+  padding: 0 15px;
+  color: #777;
+  border-left: 4px solid #ddd;
+}
+
+.markdown-body blockquote>:first-child {
+  margin-top: 0;
+}
+
+.markdown-body blockquote>:last-child {
+  margin-bottom: 0;
+}
+
+.markdown-body table {
+  display: block;
+  width: 100%;
+  overflow: auto;
+  word-break: normal;
+  word-break: keep-all;
+}
+
+.markdown-body table th {
+  font-weight: bold;
+}
+
+.markdown-body table th,
+.markdown-body table td {
+  padding: 6px 13px;
+  border: 1px solid #ddd;
+}
+
+.markdown-body table tr {
+  background-color: #fff;
+  border-top: 1px solid #ccc;
+}
+
+.markdown-body table tr:nth-child(2n) {
+  background-color: #f8f8f8;
+}
+
+.markdown-body img {
+  max-width: 100%;
+  -moz-box-sizing: border-box;
+  box-sizing: border-box;
+}
+
+.markdown-body code,
+.markdown-body samp {
+  padding: 0;
+  padding-top: 0.2em;
+  padding-bottom: 0.2em;
+  margin: 0;
+  font-size: 85%;
+  background-color: rgba(0,0,0,0.04);
+  border-radius: 3px;
+}
+
+.markdown-body code:before,
+.markdown-body code:after {
+  letter-spacing: -0.2em;
+  content: "\00a0";
+}
+
+.markdown-body pre>code {
+  padding: 0;
+  margin: 0;
+  font-size: 100%;
+  word-break: normal;
+  white-space: pre;
+  background: transparent;
+  border: 0;
+}
+
+.markdown-body .codehilite,
+.markdown-body .highlight {
+  margin-bottom: 16px;
+}
+
+.markdown-body .codehilite pre,
+.markdown-body .highlight pre,
+.markdown-body pre {
+  padding: 16px;
+  overflow: auto;
+  font-size: 85%;
+  line-height: 1.45;
+  background-color: #f7f7f7;
+  border-radius: 3px;
+}
+
+.markdown-body .codehilite pre,
+.markdown-body .highlight pre {
+  margin-bottom: 0;
+  word-break: normal;
+}
+
+.markdown-body pre {
+  word-wrap: normal;
+}
+
+.markdown-body pre code {
+  display: inline;
+  max-width: initial;
+  padding: 0;
+  margin: 0;
+  overflow: initial;
+  line-height: inherit;
+  word-wrap: normal;
+  background-color: transparent;
+  border: 0;
+}
+
+.markdown-body pre code:before,
+.markdown-body pre code:after {
+  content: normal;
+}
+
+/* Admonition */
+.markdown-body .admonition {
+  -webkit-border-radius: 3px;
+  -moz-border-radius: 3px;
+  position: relative;
+  border-radius: 3px;
+  border: 1px solid #e0e0e0;
+  border-left: 6px solid #333;
+  padding: 10px 10px 10px 30px;
+}
+
+.markdown-body .admonition table {
+  color: #333;
+}
+
+.markdown-body .admonition p {
+  padding: 0;
+}
+
+.markdown-body .admonition-title {
+  font-weight: bold;
+  margin: 0;
+}
+
+.markdown-body .admonition>.admonition-title {
+  color: #333;
+}
+
+.markdown-body .attention>.admonition-title {
+  color: #a6d796;
+}
+
+.markdown-body .caution>.admonition-title {
+  color: #d7a796;
+}
+
+.markdown-body .hint>.admonition-title {
+  color: #96c6d7;
+}
+
+.markdown-body .danger>.admonition-title {
+  color: #c25f77;
+}
+
+.markdown-body .question>.admonition-title {
+  color: #96a6d7;
+}
+
+.markdown-body .note>.admonition-title {
+  color: #d7c896;
+}
+
+.markdown-body .admonition:before,
+.markdown-body .attention:before,
+.markdown-body .caution:before,
+.markdown-body .hint:before,
+.markdown-body .danger:before,
+.markdown-body .question:before,
+.markdown-body .note:before {
+  font: normal normal 16px fontawesome-mini;
+  -moz-osx-font-smoothing: grayscale;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  line-height: 1.5;
+  color: #333;
+  position: absolute;
+  left: 0;
+  top: 0;
+  padding-top: 10px;
+  padding-left: 10px;
+}
+
+.markdown-body .admonition:before {
+  content: "\f056\00a0";
+  color: 333;
+}
+
+.markdown-body .attention:before {
+  content: "\f058\00a0";
+  color: #a6d796;
+}
+
+.markdown-body .caution:before {
+  content: "\f06a\00a0";
+  color: #d7a796;
+}
+
+.markdown-body .hint:before {
+  content: "\f05a\00a0";
+  color: #96c6d7;
+}
+
+.markdown-body .danger:before {
+  content: "\f057\00a0";
+  color: #c25f77;
+}
+
+.markdown-body .question:before {
+  content: "\f059\00a0";
+  color: #96a6d7;
+}
+
+.markdown-body .note:before {
+  content: "\f040\00a0";
+  color: #d7c896;
+}
+
+.markdown-body .admonition::after {
+  content: normal;
+}
+
+.markdown-body .attention {
+  border-left: 6px solid #a6d796;
+}
+
+.markdown-body .caution {
+  border-left: 6px solid #d7a796;
+}
+
+.markdown-body .hint {
+  border-left: 6px solid #96c6d7;
+}
+
+.markdown-body .danger {
+  border-left: 6px solid #c25f77;
+}
+
+.markdown-body .question {
+  border-left: 6px solid #96a6d7;
+}
+
+.markdown-body .note {
+  border-left: 6px solid #d7c896;
+}
+
+.markdown-body .admonition>*:first-child {
+  margin-top: 0 !important;
+}
+
+.markdown-body .admonition>*:last-child {
+  margin-bottom: 0 !important;
+}
+
+/* progress bar*/
+.markdown-body .progress {
+  display: block;
+  width: 300px;
+  margin: 10px 0;
+  height: 24px;
+  -webkit-border-radius: 3px;
+  -moz-border-radius: 3px;
+  border-radius: 3px;
+  background-color: #ededed;
+  position: relative;
+  box-shadow: inset -1px 1px 3px rgba(0, 0, 0, .1);
+}
+
+.markdown-body .progress-label {
+  position: absolute;
+  text-align: center;
+  font-weight: bold;
+  width: 100%; margin: 0;
+  line-height: 24px;
+  color: #333;
+  text-shadow: 1px 1px 0 #fefefe, -1px -1px 0 #fefefe, -1px 1px 0 #fefefe, 1px -1px 0 #fefefe, 0 1px 0 #fefefe, 0 -1px 0 #fefefe, 1px 0 0 #fefefe, -1px 0 0 #fefefe, 1px 1px 2px #000;
+  -webkit-font-smoothing: antialiased !important;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.markdown-body .progress-bar {
+  height: 24px;
+  float: left;
+  -webkit-border-radius: 3px;
+  -moz-border-radius: 3px;
+  border-radius: 3px;
+  background-color: #96c6d7;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .5), inset 0 -1px 0 rgba(0, 0, 0, .1);
+  background-size: 30px 30px;
+  background-image: -webkit-linear-gradient(
+    135deg, rgba(255, 255, 255, .4) 27%,
+    transparent 27%,
+    transparent 52%, rgba(255, 255, 255, .4) 52%,
+    rgba(255, 255, 255, .4) 77%,
+    transparent 77%, transparent
+  );
+  background-image: -moz-linear-gradient(
+    135deg,
+    rgba(255, 255, 255, .4) 27%, transparent 27%,
+    transparent 52%, rgba(255, 255, 255, .4) 52%,
+    rgba(255, 255, 255, .4) 77%, transparent 77%,
+    transparent
+  );
+  background-image: -ms-linear-gradient(
+    135deg,
+    rgba(255, 255, 255, .4) 27%, transparent 27%,
+    transparent 52%, rgba(255, 255, 255, .4) 52%,
+    rgba(255, 255, 255, .4) 77%, transparent 77%,
+    transparent
+  );
+  background-image: -o-linear-gradient(
+    135deg,
+    rgba(255, 255, 255, .4) 27%, transparent 27%,
+    transparent 52%, rgba(255, 255, 255, .4) 52%,
+    rgba(255, 255, 255, .4) 77%, transparent 77%,
+    transparent
+  );
+  background-image: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, .4) 27%, transparent 27%,
+    transparent 52%, rgba(255, 255, 255, .4) 52%,
+    rgba(255, 255, 255, .4) 77%, transparent 77%,
+    transparent
+  );
+}
+
+.markdown-body .progress-100plus .progress-bar {
+  background-color: #a6d796;
+}
+
+.markdown-body .progress-80plus .progress-bar {
+  background-color: #c6d796;
+}
+
+.markdown-body .progress-60plus .progress-bar {
+  background-color: #d7c896;
+}
+
+.markdown-body .progress-40plus .progress-bar {
+  background-color: #d7a796;
+}
+
+.markdown-body .progress-20plus .progress-bar {
+  background-color: #d796a6;
+}
+
+.markdown-body .progress-0plus .progress-bar {
+  background-color: #c25f77;
+}
+
+.markdown-body .candystripe-animate .progress-bar{
+  -webkit-animation: animate-stripes 3s linear infinite;
+  -moz-animation: animate-stripes 3s linear infinite;
+  animation: animate-stripes 3s linear infinite;
+}
+
+@-webkit-keyframes animate-stripes {
+  0% {
+    background-position: 0 0;
+  }
+
+  100% {
+    background-position: 60px 0;
+  }
+}
+
+@-moz-keyframes animate-stripes {
+  0% {
+    background-position: 0 0;
+  }
+
+  100% {
+    background-position: 60px 0;
+  }
+}
+
+@keyframes animate-stripes {
+  0% {
+    background-position: 0 0;
+  }
+
+  100% {
+    background-position: 60px 0;
+  }
+}
+
+.markdown-body .gloss .progress-bar {
+  box-shadow:
+    inset 0 4px 12px rgba(255, 255, 255, .7),
+    inset 0 -12px 0 rgba(0, 0, 0, .05);
+}
+
+/* MultiMarkdown Critic Blocks */
+.markdown-body .critic_mark {
+  background: #ff0;
+}
+
+.markdown-body .critic_delete {
+  color: #c82829;
+  text-decoration: line-through;
+}
+
+.markdown-body .critic_insert {
+  color: #718c00 ;
+  text-decoration: underline;
+}
+
+.markdown-body .critic_comment {
+  color: #8e908c;
+  font-style: italic;
+}
+
+.markdown-body .headeranchor {
+  font: normal normal 16px fontawesome-mini;
+  line-height: 1;
+  display: inline-block;
+  text-decoration: none;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
+.headeranchor:before {
+  content: '\e157';
+}
+
+.markdown-body .task-list-item {
+  list-style-type: none;
+}
+
+.markdown-body .task-list-item+.task-list-item {
+  margin-top: 3px;
+}
+
+.markdown-body .task-list-item input {
+  margin: 0 4px 0.25em -20px;
+  vertical-align: middle;
+}
+
+.markdown-body diagram-div, .markdown-body div.uml-sequence-diagram, .markdown-body, div.uml-flowchart {
+  overflow: auto;
+}
+
+/* Media */
+@media only screen and (min-width: 480px) {
+  .markdown-body {
+    font-size:14px;
+  }
+}
+
+@media only screen and (min-width: 768px) {
+  .markdown-body {
+    font-size:16px;
+  }
+}
+
+@media print {
+  .markdown-body * {
+    background: transparent !important;
+    color: black !important;
+    filter:none !important;
+    -ms-filter: none !important;
+  }
+
+  .markdown-body {
+    font-size:12pt;
+    max-width:100%;
+    outline:none;
+    border: 0;
+  }
+
+  .markdown-body a,
+  .markdown-body a:visited {
+    text-decoration: underline;
+  }
+
+  .markdown-body .headeranchor-link {
+    display: none;
+  }
+
+  .markdown-body a[href]:after {
+    content: " (" attr(href) ")";
+  }
+
+  .markdown-body abbr[title]:after {
+    content: " (" attr(title) ")";
+  }
+
+  .markdown-body .ir a:after,
+  .markdown-body a[href^="javascript:"]:after,
+  .markdown-body a[href^="#"]:after {
+    content: "";
+  }
+
+  .markdown-body pre {
+    white-space: pre;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+  }
+
+  .markdown-body pre,
+  .markdown-body blockquote {
+    border: 1px solid #999;
+    padding-right: 1em;
+    page-break-inside: avoid;
+  }
+
+  .markdown-body .progress,
+  .markdown-body .progress-bar {
+    -moz-box-shadow: none;
+    -webkit-box-shadow: none;
+    box-shadow: none;
+  }
+
+  .markdown-body .progress {
+    border: 1px solid #ddd;
+  }
+
+  .markdown-body .progress-bar {
+    height: 22px;
+    border-right: 1px solid #ddd;
+  }
+
+  .markdown-body tr,
+  .markdown-body img {
+    page-break-inside: avoid;
+  }
+
+  .markdown-body img {
+    max-width: 100% !important;
+  }
+
+  .markdown-body p,
+  .markdown-body h2,
+  .markdown-body h3 {
+    orphans: 3;
+    widows: 3;
+  }
+
+  .markdown-body h2,
+  .markdown-body h3 {
+    page-break-after: avoid;
+  }
+}
+</style><style>/*GitHub*/
+.highlight {background-color:#fff;color:#333333;}
+.highlight .hll {background-color:#ffffcc;}
+.highlight .c{color:#999988;font-style:italic}
+.highlight .err{color:#a61717;background-color:#e3d2d2}
+.highlight .k{font-weight:bold}
+.highlight .o{font-weight:bold}
+.highlight .cm{color:#999988;font-style:italic}
+.highlight .cp{color:#999999;font-weight:bold}
+.highlight .c1{color:#999988;font-style:italic}
+.highlight .cs{color:#999999;font-weight:bold;font-style:italic}
+.highlight .gd{color:#000000;background-color:#ffdddd}
+.highlight .ge{font-style:italic}
+.highlight .gr{color:#aa0000}
+.highlight .gh{color:#999999}
+.highlight .gi{color:#000000;background-color:#ddffdd}
+.highlight .go{color:#888888}
+.highlight .gp{color:#555555}
+.highlight .gs{font-weight:bold}
+.highlight .gu{color:#800080;font-weight:bold}
+.highlight .gt{color:#aa0000}
+.highlight .kc{font-weight:bold}
+.highlight .kd{font-weight:bold}
+.highlight .kn{font-weight:bold}
+.highlight .kp{font-weight:bold}
+.highlight .kr{font-weight:bold}
+.highlight .kt{color:#445588;font-weight:bold}
+.highlight .m{color:#009999}
+.highlight .s{color:#dd1144}
+.highlight .n{color:#333333}
+.highlight .na{color:teal}
+.highlight .nb{color:#0086b3}
+.highlight .nc{color:#445588;font-weight:bold}
+.highlight .no{color:teal}
+.highlight .ni{color:purple}
+.highlight .ne{color:#990000;font-weight:bold}
+.highlight .nf{color:#990000;font-weight:bold}
+.highlight .nn{color:#555555}
+.highlight .nt{color:navy}
+.highlight .nv{color:teal}
+.highlight .ow{font-weight:bold}
+.highlight .w{color:#bbbbbb}
+.highlight .mf{color:#009999}
+.highlight .mh{color:#009999}
+.highlight .mi{color:#009999}
+.highlight .mo{color:#009999}
+.highlight .sb{color:#dd1144}
+.highlight .sc{color:#dd1144}
+.highlight .sd{color:#dd1144}
+.highlight .s2{color:#dd1144}
+.highlight .se{color:#dd1144}
+.highlight .sh{color:#dd1144}
+.highlight .si{color:#dd1144}
+.highlight .sx{color:#dd1144}
+.highlight .sr{color:#009926}
+.highlight .s1{color:#dd1144}
+.highlight .ss{color:#990073}
+.highlight .bp{color:#999999}
+.highlight .vc{color:teal}
+.highlight .vg{color:teal}
+.highlight .vi{color:teal}
+.highlight .il{color:#009999}
+.highlight .gc{color:#999;background-color:#EAF2F5}
+</style><title>javase</title></head><body><article class="markdown-body"><div class="toc">
+<ul>
+<li><a href="#_1">数据结构</a><ul>
+<li><a href="#iterator">Iterator</a><ul>
+<li><a href="#listiterator">ListIterator</a></li>
+</ul>
+</li>
+<li><a href="#collection">Collection</a><ul>
+<li><a href="#collection_1">Collection接口</a></li>
+<li><a href="#list">List接口</a></li>
+<li><a href="#abstractcollection">AbstractCollection</a></li>
+<li><a href="#abstractlist">AbstractList</a><ul>
+<li><a href="#itr">Itr内部类</a></li>
+<li><a href="#listitr">ListItr内部类</a></li>
+</ul>
+</li>
+<li><a href="#arraylist">ArrayList</a><ul>
+<li><a href="#_2">构造函数：</a></li>
+<li><a href="#arraylist_1">ArrayList添加的方法有如下：</a></li>
+</ul>
+</li>
+<li><a href="#queue">Queue</a></li>
+<li><a href="#deque">Deque</a></li>
+<li><a href="#abstractsequentiallist">AbstractSequentialList</a></li>
+<li><a href="#linkedlist">LinkedList</a></li>
+<li><a href="#set">Set</a></li>
+<li><a href="#abstractset">AbstractSet</a></li>
+<li><a href="#hashset">HashSet</a></li>
+<li><a href="#vector">Vector</a></li>
+</ul>
+</li>
+<li><a href="#map">Map</a><ul>
+<li><a href="#map_1">Map接口</a><ul>
+<li><a href="#entry">内部接口Entry</a></li>
+</ul>
+</li>
+<li><a href="#abstractmap">AbstractMap</a></li>
+<li><a href="#hashmap">HashMap</a><ul>
+<li><a href="#node">内部类Node</a></li>
+<li><a href="#hashmap-put">hashmap插入元素的步骤  put方法</a></li>
+<li><a href="#resize">resize方法</a></li>
+</ul>
+</li>
+<li><a href="#treemap">TreeMap</a><ul>
+<li><a href="#_3">关于红黑树</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a href="#string">String</a><ul>
+<li><a href="#string_1">String类</a></li>
+<li><a href="#stringbuilder">StringBuilder类</a></li>
+<li><a href="#stringbuffer">StringBuffer类</a></li>
+<li><a href="#_4">正则表达式</a><ul>
+<li><a href="#_5">常用函数</a></li>
+<li><a href="#_6">元字符</a></li>
+<li><a href="#_7">字符转义</a></li>
+<li><a href="#_8">限定符</a></li>
+<li><a href="#_9">字符类(对元字符扩展)</a></li>
+<li><a href="#_10">分枝条件（对限定符扩展）</a></li>
+<li><a href="#_11">分组（元字符和限定符连接）</a></li>
+<li><a href="#_12">反义（对元字符扩展）</a></li>
+<li><a href="#_13">后向引用</a></li>
+<li><a href="#_14">零宽断言</a></li>
+<li><a href="#_15">负向零宽断言</a></li>
+<li><a href="#_16">注释</a></li>
+<li><a href="#_17">贪婪与懒惰</a></li>
+<li><a href="#_18">处理选项</a></li>
+<li><a href="#_19">平衡组/递归匹配</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a href="#io">文件IO</a><ul>
+<li><a href="#file">File</a></li>
+<li><a href="#inputstreamreader">InputStreamReader类</a></li>
+<li><a href="#bufferedreader">BufferedReader</a><ul>
+<li><a href="#jdbc">JDBC</a><ul>
+<li><a href="#jdbc_1">JDBC操作数据库步骤</a></li>
+<li><a href="#blobclob">Blob和Clob</a></li>
+<li><a href="#_20">读和更新性能</a></li>
+</ul>
+</li>
+<li><a href="#_21">事务处理</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a href="#oop">OOP</a></li>
+<li><a href="#jni">JNI</a></li>
+<li><a href="#_22">注解</a></li>
+<li><a href="#_23">待整理</a><ul>
+<li><a href="#_24">转义字符串</a></li>
+<li><a href="#_25">类型</a></li>
+<li><a href="#_26">路径拼接</a><ul>
+<li><a href="#_27">路径问题</a></li>
+<li><a href="#_28">自定义外部配置文件</a></li>
+</ul>
+</li>
+<li><a href="#_29">安装</a></li>
+</ul>
+</li>
+<li><a href="#_30">刷题的遗忘的点</a><ul>
+<li><a href="#_31">异常类</a></li>
+<li><a href="#_32">访问修饰符</a></li>
+</ul>
+</li>
+<li><a href="#jvm">JVM理论知识</a><ul>
+<li><a href="#_33">自动内存管理</a><ul>
+<li><a href="#java">java内存区域与内存溢出异常</a><ul>
+<li><a href="#_34">运行时数据区域</a><ul>
+<li><a href="#program-counter-register">Program Counter Register</a></li>
+<li><a href="#java-virtual-machine-stack">Java Virtual Machine Stack</a></li>
+<li><a href="#native-method-stack">Native method Stack</a></li>
+<li><a href="#java_1">Java 堆</a></li>
+<li><a href="#method-area">Method area</a></li>
+<li><a href="#_35">直接内存</a></li>
+</ul>
+</li>
+<li><a href="#_36">内存溢出</a></li>
+</ul>
+</li>
+<li><a href="#_37">垃圾收集器和内存分配策略</a><ul>
+<li><a href="#_38">那些对象需要回收？</a><ul>
+<li><a href="#_39">引用计数法</a></li>
+<li><a href="#_40">可达性分析</a></li>
+<li><a href="#_41">引用分类</a></li>
+<li><a href="#_42">两次标记</a></li>
+<li><a href="#_43">回收方法区</a></li>
+</ul>
+</li>
+<li><a href="#_44">什么时候回收？</a></li>
+<li><a href="#_45">如何回收？</a><ul>
+<li><a href="#heap">heap的内存划分</a></li>
+<li><a href="#1-">1.标记-清除算法</a></li>
+<li><a href="#2-">2.标记-复制算法</a></li>
+<li><a href="#3-">3.标记-整理算法</a></li>
+<li><a href="#4">4.分代收集算法</a></li>
+</ul>
+</li>
+<li><a href="#_46">代码如何产生不可达变量</a><ul>
+<li><a href="#null">改变对象引用，置为null或指向其他对象。</a></li>
+<li><a href="#_47">超出作用域</a></li>
+<li><a href="#_48">类嵌套导致未完全释放</a></li>
+<li><a href="#_49">线程中的垃圾</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a href="#_50">虚拟机执行子系统</a><ul>
+<li><a href="#_51">虚拟机类加载机制</a><ul>
+<li><a href="#_52">触发初始化的时机</a></li>
+<li><a href="#parent-delegation-model">双亲委派模型（Parent Delegation Model）</a><ul>
+<li><a href="#_53">工作过程</a></li>
+<li><a href="#_54">优点</a></li>
+<li><a href="#_55">常用类加载器</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a href="#_56">相关链接</a></li>
+</ul>
+</li>
+<li><a href="#java_2">JAVA理论知识</a><ul>
+<li><a href="#_57">异常与错误</a><ul>
+<li><a href="#_58">常见异常</a><ul>
+<li><a href="#_59">文件磁盘操作异常</a></li>
+<li><a href="#_60">数据相关异常</a></li>
+<li><a href="#_61">数据结构操作异常</a></li>
+<li><a href="#_62">网络相关异常</a></li>
+</ul>
+</li>
+<li><a href="#error">常见Error</a></li>
+</ul>
+</li>
+<li><a href="#_63">并发容器</a><ul>
+<li><a href="#_64">阻塞队列</a></li>
+<li><a href="#_65">优先队列</a></li>
+<li><a href="#_66">跳表</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a href="#lambda">Lambda表达式</a></li>
+<li><a href="#java_3">JAVA时间类</a><ul>
+<li><a href="#_67">时间戳转为日期格式字符串</a></li>
+<li><a href="#_68">日期格式转为时间戳</a></li>
+<li><a href="#_69">时间推迟</a></li>
+<li><a href="#datestring">Date转String</a></li>
+<li><a href="#date">时间戳转date</a></li>
+</ul>
+</li>
+<li><a href="#_70">并发编程基础</a><ul>
+<li><a href="#_71">线程状态</a><ul>
+<li><a href="#new">NEW</a></li>
+<li><a href="#runnable">RUNNABLE</a></li>
+<li><a href="#blocked">BLOCKED</a></li>
+<li><a href="#waiting">WAITING</a></li>
+<li><a href="#timed_waiting">TIMED_WAITING</a></li>
+<li><a href="#terminated">TERMINATED</a></li>
+</ul>
+</li>
+<li><a href="#_72">中断线程</a></li>
+<li><a href="#_73">守护线程</a></li>
+<li><a href="#_74">未捕获异常的处理器</a></li>
+<li><a href="#_75">锁对象</a></li>
+<li><a href="#sychronized">sychronized关键字</a></li>
+<li><a href="#_76">条件对象</a></li>
+<li><a href="#volatile">volatile字段</a></li>
+<li><a href="#thread">Thread</a><ul>
+<li><a href="#_77">线程与锁</a><ul>
+<li><a href="#_78">进程和线程</a></li>
+<li><a href="#_79">线程的实现</a></li>
+<li><a href="#_80">线程的状态</a></li>
+</ul>
+</li>
+<li><a href="#_81">线程池</a><ul>
+<li><a href="#workqueue">workQueue参数</a></li>
+<li><a href="#_82">拒绝策略参数</a></li>
+<li><a href="#_83">过程原理</a></li>
+<li><a href="#threadpoolexecutor">ThreadPoolExecutor类型</a></li>
+<li><a href="#_84">线程池状态</a></li>
+<li><a href="#executors">Executors快捷创建线程</a></li>
+<li><a href="#_85">提交任务</a></li>
+<li><a href="#_86">如何正确使用线程池</a></li>
+<li><a href="#_87">线程池的优势</a></li>
+<li><a href="#aqs">AQS同步器</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a href="#annotation">Annotation</a></li>
+<li><a href="#reflect">Reflect</a><ul>
+<li><a href="#integer">Integer</a></li>
+<li><a href="#clone">Clone</a><ul>
+<li><a href="#_88">深拷贝与浅拷贝</a></li>
+</ul>
+</li>
+<li><a href="#object">Object</a><ul>
+<li><a href="#5">创建对象5种方式</a></li>
+<li><a href="#_89">序列化</a></li>
+</ul>
+</li>
+<li><a href="#reflect_1">Reflect</a><ul>
+<li><a href="#class">Class</a></li>
+<li><a href="#equals">equals</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</div>
+<h1 id="_1">数据结构<a class="headerlink" href="#_1" title="Permanent link"></a></h1>
+<blockquote>
+<p>Collection为顶级的接口，List接口继承自Collection，AbstractCollection实现自Collection。</p>
+</blockquote>
+<h2 id="iterator">Iterator<a class="headerlink" href="#iterator" title="Permanent link"></a></h2>
+<blockquote>
+<p>Iterator为util包中较高等级的接口。Collection及其子接口，子类，子抽象类等都基于其实现add，get，set，remove等方法。如，AbstractList，ArrayList，LinkedList等</p>
+</blockquote>
+<div class="highlight"><pre>#对Iterator中剩下的元素进行操作,default标记的方法为普通方法。该方法会被类继承，若一个类同时继承了冲突的同名default方法，则必须重写。若继承的类和实现的接口中default方法冲突，则覆盖掉interface中的default中方法。
+default void forEachRemaining
+</pre></div>
+
+<p>Iterator定义的函数有，next，hasNext，remove。</p>
+<h5 id="listiterator">ListIterator<a class="headerlink" href="#listiterator" title="Permanent link"></a></h5>
+<div class="highlight"><pre>继承Iterator，新定义了add,set,previous,previousIndex,hasPrevious,nextIndex
+</pre></div>
+
+<p>previous:返回前一个元素值，并向该方向移动。</p>
+<p>next：返回后一个元素，并向该方向移动。</p>
+<h2 id="collection">Collection<a class="headerlink" href="#collection" title="Permanent link"></a></h2>
+<h5 id="collection_1">Collection接口<a class="headerlink" href="#collection_1" title="Permanent link"></a></h5>
+<blockquote>
+<p>Collection接口继承了Iterator，提供了增删改查的抽象方法</p>
+</blockquote>
+<p>collection接口定义了如下：</p>
+<p>返回元素个数</p>
+<div class="highlight"><pre>int size()
+</pre></div>
+
+<p>集合是否为空</p>
+<div class="highlight"><pre>boolean isEmpty();
+</pre></div>
+
+<p>是否包含此object</p>
+<div class="highlight"><pre>boolean contains(Object o);
+</pre></div>
+
+<p>返回对应泛型的迭代元素</p>
+<div class="highlight"><pre>Iterator&lt;E&gt; iterator();
+</pre></div>
+
+<p>以数组形式返回元素</p>
+<div class="highlight"><pre>Object[] toArray();
+</pre></div>
+
+<p>添加元素</p>
+<div class="highlight"><pre>boolean add(E e);
+</pre></div>
+
+<p>移除对应object</p>
+<div class="highlight"><pre>boolean remove(Object o);
+</pre></div>
+
+<p>将collection合并到此对象</p>
+<div class="highlight"><pre>boolean addAll(Collection&lt;? extends E&gt; c);
+</pre></div>
+
+<p>删除所有在collection参数中元素</p>
+<div class="highlight"><pre> boolean removeAll(Collection&lt;?&gt; c);
+</pre></div>
+
+<p>只保持在参数collection中的元素</p>
+<div class="highlight"><pre>boolean retainAll(Collection&lt;?&gt; c);
+</pre></div>
+
+<p>清除所有元素</p>
+<div class="highlight"><pre>void clear();
+</pre></div>
+
+<p>是否相等</p>
+<div class="highlight"><pre>boolean equals(Object o);
+</pre></div>
+
+<p>hash值</p>
+<div class="highlight"><pre>int hashCode();
+</pre></div>
+
+<p>AbstractCollection</p>
+<h5 id="list">List接口<a class="headerlink" href="#list" title="Permanent link"></a></h5>
+<blockquote>
+<p>相比于Collection接口，List接口增添了关于index的操作。</p>
+</blockquote>
+<p>List相较于Collection特有的：</p>
+<p>获得在index处的元素</p>
+<div class="highlight"><pre>E get(int index);
+</pre></div>
+
+<p>替换在index处的元素</p>
+<div class="highlight"><pre>E set(int index, E element);
+</pre></div>
+
+<p>在index处添加元素</p>
+<div class="highlight"><pre>void add(int index, E element);
+</pre></div>
+
+<p>在index处插入collection</p>
+<div class="highlight"><pre>boolean addAll(int index, Collection&lt;? extends E&gt; c);
+</pre></div>
+
+<p>该object在list中的第一个匹配下标</p>
+<div class="highlight"><pre>int indexOf(Object o);
+</pre></div>
+
+<p>最后一个匹配下标</p>
+<div class="highlight"><pre>int lastIndexOf(Object o);
+</pre></div>
+
+<p>返回list迭代器</p>
+<div class="highlight"><pre>ListIterator&lt;E&gt; listIterator();
+</pre></div>
+
+<p>返回从index之后的元素的迭代器</p>
+<div class="highlight"><pre>ListIterator&lt;E&gt; listIterator(int index);
+</pre></div>
+
+<p>子List</p>
+<div class="highlight"><pre>List&lt;E&gt; subList(int fromIndex, int toIndex);
+</pre></div>
+
+<h5 id="abstractcollection">AbstractCollection<a class="headerlink" href="#abstractcollection" title="Permanent link"></a></h5>
+<blockquote>
+<p>AbstractCollection实现了collection的很多方法</p>
+</blockquote>
+<p>其实现的方法如下:</p>
+<p>是否为空</p>
+<div class="highlight"><pre>public boolean isEmpty() {
+    return size() == 0;
+}
+</pre></div>
+
+<p>是否包含此object。使用iterator遍历collection，查看是否包含object。</p>
+<div class="highlight"><pre>public boolean contains(Object o) {
+    Iterator&lt;E&gt; it = iterator();
+    if (o==null) {
+        while (it.hasNext())
+            if (it.next()==null)
+                return true;
+    } else {
+        while (it.hasNext())
+            if (o.equals(it.next()))
+                return true;
+    }
+    return false;
+}
+</pre></div>
+
+<p>数组形式返回collection。size()为collection的元素个数，应该等于元素个数。为什么会有fewer和more的情况。</p>
+<p>若比预期的少，Arrays.copyOf(r, i)返回一个包含相同值的新数组。若比预期的多，创建新数组并返回。</p>
+<div class="highlight"><pre>public Object[] toArray() {
+    // Estimate size of array; be prepared to see more or fewer elements
+    Object[] r = new Object[size()];
+    Iterator&lt;E&gt; it = iterator();
+    for (int i = 0; i &lt; r.length; i++) {
+        if (! it.hasNext()) // fewer elements than expected
+            return Arrays.copyOf(r, i);
+        r[i] = it.next();
+    }
+    return it.hasNext() ? finishToArray(r, it) : r;
+}
+</pre></div>
+
+<p>创建扩容的数据，将剩余数据装载进新数组并返回</p>
+<div class="highlight"><pre>private static &lt;T&gt; T[] finishToArray(T[] r, Iterator&lt;?&gt; it) {
+    int i = r.length;
+    while (it.hasNext()) {
+        int cap = r.length;
+        if (i == cap) {
+            int newCap = cap + (cap &gt;&gt; 1) + 1;
+            // overflow-conscious code
+            if (newCap - MAX_ARRAY_SIZE &gt; 0)
+                newCap = hugeCapacity(cap + 1);
+            r = Arrays.copyOf(r, newCap);//创建新数组
+        }
+        r[i++] = (T)it.next();//迭代将剩余元素装入新数组
+    }
+    // trim if overallocated
+    return (i == r.length) ? r : Arrays.copyOf(r, i);
+}
+</pre></div>
+
+<p>若小于0说明溢出了，抛出异常。若大于数组最大size返回int最大值，否则返回数组最大值。数组最大size比integer最大size小8。由于数组元数据占用一部分空间，故少了8。元数据包括class：描述对象类型的类i信息指针，flag:描述此对象的散列码及形状，lock：是否同步，size：大小。</p>
+<div class="highlight"><pre>private static int hugeCapacity(int minCapacity) {
+    if (minCapacity &lt; 0) // overflow
+        throw new OutOfMemoryError
+            (&quot;Required array size too large&quot;);
+    return (minCapacity &gt; MAX_ARRAY_SIZE) ?
+        Integer.MAX_VALUE :
+        MAX_ARRAY_SIZE;
+}
+</pre></div>
+
+<p>AbstractCollection没有实现add方法，其实现了remove,removeAll,containAll,addAll,retainAll,clear，toString等方法。</p>
+<h5 id="abstractlist">AbstractList<a class="headerlink" href="#abstractlist" title="Permanent link"></a></h5>
+<blockquote>
+<p>AbstractList实现了List接口，继承了AbstractCollection类。但是，它没有实现List接口中的add,remove,set,get等关于index的操作。其实现了List中的Indexof,LastIndexOf,Sublist，addAll，equals等方法。自己创建了rangeCheckForAdd,removeRange,outofBoundMsg方法等。</p>
+<p>在Abstract类中首次实现了Iterator接口，其使用Itr实现了Iterator。又使用ListItr继承和实现了ListIterator，Itr类。随后的子类多使用它定义的ListItr内部类。</p>
+</blockquote>
+<p>31 * i == (i &lt;&lt; 5）- i,31是奇素数，且可用移位和减法代替。</p>
+<div class="highlight"><pre>public int hashCode() {
+    int hashCode = 1;
+    for (E e : this)
+        hashCode = 31*hashCode + (e==null ? 0 : e.hashCode());
+    return hashCode;
+}
+</pre></div>
+
+<h6 id="itr">Itr内部类<a class="headerlink" href="#itr" title="Permanent link"></a></h6>
+<div class="highlight"><pre>其实现了Iterator接口，实现了next,remove,hasNext三个方法，并重写了checkForComodification方法。
+</pre></div>
+
+<h6 id="listitr">ListItr内部类<a class="headerlink" href="#listitr" title="Permanent link"></a></h6>
+<div class="highlight"><pre>实现和继承了Itr和ListIterator接口,其实现了previous,nextIndex,previousIndex,add,set这几个函数
+</pre></div>
+
+<h5 id="arraylist">ArrayList<a class="headerlink" href="#arraylist" title="Permanent link"></a></h5>
+<blockquote>
+<p>ArrayList继承AbstractList接口，serialize,cloned,randomAccess接口</p>
+</blockquote>
+<h6 id="_2">构造函数：<a class="headerlink" href="#_2" title="Permanent link"></a></h6>
+<p>指定InitialCapacity初始容量，创建对应length的数组。</p>
+<p>若使用无参构造方法，创建为DEFAULT_EMPTY_ELEMENT。</p>
+<p>当调用add方法时，会使用default将容量扩展到default_capacity大小。</p>
+<div class="highlight"><pre>public ArrayList(int initialCapacity) {
+    if (initialCapacity &gt; 0) {
+        this.elementData = new Object[initialCapacity];
+    } else if (initialCapacity == 0) {
+        this.elementData = EMPTY_ELEMENTDATA;
+    } else {
+        throw new IllegalArgumentException(&quot;Illegal Capacity: &quot;+
+                                           initialCapacity);
+    }
+}
+</pre></div>
+
+<h6 id="arraylist_1">ArrayList添加的方法有如下：<a class="headerlink" href="#arraylist_1" title="Permanent link"></a></h6>
+<p>将容量缩小到现有元素大小</p>
+<div class="highlight"><pre>public void trimToSize() {
+    modCount++;
+    if (size &lt; elementData.length) {
+        elementData = (size == 0)
+          ? EMPTY_ELEMENTDATA
+          : Arrays.copyOf(elementData, size);
+    }
+}
+</pre></div>
+
+<blockquote>
+<p>确保容量安全函数,通过calculate函数计算newcapacity，并更新minicapacity。</p>
+<p>若数组length不满足minicapacity则使用grow函数进行扩容。</p>
+<p>关注三个值：mincapacity计算，newcapacity，maxArraySize。</p>
+</blockquote>
+<div class="highlight"><pre>private void ensureCapacityInternal(int minCapacity) {
+    ensureExplicitCapacity(calculateCapacity(elementData, minCapacity));
+}
+</pre></div>
+
+<div class="highlight"><pre>#如果计算的minCapacity比当前设置的length大，则使用grow扩充
+private void ensureExplicitCapacity(int minCapacity) {
+    modCount++;
+
+    // overflow-conscious code
+    if (minCapacity - elementData.length &gt; 0)
+        grow(minCapacity);
+}
+</pre></div>
+
+<div class="highlight"><pre>#取default_capacity和size+1中大的一个。
+private static int calculateCapacity(Object[] elementData, int minCapacity) {
+    if (elementData == DEFAULTCAPACITY_EMPTY_ELEMENTDATA) {
+        return Math.max(DEFAULT_CAPACITY, minCapacity);
+    }
+    return minCapacity;
+}
+</pre></div>
+
+<div class="highlight"><pre>#
+private void grow(int minCapacity) {
+    // overflow-conscious code
+    int oldCapacity = elementData.length;
+    int newCapacity = oldCapacity + (oldCapacity &gt;&gt; 1);
+    if (newCapacity - minCapacity &lt; 0)
+        newCapacity = minCapacity;
+    if (newCapacity - MAX_ARRAY_SIZE &gt; 0)
+        newCapacity = hugeCapacity(minCapacity);
+    // minCapacity is usually close to size, so this is a win:
+    elementData = Arrays.copyOf(elementData, newCapacity);
+}
+</pre></div>
+
+<p>hugeCapacity用来获取一个极大数，其值为Integer.MAX_VALUE或MAX_ARRAY_SIZE=Integer.MAX_VALUE-8</p>
+<p>其必须实现AbstractList接口的所有方法，增删改查如下：</p>
+<p>add，检查下标，检查容量，移动数组位置，添加元素。</p>
+<p>remove，检查下标，移动数组位置，将空位置null方便gc。</p>
+<p>set,get流程较少，使用rangeCheck检查下标后，即可取值。</p>
+<h5 id="queue">Queue<a class="headerlink" href="#queue" title="Permanent link"></a></h5>
+<div class="highlight"><pre>继承自collection接口，Queue只定义了五个方法，分别为add,remove,element,offer,poll
+</pre></div>
+
+<p>remove获取并移除队首元素，为空返回null。</p>
+<p>offer获取并移除队首元素，为空抛出异常。</p>
+<p>element用于获取队首元素，但不删除。为空返回null</p>
+<p>poll获取队首元素但不移除，队列为空抛出异常</p>
+<h5 id="deque">Deque<a class="headerlink" href="#deque" title="Permanent link"></a></h5>
+<div class="highlight"><pre>继承自Queue,基于remove,offer,element,poll添加了很多方法。同时定义了size,peek,push,pop,contain,iterator,get*等方法。
+</pre></div>
+
+<h5 id="abstractsequentiallist">AbstractSequentialList<a class="headerlink" href="#abstractsequentiallist" title="Permanent link"></a></h5>
+<div class="highlight"><pre>继承自AbstractList，需要自己实现set,get,add,remove方法
+</pre></div>
+
+<div class="highlight"><pre>#获取从index处起始的iterator，取出oldValue返回并set新值。
+public E set(int index, E element) {
+        try {
+            ListIterator&lt;E&gt; e = listIterator(index);
+            E oldVal = e.next();
+            e.set(element);
+            return oldVal;
+        } catch (NoSuchElementException exc) {
+            throw new IndexOutOfBoundsException(&quot;Index: &quot;+index);
+        }
+    }
+</pre></div>
+
+<div class="highlight"><pre>get函数：使用AbstractList实现的listIterator迭代器取得index处的值。
+remove调用iterator的remove移除index处的值
+add调用iterator的add函数添加值
+</pre></div>
+
+<h5 id="linkedlist">LinkedList<a class="headerlink" href="#linkedlist" title="Permanent link"></a></h5>
+<blockquote>
+<p>LinkedList继承和实现了AbstractSequentialList,Serializable,Cloneable,Deque</p>
+</blockquote>
+<p>LinkedList相比于ArrayList:</p>
+<div class="highlight"><pre>都继承了AbstractList，所以都支持index相关操作。都实现了了Serializable和cloned接口,并实现了Clone，readObject,writeObject方法。但其实现了了Deque接口，故实现了peek,offer,poll,element等方法。而ArrayList接口实现了RandomAccess接口，该接口无实际功能是一个标记接口，被此接口标记的List进行binarySearch时，使用普通的for循环，否则使用迭代器进行循环。
+</pre></div>
+
+<h5 id="set">Set<a class="headerlink" href="#set" title="Permanent link"></a></h5>
+<blockquote>
+<p>继承了Collection，和List及Queue的区别主要为,其元素值不可重复。主要有add,remove,clear,iterator,equals,hahsCode系列的函数。特有default spliterator()，</p>
+</blockquote>
+<p>default spliterator():与Stream Api一起使用，用于并行处理。需要自行实现其内容。暂时不细看。</p>
+<h5 id="abstractset">AbstractSet<a class="headerlink" href="#abstractset" title="Permanent link"></a></h5>
+<blockquote>
+<p>实现了Set接口,实现了三个方法，hashCode,equals,removeAll。</p>
+</blockquote>
+<h5 id="hashset">HashSet<a class="headerlink" href="#hashset" title="Permanent link"></a></h5>
+<blockquote>
+<p>继承了AbstractSet,实现了iterator,add,remove,clear等参数。hashset使用onlyIfAbsent替换equals相等的元素，保证值的唯一性。</p>
+</blockquote>
+<p>HashSet会调用HashMap进行存储，HashMap的putValue参数构造如下.</p>
+<div class="highlight"><pre>final V putVal(int hash, K key, V value, boolean onlyIfAbsent, boolean evict)  public boolean add(E e) {
+        return map.put(e, PRESENT)==null;
+    }
+hash由输入的key计算得来，key就是set.put(e)插入的e值。value是一个static final变量，内容为Object。onlyIfAbsent由map.put设定，其总为false，也就是若插入equals相等的元素，即覆盖它。
+</pre></div>
+
+<h5 id="vector">Vector<a class="headerlink" href="#vector" title="Permanent link"></a></h5>
+<blockquote>
+<p>继承和实现了AbstractList，RandomAccess,Cloneable,Serialiable.Vector操作是线程安全的。</p>
+</blockquote>
+<h2 id="map">Map<a class="headerlink" href="#map" title="Permanent link"></a></h2>
+<blockquote>
+<p>由上而下为Map接口，abstractMap和HashTable，HashMap。</p>
+</blockquote>
+<h5 id="map_1">Map接口<a class="headerlink" href="#map_1" title="Permanent link"></a></h5>
+<p>map中的内部接口Entry。静态内部类只可调用类成员，非静态内部类可以调用所有。但是由于内部接口无法实例化，故只能调用类成员，内部接口默认是静态接口，无需指定static关键字。</p>
+<h6 id="entry">内部接口Entry<a class="headerlink" href="#entry" title="Permanent link"></a></h6>
+<blockquote>
+<p>其定义了getkey,getvalue,setvalue等。用于Set<Entry\<k,v>> entrySet进行迭代访问。</p>
+</blockquote>
+<h5 id="abstractmap">AbstractMap<a class="headerlink" href="#abstractmap" title="Permanent link"></a></h5>
+<blockquote>
+<p>AbstractMap实现了Map接口的containValue,containKey,size,isEmpty,get,putAll,remove,values,clear,keyset,entrySet。还有hashcode,equals,toString等基础方法。但是需要其子类自己实现put等方法。</p>
+</blockquote>
+<h5 id="hashmap">HashMap<a class="headerlink" href="#hashmap" title="Permanent link"></a></h5>
+<blockquote>
+<p>继承和实现AbstractMap,Clone,Serializable。</p>
+<p>默认capacity为16</p>
+<p>loadFactor加载因子，默认是0.75</p>
+<p>threshold阈值。阈值=容量*加载因子。默认12，当元素数量超过阈值，触发扩容</p>
+<p>首次put的时候，</p>
+<p><a href="https://blog.csdn.net/qq_45655489/article/details/119563733">https://blog.csdn.net/qq_45655489/article/details/119563733</a></p>
+</blockquote>
+<h6 id="node">内部类Node<a class="headerlink" href="#node" title="Permanent link"></a></h6>
+<blockquote>
+<p>其为具有4个属性的静态类，next指向下一个对象，依次相连。</p>
+<div class="highlight"><pre>final int hash;
+final K key;
+V value;
+Node&lt;K,V&gt; next;
+</pre></div>
+
+</blockquote>
+<p>其有三个函数，hashCode,equals,setValue。</p>
+<div class="highlight"><pre>transient表示此属性不进行序列化，只可存活在内存中。无法序列化进行存储或传输。
+</pre></div>
+
+<p>调用旋转函数调整平衡二叉树结构的流程：</p>
+<div class="highlight"><pre>put/remove,treeifyBin,treeify,balanceInsertion,RotateLeft,RotateRight
+
+balance*函数是调整的具体内容。
+</pre></div>
+
+<h6 id="hashmap-put">hashmap插入元素的步骤  put方法<a class="headerlink" href="#hashmap-put" title="Permanent link"></a></h6>
+<blockquote>
+<p>1如果此hash没有放入值，则直接创建一个node，放入table</p>
+<p>2如果已经存在，按照如下步骤处理：</p>
+<p>​          1如果插入的hash值与已经存在的元素的hash值相等，key值相等，将元素赋值给e</p>
+<p>​          2如果hash、key值不相等，并且是红黑树节点，则将值放入树中</p>
+<p>​          3如果hash、key值不相等，并且是链表，则将值插入链表末尾。如果大于TREEIFY_THRESHOLD，尝试扩容。如果大于最小              MIN_TREEIFY_CAPACITY会扩充为红黑树。</p>
+</blockquote>
+<div class="highlight"><pre>final V putVal(int hash, K key, V value, boolean onlyIfAbsent,
+               boolean evict) {
+    Node&lt;K,V&gt;[] tab; Node&lt;K,V&gt; p; int n, i;
+    //table未初始化或者长度为0，进行扩容
+    if ((tab = table) == null || (n = tab.length) == 0)
+        n = (tab = resize()).length;
+    //(n - 1) &amp; hash 确定元素存放在哪个桶中，桶为空，
+    //新生成结点放入桶中(此时，这个结点是放在数组中)
+    if ((p = tab[i = (n - 1) &amp; hash]) == null)
+        tab[i] = newNode(hash, key, value, null);
+    //桶中已经存在元素
+    else {
+        Node&lt;K,V&gt; e; K k;
+        //key相等，hash相等
+        if (p.hash == hash &amp;&amp;
+            ((k = p.key) == key || (key != null &amp;&amp; key.equals(k))))
+            //将元素赋值给e
+            e = p;
+        //hash值不相等，即key不相等，并且该节点是红黑树节点
+        else if (p instanceof TreeNode)
+            //放入树中
+            e = ((TreeNode&lt;K,V&gt;)p).putTreeVal(this, tab, hash, key, value);
+        //链表节点
+        else {
+            //在链表末尾插入节点
+            for (int binCount = 0; ; ++binCount) {
+                if ((e = p.next) == null) {
+                    p.next = newNode(hash, key, value, null);
+                    //节点数量达到阈值8，执行treeifyBin方法
+                    //此方法会根据HashMap的数组来决定是否要转换为红黑树
+                    //数组长度大于等于64才会转换为红黑树，否则只会扩容数组
+                    if (binCount &gt;= TREEIFY_THRESHOLD - 1) // -1 for 1st
+                        treeifyBin(tab, hash);
+                    //跳出循环
+                    break;
+                }
+                if (e.hash == hash &amp;&amp;
+                    ((k = e.key) == key || (key != null &amp;&amp; key.equals(k))))
+                    break;
+                p = e;
+            }
+        }
+        //桶中有key值和hash值于插入节点相等的节点
+        if (e != null) { // existing mapping for key
+            V oldValue = e.value;
+            if (!onlyIfAbsent || oldValue == null)
+                e.value = value;
+            afterNodeAccess(e);
+            //覆盖以后返回旧值
+            return oldValue;
+        }
+    }
+    ++modCount;
+    //插入完成后实际大小大于阈值，需要扩容
+    if (++size &gt; threshold)
+        resize();
+    afterNodeInsertion(evict);
+    return null;
+}
+</pre></div>
+
+<h6 id="resize">resize方法<a class="headerlink" href="#resize" title="Permanent link"></a></h6>
+<div class="highlight"><pre>final Node&lt;K,V&gt;[] resize() {
+    Node&lt;K,V&gt;[] oldTab = table;
+    int oldCap = (oldTab == null) ? 0 : oldTab.length;
+    int oldThr = threshold;
+    int newCap, newThr = 0;
+    //容量超过最大值就不再扩容
+    if (oldCap &gt; 0) {
+        if (oldCap &gt;= MAXIMUM_CAPACITY) {
+            threshold = Integer.MAX_VALUE;
+            return oldTab;
+        }
+        //没超过最大值扩容到原来的2倍
+        else if ((newCap = oldCap &lt;&lt; 1) &lt; MAXIMUM_CAPACITY &amp;&amp;
+                 oldCap &gt;= DEFAULT_INITIAL_CAPACITY)
+            newThr = oldThr &lt;&lt; 1; // double threshold
+    }
+    else if (oldThr &gt; 0) // initial capacity was placed in threshold
+        newCap = oldThr;
+    else {               // zero initial threshold signifies using defaults
+        newCap = DEFAULT_INITIAL_CAPACITY;
+        newThr = (int)(DEFAULT_LOAD_FACTOR * DEFAULT_INITIAL_CAPACITY);
+    }
+    if (newThr == 0) {
+        float ft = (float)newCap * loadFactor;
+        newThr = (newCap &lt; MAXIMUM_CAPACITY &amp;&amp; ft &lt; (float)MAXIMUM_CAPACITY ?
+                  (int)ft : Integer.MAX_VALUE);
+    }
+    threshold = newThr;
+    @SuppressWarnings({&quot;rawtypes&quot;,&quot;unchecked&quot;})
+    Node&lt;K,V&gt;[] newTab = (Node&lt;K,V&gt;[])new Node[newCap];
+    table = newTab;
+    if (oldTab != null) {
+        //扩容完成后，重新进行hash分配，写入数据
+        for (int j = 0; j &lt; oldCap; ++j) {
+            Node&lt;K,V&gt; e;
+            if ((e = oldTab[j]) != null) {
+                oldTab[j] = null;
+                if (e.next == null)
+                    newTab[e.hash &amp; (newCap - 1)] = e;
+                else if (e instanceof TreeNode)
+                    ((TreeNode&lt;K,V&gt;)e).split(this, newTab, j, oldCap);
+                else { // preserve order
+                    Node&lt;K,V&gt; loHead = null, loTail = null;
+                    Node&lt;K,V&gt; hiHead = null, hiTail = null;
+                    Node&lt;K,V&gt; next;
+                    do {
+                        next = e.next;
+                        if ((e.hash &amp; oldCap) == 0) {
+                            if (loTail == null)
+                                loHead = e;
+                            else
+                                loTail.next = e;
+                            loTail = e;
+                        }
+                        else {
+                            if (hiTail == null)
+                                hiHead = e;
+                            else
+                                hiTail.next = e;
+                            hiTail = e;
+                        }
+                    } while ((e = next) != null);
+                    if (loTail != null) {
+                        loTail.next = null;
+                        newTab[j] = loHead;
+                    }
+                    if (hiTail != null) {
+                        hiTail.next = null;
+                        newTab[j + oldCap] = hiHead;
+                    }
+                }
+            }
+        }
+    }
+    return newTab;
+}
+</pre></div>
+
+<h5 id="treemap">TreeMap<a class="headerlink" href="#treemap" title="Permanent link"></a></h5>
+<blockquote>
+<p>实现NavigableMap-&gt;SortedMap-&gt;Map。TreeMap使用红黑树实现，SortedMap指定了部分函数，TreeMap是有序的结构。</p>
+</blockquote>
+<h6 id="_3">关于红黑树<a class="headerlink" href="#_3" title="Permanent link"></a></h6>
+<blockquote>
+<p>红黑数定义如下：</p>
+<p>每个结点为红色或黑色，根和叶子总是为黑色。</p>
+<p>相邻结点不可以都为红色</p>
+<p>从任意节点到其所有叶子结点的路径上红色结点数目都相同。</p>
+</blockquote>
+<p>当删除或添加后导致颜色不符合规则时，进行recolor或rotaion。</p>
+<p>插入结点</p>
+<div class="highlight"><pre>1插入x，将x标记为红色。若其为根，标记为黑色。
+2若x的父节点是红色
+    2.1若父节点的兄弟结点为红色，则将父节点和其兄弟结点标记为黑色，将祖父标记为红色。并让x与祖父颜色相同。
+    2.2若父亲的兄弟结点为黑色，则进行rotation操作。
+</pre></div>
+
+<p>rotation</p>
+<div class="highlight"><pre>rotation操作分为4种，分别为左左，左右，右右，右左。
+即x在祖父的左边但在父亲的右边，即为左右。其他相同道理。
+</pre></div>
+
+<h2 id="string">String<a class="headerlink" href="#string" title="Permanent link"></a></h2>
+<h5 id="string_1">String类<a class="headerlink" href="#string_1" title="Permanent link"></a></h5>
+<blockquote>
+<p>==:对于基本数据类型就是比较数值，基本数据类型存储在方法栈中的局部变量。</p>
+<p>对于引用类型来说，是比较引用地址，因为引用类型只在方法栈中存储引用的地址，对象实例存储在堆中。</p>
+<p>equals：是为了比较string引用对象的值设计的，具体原理如下所示。</p>
+</blockquote>
+<p>equals</p>
+<div class="highlight"><pre>#String属性有hash和value值。value值实际上是字符数组，用来存储内容。hash为重写的方法，用于equals和Mapkey使用。
+public String(String original) {
+    this.value = original.value;
+    this.hash = original.hash;
+}
+</pre></div>
+
+<div class="highlight"><pre>#String重写了equals()，流程为先比较是否为同一栈对象，如果是同一栈对象，那么肯定内容也相等了，返回true。否则，字符串再比较长度，进而逐个比较字符数组内容，如果内容全部一样，则true。equals本质是在比较两个字符串内容是否相等。
+#==对于不同的类型有不同的意义，对于基础类型就是比较值，对于引用类型，就是比较栈对象是否指向同一个实例。
+public boolean equals(Object anObject) {
+    if (this == anObject) {
+        return true;
+    }
+    if (anObject instanceof String) {
+        String anotherString = (String)anObject;
+        int n = value.length;
+        if (n == anotherString.value.length) {
+            char v1[] = value;
+          char v2[] = anotherString.value;
+            int i = 0;
+            while (n-- != 0) {
+                if (v1[i] != v2[i])
+                    return false;
+              i++;
+            }
+            return true;
+        }
+    }
+    return false;
+}
+</pre></div>
+
+<p>比较主串从toffset下标处匹配是否和prefix相等。</p>
+<div class="highlight"><pre>startWith()
+public boolean startsWith(String prefix, int toffset) {
+    char ta[] = value;
+  int to = toffset;
+    char pa[] = prefix.value;
+    int po = 0;
+  int pc = prefix.value.length;
+    // Note: toffset might be near -1&gt;&gt;&gt;1.
+    if ((toffset &lt; 0) || (toffset &gt; value.length - pc)) {
+      return false;
+    }
+    while (--pc &gt;= 0) {
+        if (ta[to++] != pa[po++]) {
+          return false;
+        }
+    }
+    return true;
+}
+</pre></div>
+
+<div class="highlight"><pre>endWith()
+可用startsWith实现，相当于从主串长度减去后缀串长度处的下标开始匹配。
+public boolean endsWith(String suffix) {
+    return startsWith(suffix, value.length - suffix.value.length);
+}
+</pre></div>
+
+<div class="highlight"><pre>hashcode()
+public int hashCode() {
+  int h = hash;
+    if (h == 0 &amp;&amp; value.length &gt; 0) {
+        char val[] = value;
+        for (int i = 0; i &lt; value.length; i++) {
+            h = 31 * h + val[i];
+      }
+        hash = h;
+  }
+    return h;
+}
+</pre></div>
+
+<p>实际上是调用了构造函数，重新创建了一个String，将value赋予对应的值。</p>
+<div class="highlight"><pre>subString()
+public String substring(int beginIndex, int endIndex) {
+    if (beginIndex &lt; 0) {
+        throw new StringIndexOutOfBoundsException(beginIndex);
+    }
+    if (endIndex &gt; value.length) {
+        throw new StringIndexOutOfBoundsException(endIndex);
+    }
+    int subLen = endIndex - beginIndex;
+    if (subLen &lt; 0) {
+        throw new StringIndexOutOfBoundsException(subLen);
+    }
+    return ((beginIndex == 0) &amp;&amp; (endIndex == value.length)) ? this
+            : new String(value, beginIndex, subLen);
+}
+</pre></div>
+
+<p>将String.value复制到新的数组中，并返回。</p>
+<p>System.arraycopy(value, 0, result, 0, value.length);
+将数组value复制到result中</p>
+<div class="highlight"><pre>toCharArray()
+public char[] toCharArray() {
+    // Cannot use Arrays.copyOf because of class initialization order issues
+    char result[] = new char[value.length];
+    System.arraycopy(value, 0, result, 0, value.length);
+    return result;
+}
+</pre></div>
+
+<h5 id="stringbuilder">StringBuilder类<a class="headerlink" href="#stringbuilder" title="Permanent link"></a></h5>
+<blockquote>
+<p>继承AbstractStringBuilder,定义了value,count等属性，和append,容量相关,delete,deleteCharAt,insert,reverse等属性.</p>
+</blockquote>
+<p>其线程不安全，使用一个可变字符数组。</p>
+<h5 id="stringbuffer">StringBuffer类<a class="headerlink" href="#stringbuffer" title="Permanent link"></a></h5>
+<blockquote>
+<p>线程安全，在StringBuilder的基础上添加了synchronized。</p>
+</blockquote>
+<h4 id="_4">正则表达式<a class="headerlink" href="#_4" title="Permanent link"></a></h4>
+<h5 id="_5">常用函数<a class="headerlink" href="#_5" title="Permanent link"></a></h5>
+<p>mathes,replaceAll,replaceFirst(),split().
+java还提供了Pattern类表示正则表达式对象，提供了丰富的API进行各种操作。</p>
+<h5 id="_6">元字符<a class="headerlink" href="#_6" title="Permanent link"></a></h5>
+<p>.:匹配除换行符以外任意字符
+\s:匹配任意的空白符（空格，指标，换行）
+\w:匹配字母和数字或下划线或汉字
+\d:匹、配数字
+\b：匹配单词的开始或结束
+^：匹配字符串的开始
+$：匹配字符串的结束</p>
+<h5 id="_7">字符转义<a class="headerlink" href="#_7" title="Permanent link"></a></h5>
+<p>元字符等有特殊含义，若要使用，用\转义。
+如：.    . <br />
+*   *</p>
+<h5 id="_8">限定符<a class="headerlink" href="#_8" title="Permanent link"></a></h5>
+<p>*：重复零次或更多次
++：重复一次或更多次
+？：重复零次或一次
+{n}：重复n次
+{n，}：重复n次和更多次
+{n，m}：重复n，m次​​</p>
+<h5 id="_9">字符类(对元字符扩展)<a class="headerlink" href="#_9" title="Permanent link"></a></h5>
+<p>[0-9],[a-z0-9A-Z]</p>
+<h5 id="_10">分枝条件（对限定符扩展）<a class="headerlink" href="#_10" title="Permanent link"></a></h5>
+<p>|</p>
+<h5 id="_11">分组（元字符和限定符连接）<a class="headerlink" href="#_11" title="Permanent link"></a></h5>
+<p>（）进行分组</p>
+<h5 id="_12">反义（对元字符扩展）<a class="headerlink" href="#_12" title="Permanent link"></a></h5>
+<p>字母改大写表反义
+如\W \S \D \B</p>
+<h5 id="_13">后向引用<a class="headerlink" href="#_13" title="Permanent link"></a></h5>
+<p>分组后编号默认从1开始，也可以自定义名字
+\b(\w+)\b\s+\1\b
+\b(?<Word>\w+)\b\s+\k<Word>\b</p>
+<h5 id="_14">零宽断言<a class="headerlink" href="#_14" title="Permanent link"></a></h5>
+<p>(?&lt;=exp1)exp2 匹配exp2前面是exp1的位置
+exp2(?=exp1) 匹配exp2后面是exp1的位置
+(?&lt;!exp1)exp2   匹配exp2前面不是是exp1的位置
+exp2(?!exp1)​    匹配exp2后面不是exp1的位置</p>
+<h5 id="_15">负向零宽断言<a class="headerlink" href="#_15" title="Permanent link"></a></h5>
+<h5 id="_16">注释<a class="headerlink" href="#_16" title="Permanent link"></a></h5>
+<h5 id="_17">贪婪与懒惰<a class="headerlink" href="#_17" title="Permanent link"></a></h5>
+<p>当使用<em>,+,.等时，尽可能匹配多的，称为贪婪。
+在限定符后边加？可转换为懒惰模式。
+如:</em>?,.?,+?​,{n,m}?</p>
+<h5 id="_18">处理选项<a class="headerlink" href="#_18" title="Permanent link"></a></h5>
+<h5 id="_19">平衡组/递归匹配<a class="headerlink" href="#_19" title="Permanent link"></a></h5>
+<p>other</p>
+<h1 id="io">文件IO<a class="headerlink" href="#io" title="Permanent link"></a></h1>
+<blockquote>
+<p><img alt="img" src="http://uploadfiles.nowcoder.com/images/20150328/138512_1427527478646_1.png" /></p>
+</blockquote>
+<div class="highlight"><pre>IO流用于向内存写入数据或从内存读出数据。
+IO流有四个顶级抽象父类，关于java的框架都基于这些类进行IO流的扩展。
+这四个类分别是字节流:InputStream,OutputStream,字符流:Reader，Writer。
+对于压缩文件的输入输出流，从磁盘等待压缩创建的输入流按序读取数据到内存，再从内存中将数据写入压缩文件磁盘中，完成一次压缩。
+BufferedReader和BufferWriter使用了自定义的缓冲区，一次读取8192字节，减少内存读写磁盘次数从而提升速度，和减少mysql网络请求次数原理相同。每次IO或网络请求会耗费时间建立连接、维护协议信息、磁盘寻址和读写
+</pre></div>
+
+<div class="highlight"><pre>按照流是否直接与特定的地方（如磁盘、内存、设备等）相连，分为节点流和处理流两类。
+
+节点流：可以从或向一个特定的地方（节点）读写数据。如FileReader.
+处理流：是对一个已存在的流的连接和封装，通过所封装的流的功能调用实现数据读写。如BufferedReader.处理流的构造方法总是要带一个其他的流对象做参数。一个流对象经过其他流的多次包装，称为流的链接。
+JAVA常用的节点流：
+
+文 件 FileInputStream FileOutputStrean FileReader FileWriter 文件进行处理的节点流。
+字符串 StringReader StringWriter 对字符串进行处理的节点流。
+数 组 ByteArrayInputStream ByteArrayOutputStreamCharArrayReader CharArrayWriter 对数组进行处理的节点流（对应的不再是文件，而是内存中的一个数组）。
+管 道 PipedInputStream PipedOutputStream PipedReaderPipedWriter对管道进行处理的节点流。
+常用处理流（关闭处理流使用关闭里面的节点流）
+
+缓冲流：BufferedInputStrean BufferedOutputStream BufferedReader BufferedWriter  增加缓冲功能，避免频繁读写硬盘。
+转换流：InputStreamReader OutputStreamReader 实现字节流和字符流之间的转换。
+数据流 DataInputStream DataOutputStream  等-提供将基础数据类型写入到文件中，或者读取出来.
+流的关闭顺序
+一般情况下是：先打开的后关闭，后打开的先关闭
+另一种情况：看依赖关系，如果流a依赖流b，应该先关闭流a，再关闭流b。例如，处理流a依赖节点流b，应该先关闭处理流a，再关闭节点流b
+可以只关闭处理流，不用关闭节点流。处理流关闭的时候，会调用其处理的节点流的关闭方法。
+</pre></div>
+
+<h2 id="file">File<a class="headerlink" href="#file" title="Permanent link"></a></h2>
+<blockquote>
+<p>用来描述文件并进行基础性操作的类，方法有renameTo,delete(),exists,isFile,isDirectory,getName,getPath</p>
+</blockquote>
+<h2 id="inputstreamreader">InputStreamReader类<a class="headerlink" href="#inputstreamreader" title="Permanent link"></a></h2>
+<blockquote>
+<p>他是字节流到字符流的桥梁，读取字节并用特定字符集节码，字符集默认使用平台字符集。要保证效率使用BufferReader。其定义的属性有StreamDecoder，方法有getEncode,read,ready,close。</p>
+</blockquote>
+<h2 id="bufferedreader">BufferedReader<a class="headerlink" href="#bufferedreader" title="Permanent link"></a></h2>
+<blockquote>
+<p>BufferedReader继承自Reader，提供高效字符读取,其定义了Reader,char,nChars,nextChar,ensureOpen(),read(),readline()。缓冲区的大小可以指定，否则使用默认大小。大多数情况下默认大小就够用的。 每次Reader的读取请求都会产生相应的对字符或字节流的读取请求，所以最好用BufferedReader包装那些read操作影响效率的Reader，比如FileReader和InputStreamReader。</p>
+</blockquote>
+<h3 id="jdbc">JDBC<a class="headerlink" href="#jdbc" title="Permanent link"></a></h3>
+<h5 id="jdbc_1">JDBC操作数据库步骤<a class="headerlink" href="#jdbc_1" title="Permanent link"></a></h5>
+<p>1注册驱动
+2创建连接
+3创建语句
+4处理结果​</p>
+<h5 id="blobclob">Blob和Clob<a class="headerlink" href="#blobclob" title="Permanent link"></a></h5>
+<p>Blob是指二进制大对象，Clob指大字符对象，jdbc两者都支持。
+    public static void main(String[] args) {
+        Connection con = null;
+        try {
+            // 1. 加载驱动（Java6以上版本可以省略）
+            Class.forName(&ldquo;com.mysql.jdbc.Driver&rdquo;);
+            // 2. 建立连接
+            con = DriverManager.getConnection(&ldquo;jdbc:<a href="http://mysql://localhost:3306/test">mysql://localhost:3306/test</a>&rdquo;, &ldquo;root&rdquo;, &ldquo;123456&rdquo;);
+            // 3. 创建语句对象
+            PreparedStatement ps = con.prepareStatement(&ldquo;insert into tb_user values (default, ?, ?)&rdquo;);
+            ps.setString(1, &ldquo;骆昊&rdquo;);              // 将SQL语句中第一个占位符换成字符串
+            try (InputStream in = new FileInputStream(&ldquo;test.jpg&rdquo;)) {    // Java 7的TWR
+                ps.setBinaryStream(2, in);      // 将SQL语句中第二个占位符换成二进制流
+                // 4. 发出SQL语句获得受影响行数
+                System.out.println(ps.executeUpdate() == 1 ? &ldquo;插入成功&rdquo; : &ldquo;插入失败&rdquo;);
+            } catch(IOException e) {
+                System.out.println(&ldquo;读取照片失败!&rdquo;);
+            }
+        } catch (ClassNotFoundException | SQLException e) {     // Java 7的多异常捕获
+            e.printStackTrace();
+        } finally { // 释放外部资源的代码都应当放在finally中保证其能够得到执行
+            try {
+                if(con != null &amp;&amp; !con.isClosed()) {
+                    con.close();    // 5. 释放数据库连接
+                    con = null;     // 指示垃圾回收器可以回收该对象
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
+    }</p>
+<h5 id="_20">读和更新性能<a class="headerlink" href="#_20" title="Permanent link"></a></h5>
+<p>使用结果集对象的setFetchSize（）控制抓取记录数，提高读取性能。
+​使用PreparedStatement语句构建批处理，提高更新性能。</p>
+<ul>
+<li>PreparedStatement和Statement
+  ps：1预编译，减少sql的编译错误，提高sql安全避免sql注射攻击。
+  2避免拼接，使用参数。
+  3批处理性能高。​</li>
+</ul>
+<h3 id="_21">事务处理<a class="headerlink" href="#_21" title="Permanent link"></a></h3>
+<p>Connection提供了事务处理的方法，通过调用setAutoCommit(false)可以手动提交事务。当事务完成后用commit（）显式提交。</p>
+<ul>
+<li>
+<p>四特性
+  原子性：事务要么做完，要么不做。若某一步操作异常，通过回滚到达事务开始或保存点。
+  一致性：数据库只能从一种一致的状态转移到另一种一致的状态。不能操作一半。
+  隔离性：事务与事务之间独立，事务隔离级别：
+  1READ_UNCOMMITTED
+  2READ_COMMITTED
+  3REPEATABLE​_READ
+  4SERIALIZABLE
+  持久性：事务提交后，对数据库中数据的改变是永久性的。</p>
+</li>
+<li>
+<p>三大数据问题</p>
+</li>
+<li>
+<p>脏读
+    事务a读取了b未提交的数据，并做了其他操作。</p>
+</li>
+<li>
+<p>不可重复读
+    a读取b已提交的更改数据，两次不一样。隔离后不可修改。</p>
+</li>
+<li>
+<p>幻读
+    a读取b提交的新增数据。隔离后不可插入数据。</p>
+</li>
+<li>
+<p>两类数据更新问题</p>
+</li>
+<li>
+<p>第一类
+    a撤销，导致覆盖b的提交数据。</p>
+</li>
+<li>
+<p>第二类
+    a提交的数据覆盖b提交的数据。</p>
+</li>
+<li>
+<p>DAO</p>
+</li>
+<li>
+<p>DAO模式
+    为数据库操作提供一个抽象接口，其中抽象了对数据源的操作。定义了事务方法，通过实现该接口来和数据源交互。
+    1DAO接口
+    ​2DAO实现类
+    3实体类
+    4数据库连接和关闭工具类​</p>
+</li>
+<li>
+<p>连接池
+    1避免创建和释放连接的消耗，提高性能。典型的用时间换空间，与线程池同理。</p>
+</li>
+</ul>
+<h1 id="oop">OOP<a class="headerlink" href="#oop" title="Permanent link"></a></h1>
+<ul>
+<li>
+<p>java和javaScript</p>
+</li>
+<li>
+<p>面向对象主要特征</p>
+</li>
+<li>
+<p>抽象</p>
+</li>
+<li>
+<p>封装</p>
+</li>
+<li>
+<p>继承</p>
+</li>
+<li>
+<p>多态
+    声明一个基类，他可以指向任意一个他的派生类。
+    调用基类的同一个方法，他可以表现为任意一个派生类的方法。</p>
+</li>
+<li>
+<p>修饰符</p>
+</li>
+<li>
+<p>public
+    当前类，同包，子类，其他包</p>
+</li>
+<li>
+<p>protected
+    当前类，同包，子类</p>
+</li>
+<li>
+<p>不写
+    当前类，同包</p>
+</li>
+<li>
+<p>private
+    当前类</p>
+</li>
+<li>
+<p>关键字</p>
+</li>
+<li>
+<p>assert</p>
+</li>
+<li>
+<p>static</p>
+<p>静态方法不能重写，重写只适用实例方法。</p>
+<ul>
+<li>
+<p>内部类
+  直接通过外部类类名创建内部类，不用创建外部类实例。</p>
+</li>
+<li>
+<p>方法
+  类方法，通过类名调用。加载类时初始化。</p>
+</li>
+<li>
+<p>变量
+  类变量，同类方法。</p>
+</li>
+</ul>
+</li>
+<li>
+<p>final</p>
+<ul>
+<li>
+<p>类
+  不可继承</p>
+</li>
+<li>
+<p>方法
+  不可重写</p>
+</li>
+<li>
+<p>变量
+  赋值后不可修改</p>
+</li>
+</ul>
+</li>
+<li>
+<p>子类父类调用顺序
+  new一个类对象，类中各部分执行顺序：静态代码块—非静态代码块—构造函数—一般方法。
+  子类继承父类各部分执行顺序为：父静态代码块&ndash;子静态代码块&ndash;父非静态代码块&ndash;父无参构造函数&ndash;子非静态代码块&ndash;子构造函数&ndash;方法。
+  如果没有写super()，则默认调用父类的无参构造方法。</p>
+</li>
+</ul>
+<h1 id="jni">JNI<a class="headerlink" href="#jni" title="Permanent link"></a></h1>
+<blockquote>
+<p>博客：<a href="https://www.jianshu.com/p/6cbdda111570">https://www.jianshu.com/p/6cbdda111570</a></p>
+<p>extern &ldquo;C&rdquo;。JNI函数声明声明代码是用C++语言写的，所以需要添加extern &ldquo;C&rdquo;声明；如果源代码是C语言声明，则不需要添加这个声明</p>
+<p>JNIEXPORT。这个关键字表明这个函数是一个可导出函数。每一个C/C++库都有一个导出函数列表，只有在这个列表里面的函数才可以被外部直接调用，类似Java的public函数和private函数的区别。</p>
+<p>JNICALL。说明这个函数是一个JNI函数，用来和普通的C/C++函数进行区别。</p>
+<p>Void 返回值类型</p>
+<p>JNI函数名原型：Java_ + JNI方法所在的完整的类名，把类名里面的”.”替换成”_” + 真实的JNI方法名，这个方法名要和Java代码里面声明的JNI方法名一样。</p>
+<p>env 参数 是一个执行JNIENV函数表的指针。</p>
+<p>thiz 参数 代表的是声明这个JNI方法的Java类的引用。</p>
+<p>msg 参数就是和Java声明的JNI函数的msg参数对于的JNI函数参数</p>
+<p>示例如下，下方为c语言代码。</p>
+</blockquote>
+<div class="highlight"><pre><span class="kd">public</span> <span class="kd">native</span> <span class="kt">void</span> <span class="nf">helloJNI</span><span class="o">(</span><span class="n">String</span> <span class="n">msg</span><span class="o">);</span>
+</pre></div>
+
+<div class="highlight"><pre><span class="k">extern</span> <span class="s">&quot;C&quot;</span>
+<span class="n">JNIEXPORT</span> <span class="kt">void</span> <span class="n">JNICALL</span>
+<span class="n">Java_com_kgdwbb_jnistudy_MainActivity_helloJNI</span><span class="p">(</span><span class="n">JNIEnv</span><span class="o">*</span> <span class="n">env</span><span class="p">,</span> <span class="n">jobject</span> <span class="n">thiz</span><span class="p">,</span><span class="n">jstring</span> <span class="n">msg</span><span class="p">)</span> <span class="p">{</span>
+    <span class="c1">//do something</span>
+<span class="p">}</span>
+</pre></div>
+
+<h1 id="_22">注解<a class="headerlink" href="#_22" title="Permanent link"></a></h1>
+<blockquote>
+<p>自定义注解一般与拦截器或aop一起配合，拦截器与注解配合可以检测过滤被注解的方法，如用于登录检测。</p>
+<p>aop与注解配合可以用于对注解的方法进行日志打印</p>
+<p><a href="https://www.jianshu.com/p/a7bedc771204">https://www.jianshu.com/p/a7bedc771204</a></p>
+<p><strong>Target</strong>：描述了注解修饰的对象范围，取值在<code>java.lang.annotation.ElementType</code>定义，常用的包括：</p>
+<ul>
+<li>METHOD：用于描述方法</li>
+<li>PACKAGE：用于描述包</li>
+<li>PARAMETER：用于描述方法变量</li>
+<li>TYPE：用于描述类、接口或enum类型</li>
+</ul>
+<p><strong>Retention</strong>: 表示注解保留时间长短。取值在<code>java.lang.annotation.RetentionPolicy</code>中，取值为：</p>
+<ul>
+<li>SOURCE：在源文件中有效，编译过程中会被忽略</li>
+<li>CLASS：随源文件一起编译在class文件中，运行时忽略</li>
+<li>RUNTIME：在运行时有效</li>
+</ul>
+<p>注解定义如下，定义并使用注解，然后借助反射检测是否加了对应的注解，拦截器和aop也是这个原理。</p>
+</blockquote>
+<div class="highlight"><pre><span class="nd">@Target</span><span class="o">(</span><span class="n">ElementType</span><span class="o">.</span><span class="na">FIELD</span><span class="o">)</span>
+<span class="nd">@Retention</span><span class="o">(</span><span class="n">RetentionPolicy</span><span class="o">.</span><span class="na">RUNTIME</span><span class="o">)</span>
+<span class="kd">public</span> <span class="nd">@interface</span> <span class="n">MyField</span> <span class="o">{</span>
+    <span class="n">String</span> <span class="nf">description</span><span class="o">();</span>
+    <span class="kt">int</span> <span class="nf">length</span><span class="o">();</span>
+<span class="o">}</span>
+</pre></div>
+
+<div class="highlight"><pre><span class="kd">public</span> <span class="kd">class</span> <span class="nc">MyFieldTest</span> <span class="o">{</span>
+
+    <span class="c1">//使用我们的自定义注解</span>
+    <span class="nd">@MyField</span><span class="o">(</span><span class="n">description</span> <span class="o">=</span> <span class="s">&quot;用户名&quot;</span><span class="o">,</span> <span class="n">length</span> <span class="o">=</span> <span class="mi">12</span><span class="o">)</span>
+    <span class="kd">private</span> <span class="n">String</span> <span class="n">username</span><span class="o">;</span>
+
+    <span class="nd">@Test</span>
+    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">testMyField</span><span class="o">(){</span>
+
+        <span class="c1">// 获取类模板</span>
+        <span class="n">Class</span> <span class="n">c</span> <span class="o">=</span> <span class="n">MyFieldTest</span><span class="o">.</span><span class="na">class</span><span class="o">;</span>
+
+        <span class="c1">// 获取所有字段</span>
+        <span class="k">for</span><span class="o">(</span><span class="n">Field</span> <span class="n">f</span> <span class="o">:</span> <span class="n">c</span><span class="o">.</span><span class="na">getDeclaredFields</span><span class="o">()){</span>
+            <span class="c1">// 判断这个字段是否有MyField注解</span>
+            <span class="k">if</span><span class="o">(</span><span class="n">f</span><span class="o">.</span><span class="na">isAnnotationPresent</span><span class="o">(</span><span class="n">MyField</span><span class="o">.</span><span class="na">class</span><span class="o">)){</span>
+                <span class="n">MyField</span> <span class="n">annotation</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="na">getAnnotation</span><span class="o">(</span><span class="n">MyField</span><span class="o">.</span><span class="na">class</span><span class="o">);</span>
+                <span class="n">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="s">&quot;字段:[&quot;</span> <span class="o">+</span> <span class="n">f</span><span class="o">.</span><span class="na">getName</span><span class="o">()</span> <span class="o">+</span> <span class="s">&quot;], 描述:[&quot;</span> <span class="o">+</span> <span class="n">annotation</span><span class="o">.</span><span class="na">description</span><span class="o">()</span> <span class="o">+</span> <span class="s">&quot;], 长度:[&quot;</span> <span class="o">+</span> <span class="n">annotation</span><span class="o">.</span><span class="na">length</span><span class="o">()</span> <span class="o">+</span><span class="s">&quot;]&quot;</span><span class="o">);</span>
+            <span class="o">}</span>
+        <span class="o">}</span>
+
+    <span class="o">}</span>
+<span class="o">}</span>
+</pre></div>
+
+<h1 id="_23">待整理<a class="headerlink" href="#_23" title="Permanent link"></a></h1>
+<h3 id="_24">转义字符串<a class="headerlink" href="#_24" title="Permanent link"></a></h3>
+<div class="highlight"><pre>kafka乱码
+来源此处中文乱码：LOC-[&#39;u7231u5c14u5170&#39;, &#39;u7f8eu56fd&#39;]
+python的producer加入,json.dump(result,ensure_ascii=false)
+java的consumer用utf解码，并用StringEscapeUtil解码字符串.
+</pre></div>
+
+<div class="highlight"><pre>\t \n 分别代表缩进与空格，添加\进行转义。
+区分\t \n到底代表\t \n还是代表转义后的缩进与空格，取决于该字符串是否进行转义。在python中，在字符串前添加r前缀，表示此字符串不进行字符串转义。
+</pre></div>
+
+<h3 id="_25">类型<a class="headerlink" href="#_25" title="Permanent link"></a></h3>
+<table>
+<thead>
+<tr>
+<th>类型</th>
+<th>byte</th>
+<th>short</th>
+<th>int</th>
+<th>long</th>
+<th>float</th>
+<th>double</th>
+<th>char</th>
+<th>boolean</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>长度(字节)</td>
+<td>1</td>
+<td>2</td>
+<td>4</td>
+<td>8</td>
+<td>4</td>
+<td>8</td>
+<td>4</td>
+<td>8</td>
+</tr>
+</tbody>
+</table>
+<h3 id="_26">路径拼接<a class="headerlink" href="#_26" title="Permanent link"></a></h3>
+<div class="highlight"><pre>#使用Paths.get拼接，或使用separatorChar。separatorChar可以实现不同平台的分隔符。
+Path currentRelativePath= Paths.get(&quot;&quot;);
+Path currentDir=currentRelativePath.toAbsolutePath();
+System.out.println(currentDir);
+
+String filename=&quot;data&quot;+ File.separatorChar+&quot;test.log&quot;;
+Path filepath=currentDir.resolve(filename);
+System.out.println(filepath);
+</pre></div>
+
+<h5 id="_27">路径问题<a class="headerlink" href="#_27" title="Permanent link"></a></h5>
+<div class="highlight"><pre>new File(&quot;&quot;).getAbsolutePath（）得到jar包放置的目录。使用idea运行得到项目根目录。
+打包后无src-&gt;main等路径，如果访问jar包内文件，要通过如下方式访问。
+以main和resources为合并的根目录，再加上META-INF文件夹组成根目录。输入相对路径访问即可。
+如果访问外部，通过绝对路径访问。
+#访问jar包内
+
+this.getClass().getClassLoader().getResourceAsStream(&quot;logback.xml&quot;);
+#这个才有效，读取resources
+InputStream in = Thread.currentThread().getContextClassLoader().getResourceAsStream(CONF_NAME);
+</pre></div>
+
+<h5 id="_28">自定义外部配置文件<a class="headerlink" href="#_28" title="Permanent link"></a></h5>
+<div class="highlight"><pre>一般使用源码发布，所以不使用所谓的外部配置文件。
+1使用类加载器加载配置文件，可以加载jar内部文件。
+2使用file直接读取jar包外部文件
+3使用Properties类保存属性集
+4使用ResourceBundle
+</pre></div>
+
+<h3 id="_29">安装<a class="headerlink" href="#_29" title="Permanent link"></a></h3>
+<div class="highlight"><pre>下载压缩包，配置环境变量
+安装和管理：https://blog.csdn.net/u012707739/article/details/78489833
+</pre></div>
+
+<h1 id="_30">刷题的遗忘的点<a class="headerlink" href="#_30" title="Permanent link"></a></h1>
+<h5 id="_31">异常类<a class="headerlink" href="#_31" title="Permanent link"></a></h5>
+<div class="highlight"><pre>JAVA异常类,Throwable,Error,Exception，RuntimeException,IOException的继承关系
+</pre></div>
+
+<h5 id="_32">访问修饰符<a class="headerlink" href="#_32" title="Permanent link"></a></h5>
+<div class="highlight"><pre>public
+prected
+package
+private
+</pre></div>
+
+<h1 id="jvm">JVM理论知识<a class="headerlink" href="#jvm" title="Permanent link"></a></h1>
+<h2 id="_33">自动内存管理<a class="headerlink" href="#_33" title="Permanent link"></a></h2>
+<h3 id="java">java内存区域与内存溢出异常<a class="headerlink" href="#java" title="Permanent link"></a></h3>
+<h4 id="_34">运行时数据区域<a class="headerlink" href="#_34" title="Permanent link"></a></h4>
+<blockquote>
+<ol>
+<li>-Xms1024m　　//设置堆的最小值</li>
+<li>-Xmx2048m   //设置堆的最大值</li>
+<li>-Xmn512m    //设置新生代大小</li>
+<li>-XX:MetaspaceSize=256m //设置初始Metaspace空间的大小</li>
+<li>永久带的初始值-XX:PermSize及最大值-XX:MaxPermSize</li>
+</ol>
+<p>jvm将内存区域划分为若干个不同的数据区域，这些区域有各自的用途，以及创建和销毁的时间。有些随着虚拟机进程的启动一致存在，有些区域则是依赖用户线程的启动和结束而建立和销毁。</p>
+<p>包括以下几个运行时数据区域：VM Stack、Native Method Stack、Program Counter Register、Method Area、Heap。</p>
+</blockquote>
+<h5 id="program-counter-register">Program Counter Register<a class="headerlink" href="#program-counter-register" title="Permanent link"></a></h5>
+<blockquote>
+<p>程序计数器可看作当前线程所执行的字节码的行号指示器，通过程序计数器选择下一条需要执行的字节码指令，程序的分支、循环、跳转、异常处理、线程恢复等基础功能都需要依赖这个计数器完成。</p>
+<p>线程恢复：由于一个cpu核心同时只会执行一条线程中的指令，因此为了线程切换后能回到正确的位置，每条线程都需要一个独立的程序计数器，各条线程之间计数器互不影响。</p>
+</blockquote>
+<h5 id="java-virtual-machine-stack">Java Virtual Machine Stack<a class="headerlink" href="#java-virtual-machine-stack" title="Permanent link"></a></h5>
+<blockquote>
+<p>与程序计数器一样，vm stack也是线程私有的，它的生命周期和线程相同。虚拟机栈是java方法执行的线程内存模型：每个方法被执行的时候，java虚拟机都会创建一个栈帧用于存储局部变量表、操作数帧、动态链接、方法出口等信息。每个方法被调用直至执行完毕的过程，对应着栈帧在虚拟机栈中从入栈到出栈的过程</p>
+<p>修改栈大小</p>
+<p>-Xss1m -Xss1024k -Xss1048576</p>
+</blockquote>
+<h5 id="native-method-stack">Native method Stack<a class="headerlink" href="#native-method-stack" title="Permanent link"></a></h5>
+<blockquote>
+<p>本地方法栈与虚拟机栈作用类似，区别在于java虚拟机栈为java方法（字节码）服务，而本地方法栈则是为虚拟机使用到的本地方法服务。</p>
+</blockquote>
+<h5 id="java_1">Java 堆<a class="headerlink" href="#java_1" title="Permanent link"></a></h5>
+<blockquote>
+<p>java堆是虚拟机所管理的内存中最大的一块，是被所有线程共享的一块区域。此内存区域唯一目的就是存放对象实例，java世界里几乎所有对象实例都在这里分配内存。</p>
+<p>java堆是垃圾收集器管理的内存区域，因此也被称为GC堆。</p>
+</blockquote>
+<h5 id="method-area">Method area<a class="headerlink" href="#method-area" title="Permanent link"></a></h5>
+<blockquote>
+<p>方法区与java堆一样，是多个线程的共享区域，它用于存储已经被虚拟机加载的类型信息、常量、静态变量、即时编译后的代码缓存等数据。</p>
+<p>运行时常量池，后来移入了堆中。</p>
+<p>运行时常量池是方法区的一部分，class除了有类的版本、字段、方法等描述信息，还有一项常量池表Constant Pool Table，用于存放编译器生成的各种字面量与符号引用，这部分内容在类加载后放入运行时常量池。例如你在代码中写了一个String str=“hello”，这个“hello”就是一个字面量，需要放入此处。</p>
+</blockquote>
+<h5 id="_35">直接内存<a class="headerlink" href="#_35" title="Permanent link"></a></h5>
+<blockquote>
+<p>通过Native函数库直接分配堆外的内存，然后通过java堆内的DirectByteBuffer对象为这块内存的引用进行操作，这样避免了java堆和native堆来回复制数据。但是其不受java堆大小的控制，也可能超过机器的物理内存，导致OutOfMemoryError异常。</p>
+</blockquote>
+<h4 id="_36">内存溢出<a class="headerlink" href="#_36" title="Permanent link"></a></h4>
+<blockquote>
+<p>内存溢出一般由以下代码导致，实际上代码导致应该叫内存泄露，因为其是因为编码人员的错误导致的。如果将代码修改正常，还是超过内存，才能称为内存溢出。</p>
+<p>1for循环创建大量局部变量</p>
+<p>2递归调用方法，创建大量栈帧</p>
+<p>3设置过多局部变量</p>
+</blockquote>
+<h3 id="_37">垃圾收集器和内存分配策略<a class="headerlink" href="#_37" title="Permanent link"></a></h3>
+<blockquote>
+<p>那些内存需要回收、什么时候回收、如何回收</p>
+<p>由于程序计数器、虚拟机栈、本地方法栈三个区域随线程而成，随线程而灭，栈中的栈帧随着方法的进入和退出而变化。每个栈帧中分配多少内存基本上在类结构确定下来时就已知，所以这几个区域的内分分配与回收具有确定性，当方法结束或线程结束时自然就回收了。</p>
+<p>但是Java堆和方法区这两个区域有显著的不确定性，一个接口的多个实现类内存要求不一样，一个方法的不同分支需要的内存也不一样，也就是说只有在运行时才能确定到底需要多少空间，这部分内存的分配和回收是动态的。垃圾收集器主要关系这一部分内存如何分配和回收。</p>
+</blockquote>
+<h4 id="_38">那些对象需要回收？<a class="headerlink" href="#_38" title="Permanent link"></a></h4>
+<blockquote>
+<p>为了确定那些对象死亡了，需要回收，可以通过引用计数法、可达性分析。</p>
+</blockquote>
+<h5 id="_39">引用计数法<a class="headerlink" href="#_39" title="Permanent link"></a></h5>
+<blockquote>
+<p>当有一个地方引用时，计数器值加1；当引用失效时，计数器值减1.任何时刻计数器值为零的对象不可能再被使用。</p>
+<p>优点：逻辑简单、判定效率高。</p>
+<p>缺点：需要处理很多额外情况，如对象之间循环引用。</p>
+</blockquote>
+<h5 id="_40">可达性分析<a class="headerlink" href="#_40" title="Permanent link"></a></h5>
+<blockquote>
+<p>通过GC Roots的根节点作为起始节点集，从这些结点往下搜索，搜索所走过的路径称为引用链，如果从某个对象到GC Roots之间没有任何路径，引用链，那么不可达，此对象可以回收。</p>
+<p>即根据GC Roots对象，遍历出他们（引用）关联的所有对象（Heap中的对象），没有遍历到的就是非存活对象。</p>
+<p>可作为GC Roots的对象包括以下几种：</p>
+<p>1虚拟机栈中的引用的对象，如局部变量、临时变量</p>
+<p>2方法区中的字符串常量池里的引用</p>
+<p>3本地方法栈引用的对象</p>
+<p>4jvm内部引用，如常驻的异常对象。</p>
+</blockquote>
+<h5 id="_41">引用分类<a class="headerlink" href="#_41" title="Permanent link"></a></h5>
+<blockquote>
+<p>强引用，最传统的定义，即代码中普遍存在的引用赋值</p>
+<p>软引用，描述一些还有用，但是非必须的对象。</p>
+<p>弱引用，非必须</p>
+<p>虚引用，最弱的引用关系</p>
+</blockquote>
+<h5 id="_42">两次标记<a class="headerlink" href="#_42" title="Permanent link"></a></h5>
+<blockquote>
+<p>当发现不可达后，进行一次标记。</p>
+<p>然后判断是否需要finalize方法，如果没有，就是直接回收。否则，让该对象放入一个F-Queue队列，等待执行finalize方法后再次检测，如果还是不可达，则回收。</p>
+</blockquote>
+<h5 id="_43">回收方法区<a class="headerlink" href="#_43" title="Permanent link"></a></h5>
+<blockquote>
+<p>主要回收废弃的常量和不再使用的类型</p>
+<p>废弃的常量和堆的回收类似，但是回收不再使用的类型比较苛刻。</p>
+<p>1该类所有实例回收了2该类类加载器回收了3该类java.lang.Class对象没有被引用。</p>
+</blockquote>
+<h4 id="_44">什么时候回收？<a class="headerlink" href="#_44" title="Permanent link"></a></h4>
+<blockquote>
+<p>Eden区满了，触发young gc</p>
+<p>如果整个堆在young gc时，发现晋升到老年代的剩余空间过大，就直接full gc。</p>
+<p>手动调用system.gc（）</p>
+</blockquote>
+<h4 id="_45">如何回收？<a class="headerlink" href="#_45" title="Permanent link"></a></h4>
+<blockquote>
+<p>分代收集理论，建立在两个假说上：</p>
+<p>1弱分代假说：绝大多数对象是朝生夕灭的</p>
+<p>2强分代假说：熬过越多次垃圾回收过程的对象越难以消亡</p>
+<p>所以其原则为，将内存回收的java堆划分为不同区域，根据其年龄分配到不同区域存储。对于不同区域采取不同的策略，提高回收效率。</p>
+<p>实际上分代假说需要面临很多问题，比如跨代引用问题，这里引入第三条法则</p>
+<p>3跨代引用假说：跨代引用相对于同代引用来说占比较少。</p>
+</blockquote>
+<h5 id="heap">heap的内存划分<a class="headerlink" href="#heap" title="Permanent link"></a></h5>
+<blockquote>
+<p>为了实现标记-复制算法、标记-清除算法、标记-整理算法。</p>
+<p>堆被划分成两个不同的区域：新生代 ( Young )、老年代 ( Old )。新生代 ( Young ) 又被划分为三个区域：Eden、From Survivor、To Survivor。
+这样划分的目的是为了使 JVM 能够更好的管理堆内存中的对象，包括内存的分配以及回收。</p>
+<p>默认的，新生代 ( Young ) 与老年代 ( Old ) 的比例的值为 1:2 ( 该值可以通过参数 –XX:NewRatio 来指定 )，即：新生代 ( Young ) = 1/3 的堆空间大小。
+老年代 ( Old ) = 2/3 的堆空间大小。其中，新生代 ( Young ) 被细分为 Eden 和 两个 Survivor 区域，这两个 Survivor 区域分别被命名为 from 和 to，以示区分。
+默认的，Eden : from : to = 8 : 1 : 1 ( 可以通过参数 –XX:SurvivorRatio 来设定 )，即： Eden = 8/10 的新生代空间大小，from = to = 1/10 的新生代空间大小。
+JVM 每次只会使用 Eden 和其中的一块 Survivor 区域来为对象服务，所以无论什么时候，总是有一块 Survivor 区域是空闲着的。
+因此，新生代实际可用的内存空间为 9/10 ( 即90% )的新生代空间。</p>
+</blockquote>
+<h5 id="1-">1.标记-清除算法<a class="headerlink" href="#1-" title="Permanent link"></a></h5>
+<p>标记：标记出所有要回收的对象
+清除：回收被标记对象
+缺点：效率低，这两个操作效率都不高
+​​空间问题，形成大量不连续碎片空间。当以后需要分配较大的对象时，无法找到足够大的连续空间，触发gc。</p>
+<h5 id="2-">2.标记-复制算法<a class="headerlink" href="#2-" title="Permanent link"></a></h5>
+<p>内存分为相等的两块，需要回收时，把存活的对象拷贝到另一半，清除当前的整个块，以保证空间连续性。
+缺点：代价高。
+现在一般分为三块，Eden和两块较小的Survivor。当回收时，将存活对象放到另一个Survivor中，清除当前Survivor和Eden.</p>
+<h5 id="3-">3.标记-整理算法<a class="headerlink" href="#3-" title="Permanent link"></a></h5>
+<p>标记：标记所有要回收的对象。
+整理:将存活对象向一段移动，然后直接清理到边界以外的内存空间</p>
+<h5 id="4">4.分代收集算法<a class="headerlink" href="#4" title="Permanent link"></a></h5>
+<p>分代：新生代，老生代
+新生代：存活少，使标记-复制算法。
+老年代：存活多，使用标记清除或标记整理算法。</p>
+<h4 id="_46">代码如何产生不可达变量<a class="headerlink" href="#_46" title="Permanent link"></a></h4>
+<p>非线程对象不被指向或超出作用域
+线程对象线程未启动或停止</p>
+<h6 id="null">改变对象引用，置为null或指向其他对象。<a class="headerlink" href="#null" title="Permanent link"></a></h6>
+<div class="highlight"><pre>Object x=new Object();//object1 
+Object y=new Object();//object2 
+x=y;//object1 变为垃圾 
+x=y=null;//object2 变为垃圾
+</pre></div>
+
+<h6 id="_47">超出作用域<a class="headerlink" href="#_47" title="Permanent link"></a></h6>
+<div class="highlight"><pre>if(i==0){ 
+      Object x=new Object();//object1 
+   }//括号结束后object1将无法被引用，变为垃圾 
+</pre></div>
+
+<h6 id="_48">类嵌套导致未完全释放<a class="headerlink" href="#_48" title="Permanent link"></a></h6>
+<div class="highlight"><pre>class A{ 
+      A a; 
+   } 
+   A x= new A();//分配一个空间 
+   x.a= new A();//又分配了一个空间 
+   x=null;//将会产生两个垃圾 
+</pre></div>
+
+<h6 id="_49">线程中的垃圾<a class="headerlink" href="#_49" title="Permanent link"></a></h6>
+<div class="highlight"><pre>class A implements Runnable{   
+     void run(){ 
+       //.... 
+     } 
+   } 
+   //main 
+   A x=new A();//object1 
+   x.start(); 
+   x=null;//等线程执行完后object1才被认定为垃圾 
+</pre></div>
+
+<h2 id="_50">虚拟机执行子系统<a class="headerlink" href="#_50" title="Permanent link"></a></h2>
+<h3 id="_51">虚拟机类加载机制<a class="headerlink" href="#_51" title="Permanent link"></a></h3>
+<blockquote>
+<p>一个类从被加载到虚拟机内存开始，到卸载内存为止，它经历了加载、验证、准备、解析、初始化、使用和卸载七个阶段，简称为加载、连接、初始化、使用、卸载。</p>
+</blockquote>
+<h4 id="_52">触发初始化的时机<a class="headerlink" href="#_52" title="Permanent link"></a></h4>
+<blockquote>
+<p>1new实例对象，读取或设置一个静态字段</p>
+<p>2使用java.lang.reflect包的方法进行反射调用的时候，如果没有进行过初始化，则需要先初始化</p>
+<p>3当初始化类的时候，其父类还没有初始化</p>
+<p>4挡虚拟机启动时，需要指定执行main方法的那个类</p>
+</blockquote>
+<h4 id="parent-delegation-model">双亲委派模型（Parent Delegation Model）<a class="headerlink" href="#parent-delegation-model" title="Permanent link"></a></h4>
+<h5 id="_53"><strong>工作过程</strong><a class="headerlink" href="#_53" title="Permanent link"></a></h5>
+<blockquote>
+<p>1当前ClassLoader首先从自己已经加载的类中查询此类是否已加载。若已经加载就返回加载的类。
+每个类加载器都有自己的加载缓存，当一个类被加载以后就会放入缓存。
+2当前classloader的缓存中没有找到时，委托父类加载器去加载，父类加载器采用同样的策略，直到找到或到达bootstrap classloader.
+3.当所有的父类加载器都没有加载时，再由当前的类加载器加载，并放入自己的缓存。</p>
+</blockquote>
+<h5 id="_54"><strong>优点</strong><a class="headerlink" href="#_54" title="Permanent link"></a></h5>
+<blockquote>
+<p>为了安全性，避免用户的类动态替换java的核心类，比如String。.</p>
+<p>同时避免了重复加载，因为相同的class文件被不同classloader加载是不同的两个类，相互转型会抛出classCaseException。</p>
+</blockquote>
+<h5 id="_55"><strong>常用类加载器</strong><a class="headerlink" href="#_55" title="Permanent link"></a></h5>
+<blockquote>
+<p>Bootstrap class loader：所有类加载器的父类，当运行jvm时，她负责核心库的加载，如java.lang.*等。例如java.lang.Object就是由根类加载器加载的。此加载器不是由java编写的，而是c/c++写的。
+Extension class loader：这个加载器加载除了基本API之外的拓展类。
+AppClassLoader:加载应用程序和程序员自定义的类。
+用户也可以自定义自己的类加载器，java提供了java.long.classloader.</p>
+</blockquote>
+<h2 id="_56">相关链接<a class="headerlink" href="#_56" title="Permanent link"></a></h2>
+<blockquote>
+<p>深入理解jvm虚拟机</p>
+</blockquote>
+<h1 id="java_2">JAVA理论知识<a class="headerlink" href="#java_2" title="Permanent link"></a></h1>
+<h2 id="_57">异常与错误<a class="headerlink" href="#_57" title="Permanent link"></a></h2>
+<blockquote>
+<p>在java中，所有异常都有一个共同的祖先Throwable。Throwable有两个重要的子类：Exception和Error</p>
+<p>Exception：是应用程序可预测可恢复的问题，是在特定环境下产生的，出现在特定的场景和代码，是轻度的问题。例如IOException，NullPointerException，ArrayIndexOutOfBoundException。Exception还有一个RuntimeException子类，表示JVM常用操作引发的错误。</p>
+<p>Error：表示较为严重的问题，大多数与程序逻辑无关，表示运行时jvm出现问题，例如OutOfMemoryError，StackOverFlowError。</p>
+</blockquote>
+<h3 id="_58">常见异常<a class="headerlink" href="#_58" title="Permanent link"></a></h3>
+<h4 id="_59">文件磁盘操作异常<a class="headerlink" href="#_59" title="Permanent link"></a></h4>
+<div class="highlight"><pre>IOException
+FileNOt Exist
+</pre></div>
+
+<h4 id="_60">数据相关异常<a class="headerlink" href="#_60" title="Permanent link"></a></h4>
+<div class="highlight"><pre>connection fail
+</pre></div>
+
+<h4 id="_61">数据结构操作异常<a class="headerlink" href="#_61" title="Permanent link"></a></h4>
+<div class="highlight"><pre>#Array
+ArrayIndexOutOfBound
+
+#object
+NullPointExcepiton
+</pre></div>
+
+<h4 id="_62">网络相关异常<a class="headerlink" href="#_62" title="Permanent link"></a></h4>
+<div class="highlight"><pre>host not reached
+</pre></div>
+
+<h3 id="error">常见Error<a class="headerlink" href="#error" title="Permanent link"></a></h3>
+<div class="highlight"><pre>OSError
+StackOverFlowError
+OutofMemoryError
+</pre></div>
+
+<h2 id="_63">并发容器<a class="headerlink" href="#_63" title="Permanent link"></a></h2>
+<blockquote>
+<p><a href="https://www.jianshu.com/p/67076450de38">https://www.jianshu.com/p/67076450de38</a></p>
+<p>大致分为：HashMap，ArrayList，Set，队列（阻塞队列，优先队列，数据交换队列）</p>
+<p><strong>ConcurrentHashMap：并发版HashMap</strong></p>
+<p><strong>CopyOnWriteArrayList：并发版ArrayList</strong></p>
+<p><strong>CopyOnWriteArraySet：并发Set</strong></p>
+<p><strong>ConcurrentLinkedQueue：并发队列(基于链表)</strong></p>
+<p><strong>ConcurrentLinkedDeque：并发队列(基于双向链表)</strong></p>
+<p><strong>ConcurrentSkipListMap：基于跳表的并发Map</strong></p>
+<p><strong>ConcurrentSkipListSet：基于跳表的并发Set</strong></p>
+<p><strong>ArrayBlockingQueue：阻塞队列(基于数组)</strong></p>
+<p><strong>LinkedBlockingQueue：阻塞队列(基于链表)</strong></p>
+<p><strong>LinkedBlockingDeque：阻塞队列(基于双向链表)</strong></p>
+<p><strong>PriorityBlockingQueue：线程安全的优先队列</strong></p>
+<p>SynchronousQueue：读写成对的队列</p>
+<p>LinkedTransferQueue：基于链表的数据交换队列</p>
+<p>DelayQueue：延时队列</p>
+<p>ConcurrentHashMap采用了分段锁，可以让写操作保持一定的并发性。读操作是完全并发的。</p>
+<p>CopyOnWriteArrayList采用了读无需加锁，写的时候先复制一个数组，然后再替换旧的数组。这样读操作完全并发，但是有脏数据，可能读取的数据过期。写操作加锁，适合读多写少的场景。</p>
+<p>CopyOnWriteArraySet：是并发版Set，底层用数组写的。</p>
+<p>ConcurrentSkipListSet：基于跳表的并发Set</p>
+</blockquote>
+<h3 id="_64">阻塞队列<a class="headerlink" href="#_64" title="Permanent link"></a></h3>
+<blockquote>
+<p>阻塞队列是一个支持两个附加操作的嘟列</p>
+<p>1支持阻塞的插入方法：意思是当队列满时，队列会阻塞插入元素的线程，知道队列不满。</p>
+<p>2支持阻塞的一处方法：意思是在队列为空时，获取元素的线程会等待队列变为非空</p>
+</blockquote>
+<h3 id="_65">优先队列<a class="headerlink" href="#_65" title="Permanent link"></a></h3>
+<blockquote></blockquote>
+<h3 id="_66">跳表<a class="headerlink" href="#_66" title="Permanent link"></a></h3>
+<blockquote>
+<p>跳表全称为跳跃列表，允许快速查询。</p>
+<p>普通的单向链表只能从头开始查找，但是跳表用空间换时间，多存储了一个跳跃的表，用于加快查找速度。举例如下：</p>
+<p>对于单链表  1-&gt;2-&gt;3-&gt;4-&gt;5-&gt;6-&gt;7-&gt; &hellip; .... -&gt;15</p>
+<p>可以构造一层跳表为：  1-&gt;7-&gt;15</p>
+<p>这样对于元素8，如果不适用跳表在原始表查找就是8次移动。</p>
+<p>如果使用跳表，先在跳表查找一次，然后进入原始链表 查找一次，共2次。当然，这是极端的情况，在某些极端情况下跳表也会降低效率，但是从整体来看，跳表能极大地提升查询效率，达到O(logn)。</p>
+</blockquote>
+<h1 id="lambda">Lambda表达式<a class="headerlink" href="#lambda" title="Permanent link"></a></h1>
+<blockquote>
+<p>函数是指一个集合到另一个集合的映射关系，在流处理中是指将输入流转换为正确的输出流。在java中函数式编程主要用在匿名函数和集合的stream操作.</p>
+<p>lambda只可以访问final标记的局部变量，这说明lambda不剋改变定义在域外的局部变量，否则编译错误。</p>
+<p>lambda表达式的局部变量不用声明为final，但是必须不可被后边的代码修改。</p>
+</blockquote>
+<div class="highlight"><pre>#语法格式如下
+(parameters)-&gt;expression
+(parameters)-&gt;{statements;}
+</pre></div>
+
+<h1 id="java_3">JAVA时间类<a class="headerlink" href="#java_3" title="Permanent link"></a></h1>
+<blockquote>
+<p>类型：时间戳（long，string类型），日期（Date类型），日期字符串（String类型）</p>
+<p>时间戳可以转为Date类型，借助构造函数。也可以转成日期字符串，借助SimpleDateFormat。</p>
+<p>日期可以转为时间戳类型，借助getTime（）。可以转为日期字符串，借助SimpleDateFormat。</p>
+<p>日期字符串可以转为Date，借助SimpleDateFormat。可以转成时间戳，借助先转成Date</p>
+<p>也就是说，时间戳和Date都可以直接变成其他类型，但是日期字符串需要先转换为Date类型才行。</p>
+</blockquote>
+<h3 id="_67">时间戳转为日期格式字符串<a class="headerlink" href="#_67" title="Permanent link"></a></h3>
+<div class="highlight"><pre> @Test
+    public void test1(){
+        SimpleDateFormat sdf = new SimpleDateFormat(&quot;yyyy-MM-dd HH:mm:ss&quot;);
+        // 获取当前系统时间戳
+        //long l = System.currentTimeMillis();
+        //如果你数据库存储的时间戳类型为string，就需要将string字符串转为long类型
+        String currentTime = &quot;1602384121000&quot;;
+        long l = Long.parseLong(currentTime);
+        String format = sdf.format(l);
+        System.out.println(&quot;日期格式：&quot;+format);
+        //输出：日期格式：2020-10-11 10:42:01
+    }
+</pre></div>
+
+<h3 id="_68">日期格式转为时间戳<a class="headerlink" href="#_68" title="Permanent link"></a></h3>
+<div class="highlight"><pre>public void test2(){
+        SimpleDateFormat sdf =  new SimpleDateFormat(&quot;yyyy-MM-dd HH:mm:ss&quot;);
+        String time = &quot;2020-10-11 10:42:01&quot;;
+        Date date = null;
+        try {
+            date = sdf.parse(time);
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
+        long time1 = date.getTime();
+        System.out.println(&quot;时间戳格式：&quot;+time1);
+        //输出：时间戳格式：1602384121000
+    }
+</pre></div>
+
+<h3 id="_69">时间推迟<a class="headerlink" href="#_69" title="Permanent link"></a></h3>
+<div class="highlight"><pre>    @Test
+    public void  test3(){
+        //创建Calendar实例
+        Calendar cal = Calendar.getInstance();
+        cal.setTime(new Date());   //设置当前时间
+        //推迟一天
+        //cal.add(Calendar.DATE, 1);
+        //推迟一个月
+       // cal.add(Calendar.MONTH, 1);
+        //时间推迟一年
+       cal.add(Calendar.YEAR,1);
+        long time = cal.getTime().getTime();
+        long time1 = new Date().getTime();
+
+        System.out.println(&quot;当前时间戳：&quot;+time1+&quot;；推迟一年的时间戳：&quot;+time);
+        //输出：当前时间戳：1602501173582；推迟一年的时间戳：1634037173582
+    }
+</pre></div>
+
+<h3 id="datestring">Date转String<a class="headerlink" href="#datestring" title="Permanent link"></a></h3>
+<div class="highlight"><pre>  @Test
+    public void test4(){
+        SimpleDateFormat sdf=new SimpleDateFormat(&quot;yyyy-MM-dd HH:mm:ss&quot;);
+        Date date=new Date();
+        String format = sdf.format(date);
+        System.out.println(&quot;时间String：&quot;+format);
+    }
+    //输出：时间String：2020-10-12 19:12:36
+</pre></div>
+
+<h3 id="date">时间戳转date<a class="headerlink" href="#date" title="Permanent link"></a></h3>
+<div class="highlight"><pre>   @Test
+    public void dateToStamp() {
+        long times = 1602731137125L;
+        Date date = new Date(times);
+        System.out.println(&quot;date格式：&quot;+date);
+        //输出：date格式：Thu Oct 15 11:05:37 CST 2020
+    }
+</pre></div>
+
+<h1 id="_70">并发编程基础<a class="headerlink" href="#_70" title="Permanent link"></a></h1>
+<h2 id="_71">线程状态<a class="headerlink" href="#_71" title="Permanent link"></a></h2>
+<blockquote>
+<p>java中的线程状态分为6种。</p>
+<p>1初始NEW:新创建一个对象，还没有start（）</p>
+<p>2RUNNABLE:java线程中将ready和running统称为可运行，这表示这个线程具备运行的条件，但是可能在ready状态，也可能在running状态。</p>
+<p>3BLOCKED：表示线程阻塞于锁</p>
+<p>4WAITING：进入此状态的线程需要等待其他线程做出一些特定动作</p>
+<p>5TIMED_WAITING：不同于WAITING，它可以在指定时间后自行返回。</p>
+<p>6TERMINATED：表示线程执行完毕。</p>
+</blockquote>
+<h3 id="new">NEW<a class="headerlink" href="#new" title="Permanent link"></a></h3>
+<blockquote>
+<p>当一个线程被使用new Thread（）创建时，其就处于NEW状态，等待使用start（）方法启动</p>
+</blockquote>
+<h3 id="runnable">RUNNABLE<a class="headerlink" href="#runnable" title="Permanent link"></a></h3>
+<blockquote>
+<p>当调用start（）方法后，线程计入RUNNABLE状态，等待CPU分配时间片和资源。</p>
+</blockquote>
+<h3 id="blocked">BLOCKED<a class="headerlink" href="#blocked" title="Permanent link"></a></h3>
+<blockquote>
+<p>当一个线程试图获取一个内部的对象锁，即synchronized锁，而锁被其他线程占用时，进入阻塞状态。</p>
+</blockquote>
+<h3 id="waiting">WAITING<a class="headerlink" href="#waiting" title="Permanent link"></a></h3>
+<blockquote>
+<p>当线程等待另一个线程通知调度器出现一个条件时，这个线程会进入等待状态。例如调用object.wait(),object.join(),以及等待java.util.concurrent中的Lock和Condition时，会出现这种状况。</p>
+</blockquote>
+<h3 id="timed_waiting">TIMED_WAITING<a class="headerlink" href="#timed_waiting" title="Permanent link"></a></h3>
+<blockquote>
+<p>调用带有超时参数的方法，在等待一定时间后自动返回。例如object.wait(timeout),object.join(timeout),Lock.tryLock(timeout),Condition.await(timeout)，Thread.sleep(timeout)等方法。</p>
+</blockquote>
+<h3 id="terminated">TERMINATED<a class="headerlink" href="#terminated" title="Permanent link"></a></h3>
+<blockquote>
+<p>run方法自动正常退出，或者因为未捕获的异常终止了run方法。</p>
+</blockquote>
+<h2 id="_72">中断线程<a class="headerlink" href="#_72" title="Permanent link"></a></h2>
+<blockquote>
+<p>使用interupt方法时，会将线程设置为中断状态，中断不意味着终止，如何响应中断状态可以由程序定义。可以使用isInterrupted（）检查线程的中断状态，并采取相应的措施。</p>
+</blockquote>
+<h2 id="_73">守护线程<a class="headerlink" href="#_73" title="Permanent link"></a></h2>
+<blockquote>
+<p>调用t.setDaemon(true)将线程设置为守护线程，守护线程为其他线程提供服务。当只剩守护线程时，程序会直接退出。</p>
+</blockquote>
+<h2 id="_74">未捕获异常的处理器<a class="headerlink" href="#_74" title="Permanent link"></a></h2>
+<blockquote>
+<p>在平时编写程序时，由于编写错误程序也会停止运行，并报异常，然后我们根据异常情况修复代码。这些未捕获的异常是由谁处理的呢，默认情况下会调用线程组的UncaughtExceptionHandler接口，他会将Throwable的栈轨迹输出到控制台。</p>
+<p>我们可以通过setUncaughtExceptionHandler指定自己的异常处理器，可以在处理器中使用日子API将异常存储到日志文件。</p>
+</blockquote>
+<h2 id="_75">锁对象<a class="headerlink" href="#_75" title="Permanent link"></a></h2>
+<blockquote>
+<p>当多线程并发访问对象时，会导致数据的不一致性。java提供了sychronized关键字、ReentrantLock类</p>
+</blockquote>
+<div class="highlight"><pre><span class="err">#</span><span class="n">ReentrantLock方法可以保护代码块临界区</span><span class="err">，</span><span class="n">它确保任何时候只有一个线程进入临界区</span><span class="err">。</span><span class="n">当一个线程成功调用Lock方法后</span><span class="err">，</span><span class="n">其他线程只能等待</span><span class="err">。</span>
+<span class="err">#</span><span class="n">可以通过传入true</span><span class="err">，</span><span class="n">false指定是否采用公平锁</span><span class="err">。</span><span class="n">公平锁是指让每个线程都有机会执行</span><span class="err">，</span><span class="n">其倾向于等待过久的线程</span><span class="err">。</span>
+<span class="n">var</span> <span class="n">bankLock</span><span class="o">=</span><span class="k">new</span> <span class="n">ReentrantLock</span><span class="o">(</span><span class="kc">false</span><span class="o">);</span>
+<span class="n">bankLock</span><span class="o">.</span><span class="na">lock</span><span class="o">();</span>
+<span class="k">try</span>
+<span class="o">{}</span>
+<span class="k">finally</span><span class="o">{</span>
+    <span class="n">bank</span><span class="o">.</span><span class="na">unlock</span><span class="o">();</span>
+<span class="o">}</span>
+</pre></div>
+
+<h2 id="sychronized">sychronized关键字<a class="headerlink" href="#sychronized" title="Permanent link"></a></h2>
+<blockquote>
+<p>Lock和condition可以允许灵活的控制锁定，但大多数情况下，我们只需要确保互斥的访问即可。java语言内置了对象的内部锁。如果一个方法带有sychronized关键字，那么对象的锁将保护整个方法。</p>
+</blockquote>
+<div class="highlight"><pre><span class="err">#</span><span class="kd">public</span> <span class="n">sychronized</span> <span class="kt">void</span> <span class="nf">method</span><span class="o">()</span>
+<span class="o">{</span>
+    <span class="n">method</span> <span class="n">body</span>
+<span class="o">}</span>
+<span class="err">#</span><span class="n">sychronized</span> <span class="n">代码块</span>
+<span class="n">sychronized</span> <span class="o">{</span>
+    <span class="c1">//do something</span>
+<span class="o">}</span>
+</pre></div>
+
+<h2 id="_76">条件对象<a class="headerlink" href="#_76" title="Permanent link"></a></h2>
+<blockquote>
+<p>有时候，线程获取到了资源，并进入临界区。却发现只有满足某个条件后其才能执行，例如转账时自己的账户金额必须足够支付。这时，可以使用一个条件对象进行管理，其目的是管理那些已经获得了锁但是却无法做有用工作的线程。这种情况，使用if语句检查是错误的，因为线程可能在if之后中断，然后账户金额发生变动。如果使用ReentrantLock加锁，当账户金额不够时，会导致其他线程无法访问账户对象，更无法增加账户金额，形成死锁。使用条件对象可以让当前线程进入await状态，并允许其他线程访问对象变更金额条件，当金额变动后调用singnalAll（）唤醒所有被await的线程尝试工作。</p>
+</blockquote>
+<div class="highlight"><pre>var bankLock=new ReentrantLock(false);
+private Condition sufficientFunds=bankLock.newCondition()
+bankLock.lock()
+try{
+while(accounts[from]&lt;amount)
+    sufficientFunds.await();
+//处理转账操作
+sufficientFunds.singnalAll()
+}finally
+{
+  bankLock.unlock()
+}
+</pre></div>
+
+<h2 id="volatile">volatile字段<a class="headerlink" href="#volatile" title="Permanent link"></a></h2>
+<blockquote>
+<p>有时如果只是为了读写一两个实例字段而使用同步，所带来的开销过大，可以使用volatile可以确保读取的值是最新的值。例如, return done，如果使用volatile修饰，则可以保证done得到的值是正确的a值。但是，注意其无法确保原子性。如done=！done就无法保证读取、反转、写入时不被中断。</p>
+</blockquote>
+<h2 id="thread">Thread<a class="headerlink" href="#thread" title="Permanent link"></a></h2>
+<blockquote>
+<p><a href="https://www.jianshu.com/p/9beab78a3afe">https://www.jianshu.com/p/9beab78a3afe</a></p>
+</blockquote>
+<h3 id="_77">线程与锁<a class="headerlink" href="#_77" title="Permanent link"></a></h3>
+<h4 id="_78"><strong>进程和线程</strong><a class="headerlink" href="#_78" title="Permanent link"></a></h4>
+<p>进程：并发执行的程序在执行过程中分配计算机资源的基本单位。
+线程：是进程的一个执行单元，是比进程更小的基本单位。
+一个程序至少一个进程，一个进程至少一个线程。
+​​区别：进程的地址空间和资源是独立的，一个崩溃互不影响。
+但线程开销更小。
+应用场景：用户接入tomcat，tomcat分配给新线程，再调用servlet。
+​​                         后台备份，前台不断询问后端进度。</p>
+<h4 id="_79"><strong>线程的实现</strong><a class="headerlink" href="#_79" title="Permanent link"></a></h4>
+<p>继承Thread,实现Runnable,重写run方法。</p>
+<h4 id="_80">线程的状态<a class="headerlink" href="#_80" title="Permanent link"></a></h4>
+<blockquote>
+<p>-new:对象被创建后状态</p>
+<p>-runnable:对象start()后，等待cpu资源</p>
+<p>-running:获取到cpu，执行线程，只能由runnable转换而来</p>
+<p>-blocking:放弃cpu，停止</p>
+<p>等待阻塞</p>
+<p>调用wait(),失去锁，进入等待池。等待自己被唤醒。</p>
+<p>同步阻塞</p>
+<p>当线程申请锁失败，进入锁池，等待锁。</p>
+<p>其他阻塞</p>
+</blockquote>
+<div class="highlight"><pre>通过调用join()，sleep()不会释放锁,IO请求。当以上操作结束或完成，进入就绪状态。
+多线程实现同步方法
+</pre></div>
+
+<blockquote>
+<p>sychronized可以修饰方法，代码块。
+ReentrantLock:阻塞所，可重入，操作由程序员编写。可实现非公平锁。
+automaticInteger乐观锁，如原子变量就是乐观锁的应用。
+wait(),notify(),sleep()：wait使一个线程处于等待状态，释放所有lock。sleep保留锁。
+volatile(易变的):确保每次都重新取值，而不是使用寄存器的值。</p>
+</blockquote>
+<h3 id="_81">线程池<a class="headerlink" href="#_81" title="Permanent link"></a></h3>
+<blockquote>
+<p>使用Executors来创建线程池，失去了线程池的灵活性，而且存在隐患，可能导致资源耗尽。
+但是：在开发中不允许使用Executors去创建线程池，而是通过ThreadPoolExecutor的方式，这样可以避免资源耗尽的风险。原因是：</p>
+</blockquote>
+<p>FixedThreadPool和SingleThreadPool：允许的请求队列长度为Integer.MAX_VALUE,可能会堆积大量的请求，从而导致OOM。
+CachedThreadPool和ScheduledThreadPool：允许的创建线程数量为Integer.MAX_VALUE,可能会创建大量的线程，从而导致OOM。</p>
+<blockquote>
+<p>corePoolSize:核心线程数量
+​ maximumPoolSize:最大线程数量 
+​workQueue:等待队列，当线程数量​​大于corePoolSize时，任务封装成worker放入队列。 </p>
+<p>keepAliveTime:当线程数超过corePoolSize时，超过此时间空闲，则回收。
+timeUnit:时间单位
+​ threadFactory:指定创建的线程池类型
+handler:拒绝策略</p>
+</blockquote>
+<h4 id="workqueue">workQueue参数<a class="headerlink" href="#workqueue" title="Permanent link"></a></h4>
+<blockquote>
+<p>ArrayBlockingQueue</p>
+<p>LinkedBlockingQueue</p>
+<p>SynchronousBlockingQueue</p>
+<p>PriorityBlockingQueue</p>
+<p>SynchronousQueue是一个不存储元素的阻塞队列。每一个put操作必须等待一个take操作，否则不能继续添加元素。</p>
+</blockquote>
+<h4 id="_82">拒绝策略参数<a class="headerlink" href="#_82" title="Permanent link"></a></h4>
+<blockquote>
+<p>AbortPolicy抛出RejectedExecutionException
+DiscardPolicy什么也不做，直接忽略
+DiscardOldestPolicy丢弃执行队列中最老的任务，尝试为当前提交的任务腾出位置
+CallerRunsPolicy直接由提交任务者执行这个任务</p>
+</blockquote>
+<h4 id="_83">过程原理<a class="headerlink" href="#_83" title="Permanent link"></a></h4>
+<blockquote>
+<p>If fewer than corePoolSize threads are running, the Executor always prefers adding a new thread rather than queuing.
+If corePoolSize or more threads are running, the Executor always prefers queuing a request rather than adding a new thread.
+If a request cannot be queued, a new thread is created unless this would exceed maximumPoolSize, in which case, the task will be rejected.
+即： corePoolSize -&gt; 任务队列 -&gt; maximumPoolSize -&gt; 拒绝策略 </p>
+</blockquote>
+<h4 id="threadpoolexecutor"><strong>ThreadPoolExecutor类型</strong><a class="headerlink" href="#threadpoolexecutor" title="Permanent link"></a></h4>
+<blockquote>
+<p>借助ThreadPoolExecutor创建一些特定的线程池</p>
+<p>ThreadPoolExecutor, ScheduledThreadPoolExecutor通常由工厂类Executors创建。
+Executors可以创建三种类型的ThreadPoolExecutor:
+SingleThreadPool,FixedThreadPool和CachedThreadPool。
+Executors可以创建2种类型的ScheduledThreadPoolExecutor：
+SingleScheduledThreadPoo和ScheduledThreadPool。</p>
+<p>SingleThreadPool:适用于需要保证顺序地执行各个任务；并且在任意时间点，不会有多个线程是活动的应用场景。它填写的参数为corepoolsize为1，最大size也为1，使用LinkedBlockingQueue</p>
+<p>FixedThreadPool:固定数量线程池（newFixedThreadPool）,适用于为了满足资源管理的需求，而需要限制当前线程数量的应用场景，它适用于负载比较重的服务器。使用LinkedBlockingQueue</p>
+<p>newCachedThreadPool:创建一个会根据需要创建新线程的，适用于执行很多的短期异步任务的小程序，或者是负载较轻的服务器。它填写的corePoolsize为0，使用的队列为SynchronousQueue。</p>
+</blockquote>
+<h4 id="_84">线程池状态<a class="headerlink" href="#_84" title="Permanent link"></a></h4>
+<div class="highlight"><pre>running:能接受，能处理
+shutdown:不接受新任务，能处理已添加
+stop:不接受新任务，不处理已添加
+tidying:由shutdown和stop转换而来
+terminated:线程时彻底终止。由tidying执行terminated()转换而来
+</pre></div>
+
+<h4 id="executors">Executors快捷创建线程<a class="headerlink" href="#executors" title="Permanent link"></a></h4>
+<div class="highlight"><pre>newFixedThreadPool(int nThreads)创建固定大小的线程池
+newSingleThreadExecutor()创建只有一个线程的线程池
+newCachedThreadPool()创建一个不限线程数上限的线程池，任何提交的任务都将立即执行
+
+使用ThreadPoolExecutor安全创建线程
+填写ThreadPoolExecutor重要参数：
+ExecutorService executorService = new ThreadPoolExecutor(2, 2, 
+                0, TimeUnit.SECONDS, 
+                new ArrayBlockingQueue&lt;&gt;(512), // 使用有界队列，避免OOM
+                new ThreadPoolExecutor.DiscardPolicy());
+</pre></div>
+
+<h4 id="_85">提交任务<a class="headerlink" href="#_85" title="Permanent link"></a></h4>
+<blockquote>
+<p>Future<T> submit(Callable <T> task):
+​关注返回值,用future.get()获得返回信息
+Future<T> submit(Runnable task)  不关注返回值
+void execute(Runnable command)​   不关注返回值</p>
+<p>中断线程</p>
+<p>shutdown</p>
+<p>shutdownnow</p>
+</blockquote>
+<h4 id="_86">如何正确使用线程池<a class="headerlink" href="#_86" title="Permanent link"></a></h4>
+<div class="highlight"><pre>避免使用无界队列
+明确拒绝任务时的行为
+获取处理结果和异常
+ExecutorService executorService = Executors.newFixedThreadPool(4);
+Future&lt;Object&gt; future = executorService.submit(new Callable&lt;Object&gt;() {
+        @Override
+        public Object call() throws Exception {
+            throw new RuntimeException(&quot;exception in call~&quot;);// 该异常会在调用Future.get()时传递给调用者
+        }
+    });
+
+try {
+  Object result = future.get();
+} catch (InterruptedException e) {
+  // interrupt
+} catch (ExecutionException e) {
+  // exception in Callable.call()
+  e.printStackTrace();
+}
+</pre></div>
+
+<h4 id="_87">线程池的优势<a class="headerlink" href="#_87" title="Permanent link"></a></h4>
+<blockquote>
+<p>降低资源消耗，创建和销毁线程很占用资源，jvm需要跟踪回收。
+提高响应速度，任务到达，无需等待创建线程。
+方便管理</p>
+</blockquote>
+<h4 id="aqs">AQS同步器<a class="headerlink" href="#aqs" title="Permanent link"></a></h4>
+<blockquote>
+<p>AQS就是实现锁的框架，内部实现时FIFO，state状态，定义内部内ConditionObject</p>
+<p>sleep和yield
+sleep保留锁，进入阻塞状态。他会给予低优先级线程机会。可能出现死锁，和interruptedExceptoion。
+yield进入就绪状态，只会给相同优先级或更高优先级的线程运行机会。</p>
+<p>stop和suspend
+stop强制中断线程，解除所有锁定，其他线程就可以访问对象。
+suspend()目标线程停止，但仍然持有锁，可能导致死锁。A需要B来苏醒，B需要A的锁。
+应该使用wait(),notify().​</p>
+<p>cyclicbarrier和countdownlatch
+CountDownLatch用于A等待若干个线程执行完任务后，他才执行。
+CylicBarrier一般用于一组线程互相等待至某个状态，然后同时执行。</p>
+<p>公平锁和非公平锁，可重入锁，读写锁，中断锁
+用队列FIFO是公平锁的一个完美方式，能保证每个人都拿到锁。
+公平锁效率低，非公平锁能利用好cpu碎片时间。
+非公平锁需要锁时，直接尝试获取锁，失败则排到队尾。
+​可重入：多次申请一个对象的锁，如method1调用method2，就会再次申请对象锁。
+读写锁：使多个线程的读操作不冲突。
+中断锁：B在锁池等待，但突然要处理其他事情，就中断自己。​</p>
+<p>sychronized和Lock
+都是阻塞锁。都可重入，sychronized使用计数器实现。Lock需要程序员自己实现，更加灵活适用复杂的场景，sychronized由系统隐式实现。</p>
+<p>悲观锁和乐观锁
+悲观锁：假设数据一定发生冲突，通过阻塞来保证数据安全。
+乐观锁：假设不会发生冲突，到更新时再检查。
+​CAS就是使用的乐观锁,v:内存值，A：期望的旧值 B：新值，比较v，A,若相等才交换为B。无法处理ABA的情况，处理方法，加上version号。</p>
+<p>死锁
+互斥条件：一个资源只能被一个进程使用
+请求与保持条件：一个进程请求资源而阻塞时，对已获得的资源不释放。
+不剥夺条件：进程已获得的资源，在使用完之前，不能强行剥夺
+循环等待条件​：若干进程形成头尾相接的循环等待资源关系。</p>
+<p>避免死锁
+1：破环请求和保持条件：请求失败后，释放已有资源。
+2:破坏不可抢占，代价大。
+3：破环循环，规定顺序，避免相互等待。​</p>
+</blockquote>
+<h1 id="annotation">Annotation<a class="headerlink" href="#annotation" title="Permanent link"></a></h1>
+<h1 id="reflect">Reflect<a class="headerlink" href="#reflect" title="Permanent link"></a></h1>
+<div class="highlight"><pre>#判断该类是否为某个类的父类
+isAssignableFrom()
+#判断该示例是否为某个类的子类的实例
+instanceof()
+</pre></div>
+
+<h2 id="integer">Integer<a class="headerlink" href="#integer" title="Permanent link"></a></h2>
+<div class="highlight"><pre>intValue()是把Integer对象类型变成int的基础数据类型；
+parseInt()是把String 变成int的基础数据类型；
+Valueof()是把String 转化成Integer对象类型；（现在JDK版本支持自动装箱拆箱了。）
+</pre></div>
+
+<h2 id="clone">Clone<a class="headerlink" href="#clone" title="Permanent link"></a></h2>
+<h6 id="_88">深拷贝与浅拷贝<a class="headerlink" href="#_88" title="Permanent link"></a></h6>
+<p>基本类型存储在栈中
+引用类型将引用放在栈，实际值存储在堆中，栈中的引用指向堆中存放的数据。
+​浅拷贝就是，对于基础类型复制其值，而引用类型只复制引用，所以和原对象指向相同的值。如果拷贝之后，更改原对象将会影响拷贝的值。
+深拷贝则是无论引用类型还是基础类型，都复制独立的一份，两个对象不会互相影响。
+<strong>如何实现深拷贝</strong>
+对于每个引用类型，让其继承Cloneable接口，并重写其clone方法。手动调用引用属性的clone方法创建新堆对象，然后传递给拷贝对象的属性。</p>
+<div class="highlight"><pre>#引用拷贝,创建一个新的栈对象指向相同的堆对象。
+Stu s2=s1;
+#对象拷贝,创建新的栈对象指向新的堆对象。对象拷贝包括浅拷贝和深拷贝。
+Stu s2=(Stu)s1.clone();
+#浅拷贝，虽然创建新的堆对象，但是对象所包含的引用属性不会真的拷贝。而是和原来的对象共享相同的引用属性。
+深拷贝，创建新的堆对象，并且其包含的基础类型和引用类型的属性都独立复制一份。
+</pre></div>
+
+<h2 id="object">Object<a class="headerlink" href="#object" title="Permanent link"></a></h2>
+<h6 id="5">创建对象5种方式<a class="headerlink" href="#5" title="Permanent link"></a></h6>
+<p>1.new 2.用类的newinstance 3用constructor的newinstance 4clone 5反序列化</p>
+<h6 id="_89">序列化<a class="headerlink" href="#_89" title="Permanent link"></a></h6>
+<p>序列化指将java对象数据，通过某种方式转换成二进制流，可以存储和在网络上传输。
+反序列化是从流或网络上读取二进制，再恢复成对象的过程。
+​为什么使用序列化
+1分布式系统需要网络间传输，共享javabean对象。
+2​服务器端对于不活跃的对象，将其序列化存储再磁盘。需要时再读出。
+实现
+需要序列化的​类必须继承Serializable接口
+通过ObjectOutputStream。writeObject（）序列化，ObjectInputStream。readObject（）反序列化
+    ByteArrayOutputStream bos = new ByteArrayOutputStream();
+    ObjectOutputStream oos = new ObjectOutputStream(bos);
+    oos.writeObject(this);
+    // 反序列化
+    ByteArrayInputStream bis = new ByteArrayInputStream(bos.toByteArray());
+    ObjectInputStream ois = new ObjectInputStream(bis);</p>
+<h2 id="reflect_1">Reflect<a class="headerlink" href="#reflect_1" title="Permanent link"></a></h2>
+<blockquote>
+<p>可以分析类的能力，动态的操作java代码称为反射。多用于开发供他人使用的构建工具。</p>
+</blockquote>
+<h6 id="class">Class<a class="headerlink" href="#class" title="Permanent link"></a></h6>
+<blockquote>
+<p>关系:继承和实现了Serializable,GenericDeclaration,Type,AnnotatedElement。该类描述了一个类的信息，如属性，方法。</p>
+</blockquote>
+<p>取反射类
+1.Class stu=Class.forName(&ldquo;com.weitao.domain.Student);  由字符串常量取得
+​2.Class s=stu.getClass();             由类的实列取得
+3.Class s=Student.class;            由类对象取得</p>
+<p>获得属性
+getFidlds(),getField(String name)                        可以取得该类所有方法，但无法取得父类方法
+getDeclaredFields,getDeclaredField(String name)   </p>
+<p>获得方法
+getMethods(),getMethod(String name,Class Class&lt;?&gt;..paramTypes)         可以取得该类所有方法，但无法取得父类方法
+getDeclaredMethods(),getMethod(String name,Class Class&lt;?&gt;..paramTypes) 无法取得静态方法，但能父类方法</p>
+<p>获得构造方法
+getConstructors(),getConstructor(Class&lt;?&gt;..paramsTypes)
+​getDeclaredConstructors(),getDeclaredConstructor(Class&lt;?&gt;..paramsTypes)</p>
+<p>获得其他
+getName();
+newInstance();
+getInterFaces();
+getPackage();​</p>
+<p>实例化对象
+使用获取到的反射类s.
+​1Student stu=(Student)s.newInstance();
+​2Constructor<Student>  constructor=s.getConstructor(String.class);
+Student stu=constructor.newInstance(&ldquo;李四&rdquo;);</p>
+<h6 id="equals">equals<a class="headerlink" href="#equals" title="Permanent link"></a></h6>
+<div class="highlight"><pre>equals()
+public boolean equals(Object obj) {
+              return (this == obj);
+           }
+</pre></div>
+
+<p>在java中==是比较两个引用对象的引用或比较基础类型的值。
+此处即比较对象的地址。
+重写equals的要求:
+1自反性 2对称性 3传递性 4一致性 5对于任何非x，x.equals（null）值为null​
+参考String类的equals
+重写equals必须重写hashcode()，因为必须保证值相同的对象必须有相同的hashcode。若两者equals结果为true，hashcode一定相同。若hashcode不同，equals一定为false。hashcode相同时，equals不一定为true。</p>
+<p>当map插入时，先比较hashcode，确定存储位置。再使用equals与存储的值比较，如果为true则不存储该值，为false就插入到散列结构中。散列结构一般为二叉树和红黑树。</p>
+<p>如果重写equals但不重写hashcode，会出现equals为true，但hashcode不一样的情况。</p></article></body></html>
