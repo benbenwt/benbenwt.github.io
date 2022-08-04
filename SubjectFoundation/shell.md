@@ -1,3 +1,5 @@
+[TOC]
+
  windows计算hash
 
 ```
@@ -217,7 +219,7 @@ source include.sh
 
 反引号：``包裹的字符表示获取字符作为命令执行的结果。
 
-#str1：长度
+
 
 echo ${str1:2:3}
 
@@ -574,9 +576,71 @@ sed  '3,7s//jin/xxx/g ' 1.txt
 if [[ "$SERVICE" =~ ^(help|version|orcfiledump|rcfilecat|schemaTool|cleardanglingscratchdir|metastore|beeline|llapstatus|llap)$ ]] ; then
 ```
 
-## 其他命令
+# 其他命令
+## awk
+>awk是一种文本文件处理语言，名字来源于创始人名字缩写首字符。
+>awk读取输入文件的每一行，并匹配处理该行的数据。
 
-### getopts
+### 数据结构
+```
+#数组
+awk 'BEGIN { 
+	//创建数组
+	names["test"]="testname"; 
+    names["good"]="bob";
+    //打印数组 
+    print names["test"];
+    //删除数组
+    delete names["test"];
+	}'
+```
+
+### 条件语句和循环
+```
+if (condition)
+{
+    action-1
+    action-1
+    .
+    .
+    action-n
+}
+else{
+
+}
+
+#for循环
+awk 'BEGIN { for (i = 1; i <= 5; ++i) print i }'
+```
+### 示例
+```
+awk [param] 'script' var=value files(s)
+awk [param] -f scriptfile  var=value files(s)
+
+-F fs or --field-separator fs
+指定输入文件折分隔符，fs是一个字符串或者是一个正则表达式，如-F:。
+
+-v var=value or --asign var=value
+赋值一个用户定义变量。
+
+-f scripfile or --file scriptfile
+从脚本文件中读取awk命令。
+```
+
+```
+#常见用法
+#基本用法,对log.txt执行打印的命令
+ awk '{printf "%-8s %-10s\n",$1,$4}' log.txt
+
+#常用于获取某一列
+ll | awk -F' ' '{print $1,$9}' #列之间是空格符
+
+#与ps命令结合
+ps -aux | awk -F' ' '{print $1,$9}' #列之间是空格符
+```
+
+
+## getopts
 
 >用于处理以'-'开头的选项参数。可以支持我们自定义自己的命令，进行解析。
 >

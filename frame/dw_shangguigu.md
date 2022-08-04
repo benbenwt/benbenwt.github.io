@@ -326,6 +326,9 @@ kafka-producer-perf-test.sh
 ```
 
 ###### flume sink格式
+###### hive仓库订单地区数据倾斜
+>每个地区的订单数量差距大，导致使用订单作为分组key时，数据倾斜很严重
+
 
 ##### 碰到的问题
 
@@ -563,6 +566,8 @@ hdfs_to_ods_log.sh 2020-06-14
 >
 
 #### 拉链表
+>拉链表是将（当天新增的和修改的全量数据）与（当前拉链表全量数据）直接合并
+>而累积性快照事实表是将（未完成的未失效的数据）保存在9999分区，然后每次（当天新增的和修改的全量数据）需要与999分区的数据进行join，如果是同一条记录会合并，在放入正确的分区。
 
 ```
 为每一条信息记录开始时间，和生效的结束时间。当该条信息被修改时，该条信息作废，将失效时间设为当前时间。并创建新记录，该记录失效时间设置为9999-99-99。
@@ -946,7 +951,15 @@ LIMIT 10000;
 #### 数据统计模块
 
 ##### 空id检查脚本
+```
+# 空值个数
+RESULT=$($HIVE_ENGINE -e "set hive.cli.print.header=false;select count(1) from $HIVE_DB.$TABLE where dt='$DT' and $COL is null;")
 
+#结果插入MySQL
+mysql -h"$mysql_host" -u"$mysql_user" -p"$mysql_passwd" \
+  -e"INSERT INTO $mysql_DB.$mysql_tbl VALUES('$DT', '$TABLE', '$COL', $RESULT, $MIN, $MAX, $LEVEL)
+ON DUPLICATE KEY UPDATE \`value\`=$RESULT, value_min=$MIN, value_max=$MAX, notification_level=$LEVEL;"
+```
 
 ##### 重复id检查脚本
 
@@ -1843,5 +1856,496 @@ CREATE TABLE `ads_coupon_stats` (
 ) ENGINE=INNODB DEFAULT CHARSET=utf8 ROW_FORMAT=DYNAMIC;
 ```
 
+
+# 数据仓库详细sql语句
+
+## gmall项目
+
+##### ads_order_spu_status 商品主题详细流程
+
+>已知所有表如下所示，编写脚本实现从ods层至ads的数据流动。具体表结构查看datagrip。ods层数据为原始数据，对应一条订单，最小粒度。dwd也为一条订单的粒度，但是其关联了支付、退款等信息。dws为一天的粒度，dwt为1，7，30等不同粒度的统计，ads为最终数据聚合。
+>
+>     ods_order_detail，ods_order_info，ods_order_detail_activity，ods_order_detail_coupon
+>     dwd_order_detail，dwd_order_refund_info，dwd_payment_info，dwd_refund_payment
+>             dws_sku_action_daycount，dim_sku_info   
+>                   dwt_sku_topic，dim_sku_info
+>                      ads_order_spu_stats
+>订单，订单明细，订单活动关联，订单优惠券关联         
+>交易的订单信息，退款订单信息，支付信息，退款顺序
+>dwd层的工作量很大，需要聚合很多表，整合成单条记录形式，最小粒度。后边的dws，dwt基本基于dwd处理，不会连接太多表。
+>sku行为以天为粒度，列和DWS一样的。sku维度表
+>sku主题表，下单次数（是否参与活动，是否使用优惠券），下单件数（是否参与活动，是否使用优惠券），下单原始金额（活动优惠金额，优惠券优惠金额），下单最终金额，退款，评价（好评，差评，中评），购物车，收藏，以及1，7，30粒度的统计。sku维度表
+>dwt这一层太宽了吧，这么多列。
+>spu的订单聚合信息，对于指定spu商品，其订单金额，订单数目，最近天数（1，7，30）
+
+###### dwd_order_detail
+
+```
+#首先确定一下每一列来自那个ods表
+id
+order_id:四个表的连接列
+user_id:来自ods_order_info表
+sku_id:来自ods_order_detail
+province_id:ods_order_info
+activitity_id:ods_order_detail_activity
+activity_rule_id:ods_order_detail_activity
+coupon_id:ods_order_detail_coupon
+create_time:ods_order_info
+source_type:ods_order_detail
+source_id:ods_order_detail
+sku_num:ods_order_detail
+
+original_amount:ods_order_detail
+split_final_amount:ods_order_detail
+split_activity_amount:ods_order_detail
+split_coupon_amount:ods_order_detail
+dt:日期，来自ods_order_detail
+```
+
+###### dwd_order_detail 清洗sql
+
+>注意dwd_order_detail聚合的行粒度是一个订单明细，不是一个订单，所以left join用order_detail_id进行连接。一个订单包含多个订单明细。
+
+```sql
+INSERT OVERWRITE TABLE dwd_order_detail_my_practice
+SELECT od.id,od.order_id,oi.user_id,od.sku_id,oi.province_id,oda.activity_id,oda.activity_rule_id,odc.coupon_id,oi.create_time,od.source_type,od.source_id,od.sku_num,od.order_price,od.split_final_amount,od.split_activity_amount,od.split_coupon_amount, date_format(create_time,'yyyy-MM-dd')
+FROM
+(SELECT id,order_id,sku_id,sku_num,source_type,source_id,order_price,split_final_amount,split_activity_amount,split_coupon_amount FROM ods_order_detail)od
+LEFT JOIN
+(SELECT id,user_id,province_id,create_time FROM ods_order_info )oi
+ ON od.order_id=oi.id
+LEFT JOIN
+(SELECT order_detail_id,activity_id,activity_rule_id FROM ods_order_detail_activity)oda
+ON od.id=oda.order_detail_id
+LEFT JOIN
+(SELECT order_detail_id,coupon_id FROM ods_order_detail_coupon)odc
+ON od.id=odc.order_detail_id
+```
+
+###### dwd_order_refund_info清洗sql
+
+```sql
+#查看有哪些列，使用哪些表，哪些需要聚合。查两个表就行了，无聚合操作。主要是多表join。
+INSERT OVERWRITE TABLE dwd_order_refund_info_my_pratice
+SELECT ori.id,oi.user_id,ori.order_id,sku_id,oi.province_id,ori.refund_type,ori.refund_num,ori.refund_amount,ori.refund_reason_type,ori.create_time, date_format(ori.create_time,'yyyy-MM-dd')
+FROM
+    (SELECT id,order_id,sku_id,refund_type,refund_amount,refund_num,refund_reason_type,create_time FROM ods_order_refund_info)ori
+     LEFT JOIN
+     (SELECT id,user_id,province_id FROM ods_order_info)oi
+    ON ori.order_id=oi.id
+```
+
+###### dwd_payment_info清洗sql
+
+```sql
+SELECT pi.id,order_id,pi.user_id,oi.province_id,pi.trade_no,pi.out_trade_no,pi.payment_type,pi.payment_amount,pi.payment_status,pi.create_time,pi.callback_time,nvl(date_format(pi.callback_time,"yyyy-MM-dd"),"9999-99-99") FROM
+(SELECT * FROM ods_payment_info)pi
+LEFT JOIN
+(SELECT * FROM ods_order_info)oi
+ON pi.order_id=oi.id
+```
+
+##### 商品ads 主题
+
+###### dws_sku_action_daycount
+
+>dwd进行了多表join，dws需要进行聚合统计。
+>
+>这张表是对sku的信息进行统计，粒度为一天，包括下单、支付、退单、退款、评价与收藏这几个板块。在下单板块内包括下单件数、下单次数、下单金额，以及参与活动和使用优惠券的情况下，这次数、件数指标的计算，还有活动优惠金额、优惠券优惠金额，被下单原始金额，被下单最终金额。在支付板块，有支付件数、支付次数、支付金额。在退单板块有退单次数、件数、金额。退款板块有退款次数、件数、金额。评价好、中、查次数、默认评价数，收藏次数，购物车次数。
+
+拆开逐个看吧
+
+>count代表次数，num代表该sku的件数，amount代表该sku的金额
+
+```
+#被下单次数，被下单件数，参与活动被下单件数，参与活动被下单件数，使用优惠券被下单次数，使用优惠券被下单件数，优惠金额（活动），优惠金额（优惠券）
+select
+        date_format(create_time,'yyyy-MM-dd') dt,
+        sku_id,
+        count(*) order_count,
+        sum(sku_num) order_num,
+        sum(if(split_activity_amount>0,1,0)) order_activity_count,
+        sum(if(split_coupon_amount>0,1,0)) order_coupon_count,
+        sum(split_activity_amount) order_activity_reduce_amount,
+        sum(split_coupon_amount) order_coupon_reduce_amount,
+        sum(original_amount) order_original_amount,
+        sum(split_final_amount) order_final_amount
+    from dwd_order_detail
+    group by date_format(create_time,'yyyy-MM-dd'),sku_id
+
+```
+
+```
+被支付金额，被支付件数，被支付件数
+ select
+        date_format(callback_time,'yyyy-MM-dd') dt,
+        sku_id,
+        count(*) payment_count,
+        sum(sku_num) payment_num,
+        sum(split_final_amount) payment_amount
+    from dwd_order_detail od
+    join
+    (
+        select
+            order_id,
+            callback_time
+        from dwd_payment_info
+        where callback_time is not null
+    )pi on pi.order_id=od.order_id
+    group by date_format(callback_time,'yyyy-MM-dd'),sku_id
+```
+
+```
+#退单次数，退单金额
+select
+        date_format(create_time,'yyyy-MM-dd') dt,
+        sku_id,
+        count(*) refund_order_count,
+        sum(refund_num) refund_order_num,
+        sum(refund_amount) refund_order_amount
+    from dwd_order_refund_info
+    group by date_format(create_time,'yyyy-MM-dd'),sku_id
+#
+```
+
+```
+#退款次数，退款金额
+select
+        date_format(callback_time,'yyyy-MM-dd') dt,
+        rp.sku_id,
+        count(*) refund_payment_count,
+        sum(ri.refund_num) refund_payment_num,
+        sum(refund_amount) refund_payment_amount
+    from
+    (
+        select
+            order_id,
+            sku_id,
+            refund_amount,
+            callback_time
+        from dwd_refund_payment
+    )rp
+    left join
+    (
+        select
+            order_id,
+            sku_id,
+            refund_num
+        from dwd_order_refund_info
+    )ri
+    on rp.order_id=ri.order_id
+    and rp.sku_id=ri.sku_id
+    group by date_format(callback_time,'yyyy-MM-dd'),rp.sku_id
+```
+
+```
+# 购物车，收藏
+select
+        dt,
+        item sku_id,
+        sum(if(action_id='cart_add',1,0)) cart_count,
+        sum(if(action_id='favor_add',1,0)) favor_count
+    from dwd_action_log
+    where action_id in ('cart_add','favor_add')
+    group by dt,item
+),
+
+```
+
+```
+#评价次数
+select
+        date_format(create_time,'yyyy-MM-dd') dt,
+        sku_id,
+        sum(if(appraise='1201',1,0)) appraise_good_count,
+        sum(if(appraise='1202',1,0)) appraise_mid_count,
+        sum(if(appraise='1203',1,0)) appraise_bad_count,
+        sum(if(appraise='1204',1,0)) appraise_default_count
+    from dwd_comment_info
+    group by date_format(create_time,'yyyy-MM-dd'),sku_id
+
+```
+
+```
+将5大板块通过dt加sku_id分组查询出来后，没有使用join，而是使用union all合并，不存在的字段使用0，方便后续的sum求和。union的优势
+```
+
+###### dwt_sku_topic
+
+>确定列来源的表，连接粒度，分块。分块基本按照业务流程划分，如下单、支付、退单、退款，然后这些块内部的属性，如金额、次数、联系上优惠券、活动属性。另外，DWT表还要负责更高粒度的统计，如1粒度、7粒度、30粒度。维度组合多了，看的很混乱，脑袋疼。总结以下固定顺序吧，按照如下顺序逐个处理: 选择业务过程(确认维度)→声明粒度→确认事实,与dws相似，但是dwt的一个表的维度可以是多个业务，比如包括下单、退款等等。选中业务后，确认此业务关注的列，以下单为例子，其维度可以通过组合确认，即（金额、次数）（原始金额、使用优惠券优惠的、活动优惠的）（时间跨度），。粒度一般为主题的最小单位，如sku、user_id、coupon_id、activity_id。确认事实这一步多余，因为有多个事实，如前边提到的金额、次数。以此表为例，业务分为下单、支付、退款、退单，组合维度如上所示
+
+```sql
+#将四块业务用全是一个表的即dws_sku_aciton_daycount，再用nvl处理。可以发现下单件数、下单件数的sql基本一样，只用切换列名即可，其他的查询也是这样，全是重复类似操作。
+#下单 次数  1、7、30天
+select sku_id,sum(if(dt="2020-06-14",order_num,0)) order_last_1day_count ,sum(if(dt>date_add("2020-06-14",-6),order_num,0)) order_last_7day_count,sum(if(dt>date_add("2020-06-14",-29),order_num,0)) order_last_30day_count
+from dws_sku_action_daycount
+ group by sku_id
+#下单 件数  1、7、30天
+select sku_id,sum(if(dt="2020-06-14",order_count,0)) order_last_1day_count ,sum(if(dt>date_add("2020-06-14",-6),order_count,0)) order_last_7day_count,sum(if(dt>date_add("2020-06-14",-29),order_count,0)) order_last_30day_count
+from dws_sku_action_daycount
+ group by sku_id
+ 下边的业务维度也是一样的，只用替换列名
+#下单 参与活动的件数  1、7、30天
+#下单 参与优惠券的件数  1、7、30天
+#下单 活动优惠的金额  1、7、30天
+#下单 优惠券优惠的金额  1、7、30天
+#下单  原始金额   1、7、30天
+#下单  最终的金额  1、7、30天
+
+#支付
+#退款
+#退单
+```
+
+###### ads_order_spu_stats
+
+>确定有哪些业务、维度列，行的单位还是sku，多个事实列
+>
+>（下单） （次数、金额）  （最近1、7、30天）
+
+```sql
+#下边是核心语句，查出来后与事实表拼接，然后用行粒度分组并聚合统计即可。
+select
+        recent_days,
+        sku_id,
+        case
+            when recent_days=1 then order_last_1d_count
+            when recent_days=7 then order_last_7d_count
+            when recent_days=30 then order_last_30d_count
+        end order_count,
+        case
+            when recent_days=1 then order_last_1d_final_amount
+            when recent_days=7 then order_last_7d_final_amount
+            when recent_days=30 then order_last_30d_final_amount
+        end order_amount
+    from dwt_sku_topic lateral view explode(Array(1,7,30)) tmp as recent_days
+    where dt='2020-06-14'
+
+```
+
+
+
+###### ads_repeat_purchase
+
+>品牌复购率计算，业务维度如下，每行的粒度是由唯一的user_id sku_id recent_days确定的，事实是回购率，中间的临时表事实是购买次数。
+>
+>（购买）（品牌复购率）  （最近1、7、30天）
+>
+>复购率的含义，至少买过2次及以上的人所占的比列，即（买两次的用户数）/(买两次的用户数+买一次的用户数)
+>
+
+```sql
+#利用explode将dwd_order_detail表的数据复制三份，分别用于1、7、30的recent_days的select，然后借助date_add(now_date,-recent_days+1)对三组数据进行筛选。
+select
+            recent_days,
+            user_id,
+            sku_id,
+            count(*) order_count
+        from dwd_order_detail lateral view explode(Array(1,7,30)) tmp as recent_days
+        where dt>=date_add('2020-06-14',-29)
+        and dt>=date_add('2020-06-14',-recent_days+1)
+        group by recent_days, user_id,sku_id
+```
+
+```
+#查出来后，再与dim_sku_info使用join，拼接获得sku的品牌名称和id。
+#然后计算大于1的，以及大于2的，再相除。
+cast(sum(if(order_count>=2,1,0))/sum(if(order_count>=1,1,0))*100 as decimal(16,2))
+```
+
+
+
+##### 订单主题
+
+###### ads_order_total
+
+>业务维度，每行粒度，事实列
+>
+>（下单） （订单数、人数、金额） （统计日期，最近1、7、30） ， 单个订单  ，  人数、金额
+
+```
+#核心语句，查出1、7、30天，这个when recent_days=0个人认为是无意义的，可能写错了，因为recent_days是自己创建的，明明只有1、7、30几个数。
+ select
+        recent_days,
+        user_id,
+        case when recent_days=0 then order_count
+             when recent_days=1 then order_last_1d_count
+             when recent_days=7 then order_last_7d_count
+             when recent_days=30 then order_last_30d_count
+        end order_count,
+        case when recent_days=0 then order_final_amount
+             when recent_days=1 then order_last_1d_final_amount
+             when recent_days=7 then order_last_7d_final_amount
+             when recent_days=30 then order_last_30d_final_amount
+        end order_final_amount
+    from dwt_user_topic lateral view explode(Array(1,7,30)) tmp as recent_days
+    where dt='2020-06-14'
+
+#行粒度分组统计
+```
+
+###### ads_order_by_province
+
+>（下单）  （订单数、订单金额）  （1、7、30）      单个地区       订单数、订单金额
+
+```sql
+#太明显了，就是dwt查出来，然后进行分组聚合订单数、订单金额，然后与dim事实表拼接。最后，union ads_order_by_province表中原始的数据
+insert overwrite table ads_order_by_province
+select * from ads_order_by_province
+union
+select
+    dt,
+    recent_days,
+    province_id,
+    province_name,
+    area_code,
+    iso_code,
+    iso_3166_2,
+    order_count,
+    order_amount
+from
+(
+    select
+        '2020-06-14' dt,
+        recent_days,
+        province_id,
+        sum(order_count) order_count,
+        sum(order_amount) order_amount
+    from
+    (
+        select
+            recent_days,
+            province_id,
+            case
+                when recent_days=1 then order_last_1d_count
+                when recent_days=7 then order_last_7d_count
+                when recent_days=30 then order_last_30d_count
+            end order_count,
+            case
+                when recent_days=1 then order_last_1d_final_amount
+                when recent_days=7 then order_last_7d_final_amount
+                when recent_days=30 then order_last_30d_final_amount
+            end order_amount
+        from dwt_area_topic lateral view explode(Array(1,7,30)) tmp as recent_days
+        where dt='2020-06-14'
+    )t1
+    group by recent_days,province_id
+)t2
+join dim_base_province t3
+on t2.province_id=t3.id;
+
+```
+
+##### 访客统计
+
+##### 用户统计
+
+###### ads_user_total
+
+>（下单、新增）  （金额数、用户数） （1、7、30天）    中间表是单个用户user_id和recent_days，最终是     recent_days   用户数、金额数
+>
+>这个几个关键变量：login_date_first,表示该用户第一次登录，即新增的日期。login_date_last，最后登陆日期。order_date_first，表示第一次下单的用户，即新增下单用户。order_date_last，最后一次购物。order_final_mount代表周期内的下单金额。
+
+```sql
+#所有用户的下单金额
+sum(order_final_amount) order_final_amount,
+#所有用户的下单次数
+sum(if(order_final_amount>0,1,0)) order_user_count,
+#最近周期内第一次登陆
+sum(if(login_date_first>=recent_days_ago,1,0)) new_user_count,
+#最近周期内第一次购物
+sum(if(order_date_first>=recent_days_ago,1,0)) new_order_user_count,
+#最近活跃，但是就是不购物，白嫖怪。
+sum(if(login_date_last>=recent_days_ago and order_final_amount=0,1,0)) no_order_user_count
+
+#通过如下语句组装需要的几个关键变量
+(select user_id,recent_days,login_date_first,login_date_last,order_date_first,
+       case when recent_days=0 then order_final_amount
+            when recent_days=1 then order_last_1d_final_amount
+            when recent_days=7 then order_last_7d_final_amount
+            when recent_days=30 then order_last_30d_final_amount
+        end order_final_mount,
+        if(recent_days=0,"1997-01-01",date_add('2020-06-14',-recent_days+1)) recent_days_ago
+from dwt_user_topic lateral view explode(Array(0,1,7,30)) tmp as recent_days
+where dt='2020-06-14')t1
+```
+
+###### ads_user_change
+
+>统计流失用户、回流用户
+>
+>（登录  ）  （用户数）统计日期                中间表是
+>
+>流失：最后活跃时间是7日前这一天，即为流失。
+>
+>回流：今日登录，且7日内没有登录
+
+```sql
+#回流筛选
+ where datediff(login_date_last,login_date_previous)>=8
+ #流失筛选
+ where dt='2020-06-14'
+    and login_date_last=date_add('2020-06-14',-7)
+```
+
+###### ads_user_retention
+
+>（新增用户 ）   （留存天数，留存用户数量，留存率）   行粒度：7天内的每个单个日期（create_date），中间表是单个user_id，通过第一次登录日期聚合即可    事实列：用户数量、天数  
+>
+>留存天数：7天内注册，今天减去第一次登录日期，就是留存日期
+>
+>留存用户数：7天内注册，最后登陆日期是今天，记为留存
+>
+>留存率：留存用户数/留存用户数+今天未登录
+>
+>中间表的列为：留存天数、用户id、新增日期
+>
+>结果表：group by dt
+
+```sql
+select
+    '2020-06-14',
+    login_date_first create_date,
+    datediff('2020-06-14',login_date_first) retention_day,
+    sum(if(login_date_last='2020-06-14',1,0)) retention_count,
+    count(*) new_user_count,
+    cast(sum(if(login_date_last='2020-06-14',1,0))/count(*)*100 as decimal(16,2)) retention_rate
+from dwt_user_topic
+where dt='2020-06-14'
+and login_date_first>=date_add('2020-06-14',-7)
+and login_date_first<'2020-06-14'
+group by login_date_first;
+```
+
+##### 优惠券主题
+
+###### ads_coupon_stats
+
+>（领取、下单、过期）    （次数，原始金额，优惠金额，补贴率）               粒度是优惠券id
+
+```sql
+select coupon_id,order_original_amount,order_final_amount,order_reduce_amount,
+        cast(order_reduce_amount/order_original_amount as decimal(16,2)) reduce_rate
+       from dwt_coupon_topic
+```
+
+##### 活动主题
+
+###### ads_activity_stats
+
+>（下单）  （下单原始金额，最终金额，优惠金额，补贴率）  活动id  
+
+```sql
+ select
+        activity_id,
+        sum(order_count) order_count,
+        sum(order_original_amount) order_original_amount,
+        sum(order_final_amount) order_final_amount,
+        sum(order_reduce_amount) reduce_amount,
+        cast(sum(order_reduce_amount)/sum(order_original_amount)*100 as decimal(16,2)) reduce_rate
+    from dwt_activity_topic
+    where dt='2020-06-14'
+    group by activity_id
+```
 
 

@@ -254,7 +254,7 @@ logging:
 
 相当于@Configuration注解的重新定义
 
-##### @Configuration 
+##### @Configuration
 
 声明一个Spring配置类
 
@@ -276,17 +276,17 @@ logging:
 
 springboot默认会扫描与启动类同级的文件夹。
 
-##### SpringBootApplication  
+##### SpringBootApplication
 
 启动类
 
 [SpringApplication.run](http://springapplication.run/)(HelloWorldMainApp.class,args); 运行启动类
 
-##### @Component  
+##### @Component
 
 ##### 组件类
 
-##### @EnableAutoConfiguration 
+##### @EnableAutoConfiguration
 
 ##### 自动配置，即导入元数据的所有命名包。只扫描主配置类所在包下面的组件。
 
