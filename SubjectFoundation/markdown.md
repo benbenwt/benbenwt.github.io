@@ -67,6 +67,7 @@ goto  start
 >行内公式与文字一起使用，不会独占一行。在typora中打出$后，按esc键就会出现行内公式块，可以在其中添加公式。
 
 
+
 $$
 \Gamma(z) = \int_0^\infty t^{z-1}e^{-t}dt\,. \Gamma(z) = \int_0^\infty t^{z-1}e^{-t}dt\,.
 $$

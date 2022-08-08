@@ -1493,6 +1493,8 @@ services:
     build:
       context: ./docker/superset
       dockerfile: ./Dockerfile
+    volumes:
+      - "./data/supersetdb:/root/.supersetdb"
     ports:
       - 8787:8787
     networks:
@@ -1546,6 +1548,7 @@ RUN chown -R mysql:mysql /docker-entrypoint-initdb.d/
 ### superset
 
 >如下的dockerfile主要是为了安装python的依赖，将python和pip编译并安装好。然后使用pip安装superset及gunicorn其依赖。其中gunicorn是superset的后端http服务
+>如果python报错，找不到mysqldb模块，就是mysqlclient和mysql的系统服务没有安装好，可以使用yum和pip分别安装好对应的依赖。
 
 ```
 FROM centos:7
@@ -1579,6 +1582,7 @@ markupsafe==2.0.1 -i https://pypi.douban.com/simple/ \
 WTForms==2.3.3 \
 sqlalchemy==1.3.24  \
 pymysql
+mysqlclient
 COPY   --chown=platform:platform  ./entrypoint.sh /home/platform/
 USER root
 CMD ["sh","/home/platform/entrypoint.sh"]
@@ -1588,7 +1592,11 @@ CMD ["sh","/home/platform/entrypoint.sh"]
 ```
 #第一次启动还要进行如下操作
 #superset需要创建数据库，指定登陆web界面的用户和密码，及后续的gunicorn这一部分需要如下手动完成。
-先使用ln -s将superset、gunicorn的可执行文件链接到/usr/bin，然后：
+先使用ln -s将superset、gunicorn的可执行文件链接到/usr/bin，
+ln -s /usr/local/python3/lib/python3.7/site-packages/superset/bin/superset /usr/bin/superset
+ln -s /usr/local/python3/bin/gunicorn  /usr/bin/gunicorn
+
+#然后：
 superset db upgrade
 export FLASK_APP=superset
 superset fab create-admin
@@ -1596,7 +1604,7 @@ superset init
 
 #配置前端页面,其中ip为容器ip
 pip install gunicorn -i https://pypi.douban.com/simple/
-gunicorn --workers 5 --timeout 120 --bind ip:8787  "superset.app:create_app()"
+gunicorn --workers 5 --timeout 120 --bind 172.42.1.11:8787  "superset.app:create_app()"
 
 #关于为什么可以直接在终端使用superset命令，因为它将site-packages/superset/bin/superset软连接到了/usr/bin或添加了环境变量。有时候其可执行文件不是放在对应安装包的bin目录下，而是在python环境的bin目录，gunicorn就是这样，其可执行文件放在conda/env/my_python/bin/gunicorn
 ```

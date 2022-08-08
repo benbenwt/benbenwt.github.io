@@ -1,7 +1,8 @@
+[TOC]
 # 安装
 
 ```
-sudo yum install -y gcc gcc-c++ libffi-devel python-devel python-pip python-wheel python-setuptools openssl-devel cyrus-sasl-devel openldap-devel
+sudo yum install -y gcc gcc-c++ libffi-devel python-devel python-pip python-wheel python-setuptools openssl-devel cyrus-sasl-devel openldap-devel MySQL-python mysql-devel
 ```
 
 ### 安装anaconda创建python环境

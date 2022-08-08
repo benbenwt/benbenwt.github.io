@@ -1,3 +1,5 @@
+[TOC]
+
 ```
 free -h
 ```
@@ -79,15 +81,30 @@ cat /var/log/secure
 df -h 查看磁盘容量
 ```
 
-# 开机启动
-
+# centos shell功能
+## 开机启动
 ```
+# /etc/rc.d/rc.local负责管理开机自启的程序，该程序需要赋予可执行权限。
 vim /etc/rc.d/rc.local
 在其中追加shell命令，达到自启的目的。
+
+#该命令用于引入环境变量
+source /etc/profile
 ```
 
+## 定时任务
+```
+#centos 的定时任务需要借助crontab命令。
+#可以通过修改/etc/crontab 添加定时任务，然后systemctl restart crond重启crontab服务让配置生效
+ * * * * * /home/test.sh
+ 从左向右五个*单位分别是，分钟，小时，日期，月份，星期
 
+#如下例子表示每隔24小时执行一次
+* */24 * * * /test.sh
 
+#如下例子表示没小时的第1分钟执行一次
+1 * * * * /test.sh
+```
 # 用户管理
 
 ```
