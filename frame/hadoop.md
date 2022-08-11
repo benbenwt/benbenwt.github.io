@@ -1,3 +1,4 @@
+[TOC]
 # 相关组件版本
 
 ```
@@ -477,7 +478,7 @@ System.out.println("上传完毕");
 
 https://github.com/ordinaryload/Hadoop-tools
 
-将hadoop.dll,winexe复制到hadoop-3.1.4/bin
+将winexe复制到hadoop-3.1.4/bin,将hadoop.dll复制到windows/system32目录下
 
 2编写程序，按照bili视频编写map,reduce,driver类。
 
@@ -489,7 +490,7 @@ https://www.cnblogs.com/xingluo/p/9512961.html
 
 参考此博客处理：https://blog.csdn.net/weixin_42229056/article/details/82686172
 
-4直接运行driver的main函数，直接将输入输出目录写死在程序中，不使用控制台输入参数。
+4直接运行driver的main函数。
 
 ##### 源码
 

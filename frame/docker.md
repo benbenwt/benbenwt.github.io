@@ -1,108 +1,13 @@
-```
-docker构建一次镜像后，应该可以重复使用。当有更改部分时，才需要build。
-DockerFile编写时分层应该按照功能，基础的功能放在前边，需要修改的放到后边。比如构建一个nginx的基础镜像，然后在这个基础上再编写导入前端代码的dockerFile。
-```
+[TOC] 
+# Platform_docker
 
-```
-如果直接携带docker镜像，他只是作为一个固定镜像存在，如果需要更改，需要另外编写一个DockerFile，在它的基础上更改。
-```
-
-# problem
-
-### File "docker/transport/unixconn.py", line 43, in connect FileNotFoundError: [Errno 2] No such file or directory
-
-```
-只要说urllib相关的错误，极有可能是没启动docker服务端，导致docker客户端发发送请求失败。
-```
-
-# docker网络
-
-```
-docker network create jenkins
-```
-
-# docker管理
-
-### volume local dirver
-
-```
-在/var/lib/docker 目录下存储
-```
-
-查看磁盘占用
-
-```
-docker system df -v
-```
-
-
-
-```
-docker network ls
-docker network rm 
-```
-
-```
-查看latest具体版本
-docker image inspect    rabbitmq:latest|grep -i version
-```
-
-```
-tail -f /dev/null
-```
-
-### 删除none镜像
-
-```
-清空
-docker rmi $(docker images -a|grep none|awk '{print $3}')
-```
-
-
-
-### lisa所有版本
+### 使用版本版本
 
 ```
 docker 20.10.7
 docker-compose 1.28.5
 ```
 
-##### workdir
-
-```
-对build阶段生效，对run阶段也生效，用于切换目录。
-```
-
-
-
-```
-文件夹复制
-COPY  文件 文件，指定的名字
-COPY  文件 文件夹，放到文件夹下,文件夹不存在则当作为名字。
-COPY  文件夹 文件夹，直接将源文件夹下的零散文件放在目的文件夹
-COPY  文件夹/* 文件夹，同上
-```
-
-
-
-#清空所有
-#network,ports,volumes,depends,devices,sysctls,cap-add
-docker-compose up web
-
-COPY --chown=组名:用户名 宿主机目录 容器目录
-RUN  脚本命令1\
-     &&命令2\
-#指定环境变量
-ENV <key1>=<value1> <key2>=<value2>...
-#开放端口，并不进行宿主机映射.可在run时，通过-P进行映射
-EXPOSE <端口1> 
-EXPOSE 8080
-#容器启动时执行的命令，同entrypoints。可通过--entrypoints在运行时切换
-CMD["nginx", "-g", "daemon off;"]
-#设定工作目录，随后的命令在此目录执行。若多次使用相对路径，会进行叠加，同cd。
-WORDIR
-
-# Platform_docker
 
 ##### DockerFile例子
 
@@ -259,6 +164,7 @@ docker import - new_hangger_server < hangger_server.tar
 
 >docker各个容器互相独立，不会互相影响。但是他们都作为宿主机的一个进程存在，使用宿主机的ps指令可查看到很多相关进程并进行管理。
 
+
 ### 常用
 
 ```
@@ -332,9 +238,9 @@ sudo yum-config-manager \
 
 ```
 vim /etc/docker/daemon.json
-#添加
+#添加自己的镜像
 {
-  "registry-mirrors": ["https://134lgcv1.mirror.aliyuncs.com"]
+  "registry-mirrors": ["****"]
 }
 systemctl daemon-reload。
 systemctl restart docker。
@@ -468,7 +374,89 @@ docker container attach  id  进入正在运行的命令行
 容器拷到宿主机：docker  cp  id:path   宿主机path
 主机到容器：挂载
 
-##### docker使用
+
+### 容器数据卷
+
+>搭建服务环境后，在环境中部署应用。但是删除容器后，数据会丢失。所以将docker目录挂载到外部，实现保存。
+
+docker inspect，查看容器信息。
+
+docker run -it -v 主机目录：容器内目录,挂载目录。
+
+例如：docker run   -it -v /home/ceshi:/home centos  /bin/bash
+
+docker run -d -p  3310:3306  -v  /home/mysql/conf:/home/conf    mysql  /bin/bash
+
+docker attach 容器id，进入运行的容器。
+
+  
+
+应用举例：
+
+将nginx配置文件挂载出来，不用进入容器修改配置
+
+将存储的json文件挂载到外部
+
+将mysql挂载到外部
+
+## docker网络
+
+```
+docker network create jenkins
+```
+
+## docker管理
+
+```
+文件夹复制
+COPY  文件 文件，指定的名字
+COPY  文件 文件夹，放到文件夹下,文件夹不存在则当作为名字。
+COPY  文件夹 文件夹，直接将源文件夹下的零散文件放在目的文件夹
+COPY  文件夹/* 文件夹，同上
+```
+
+### volume local dirver
+
+```
+在/var/lib/docker 目录下存储
+```
+
+### 查看磁盘占用
+
+```
+docker system df -v
+```
+
+
+
+```
+docker network ls
+docker network rm 
+```
+
+```
+查看latest具体版本
+docker image inspect    rabbitmq:latest|grep -i version
+```
+
+```
+tail -f /dev/null
+```
+
+### 删除none镜像
+
+```
+清空
+docker rmi $(docker images -a|grep none|awk '{print $3}')
+```
+
+## docker 例子
+
+```
+docker pull nginx
+docker image run nginx:latest -P 80:9870
+curl localhost:9870
+```
 
 ##### **docker**安装nginx
 
@@ -484,43 +472,19 @@ docker  container exec -it tomcat01 /bin/bash
 ​cd   /usr/local/tomcat/webapps
 cp webapps-dist/* webapps
 
-  ### 容器数据卷
 
-  >搭建服务环境后，在环境中部署应用。但是删除容器后，数据会丢失。所以将docker目录挂载到外部，实现保存。
-
-  docker inspect，查看容器信息。
-
-  docker run -it -v 主机目录：容器内目录,挂载目录。
-
-  例如：docker run   -it -v /home/ceshi:/home centos  /bin/bash
-
-  docker run -d -p  3310:3306  -v  /home/mysql/conf:/home/conf    mysql  /bin/bash
-
-  docker attach 容器id，进入运行的容器。
-
+# dockerFile
+>构建生成镜像，镜像是一层一层的。
+>开发者开发完毕，使用docker封装好环境和服务，使用者使用命令拉取和运行，不用关心运行环境。
   
-
-  应用举例：
-
-  将nginx配置文件挂载出来，不用进入容器修改配置
-
-将存储的json文件挂载到外部
-
-将mysql挂载到外部
-
-### docker 例子
-
 ```
-docker pull nginx
-docker image run nginx:latest -P 80:9870
-curl localhost:9870
+DockerFile编写时分层应该按照功能，基础的功能放在前边，需要修改的放到后边。比如构建一个nginx的基础镜像，然后在这个基础上再编写导入前端代码的dockerFile。
 ```
 
-  ### dockerFile
+```
+如果直接携带docker镜像，他只是作为一个固定镜像存在，如果需要更改，需要另外编写一个DockerFile，在它的基础上更改。
+```
 
-  >构建生成镜像，镜像是一层一层的。
->
-  >开发者开发完毕，使用docker封装好环境和服务，使用者使用命令拉取和运行，不用关心运行环境。
 
 ```
 #关于编译环境和发布环境
@@ -541,7 +505,7 @@ ARG webhost=locahost:4242，定义的ARG在build必须通过**--build-arg a_name
 docker build -t myjenkins-blueocean:1.1 .
 ```
 
-  ##### 基本命令
+##### 基本命令
 
   FROM，基础镜像
 
@@ -569,7 +533,7 @@ docker build -t myjenkins-blueocean:1.1 .
 
   
 
-  ##### 构建镜像例子
+##### 构建镜像例子
 
   FROM centos
 
@@ -591,7 +555,7 @@ docker build -t myjenkins-blueocean:1.1 .
 
   docker history 镜像id，查看构建步骤
 
-  ##### 构建tomcat镜像例子
+##### 构建tomcat镜像例子
 
   FROM centos
 
@@ -623,7 +587,7 @@ docker build -t myjenkins-blueocean:1.1 .
 
   CMD /usr/local/apache-tomcat/bin/startup.sh && tail -F  /usr/local/apache/bin/logs/catalina.out
 
-  ##### 整合springboot，打包docker发布
+##### 整合springboot，打包docker发布
 
   FROM java:8
 
@@ -635,25 +599,39 @@ docker build -t myjenkins-blueocean:1.1 .
 
   ENTRYPOINT [“java","-jar","app.jar"]
 
-  ### 数据卷容器
 
-  > 容器之间数据同步
 
-  
+# docker compose
 
-  ### docker网络原理
+## docker-compose.yml 文件
+```
+#通过docker-compose.yml管理多个容器,需要指定镜像名，镜像构建路径，进行挂载目录和网络的设置等:
+version: "2"
+services:
+  mysql:
+    image: vs-mysql
+    build:
+      context: ./docker/mysql
+      dockerfile: ./Dockerfile
+    environment:
+      - MYSQL_ROOT_PASSWORD=root
+      - MYSQL_USER=vsserver
+      - MYSQL_PASSWORD=vsserver
+      - MYSQL_DATABASE=gmall_report
+    volumes:
+      - "./data/mysqldb:/var/lib/mysql"
+    ports:
+      - 3307:3306
+    networks:
+      vs_server_net:
+        ipv4_address: 172.42.1.10
 
-  ### idea整合docker
-
-  ### docker compose
-
+```
 ##### depends_on
 
 ```
 被依赖的镜像必须先启动，而
 ```
-
-
 
 https://docs.docker.com/compose/install/
 
@@ -681,13 +659,15 @@ docker -p 4242:80 会将容器内端口映射到主机所有ip的4242端口上�
 docker -p 192.168.0.5:4242:80,此时只有192.168.0.5:4242能访问容器的80端口服务。
 ```
 
-
-
-  ### docker swarm
-
-  ### CI/CD jenkins
-
 ### problem
+
+##### File "docker/transport/unixconn.py", line 43, in connect FileNotFoundError: [Errno 2] No such file or directory
+
+```
+只要说urllib相关的错误，极有可能是没启动docker服务端，导致docker客户端发发送请求失败。
+```
+
+
 
 ##### Error response from daemon: file integrity checksum failed
 
@@ -700,7 +680,7 @@ docker system prune -a
 #then change the mrmory for docker on your system
 ```
 
-3try to use save and export  command
+3.try to use save and export  command
 
 ##### no such file or directory
 
