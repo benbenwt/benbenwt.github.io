@@ -19,7 +19,7 @@
 14.145.74.175 - - [10/Nov/2016:00:01:53 +0800] "POST /course/ajaxmediauser/ HTTP/1.1" 200 54 "www.imooc.com" "http://www.imooc.com/video/678" mid=678&time=60&learn_time=551.5 "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/45.0.2454.101 Safari/537.36" "-" 10.100.136.64:80 200 0.014 0.014.145.74.175 - - [10/Nov/2016:00:01:53 +0800] "POST /course/ajaxmediauser/ HTTP/1.1" 200 54 "www.imooc.com" "http://www.imooc.com/video/678" mid=678&time=60&learn_time=551.5 "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/45.0.2454.101 Safari/537.36" "-" 10.100.136.64:80 200 0.014 0.014 
 ```
 
-
+## 统计流程
 ### 日志清洗
 >url,traffic,ip等多个值之间是用"空格"分隔开的，以此为依据取出对应的值。其中time属性，需要编写format解析格式，并转换为规范的格式。
 >然后过滤局域网的的ip，和不符合要求的记录。因为后边要根据公网ip映射对应的地区城市，所以进行了过滤。
@@ -77,106 +77,138 @@ object CleanRawLog {
 >包括对url内容进行解析，获得cmsType，cmsId，根据ip映射城市，根据时间解析日期等
 
 ```
-package com.whirly.util
+package com.imooc
 
 import com.ggstar.util.ip.IpHelper
+import com.imooc.conf.pathConfig
+import com.imooc.utils.{DateUtils, RegexUtils}
 import org.apache.commons.lang3.StringUtils
-import org.apache.spark.sql.Row
-import org.apache.spark.sql.types.{LongType, StringType, StructField, StructType}
+import org.apache.spark.rdd.RDD
+import org.apache.spark.sql.{DataFrame, SaveMode, SparkSession}
+import org.apache.spark.{SparkConf, SparkContext}
 
-/**
-  * 访问日志转换(输入==>输出)工具类
-  */
-object AccessConvertUtil {
-  //定义的输出的字段
-  val struct = StructType(
-    Array(
-      StructField("url", StringType),
-      StructField("cmsType", StringType),
-      StructField("cmsId", LongType),
-      StructField("traffic", LongType),
-      StructField("ip", StringType),
-      StructField("city", StringType),
-      StructField("time", StringType),
-      StructField("day", StringType)
-    )
-  )
+object ExtractMore {
+  case class Info(url:String,urlType:String, urlId:Long, traffic:String, ip:String, city:String, time:String, date:String)
+  def main(args: Array[String]): Unit = {
+//    读取
+    val sparkConf:SparkConf=new SparkConf().setMaster("local[*]").setAppName("ExtractMore")
+    val spark: SparkSession = SparkSession.builder().config(sparkConf).getOrCreate()
+    val sc:SparkContext=spark.sparkContext
+    val input=sc.textFile(pathConfig.protocol+pathConfig.ExtractInputPath)
+    val splits=input.map(line => {
+      val splits=line.split("\t")
+      splits
+    })
+    val test=splits.take(5)
+    val extractResult:RDD[Info]=splits.map(splits =>
+    {
+      val  time=splits(0)
+      val  url=splits(1)
+      val  traffic=splits(2)
+      val  ip=splits(3)
 
+//      扩充日期，
+      val timeObject=DateUtils.OUTPUT_TIME_FORMAT.parse(time)
+      val date=DateUtils.getDate(timeObject)
 
-  /**
-    * 根据输入的每一行信息转换成输出的样式
-    *
-    * @param log 输入的每一行记录信息: 1970-01-01 08:00:00	http://www.imooc.com/code/547	54	119.130.229.90
-    */
-  def parseLog(log: String) = {
+      var urlType=""
+      var urlId=0L
+//      正则type,id
+      val base="http://www.imooc.com/"
+      val baseIndex=url.indexOf(base)
+      if(baseIndex>=0)
+        {
+          val typeIdStr=url.substring(baseIndex+base.length)
+          val typeIdSplits=typeIdStr.split("/")
+          if(typeIdSplits.length>1){
+//            println(typeIdStr,typeIdSplits(0),typeIdSplits(1))
+            urlType=typeIdSplits(0)
+//            code,video ,learn
+            if("video".equals(urlType) || "code".equals(urlType) || "learn".equals(urlType))
+              {
+                try{
+                   urlId=typeIdSplits(1).toLong
+                }catch {
+                  case e:Exception => {}
+                }
 
-    try {
-      val splits = log.split("\t")
-
-      val url = splits(1)
-      val traffic = splits(2).toLong
-      val ip = splits(3)
-
-      // http://www.imooc.com/code/547   ===>  code/547  547
-      var cmsType = ""
-      var cmsId = 0l
-
-      val domain = "http://www.imooc.com/"
-      val domainIndex = url.indexOf(domain)
-      if (domainIndex >= 0) {
-        val cms = url.substring(domainIndex + domain.length)
-        val cmsTypeId = cms.split("/")
-
-        if (cmsTypeId.length > 1) {
-          cmsType = cmsTypeId(0)
-          if ("video".equals(cmsType) || "code".equals(cmsType) || "learn".equals(cmsType)) {
-            try {
-              cmsId = cmsTypeId(1).toLong
-            } catch {
-              case e: Exception => {}
+              }
+            //            article
+            else if("article".equals(urlType)){
+              val number=RegexUtils.findStartNumber(typeIdSplits(1))
+              if(StringUtils.isNotEmpty(number)){
+                urlId=number.toLong
+              }
             }
-          } else if ("article".equals(cmsType)) {
-            val number = RegexUtil.findStartNumber(cmsTypeId(1))
-            if (StringUtils.isNotEmpty(number)) {
-              cmsId = number.toLong
-            }
+
           }
         }
-      } /*else {
-        val domain = "http://coding.imooc.com/"
-        val domainIndex = url.indexOf(domain)
-        if (domainIndex >= 0) {
-          val cms = url.substring(domainIndex + domain.length)
-          val cmsTypeId = cms.split("/")
-          if (cmsTypeId.length > 1) {
-            cmsType = cmsTypeId(0)
-            if ("lesson".equals(cmsType)) {
-              cmsId = cmsTypeId(1).toLong
-            }
-          }
-        }
-      }*/
+//      城市
+        val city = IpHelper.findRegionByIp(ip)
+      Info(url, urlType, urlId, traffic, ip, city, time, date)
+    })
+//    extractResult.take(10).foreach(println)
+    val infoDF:DataFrame=spark.createDataFrame(extractResult)
+    infoDF.printSchema()
+    infoDF.show(false)
 
-      val city = IpHelper.findRegionByIp(ip)
-      //IpUtils.getCity(ip)
-      val time = splits(0)
-      val day = time.substring(0, 10).replaceAll("-", "")
-
-      //这个row里面的字段要和struct中的字段对应上
-      Row(url, cmsType, cmsId, traffic, ip, city, time, day)
-    } catch {
-      case e: Exception => {
-        println("------------log----------------------")
-        println(log)
-        Row(0)
-      }
-    }
+    infoDF.coalesce(1).write.format("csv").mode(SaveMode.Overwrite).partitionBy("date").save(pathConfig.ExtractOutputPathCSV)
+    infoDF.coalesce(1).write.format("parquet").mode(SaveMode.Overwrite).partitionBy("date").save(pathConfig.ExtractOutputPath)
+//    split得到4部分
+//    解析更多信息
+    spark.stop()
   }
+
 }
 
 ```
 
+### 指标统计
+```
+package com.imooc
 
+import com.imooc.conf.pathConfig
+import org.apache.spark.{SparkConf, SparkContext}
+import org.apache.spark.sql.SparkSession
+import org.apache.spark.sql.expressions.Window
+import org.apache.spark.sql.functions._
+
+object TopNJob {
+  def main(args: Array[String]): Unit = {
+    val sparkconf:SparkConf=new SparkConf().setMaster("local[*]").setAppName("TopNJob")
+    val spark:SparkSession=SparkSession.builder().config(sparkconf).getOrCreate()
+    val sc:SparkContext=spark.sparkContext
+
+    val inputDF=spark.read.format("parquet").load(pathConfig.ExtractOutputPath)
+    inputDF.cache()
+
+    import spark.implicits._
+
+//    topN video
+    val videoDF=inputDF.filter( $"date"=== "1970-01-01" &&$"urlType" === "video" && $"urlId" =!= "0").groupBy("date","urlId").agg(count("urlId").as("times")).orderBy($"times".desc)
+    val window=Window.partitionBy(col("date")).orderBy(col("times").desc)
+    val topNDF=videoDF.withColumn("topn",row_number().over(window)).where(col("topn")<=5)
+    topNDF.show(10)
+
+//    topN video in different city
+    val videoCityDF=inputDF.filter( $"date"=== "1970-01-01" &&$"urlType" === "video" && $"urlId" =!= "0").groupBy("date","urlId","city").agg(count("urlId").as("times")).orderBy($"times".desc)
+    val window1=Window.partitionBy(col("date")).orderBy(col("times").desc)
+    val topNCityDF=videoCityDF.withColumn("topn",row_number().over(window1)).where(col("topn")<=5)
+    topNCityDF.show(10)
+//  code最多的课程
+    val codeDF=inputDF.filter( $"date"=== "1970-01-01" &&$"urlType" === "code" && $"urlId" =!= "0").groupBy("date","urlId").agg(count("urlId").as("times")).orderBy($"times".desc)
+    val window2=Window.partitionBy(col("date")).orderBy(col("times").desc)
+    val topNCodeDF=codeDF.withColumn("topn",row_number().over(window2)).where(col("topn")<=5)
+    topNCodeDF.show(10)
+//  访问量最多的文章
+    val articleDF=inputDF.filter( $"date"=== "1970-01-01" &&$"urlType" === "article" && $"urlId" =!= "0").groupBy("date","urlId").agg(count("urlId").as("times")).orderBy($"times".desc)
+    val window3=Window.partitionBy(col("date")).orderBy(col("times").desc)
+    val topNArticleDF=articleDF.withColumn("topn",row_number().over(window3)).where(col("topn")<=5)
+    topNArticleDF.show(10)
+  }
+}
+
+```
 
 
 

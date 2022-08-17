@@ -10,6 +10,14 @@
 
 # 使用
 
+## setting.xml 配置
+```
+#指定本地仓库的存储路径
+<localRepository></localRepository>
+#指定远程仓库的地址
+#
+```
+
 ## 仓库源
 ### 仓库地址
 
@@ -46,6 +54,15 @@ https://blog.csdn.net/qq_21190847/article/details/105240049
    </repositories>
 ```
 
+
+
+
+## 依赖管理
+
+> 指定子级模块所用版本，子模块只需要写依赖，不用写版本号。
+>
+> 注意父级只是指定版本号，子级使用仍然需要在dependencies中导入。
+> 
 
 ## 打包
 ### 打包指定模块
@@ -135,12 +152,6 @@ powershell自带sha1工具，命令：certutil -hashfile 路径
     </build>
 ```
 
-## 依赖管理
-
-> 指定子级模块所用版本，子模块只需要写依赖，不用写版本号。
->
-> 注意父级只是指定版本号，子级使用仍然需要在dependencies中导入。
-> 
 ## 常用命令
 ```
 #查看版本

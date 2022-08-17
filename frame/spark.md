@@ -1142,7 +1142,7 @@ def saveAsSequenceFile(
 
 >分布式遍历 RDD 中的每一个元素，调用指定函数
 
-## spark sql
+## spark SQL语法 与 DSL语法
 
 >无论是hadoop、spark、flink其都具备一些共性的功能，都试图不断完善自己的功能。
 >
@@ -1166,22 +1166,21 @@ def saveAsSequenceFile(
 >
 >共用几种方案：
 >
->1将hive的配置文件链接到spark的conf文件夹，还有mysql connector、hdfs的配置文件等。使用spark-shell或spark程序的sparkcontext，借助spark.sql执行sql语句。
+>1将hive的配置文件链接到spark的conf文件夹，还有mysql connector、hdfs的配置文件等。使用spark-shell执行sql语法。或在程序中使用spark程序的sparkcontext，借助spark.sql执行sql语句。
 >
 >2将hive的配置文件链接到spark的conf文件夹，还有mysql connector、hdfs的配置文件等。spark-sql执行sql语句。也可以开启thriftserver，使用beeline直接执行sql语句，和hiveserver2形式一样。
 
-### DataFrame
-
-#### 创建DataFrame
-
-```scala
-#从本地文件系统的json文件创建dataframe
-val df=spark.read.json("data/user.json")
-#从RDD创建dataframe
-#从hive table进行查询返回
+### SQL 与 DSL的转换
 ```
+#一个dataframe或dataset想要执行sql语句，需要创建View表，才能操作。
+val df=spark.read.json("data/user.json")
+df.createOrReplaceTempView("people")
 
-#### SQL语法
+#一个sql语句的查询结果就是dataframe，之后就可以执行DSL语法的语句。
+val sqlDF=spark.sql("SELECT * FROM people")
+sqlDF.show()
+```
+### SQL语法
 
 >sql语法风格是指查询数据时使用sql语句来查询，这种风格的查询必须要有临时试图或者全局视图来辅助
 
@@ -1201,6 +1200,18 @@ spark.sql("SELECT * FROM global_temp.people").show()
 spark.newSession().sql("SELECT * FROM global_temp.people").show()
 ```
 
+
+### DataFrame
+
+#### 创建DataFrame
+
+```scala
+#从本地文件系统的json文件创建dataframe
+val df=spark.read.json("data/user.json")
+#从RDD创建dataframe
+#从hive table进行查询返回
+```
+
 #### DSL语法
 
 >domain-specific language，DSL语法用于管理结构化数据，可以使用scala、java、python等编写DSL语法语句，无需创建临时视图使用sql了。
@@ -1216,6 +1227,11 @@ df.filter($"age">30).show
 df.groupBy("age").count.show
 ```
 
+#### DSL语法与sql差异
+```
+where 和 filter的差异，where是filter的别名
+$取列值是语法糖，本质是返回一个column对象
+```
 #### RDD与DataFrame互相转换
 
 >在IDEA开发程序时，如果需要将RDD于DF和DS之间互相操作，需要import spark.implicits._
@@ -1242,6 +1258,13 @@ case class User(name:String,age:Int)
 sc.makeRDD(List(("zhangsan",30),("lisi",40))).map(t=>User(t._1,t._2)).toDF.show
 ```
 
+```
+直接调用toDF实际上是借助隐式转换完成的，一般不使用，我们可以通过createDataFrame转换rdd到df或ds
+https://blog.csdn.net/sunyiyuan1213/article/details/91450379
+#其中spark是创建的sparkSession
+val classDF: DataFrame = spark.createDataFrame(usersRow)
+val structDf: DataFrame = spark.createDataFrame(structRow,structSchema)
+```
 
 
 ### Dataset
@@ -1259,6 +1282,13 @@ caseClassDS.show
 #使用基本类型的序列创建DataSet
 val ds=Seq(1,2,3,4,5).toDS
 ds.show
+
+#通过 SparkSession.createDataset() 直接创建
+val spark = SparkSession.builder().config(conf).getOrCreate();
+import spark.implicits._;
+val ds = spark.createDataset(List(Person("Jason",34,"DBA"),Person("Tom",20,"Dev")));
+ds.show();
+
 ```
 
 ##### Dataset与其他类型之间的转换
@@ -1292,6 +1322,7 @@ VAL df=ds.toDF
 >Dataframe相比于rdd，多了列名，可以方便进行sql。rdd无法直接查看每一列的值，必须通过解析。
 >
 >Dataframe时Dataset的特例，相当于指定类型为Row，类型可以为person、teacher等。
+>Row是无法知道每列字段的具体类型的，所以其是弱类型的，
 
 ### IDEA开发SparkSQL
 
@@ -1374,7 +1405,6 @@ class MyAveragUDAF extends UserDefinedAggregateFunction {
 StructType(Array(StructField("age",IntegerType)))
  // 聚合函数缓冲区中值的数据类型(age,count)
  def bufferSchema: StructType = {
- 
 StructType(Array(StructField("sum",LongType),StructField("count",LongType)))
  }
 // 函数返回值的数据类型
