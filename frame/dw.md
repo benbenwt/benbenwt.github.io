@@ -76,36 +76,43 @@ offershow
 #### equals和==区别，为什么重写equals要重写hashcode
 >==是比较两个变量的值是否相等，如果相等返回true否则false。equals则是先比较两个变量的地址，如果相等返回True，否则进一步比较值，如果相等返回true，否则false。equals表示两个变量值是否是相等，hashcode也表示两个变量是否是同一个东西，这两者必须保持一致，也就是equals返回true时，hashcode必须相等，但hashcode一样，不一定equals为true。
 
+>答案：基本类型的变量==直接比较两个值是否相等，引用类型的==是比较的两个变量指向的地址是否相同。这本质上是因为两者在栈中存储的值的意义不同，实际上都是比较其在栈中的值。基本类型的变量在栈中存储的是其真实值，例如1，2.0f等，而引用变量存储的是地址，所以自然比较的也是地址。object对象的equals默认还是比较地址的，继承了object后，需要根据子类的含义重写equals方法，例如String字符串类的equals就是比较两个String的内容是否相等。
+>https://blog.csdn.net/weixin_41943637/article/details/105437949
 ### java集合有哪些
->collection下有List，Set，Map。再细分有ArrayList，LinkedList，HashMap
+>collection下有List，Set，Map。再细分有ArrayList，LinkedList，HashMap,TreeMap,HashTable,HashSet,TreeSet
 
 ### ArrayList和LinkedList区别
 >ArrayList底层是基于数组实现的，所有它的随机读写很快，能通过索引快速找到值。但是在删除某一个元素或添加某一个元素到数组中间时，其需要挪动插入位置之后的所有元素，所以复杂度较高。LinkedList底层基于链表，其添加元素和删除元素比较方便，只需要将相邻的链表节点进行修改。但是其在查找元素时，只能顺序遍历链表的节点，所以效率较差。
 
+>答案：补充：ArrayList空间浪费体现在在结尾预留空间，而LinkedList空间花费体现在每一个元素需要花费空间威武信息。
 ### HashMap默认大小，扩容机制
 > HashMap结构是什么样的？什么时候扩容？扩到多少？
 
+>答案：默认capacity为16；loadFactor加载因子，默认是0.75。threshold阈值。阈值=容量*加载因子。默认12，当元素数量超过阈值，触发扩容。扩容到原来的两倍。
 ### HashMap在哪个版本使用红黑树，之前是使用什么?
-> jdk8，之前使用键值对和链表。
+> jdk8，之前使用哈希表和链表。
 
 ### 线程的创建方式
 > 1使用一个类实现Runnable接口，然后调用run方法
 > 2直接使用Thread
 
+>答案：1继承Thread类 2实现Runnable接口 3使用线程池例如Executor框架
 ### 多线程了解
-> 线程的状态：
-> 线程状态的转换：
-> 多线程的常用编程：
+> 线程的状态：NEW,RUNNABLE,BLOCKED,WAITING,TIMED_WAITING,TERMINATED
+> 线程状态的转换：当线程试图获取synchronized时，而锁被其他人占用，进入阻塞状态。当线程等待其他线程调度器出现一个条件时，就会计入等待状态。例如wait（），join（）等。以及concurrent中的Lock和Condition锁。当调用带有超时参数的的wait和lock、condition时，就会进入TIME_WAITING状态。
+> 多线程的常用编程：线程池的类型、关键参数及使用方法
 
 ### MySQL的索引，b树与b+树区别
 > MySQL使用b+树构建索引，b+树的每个节点由指向下一层的指针以及值构成，两者互相间隔，指针数比值数目多1。通过与值比较确认所在的子树，从而进入下一层，重复此过程到达叶子节点。b树的查找结果可以分布在非叶子节点，而b+树全部在叶子节点，这样每个查询的时间都相近，保持了查询性能的稳定性。
 
+>答案：b+树相比于b树还使用了链表结构将叶子节点相连，加速遍历的访问速度。b树在有大量热点数据重复访问时，效率更高，因为可以将热点数据放置到离根较近的位置。
 ### Redis了解
->Redis是一个内存数据库，有高并发，高速度的特点，因为其数据都是维持在内存中的，可以保持较高的访问速度。
->Rdis提供了一些常用的数据结构，如String，List，Set，Map，ZSset（有序set）。Redis可以用于一些临时数据的存储，因为其无法保持较高的可靠性，可能导致数据的丢失。可以用来存储当日平台的用户日活信息等，帮助编写实时处理的逻辑。
+
+>Redis是一个基于内存实现的键值型数据库，有高并发，高速度的特点，因为其数据都是维持在内存中的，可以保持较高的访问速度。
+>Rdis提供了一些常用的数据结构，如String，List，Set，hash，ZSset（有序set）。Redis可以用于一些临时数据的存储，因为其无法保持较高的可靠性，可能导致数据的丢失。可以用来存储当日平台的用户日活信息等，帮助编写实时处理的逻辑。
 
 ### 介绍一下Spark
->Spark是一个大数据计算引擎，其是在Hadoop之后提出的，相比于Hadoop其执行速度获得了很大的提升。因为其使用内存作为存储媒介，减少了磁盘的交互次数，提升了效率，同时也对设备的内存提出了较高的要求。其提出了弹性分布式数据集RDD，RDD是对分布在多台机器上的数据集的描述，spark的操作都是基于rdd和算子进行的，算子可以对rdd执行各种操作，例如map，reduce，take，show等，当有action算子调用时，就会进行计算。
+>Spark是一个并行计算框架，其是在Hadoop之后提出的，相比于Hadoop其执行速度获得了很大的提升。因为其使用内存作为存储媒介，减少了磁盘的交互次数，提升了效率，同时也对设备的内存提出了较高的要求。其提出了弹性分布式数据集RDD，RDD是不可变得分布式对象集合，spark的操作都是基于rdd和算子进行的，算子可以对rdd执行各种操作，例如map，reduce，take，show等，当有action算子调用时，就会进行计算。
 >Spark的架构：Spark的具体任务由executor执行，executor接受来自master的任务，并在所在机器执行，并返回结果给master。master和worker这是节点，executor这是spark的抽象架构程序。
 >Spark on yarn：Spark on yarn模式通过将yarn作为资源管理器，提供了集群资源管理功能。executor的创建需要相yarn申请对应的资源，然后才能获得创建的权限。
 
