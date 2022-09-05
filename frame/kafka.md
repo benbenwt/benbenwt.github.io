@@ -200,6 +200,16 @@ kafka是基于发布订阅模式的消费者拉取。
 >properties.put(ProducerConfig.PARTITIONER_CLASS_CONFIG,"com.atgui gu.kafka.producer.MyPartitioner");
 
 # kafka用法
+### windows使用
+>https://blog.csdn.net/YY_WG/article/details/104154823
+>consumer启动后，不会自动读取latest信息，需要回车一下才会显示最新的消息,kafka-server也需要回车一下。
+```
+bin\windows\zookeeper-server-start.bat config\zookeeper.properties
+bin\windows\kafka-server-start.bat config\server.properties
+bin\windows\kafka-topics.bat --create --bootstrap-server localhost:2181 --replication-factor 1 --partitions 1 --topic test
+bin\windows\kafka-console-producer.bat --broker-list localhost:9092 --topic ods_json
+bin\windows\kafka-console-consumer.bat --bootstrap-server localhost:9092 --topic ods_json --from-beginning
+```
 
 ### shell命令
 

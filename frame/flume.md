@@ -178,6 +178,8 @@ a1.sinks.k1.channel= c1
 ### sink
 
 # flume用法
+### windows 命令
+>>flume-ng.cmd agent --conf ..\conf -conf-file ..\conf\flume_file_kafka.conf --name agent1 -property flume.root.logger=INFO,console
 
 ### ExecSource
 
@@ -320,6 +322,7 @@ tier1.sources.source1.type = org.apache.flume.source.kafka.KafkaSource
 tier1.sources.source1.channels = channel1
 tier1.sources.source1.kafka.bootstrap.servers = localhost:9092
 tier1.sources.source1.kafka.topics = test1, test2
+tier1.sources.source1.kafka.consumer.group.id = custom.g.id
 ```
 
 ```
