@@ -279,7 +279,7 @@ a1.sources.src-1.fileHeader = true
 
 ##### Taildir Source
 
->note:此功能无法在windwos工作
+>note:此功能无法在windows工作
 >
 >监控特定的文本文件，并不断读取追加的内容，以行为单位封装为Event，发送到channels。
 >

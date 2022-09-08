@@ -186,7 +186,7 @@ kafka是基于发布订阅模式的消费者拉取。
 
 >根据partion分区，根据key的哈希分区，随机分区，当随机分区触发一次send，下次再随机挑选一个。
 
-![](../resources/images/ProducerRecord.png)
+![](../resources/images/ProducerRecord.png) 
 
 >自定义分区ProduceRecord
 >
