@@ -38,7 +38,6 @@ kafka-server-start.sh     conf/server.properties
 ```
 
 
-
 ##### 查看zookeeper结点
 
 ```

@@ -1,5 +1,7 @@
 [TOC] 
 
+>场景提：https://blog.csdn.net/xxscj/article/details/86575294
+# 日常八股文和刷题
 ## 理论知识0822
 ### Java八股
 #### equals和==区别，为什么重写equals要重写hashcode
@@ -214,7 +216,7 @@ public class Solution {
     }
 }
 ```
-## 二分查找-I
+### 二分查找-I
 ```
 import java.util.*;
 
@@ -251,6 +253,83 @@ public class Solution {
 }
 ```
 
+## 0906算法题
+>数据结构：堆，栈，队列，链表，树，图。
+>算法：动态规划，回溯法。
+### 用两个栈实现队列
+>数据颠倒两次，关键什么时候颠倒。这题没有限制stack的大小，所以等输出的stack2空时颠倒最好，只需要将stack1的值复制到stack2.如果stack限制了大小，就需要在stack1满时尝试合并。
+```
+import java.util.*;
+import java.util.Stack;
+
+public class Solution {
+    Stack<Integer> stack1 = new Stack<Integer>();
+    Stack<Integer> stack2 = new Stack<Integer>();
+    
+    public void push(int node) {
+        stack1.push(node);
+//        左边满了，要合并到右边 
+    }
+    
+    public int pop() {
+//     右边没了，要将左边合并到右边
+        if(stack2.empty()){
+            while(!stack1.empty())
+            {
+                stack2.push(stack1.pop());
+            }
+             return stack2.pop();
+        }else{
+            return stack2.pop();
+        }
+        
+    }
+}
+```
+
+### 包含min函数的栈
+```
+此栈包含的方法有：
+push(value):将value压入栈中
+pop():弹出栈顶元素
+top():获取栈顶元素
+min():获取栈中最小元素
+
+存储minValue的结构使用栈会比较方便，应为minValue也是在同一段插入和删除的。
+import java.util.*;
+import java.util.Stack;
+
+public class Solution {
+
+    Stack<Integer> stack=new Stack<Integer>();
+    private ArrayList<Integer> minList=new ArrayList();
+    private int minValue;
+    public void push(int node) {
+        if(stack.empty())
+        {
+            minValue=node;
+        }else{
+            minValue=node<minValue?node:minValue;
+        }
+        minList.add(minValue);
+        stack.push(node);
+    }
+    
+    public void pop() {
+        minList.remove(stack.size()-1);
+        int value=stack.pop();
+        minValue=minList.get(stack.size()-1);
+    }
+    
+    public int top() {
+        return stack.peek();
+    }
+    
+    public int min() {
+        return minValue;
+    }
+}
+```
 # 数据仓库工具箱
 ## 第10节 金融服务
 >金融服务涉及各行业，如信用卡公司，抵押贷款提供商等，日常接触的零售银行。一家银行提供广泛的产品，包括活期存款，储蓄账户，按揭贷款，个人贷款，信用卡以及银行贵重物品保险箱等。
@@ -292,6 +371,13 @@ public class Solution {
 >两种需求：1统计每个月的2统计截止目前的。对于需求2不用单独编写代码，可以在需求1计算完成后存储到clickhouse等，再轻度聚合。
 >Flink实现了流处理和批处理使用统一的接口，使用流处理思想编写的DataStream也能以批处理方式运行。以sql编写的逻辑，也能以流处理方式运行。
 # other
+
+```
+flink_ti 按照图形界面完成
+简历投递
+sql和top101
+公司对应面经
+```
 ```
 计算机基础八股文（算法，网络），八股文(java（jvm，网络，多线程，javase）,框架(hdfs,mr,yarn,hive,spark),javaweb)，项目（数仓（电商场景，TI），web）,笔试（算法题，sql题）
 其他：linux环境下的shell及日常使用，git使用，maven使用，nginx，docker

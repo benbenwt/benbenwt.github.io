@@ -1,6 +1,6 @@
 [TOC]
 ### 安装
-
+ 
 ```
 #解压缩安装包
 #进入conf文件夹
@@ -8,7 +8,7 @@ mv flume-env.sh.template flume-env.sh
 vi flume-env.sh
 export JAVA_HOME=/opt/module/jdk1.8.0_212
 ```
-
+ 
 ### 使用
 
 ##### 启动flume

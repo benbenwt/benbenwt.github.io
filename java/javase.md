@@ -958,7 +958,7 @@ JAVA常用的节点流：
 管 道 PipedInputStream PipedOutputStream PipedReaderPipedWriter对管道进行处理的节点流。
 常用处理流（关闭处理流使用关闭里面的节点流）
 
-缓冲流：BufferedInputStrean BufferedOutputStream BufferedReader BufferedWriter  增加缓冲功能，避免频繁读写硬盘。
+缓冲流：BufferedInputStream BufferedOutputStream BufferedReader BufferedWriter  增加缓冲功能，避免频繁读写硬盘。
 转换流：InputStreamReader OutputStreamReader 实现字节流和字符流之间的转换。
 数据流 DataInputStream DataOutputStream  等-提供将基础数据类型写入到文件中，或者读取出来.
 流的关闭顺序
@@ -1577,7 +1577,7 @@ class A implements Runnable{
 >
 >3当初始化类的时候，其父类还没有初始化
 >
->4挡虚拟机启动时，需要指定执行main方法的那个类
+>4当虚拟机启动时，需要指定执行main方法的那个类
 
 #### 双亲委派模型（Parent Delegation Model）
 
@@ -2295,6 +2295,9 @@ public boolean equals(Object obj) {
 
 如果重写equals但不重写hashcode，会出现equals为true，但hashcode不一样的情况。
 
+# 动态代理
+>https://www.jianshu.com/p/9bcac608c714
+>
 # Annotation
 >注解是java5开始的，可以用于包，类，方法，变量等，比如常见的@Override
 ## 元数据
