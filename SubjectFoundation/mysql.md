@@ -1,12 +1,10 @@
-```
-mysql有快照嘛
-```
-
-
+[TOC]
 
 ### DDL
 constraint用于防止非法信息进入
 #### 索引
+>CREATE INDEX index_name ON table_name (column_list) 
+>
 #### 表结构
 
 ##### 指定外键
@@ -37,7 +35,10 @@ str_to_date("2022-02-02","%Y-%m-%d %H:%m:%s")
 isnull
 ```
 ### DCL
-
+>Data Control Language
+>如定义用户账户对数据表、数据库等的控制权，GRANT、REVOKE。
+>GRANT ALL PRIVILEGES ON "*" TO user@localhost
+>
 
 ### platform相关sql
 
@@ -90,8 +91,8 @@ delete from celery_taskmeta where id in
 
 
 
-
-### shell命令
+### 用法
+#### shell命令
 
 ```
 #连接mysql,-p与密码之间不要加空格，加空格后无法识别正确的密码。
@@ -104,8 +105,24 @@ update user set host="%" where user="root";
 #执行mysql文件
 source create_table.sql
 ```
+##### 创建数据库
 
-### 批量PrepareStatement插入
+CREATE DATABASE `cloud_db_one` CHARACTER SET utf8 COLLATE utf8_bin;
+
+##### 创建数据表
+
+CREATE TABLE `dept`(
+`dept_no` int(11) NOT NULL AUTO_INCREMENT,
+`dept_name` varchar(500) DEFAULT NULL,
+`db_source` varchar(500) DEFAULT NULL,
+PRIMARY KEY(`dept_no`)
+)ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+
+
+
+### problem
+#### 批量PrepareStatement插入
 
 >时间花费=网络传输时间（传输的数据量，建立的连接次数）+数据库向应时间（索引结构、存储原理）
 
@@ -122,7 +139,7 @@ conn = DriverManager.getConnection("jdbc:mysql://hbase2:3306/platform?useUnicode
 #使用这两个参数后，只传递一条预编译语句，一次请求将数据放在一起传递过去。减少了传递的预编译语句数量，以及创建连接的次数。
 ```
 
-### 重设自增id
+#### 重设自增id
 
 ```
 清空自增id
@@ -176,25 +193,6 @@ FLUSH PRIVILEGES;
 
 
 
-### problem
-
-多个sql不可以公用statement
-
-### 数据表
-
-##### 创建数据库
-
-CREATE DATABASE `cloud_db_one` CHARACTER SET utf8 COLLATE utf8_bin;
-
-##### 创建数据表
-
-CREATE TABLE `dept`(
-`dept_no` int(11) NOT NULL AUTO_INCREMENT,
-`dept_name` varchar(500) DEFAULT NULL,
-`db_source` varchar(500) DEFAULT NULL,
-PRIMARY KEY(`dept_no`)
-)ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
 # 理论部分
 
 ## 存储引擎
@@ -219,6 +217,9 @@ PRIMARY KEY(`dept_no`)
 >
 >一般b+树的层数维持在2-4层。
 
+### MyISAM
+>1不提供事务支持
+>2只提供表锁，innodb提供行锁，以及与Oracle类型一致的不加锁读取。当然，在无法确认slq访问扫描的范围时，也会执行锁全表。
 ## mysql事务和锁
 
 >
