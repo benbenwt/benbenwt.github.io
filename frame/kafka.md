@@ -205,7 +205,8 @@ kafka是基于发布订阅模式的消费者拉取。
 ```
 bin\windows\zookeeper-server-start.bat config\zookeeper.properties
 bin\windows\kafka-server-start.bat config\server.properties
-bin\windows\kafka-topics.bat --create --bootstrap-server localhost:2181 --replication-factor 1 --partitions 1 --topic test
+bin\windows\kafka-topics.bat --create --bootstrap-server localhost:9092 --replication-factor 1 --partitions 1 --topic ods_json
+bin\windows\kafka-topics.bat --delete --bootstrap-server localhost:9092 --topic ods_json
 bin\windows\kafka-console-producer.bat --broker-list localhost:9092 --topic ods_json
 bin\windows\kafka-console-consumer.bat --bootstrap-server localhost:9092 --topic ods_json --from-beginning
 ```

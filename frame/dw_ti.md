@@ -1,5 +1,7 @@
 # Flink kappa架构
 >kappa是指实时和离线使用同一套代码，减少维护的量。比如，统计每日活跃用户数，如果使用lambda架构需要两套代码，但是使用kappa就只用流处理完成按日统计，这个日结果是实时的，所以完成了实时处理的功能。当一日结束后，当前日的数据就计算完了，将结果放入数据库，方便后续使用。就是说将离线数仓各层之间的流动，变为实时流处理了，一旦hive表发生变化，那么就会传递到下一层。至于这些层，可以采用kafka也可以采用数据库等，这取决于是否要复用这些数据。
+
+>FLINK_ti:http://192.168.31.177:5602/goto/441f74056609ece736f5ad78a04335cd
 ## 分块
 ### flume采集
 >从磁盘采集到kafka
@@ -11,23 +13,59 @@
 #### dwd
 >解析后的基本粒度，如一条记录。
 >解析json为基本粒度
->日期，地区，样本类别，架构类别。
+>日期，地区，样本类别，架构类别,攻击者，ip，漏洞编号，地区iso编号。
+
+##### 映射iso编码
+##### 反射填充对象
+>json解析后的信息需要填充到对应的实体类，便于后边使用Flink SQL进行指标统计。
+
 #### dws
->轻度聚合，如一天，注意状态过期时间。
+>轻度聚合，如一天。
 >聚合后写入kafka。
 #### dwt
 >一个月聚合
->聚合后写入业务系统存储clickhouse。
+>聚合后写入存储elasticsearch。
 #### ads
->关注的主题
->当新增一条记录时，按规则聚合后，sink的数据是覆盖还是增加，这取决于使用的sink端，和编写的sink逻辑。
+>关注的主题：location，安全信息类别，安全信息架构分布，其他（攻击者，漏洞，ip地址）
+>当新增一条记录时，按规则聚合后，sink的数据是覆盖还是增加，这取决于使用的sink端，和编写的sink逻辑。当使用elasticsearch时，会直接插入一条新数据，如果我们希望其覆盖之前的，可以通过指定唯一id_来实现。
 
 ### Elasticsearch
 #### 索引设计
->必须有一个date类型的时间字段，因为es的dashboard需要此字段确认数据范围。
+>必须有一个date类型的时间字段，因为es的dashboard需要此字段确认数据时间范围。
 >如果需要使用地图功能，需要存储地区对应的iso code编码。
 >注意需要进行计算字段，指定为需要的类型，如float等。
 
+```
+PUT /threatactormonth
+{
+  "settings": {
+    "number_of_shards": 3
+  },
+ "mappings": {
+    "properties": {
+      "nums": {
+          "type": "long"
+        },
+        "threatactor": {
+          "type": "text",
+          "fields": {
+            "keyword": {
+              "type": "keyword",
+              "ignore_above": 256
+            }
+          }
+        },
+        "year_month": {
+          "type": "date"
+        }
+    }
+  }
+}
+```
+
+#### 国家iso编码可视化
+>elasticsearch iso-3166介绍：https://maps.elastic.co/v7.11/index.html?locale=en#file/world_countries
+>点击visualize后，创建Map，然后add layer 选择 EMS Boundaries类型指定数据源等设置。
 ## problem
 ### flume spooldir监控递归子目录
 >1.19版本将此选项开启即可
@@ -40,6 +78,13 @@
 ### Flink读取kafka中flume采集数据乱码
 >agent1.channels.channel1.parseAsFlumeEvent = false
 >将此项关闭，如果开启表示按照FlumeEvent的方式对其序列化并写入kafka，这意味着后续你会使用Flume Source反序列化该字节流。当我们存入kafka提供给其他应用使用时，应关闭此选项。
+
+### flume采集单个文件大小限制
+>flume采集的文件大小也有限制，event的大小需要在kafka的服务端设置，内容如下：
+>server.properties加上的message.max.bytes、max.request.size配置，max.request.size要比message.max.bytes小。
+>另外，还要给kafka的producer设置max.request.size参数，现在使用的是flume，所以在flume的配置文件中修改kafka
+配置,添加producer.max.request.size。
+
 ### Flink connector，java对象传输到kafka序列化与反序列化
 >当dwd层完成计算后，需要将数据写入kafka，然后再由dws从kafka读出该数据，进一步统计。在使用java编写flink程序时，这些数据就是用java对象表示和操作的。所以Flink如何将java对象数据写入kafka，以及如何读出，需要我们自己实现序列化和反序列化方法。通过实现org.apache.flink.api.common.serialization.SerializationSchema接口，我们可以定义自己的序列化方法;
 >主要修改addSink和addSource指定的Schema即可。

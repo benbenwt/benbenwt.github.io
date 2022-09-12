@@ -2,6 +2,7 @@
 # 安装使用.
 api document:https://www.elastic.co/guide/en/elasticsearch/reference/current/indices-get-mapping.html
 
+
 ```
 #docker安装
 https://www.elastic.co/guide/en/elasticsearch/reference/7.5/docker.html
