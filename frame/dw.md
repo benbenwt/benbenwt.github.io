@@ -1,4 +1,20 @@
 [TOC] 
+# 0913 电面
+>1yarn client ,yarn cluster
+>2用户留存率计算
+>3spark的部署模式
+>4kafka 精确一次消费
+>5hive表的更新策略
+>6Flink版本 1.13.6 flume 1.9
+>7sqoop使用碰到的问题
+>8kafka使用的场景
+>9flink实现精确一次
+>10yarn的组件
+>11各框架的版本：
+>12 新增及更新表的逻辑，拉链表的逻辑
+>13 熟悉文档里边数仓建模的概念，hadoop，spark，flink八股
+>14 java hashmap
+>15 Flink 集群搭建
 
 >场景提：https://blog.csdn.net/xxscj/article/details/86575294
 # 日常八股文和刷题

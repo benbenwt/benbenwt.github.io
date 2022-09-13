@@ -1,5 +1,6 @@
 [TOC]
 # 安装使用.
+>分布式全文检索引擎
 api document:https://www.elastic.co/guide/en/elasticsearch/reference/current/indices-get-mapping.html
 
 

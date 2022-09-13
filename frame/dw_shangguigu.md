@@ -207,7 +207,6 @@ a1.channels.c1.type = file
 a1.channels.c1.checkpointDir = /opt/module/flume/checkpoint/behavior1
 a1.channels.c1.dataDirs = /opt/module/flume/data/behavior1/
 
-
 ## sink1
 a1.sinks.k1.type = hdfs
 a1.sinks.k1.hdfs.path = /origin_data/gmall/log/topic_log/%Y-%m-%d

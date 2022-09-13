@@ -810,6 +810,14 @@ select chinese+math from students
 | A RLIKE B                | strings                          | NULL if A or B is NULL, TRUE if any (possibly empty) substring of A matches the Java regular expression B, otherwise FALSE. For example, 'foobar' RLIKE 'foo' evaluates to TRUE and so does 'foobar' RLIKE '^f.*r$'. |
 | A REGEXP B               | strings                          | Same as RLIKE.                                               |
 
+
+###### LIKE运算符号
+```
+select * from table where name like "_[^c]%";
+_表示匹配任意一个字符。
+%表示匹配任意多个字符。
+[^c]表示该位不能为字符c。
+```
 ##### 逻辑运算符
 
 以下运算符为创建逻辑表达式提供支持。 它们都根据操作数的布尔值返回布尔值TRUE，FALSE或NULL。 NULL表现为“未知”标志，因此，如果结果取决于未知状态，则结果本身是未知的。

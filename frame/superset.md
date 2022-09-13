@@ -65,8 +65,8 @@ sqlalchemy==1.3.24
 superset export_dashboards -f dashboards.json
 superset import_dashboards -f dashboards.json
 
-#如果此方法无效，可以尝试直接复制superset的sqlite数据库文件，其在当前用户的.superset目录下，即~/.superset
-```
+#如果此方法无效，可以尝试直接复制superset的sqlite数据库文件，
+```其在当前用户的.superset目录下，即~/.superset
 
 
 
