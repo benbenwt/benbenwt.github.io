@@ -1,5 +1,331 @@
 [TOC] 
-# 0913 电面
+# 0915 算法题
+## 重建二叉树
+>左子树长度为i-1,左闭右开就是i，i为根节点在中序遍历中的位置。左子树确定后，右子树的下标位置也就确定了。
+>root.left=reConstructBinaryTree(Arrays.copyOfRange(pre,1,1+i),Arrays.copyOfRange(vin,0,i));
+>root.right=reConstructBinaryTree(Arrays.copyOfRange(pre,i+1,m),Arrays.copyOfRange(vin,i+1,n));
+
+```
+import java.util.*;
+/**
+ * Definition for binary tree
+ * public class TreeNode {
+ *     int val;
+ *     TreeNode left;
+ *     TreeNode right;
+ *     TreeNode(int x) { val = x; }
+ * }
+ */
+public class Solution {
+    public TreeNode reConstructBinaryTree(int [] pre,int [] vin) {
+        int m=pre.length;
+        int n=vin.length;
+        if(m==0 | n==0)
+        {
+            return null;
+        }
+        
+        TreeNode root=new TreeNode(pre[0]);
+        for(int i=0;i<vin.length;i++)
+        {
+            if(vin[i]==pre[0])
+            {
+                root.left=reConstructBinaryTree(Arrays.copyOfRange(pre,1,1+i),Arrays.copyOfRange(vin,0,i));
+                root.right=reConstructBinaryTree(Arrays.copyOfRange(pre,i+1,m),Arrays.copyOfRange(vin,i+1,n));
+            }
+        }
+        return root;
+    }
+}
+```
+## 判断是否为二叉搜索树树的合法后序遍历
+>最后一个元素为根节点，找到右子树的起始点，若起始点之后全部大于根节点为true，反之为false。再递归检查左右子树。
+```
+public boolean checkValid(int [] sequence)
+{
+    if(sequence.length)
+    {
+        return true;
+    }
+    int root=sequence[sequence.length-1];
+    for(int i=0;i<sequence.length;i++)
+    {
+        if(sequence[i]>=root)
+        {
+            break;
+        }
+    }
+    for(int j=i;j<sequence.length;j++)
+    {
+          if(sequence[i]<root)
+          {
+            return false;
+          }
+    }
+
+    Boolean result1=checkValid(Arrays.copyOfRange(sequence,0,i));
+    Boolean result2=checkValid(Arrays.copyOfRange(sequence,i,sequence.length-1));
+    return result1 & result2
+}
+```
+
+## 滑动窗口中位数 lt 480
+>给定数组nums，以及大小为k的窗口，每次向右滑动1个数字，请给出窗口每次滑动后的中位数，以数组形式返回。
+>通过一个大顶堆和小顶堆维护了窗口的中位数值，直接从堆中取出即可。
+```
+class Solution {
+    public double[] medianSlidingWindow(int[] nums, int k) {
+        /*
+        滑窗+对顶堆:
+        我们创建两个堆left和right,其中left是大顶堆存储小的一半元素,right为小顶堆存储大的一半元素
+        假定right存储的元素数目总是>=left存储的元素数目
+        1.当窗口元素总数为奇数时:中位数为排序k/2的数字,此时直接right堆顶就是答案
+        2.当窗口元素总数为偶数时:中位数为排序k/2与(k-1)/2的均值,此时将left堆顶与right堆顶取均值即可\
+        还要注意的是:窗口滑动过程中我们加入与删除元素后记得调整堆使得堆平衡
+         */
+        int len = nums.length;
+        int cnt = len - k + 1;  // 滑窗个数
+        double[] res = new double[cnt];
+        // Integer.compare(b, a)逻辑为:(x < y) ? -1 : ((x == y) ? 0 : 1) 只比较不会加减
+        PriorityQueue<Integer> left = new PriorityQueue<>((a, b) -> Integer.compare(b, a)); // 大顶堆(注意不要b-a防止溢出)
+        PriorityQueue<Integer> right = new PriorityQueue<>((a, b) -> Integer.compare(a, b)); // 小顶堆
+        // 初始化堆:[0,k-1] 使得right>=left
+        for (int i = 0; i < k; i++) {
+            right.add(nums[i]);
+        }
+        for (int i = 0; i < k / 2; i++) {
+            left.add(right.poll()); // 弹出最小的数字给left
+        }
+        // 首个中位数加入res
+        res[0] = getMid(left, right);
+        // 这里的i代表即将加入窗口的右端元素
+        for (int i = k; i < len; i++) {
+            int a = nums[i], b = nums[i - k];   // a为即将加入窗口的元素,b为即将退出窗口的元素
+            if (a >= right.peek()) {
+                right.add(a);
+            } else {
+                left.add(a);
+            }
+            if (b >= right.peek()) {
+                right.remove(b);
+            } else {
+                left.remove(b);
+            }
+            // 调整堆
+            adjust(left, right);
+            // 该窗口中位数加入结果
+            res[i - k + 1] = getMid(left, right);
+        }
+        return res;
+    }
+
+    // 调整堆使得堆平衡
+    private void adjust(PriorityQueue<Integer> left, PriorityQueue<Integer> right) {
+        while (left.size() > right.size()) right.add(left.poll());  // 左边比右边多,左边必定不符合条件,往右边搬
+        while (right.size() > left.size() + 1) left.add(right.poll());  // 右边比左边多1以上,右边必定多了,往左边搬
+    }
+
+    // 根据left与right两个堆返回中位数
+    private double getMid(PriorityQueue<Integer> left, PriorityQueue<Integer> right) {
+        if (left.size() == right.size()) return left.peek() / 2.0 + right.peek() / 2.0; // 范围不知道防止溢出
+        else return (double) right.peek();
+    }
+}
+```
+## 任务分配所需的工人数
+>给定二维数组nx2，表示n个任务，2用来表示开始时间和结束时间。例如[[1,3],[2,4]]
+>一个工人同时只能处理一个任务，如图所示例子需要两个工人处理。
+```
+
+```
+## 给定数组，查找三个数，使得他们互相相乘的和最大，输出最大值
+## 给定数组，查找n个数，使得他们互相相乘的和最大,输出这些数
+## 哈夫曼树
+## 操作系统死锁
+## http协议头部 accept-code
+## 数据库
+## 高速缓存
+## 
+
+## 给定数组和数，从左右端拿掉 动态规划
+## 树的遍历
+### 前序遍历
+
+## 网络每一层 bit，帧，frame
+## tcp 粘包
+## 哪些操作进程会阻塞
+## namenode 源文件 怎么弄成xml
+## 查看文件 vim grep   ， grep “” “file.name”
+## mapreduce reduce，reduce可以设置为0嘛？
+## 
+## hdfs写入流程绘图
+```
+
+```
+
+
+```
+import java.util.*;
+
+/*
+ * public class TreeNode {
+ *   int val = 0;
+ *   TreeNode left = null;
+ *   TreeNode right = null;
+ *   public TreeNode(int val) {
+ *     this.val = val;
+ *   }
+ * }
+ */
+
+public class Solution {
+    /**
+     * 代码中的类名、方法名、参数名已经指定，请勿修改，直接返回方法规定的值即可
+     *
+     * 
+     * @param root TreeNode类 
+     * @return int整型一维数组
+     */
+    
+    LinkedList<Integer> result=new LinkedList<>();
+    public int[] preorderTraversal (TreeNode root) {
+        // write code here
+        answer(root);
+        
+        int[] res=new int[result.size()];
+        for (int i = 0; i < result.size(); i++) {
+            res[i]=result.get(i);
+        }
+        
+        return res;
+    }
+    public void answer (TreeNode root) {
+        if(root==null) return;
+        result.add(root.val);
+        answer(root.left);
+        answer(root.right);
+    }
+}
+```
+# 0914 算法题
+## leetcode 179 最大数
+>给定一个nums数组，请重新排列每个数的顺序，使得其排列组成一个最大的数
+>主要熟悉冒泡排序、String的compareTo函数，它是从高位到低位逐位比较大小。
+>还有处理00这种情况
+
+```
+import java.util.*;
+import java.lang.*;
+class Solution {
+    public String largestNumber(int[] nums) {
+        // 冒泡
+        int left=0;
+        int temp=0;
+        for(int i=0;i<nums.length-1;i++)
+        {
+            for(int j=nums.length-1;j>left;j--)
+            {
+                // j 大于 j-1
+                if(((""+nums[j]+nums[j-1]).compareTo(""+nums[j-1]+nums[j]))>0)
+                {
+                    temp=nums[j];
+                    nums[j]=nums[j-1];
+                    nums[j-1]=temp;
+                }
+            }
+        }
+        StringBuilder result=new StringBuilder("");
+        for(int i=0;i<nums.length;i++)
+        {
+            result.append(nums[i]);
+        }
+        //00
+        if(result.substring(0,1).equals("0"))
+        {
+            return "0";
+        }
+        return result.toString();
+    }
+}
+```
+
+## leetcode nums数组两个数字和为target
+>1遍历数组，向后查找是否有与当前下标数和为target的。为了加速查找，可以先排序，在进行查找。时间复杂度为O(nlogn)
+>2使用hash表存储nums[i],每次遍历到一个元素，检索hash表中是否有target-nums[i]，如果有则返回该匹配的结果，否则将其放入hash表中。时间复杂度为O(n),空间复杂度为O(n)。
+
+## 排序复习
+### 冒泡
+```
+for(int i=0;i<nums.length;i++)
+{
+    int left=0;
+    int temp=0;
+    for(int j=nums.length-1;j>left;j--)
+    {
+        temp=nums[j];
+        nums[j]=nums[j-1];
+        nums[j-1]=temp;
+    }
+}
+```
+### 快速排序
+```
+#使用了nums[left]作为划分界限，并从nums[left+1]开始排序，最终再把nums[left]和nums[j]交换。
+
+void quicksort(int[] nums,int left,int right)
+{
+    <!-- 划分 -->
+    int i=left;
+    int j=right+1;
+    int temp=0;
+    while(true)
+    {
+        while(nums[++i]<nums[left] & i<right);
+        while(nums[--j]>nums[left]);
+        if(i>=j)
+        {
+            break;
+        }
+        temp=nums[i];
+        nums[i]=nums[j];
+        nums[j]=temp;
+    }
+    temp=nums[left];
+    nums[left]=nums[j];
+    nums[j]=temp;
+
+    quicksort(nums,left,j);
+    quicksort(nums,j+1,right);
+}
+```
+
+### 堆排序
+```
+#java 用优先队列实现
+#默认是小根堆
+PriorityQueue<Integer> queue = new PriorityQueue<>();
+
+# 大根堆
+PriorityQueue<Integer> queue = new PriorityQueue<>(new Comparator<Integer>() {
+    @Override
+    public int compare(Integer o1, Integer o2) {
+        return o2.compareTo(o1);
+    }
+});
+
+#简化写法
+PriorityQueue<Integer> queue = new PriorityQueue<>((o1, o2)->o2.compareTo(o1));
+Queue<Integer> queue = new PriorityQueue<>(Collections.reverseOrder());
+
+queue.offer(12);
+queue.poll();
+```
+
+## 牛客 DP18 滑雪
+```
+
+```
+# 0913 理论知识，项目
 >1yarn client ,yarn cluster
 >2用户留存率计算
 >3spark的部署模式
@@ -15,6 +341,7 @@
 >13 熟悉文档里边数仓建模的概念，hadoop，spark，flink八股
 >14 java hashmap
 >15 Flink 集群搭建
+>16 shell常用命令
 
 >场景提：https://blog.csdn.net/xxscj/article/details/86575294
 # 日常八股文和刷题
