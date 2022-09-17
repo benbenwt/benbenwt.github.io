@@ -74,6 +74,7 @@ SUBCOMMAND may print help when invoked w/o parameters or with -h.
 ```
 
 ### 单机模式运行
+>standlone模式是指所有服务都运行在同一个java 进程中，包括NameNode，DataNode，ResourceManager，NodeManager，主要用于调试。
 
 官方文档：https://hadoop.apache.org/docs/r3.1.4/hadoop-project-dist/hadoop-common/SingleCluster.html
 
@@ -91,7 +92,7 @@ cat output/*
 然后用hadoop-mapreduce-examples-3.1.4.jar中的java程序统计input下的所有文件，再对结果进行'dfs[a-z.]+'正则匹配，将结果输出到output文件夹。
 
 ### 伪分布式
-
+>伪分布式是指都运行在同一台机器上，但是使用了不同的java进程。
 1vim    etc/hadoop/core-site.xml，修改为如下内容，指定默认文件系统路径。:
 
 ```
@@ -177,6 +178,7 @@ cat output/*
 ```
 
 ### 完全分布式搭建
+>服务独立运行在多台机器上
 
 >编写好scp分发脚本,快速同步etc配置文件到其他集群机器.
 >

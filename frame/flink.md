@@ -4587,7 +4587,10 @@ bin/flink run -s hdfs://hbase:9000/flink/savepoints -c com.demo.task.practice.Sa
 
 
 
-
+# 其他
+## Flink 的聚合调优
+>https://blog.csdn.net/xxscj/article/details/86575294
+>
 
 
 

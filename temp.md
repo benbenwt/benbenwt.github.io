@@ -1,212 +1,183 @@
 [TOC]
-## 算法题0912
-### DP41 【模板】01背包
->这是max最优值的动态规划问题，状态就是最优值。前后依赖，i依赖于i+1，共三种情况，1装不下2装得下但不装3装得下并装。
->背包：可用容量 累积价值  物品：容量 价值
->起点是，当可选物品只有一个时，且容量已知，那么该物品要么装不下，要么装得下直接装。
+# 0914 算法题
+## leetcode 179 最大数
+>给定一个nums数组，请重新排列每个数的顺序，使得其排列组成一个最大的数
+>主要熟悉冒泡排序、String的compareTo函数，它是从高位到低位逐位比较大小。
+>还有处理00这种情况
 
 ```
 import java.util.*;
-public class Main{
-    public static void main(String [] args){
-        Scanner scanner=new Scanner(System.in);
-        int n,V;
-        n=scanner.nextInt();
-        V=scanner.nextInt();
-        
-        int [] volume=new int[n+1];
-        int [] weight=new int[n+1];
-        for(int i=1;i<=n;i++)
+import java.lang.*;
+class Solution {
+    public String largestNumber(int[] nums) {
+        // 冒泡
+        int left=0;
+        int temp=0;
+        for(int i=0;i<nums.length-1;i++)
         {
-            volume[i]=scanner.nextInt();
-            weight[i]=scanner.nextInt();
-        }
-        
-        int [] dp=new int[V+1];
-//         将第一维省略了，因为此题只用求出max值，不用记录路径，且dp[i]只依赖于dp[i-1]所以省略了一维。
-        for(int i=1;i<=n;i++){
-            for(int j=V;j>=volume[i];j--)
+            for(int j=nums.length-1;j>left;j--)
             {
-                dp[j]=dp[j]>dp[j-volume[i]]+weight[i]?dp[j]:dp[j-volume[i]]+weight[i];
+                // j 大于 j-1
+                if(((""+nums[j]+nums[j-1]).compareTo(""+nums[j-1]+nums[j]))>0)
+                {
+                    temp=nums[j];
+                    nums[j]=nums[j-1];
+                    nums[j-1]=temp;
+                }
             }
         }
-        System.out.println(dp[V]);
-        
-//         正好装满，就是可用空间刚好等于vomume[i],或可用空间为0.其他情况都为不可达，表示无法装满。
-        int [] dp1=new int[V+1];
-        Arrays.fill(dp1,Integer.MIN_VALUE);
-        dp1[0]=0;
-        for(int i=1;i<=n;i++)
+        StringBuilder result=new StringBuilder("");
+        for(int i=0;i<nums.length;i++)
         {
-            for(int j=V;j>=volume[i];j--)
-            {
-                dp1[j]=dp1[j]>dp1[j-volume[i]]+weight[i]?dp1[j]:dp1[j-volume[i]]+weight[i];
-            }
+            result.append(nums[i]);
         }
-        if(dp1[V]<0)
+        //00
+        if(result.substring(0,1).equals("0"))
         {
-            dp1[V]=0;
+            return "0";
         }
-        System.out.println(dp1[V]);
+        return result.toString();
     }
 }
 ```
 
-### DP5 多少个不同的二叉搜索树
->计数类型的动态规划，状态为可构成的二叉搜索树数量，前后依赖此状态。起点为1个节点，两个节点，三个节点。
->已知i，i+1与i的关系为：分解为左右子树的搜索树数量
+## leetcode nums数组两个数字和为target
+>1遍历数组，向后查找是否有与当前下标数和为target的。为了加速查找，可以先排序，在进行查找。时间复杂度为O(nlogn)
+>2使用hash表存储nums[i],每次遍历到一个元素，检索hash表中是否有target-nums[i]，如果有则返回该匹配的结果，否则将其放入hash表中。时间复杂度为O(n),空间复杂度为O(n)。
+>判断某个值存不存在，一般都有空间换时间的替代解法，使用hashMap，set等。本题是判断target-num[i]是否存在。
+
+## 排序复习
+### 冒泡
+```
+for(int i=0;i<nums.length;i++)
+{
+    int left=0;
+    int temp=0;
+    for(int j=nums.length-1;j>left;j--)
+    {
+        temp=nums[j];
+        nums[j]=nums[j-1];
+        nums[j-1]=temp;
+    }
+}
+```
+### 快速排序
+```
+#使用了nums[left]作为划分界限，并从nums[left+1]开始排序，最终再把nums[left]和nums[j]交换。
+
+void quicksort(int[] nums,int left,int right)
+{
+    <!-- 划分 -->
+    int i=left;
+    int j=right+1;
+    int temp=0;
+    while(true)
+    {
+        while(nums[++i]<nums[left] & i<right);
+        while(nums[--j]>nums[left]);
+        if(i>=j)
+        {
+            break;
+        }
+        temp=nums[i];
+        nums[i]=nums[j];
+        nums[j]=temp;
+    }
+    temp=nums[left];
+    nums[left]=nums[j];
+    nums[j]=temp;
+
+    quicksort(nums,left,j);
+    quicksort(nums,j+1,right);
+}
+```
+
+### 堆排序
+```
+#java 用优先队列实现
+#默认是小根堆
+PriorityQueue<Integer> queue = new PriorityQueue<>();
+
+# 大根堆
+PriorityQueue<Integer> queue = new PriorityQueue<>(new Comparator<Integer>() {
+    @Override
+    public int compare(Integer o1, Integer o2) {
+        return o2.compareTo(o1);
+    }
+});
+
+#简化写法
+PriorityQueue<Integer> queue = new PriorityQueue<>((o1, o2)->o2.compareTo(o1));
+Queue<Integer> queue = new PriorityQueue<>(Collections.reverseOrder());
+
+queue.offer(12);
+queue.poll();
+```
+
+## 牛客 DP18 滑雪
+>动态规划 极值类型，求出得到极值的path。这题关键点是确定起点和计算方向，起点是最低的点，计算方向是按照高度增加。
 ```
 import java.util.*;
+
+//     
+class HeightAxis{
+    public int height;
+    public int i;
+    public int j;
+
+    public  HeightAxis(int height,int i,int j){
+        this.height=height;
+        this.i=i;
+        this.j=j;
+    }
+}
+
 public class Main{
+//     选出最长的路径，状态值为当前的max长度，依赖为取决于三个方向。起始点为当一个点的四周没有比他低的（排除来路），其max=0。如何取到所有滑道。
     public static void main(String[] args){
         Scanner scanner=new Scanner(System.in);
-        int n=scanner.nextInt();
-//         
-        int dp[]=new int[n+1];
-        dp[0]=1;
-        dp[1]=1;
-        for(int i=2;i<=n;i++)
-        {
-            for(int root=1;root<=i;root++)
-            {
-                dp[i]+=dp[root-1]*dp[i-root];
-            }
-        }
-        System.out.println(dp[n]);
-    }
-}
-```
-### DP3 跳台阶扩展问题
->可以跳任意阶数，所以就等于前边所有介的累加和，增加的1就是从0号台阶直接跳n级到达n号台阶的跳法。
-```
-import java.util.*;
-public class Main{
-    public static void main(String[] args)
-    {
-        Scanner scanner=new Scanner(System.in);
-        int target=scanner.nextInt();
-        
-        if(target==1)
-        {
-            System.out.println(1);
-            return;
-        }
-        if(target==2)
-        {
-            System.out.println(2);
-              return;
-        }
-        int past=3;
-        int ans=0;
-        for(int i=3;i<=target;i++)
-        {
-            ans=past+1;
-            past=past+ans;
-        }
-        System.out.println(ans);
-    }
-}
-```
-
-### DP4 最下花费爬楼梯 自输入输出
-```
-import java.util.*;
-
-public class Main{
-    public static void main(String[] args)
-    {
-        Scanner scanner=new Scanner(System.in);
-        int n=scanner.nextInt();
-        int [] cost=new int[n];
+        int n=0;int m=0;
+        n=scanner.nextInt();
+        m=scanner.nextInt();
+        PriorityQueue<HeightAxis> heightQueue=heightQueue=new PriorityQueue<HeightAxis>((o1,o2)->(o1.height-o2.height));;
+        int [][] matrix=new int[n][m];
         for(int i=0;i<n;i++)
         {
-            cost[i]=scanner.nextInt();
+            for(int j=0;j<m;j++)
+            {
+                matrix[i][j]=scanner.nextInt();
+                HeightAxis h=new HeightAxis(matrix[i][j],i,j);
+                heightQueue.offer(h);
+            }
         }
-        
-        System.out.println(Main.minCostClimbingStairs(cost));
+        Main.answer(matrix,n,m,heightQueue);
     }
-    public static int minCostClimbingStairs (int[] cost) {
-        // write code here
-        if(cost.length==0 || cost.length==1)
-        {
-            return 0;
-        }
-        int a=0;
-        int b=0;
-        int ans=0;
-        for(int i=2;i<=cost.length;i++)
-        {
-            ans=(b+cost[i-1])<(a+cost[i-2])?(b+cost[i-1]):(a+cost[i-2]);
-            a=b;
-            b=ans;
-        }
-        return ans;
-    }
-}
-```
-### DP1 斐波那契数列 自处理输入输出
-```
-import java.util.*;
 
-public class Main {
-    public static void main(String [] args){
-        int n;
-        Scanner scanner=new Scanner(System.in);
-        n=scanner.nextInt();
-        System.out.println(Main.Fibonacci(n));
-    }
-    public static int Fibonacci(int n) {
-        //从0开始，第0项是0，第一项是1
-        if(n <= 2)    
-             return 1;
-         int res = 0;
-         int a = 1;
-         int b = 1;
-         //因n=2时也为1，初始化的时候把a=0，b=1
-         for (int i = 3; i <= n; i++){
-         //第三项开始是前两项的和,然后保留最新的两项，更新数据相加
-             res = (a + b);
-             a = b;
-             b = res;
-         }
-        return res;
-    }
-}
-```
-
-### DP2爬台阶 自处理输入输出
-```
-import java.util.*;
-
-public class Main{
-    public static void main(String[] args){
-        Scanner scanner=new Scanner(System.in);
-        int n=scanner.nextInt();
-        System.out.println(Main.jumpFloor(n));
-    }
-    public static int jumpFloor(int target) {
-        if(target==0)
-        {
-            return 0;
+    public static void answer(int [][] matrix,int n,int m,PriorityQueue<HeightAxis> heightQueue){
+        int [] [] dp=new int [n][m];
+        int maxResult=Integer.MIN_VALUE;
+        while(heightQueue.size()>0){    
+                HeightAxis h=heightQueue.poll();
+                int i=h.i;
+                int j=h.j;
+                int max=1;
+                if(i-1>=0 && matrix[i][j]>matrix[i-1][j]){
+                    max=(dp[i-1][j]+1)>max?(dp[i-1][j]+1):max;
+                }
+                 if(i+1<n && matrix[i][j]>matrix[i+1][j]){
+                    max=(dp[i+1][j]+1)>max?(dp[i+1][j]+1):max;
+                }
+                 if(j-1>=0 && matrix[i][j]>matrix[i][j-1]){
+                     max=(dp[i][j-1]+1)>max?(dp[i][j-1]+1):max;
+                }
+                 if(j+1<m && matrix[i][j]>matrix[i][j+1]){
+                     max=(dp[i][j+1]+1)>max?(dp[i][j+1]+1):max;
+                }
+                dp[i][j]=max;  
+                maxResult=max>maxResult?max:maxResult;
         }
-        if(target==1)
-        {
-            return 1;
-        }
-        if(target==2)
-        {
-            return 2;
-        }
-        int a=1;
-        int b=2;
-        int ans=0;
-        for(int i=3;i<=target;i++)
-        {
-            ans=a+b;
-            a=b;
-            b=ans;
-        }
-        return ans;
+        System.out.println(maxResult);
+//     max
     }
 }
 ```

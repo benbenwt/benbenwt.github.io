@@ -487,14 +487,18 @@ properties.put(ProducerConfig.RETRIES_CONFIG, 3);
 >replica.lag.time.max.ms表示 同步时间阈值，超过此时间不响应的replica follower剔除出ISR。
 
 ### 数据去重
-
+生产者精确一次：
 >至少一次，至多一次，精确一次。
 >
->当ACK设置为0时，就是至多一次。不会重发
+>当ACK设置为0时，就是至多一次。不会重发，可能丢失。发生故障导致producer没送到，就是0次消费。
 >
->当ACK级别为-1，副本数大于等于2，ISR应答副本数大于等于2，就是至少一次。可能重发
->
->当使用幂等性和事务时，并满足至少一次的相同条件时（ack=-1，ISR>2,replica>2），保持精确一次。
+>当ACK级别为-1，副本数大于等于2，ISR应答副本数大于等于2，就是至少一次。可能重发，不会丢失。如果ack相应没有被producer收到，其再发一次，就会多次消费。
+>当使用幂等性和事务时，并满足至少一次的相同条件时（ack=-1，ISR>2,replica>2），就是精确一次。
+
+幂等性就是指Producer不论向Broker发送多少数据，都只会持久化一条，保证了不重复。当这时发生ACK响应信号丢失时，即使producer重发了，也不会导致重复。但是其局限于单会话和单分区，重启producer会生成新的producer会话，可以借助事务实现跨会话跨分区。
+
+消费者精确一次：
+>将消费过程与offset提交做原子绑定，要么消费过程和offset都完成，要么没完成且不提交offset。即无论发布发生故障，消费端对所有数据只执行精确一次处理。
 
 ##### 幂等性原理
 
@@ -509,7 +513,9 @@ properties.put(ProducerConfig.RETRIES_CONFIG, 3);
 >enable.idempotence 默认为true，开启。
 
 ##### 生产者事务
-
+![](../resources/images/kafka_transaction.png)
+>开启事务后，当kafka producer故障重启后，仍然能继续处理未完成的事务。如果只commit没有完成消息，说明需要完成该事务。如果两者都有就不用管。
+>当producer重启后，根据事务id取trasaction topic中查询是否有未完成的事务，没有则直接继续处理后续的事务，否则需要恢复未提交的事务。
 >开启事务必须开启幂等性。
 
 ```

@@ -449,6 +449,17 @@ Executor负责执行任务并返回给驱动进程，通过自身的Block Manage
 >
 >10dirver分配任务并监控任务的执行。
 
+Yarn Cluster 粗略过程
+>1在YARN Cluster模式下，任务提交后回合RM申请AM资源。
+>
+>2随后RM分配container，在合适的NM上启动AM，此时的AM就是Driver。
+>
+>3Driver启动后相RM申请Executor内存，RM收到后分配container，然后启动Executor。
+>
+>4Executor启动后相Driver反向注册，Executor全部注册后开始执行main函数。
+>
+>5之后执行到Action算子后，出发一个Job，并划分stage，生成TaskSset，将task发送到Executor执行。
+
 #### yarn client模式
 
 >AM  ->Driver->Executer
@@ -470,6 +481,21 @@ Executor负责执行任务并返回给驱动进程，通过自身的Block Manage
 >8.CoarseGrainedExecutorBackend进程会接收消息，
 >
 >9.Dirver分配任务并监控任务的执行
+
+Yarn client 粗略过程
+用于监控Driver模块在客户端执行，而不是在Yarn中，过程如下；
+>1Driver在提交的本地机器启动
+>
+>2Driver会与ResourceManager通讯申请启动ApplicationMaster
+>
+>3ResourceManager分配contaienr，在正确的NodeManager上启动ApplicationMaster，负责向RM申请Executor内存。
+>
+>4RM收到AM资源请求后，分配container，然后AM在分配的NM上启动Executor进程
+>
+>5Executor启动后再向Driver反向注册，注册完成后Driver开始执行。
+>
+>6到达Action算子时，出发job，并根据stage规则划分，每个stage生成TaskSet，将Task发送到各个Executor上。
+
 
 #### yarn cluster和yarn client的区别
 

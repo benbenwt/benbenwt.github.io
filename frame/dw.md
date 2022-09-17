@@ -252,6 +252,7 @@ class Solution {
 ## leetcode nums数组两个数字和为target
 >1遍历数组，向后查找是否有与当前下标数和为target的。为了加速查找，可以先排序，在进行查找。时间复杂度为O(nlogn)
 >2使用hash表存储nums[i],每次遍历到一个元素，检索hash表中是否有target-nums[i]，如果有则返回该匹配的结果，否则将其放入hash表中。时间复杂度为O(n),空间复杂度为O(n)。
+>判断某个值存不存在，一般都有空间换时间的替代解法，使用hashMap，set等。本题是判断target-num[i]是否存在。
 
 ## 排序复习
 ### 冒泡
@@ -322,28 +323,310 @@ queue.poll();
 ```
 
 ## 牛客 DP18 滑雪
+>动态规划 极值类型，求出得到极值的path。这题关键点是确定起点和计算方向，起点是最低的点，计算方向是按照高度增加。
+```
+import java.util.*;
+
+//     
+class HeightAxis{
+    public int height;
+    public int i;
+    public int j;
+
+    public  HeightAxis(int height,int i,int j){
+        this.height=height;
+        this.i=i;
+        this.j=j;
+    }
+}
+
+public class Main{
+//     选出最长的路径，状态值为当前的max长度，依赖为取决于三个方向。起始点为当一个点的四周没有比他低的（排除来路），其max=0。如何取到所有滑道。
+    public static void main(String[] args){
+        Scanner scanner=new Scanner(System.in);
+        int n=0;int m=0;
+        n=scanner.nextInt();
+        m=scanner.nextInt();
+        PriorityQueue<HeightAxis> heightQueue=heightQueue=new PriorityQueue<HeightAxis>((o1,o2)->(o1.height-o2.height));;
+        int [][] matrix=new int[n][m];
+        for(int i=0;i<n;i++)
+        {
+            for(int j=0;j<m;j++)
+            {
+                matrix[i][j]=scanner.nextInt();
+                HeightAxis h=new HeightAxis(matrix[i][j],i,j);
+                heightQueue.offer(h);
+            }
+        }
+        Main.answer(matrix,n,m,heightQueue);
+    }
+
+    public static void answer(int [][] matrix,int n,int m,PriorityQueue<HeightAxis> heightQueue){
+        int [] [] dp=new int [n][m];
+        int maxResult=Integer.MIN_VALUE;
+        while(heightQueue.size()>0){    
+                HeightAxis h=heightQueue.poll();
+                int i=h.i;
+                int j=h.j;
+                int max=1;
+                if(i-1>=0 && matrix[i][j]>matrix[i-1][j]){
+                    max=(dp[i-1][j]+1)>max?(dp[i-1][j]+1):max;
+                }
+                 if(i+1<n && matrix[i][j]>matrix[i+1][j]){
+                    max=(dp[i+1][j]+1)>max?(dp[i+1][j]+1):max;
+                }
+                 if(j-1>=0 && matrix[i][j]>matrix[i][j-1]){
+                     max=(dp[i][j-1]+1)>max?(dp[i][j-1]+1):max;
+                }
+                 if(j+1<m && matrix[i][j]>matrix[i][j+1]){
+                     max=(dp[i][j+1]+1)>max?(dp[i][j+1]+1):max;
+                }
+                dp[i][j]=max;  
+                maxResult=max>maxResult?max:maxResult;
+        }
+        System.out.println(maxResult);
+//     max
+    }
+}
 ```
 
-```
 # 0913 理论知识，项目
->1yarn client ,yarn cluster
->2用户留存率计算
->3spark的部署模式
->4kafka 精确一次消费
->5hive表的更新策略
->6Flink版本 1.13.6 flume 1.9
->7sqoop使用碰到的问题
->8kafka使用的场景
->9flink实现精确一次
->10yarn的组件
->11各框架的版本：
->12 新增及更新表的逻辑，拉链表的逻辑
->13 熟悉文档里边数仓建模的概念，hadoop，spark，flink八股
->14 java hashmap
->15 Flink 集群搭建
->16 shell常用命令
+## 提交模式yarn client ,yarn cluster
+>提交模式决定了应用和任务的运行方式。
+Yarn Client 用于监控Driver模块在客户端执行，而不是在Yarn中，过程如下；
+>1Driver在提交的本地机器启动
+>2Driver会与ResourceManager通讯申请启动ApplicationMaster
+>3ResourceManager分配contaienr，在正确的NodeManager上启动ApplicationMaster，负责向RM申请Executor内存。
+>4RM收到AM资源请求后，分配container，然后AM在分配的NM上启动Executor进程
+>5Executor启动后再向Driver反向注册，注册完成后Driver开始执行。
+>6到达Action算子时，出发job，并根据stage规则划分，每个stage生成TaskSet，将Task发送到各个Executor上。
+>
+Yarn Cluster
+>1在YARN Cluster模式下，任务提交后回合RM申请AM资源。
+>2随后RM分配container，在合适的NM上启动AM，此时的AM就是Driver。
+>3Driver启动后相RM申请Executor内存，RM收到后分配container，然后启动Executor。
+>4Executor启动后相Driver反向注册，Executor全部注册后开始执行main函数。
+>5之后执行到Action算子后，出发一个Job，并划分stage，生成TaskSset，将task发送到Executor执行。
 
->场景提：https://blog.csdn.net/xxscj/article/details/86575294
+## 用户留存率计算
+> 留存率根据第一次登陆日期和最后一次登录日期计算，第一次登录就是注册日期。
+> n日留存率就是：n天前注册，且今天登陆了。即first_login_time为n天前，且last_login_time为今天就是留存人数，除以总人数就是留存率。
+> 
+>DWT 如何得到的last_login，DWT取得什么数据，存储到分区的是什么数据。
+>
+
+>HIVE表都是什么类型。取得什么数据，怎么计算的指标，存储到分区的是什么数据。
+
+>ODS层从日志和业务数据库中导入的原生数据，导入数据的方式分为全量，增量，新增及变化。
+>
+>全量：适合数据量小，可以有插入和修改旧数据。每个当日分区存储了截止该天的全部数据。对应于周期型快照事实表。
+>
+>增量：适合数据量大，只能有插入。每个当日分区存储了该天新增的数据。对应于事务型事实表。
+>
+>新增及变化：适合数据量大，可以有插入和旧数据的修改。每个当日分区存储了该天新增及变化的数据。对应于累计型快照事实表。
+>
+
+>DWD 存储从ods解析出来的数据，有时需要连接多个ods表进行join。
+>事务型事实表： 从ods取出当天分区， 放入当天分区。
+>周期型累计快照事实表： 从ods取出当天分区，放入当天分区。
+>累积型快照事实表： 从ods取出当天分区，与9999-99-99分区full outer join，然后将时间字段更新，如果有finish_time则表示过期了，并按照finish_time分区。否则说明未到达生命周期终点，将其放入9999-99-99.为了方便sql编写，sql的逻辑为：如果finish_time存在，则取finish_time为time，否则time取9999-99-99，最终按照time字段分区。当天分区存储的是当天完成的记录。
+
+
+>DIM 主要存储一些变化很小的属性，例如地区，省份等。
+>直接从ods查询全量的数据放入当天分区，有些特殊的维表不需要每天查询，因为其基本不变化。
+>拉链表：维度缓慢变化的，其数量较大不适用于全量，所以使用拉链表。从ods查出当天新增及变化的数据，然后和9999-99-99分区进行full outer join，join后将new和old数据都存在的那些行挑出，然后将这些行的old部分写入当天分区。再从join后的表中查出所有new 表的数据，写入9999-99-99分区。当天分区存储的是当天过期的数据。
+
+>DWS  从DWD查询数据，按照1天聚合。写入当天分区。
+>DWD如果是增量 事务型事实表，分区内存储就是当天的数据，那么直接按照dt和关注的列（user_id,product_id）进行分区聚合。
+>如果前边时全量,周期型快照事实表，分区存储了全量数据，那么按照其他时间字段聚合，dt不是所需聚合字段，例如(comment_creat_time)。
+>如果前边dwd是新增及变化，累积型快照事实表，分区存储了当天完成的数据，那么可以按照dt和关注的字段。
+
+>DWT DWS已经统一为增量数据了，每天分区就是当天增量的数据，进行聚合统计的结果。
+
+## kafka 精确一次消费
+>当使用幂等性和事务时，并满足至少一次的相同条件时（ack=-1，ISR>2,replica>2），就是精确一次。
+
+幂等性就是指Producer不论向Broker发送多少数据，都只会持久化一条，保证了不重复。当这时发生ACK响应信号丢失时，即使producer重发了，也不会导致重复。但是其局限于单会话和单分区，重启producer会生成新的producer会话，可以借助事务实现跨会话跨分区。
+
+消费者精确一次：
+>将消费过程与offset提交做原子绑定，要么消费过程和offset都完成，要么没完成且不提交offset。即无论发布发生故障，消费端对所有数据只执行精确一次处理。
+
+### 幂等性原理
+
+>使用<PID,Partition,SeqNumber>确定唯一消息，不可持久化重复的数据。即其保证不重启情况下的单个分区数据幂等性。
+>
+>PID:producerID，每次kafka重启分配一个新的PID
+>
+>Partition，表示分区
+>
+>Sequence Number表示在producer端的编号。
+>
+>enable.idempotence 默认为true，开启。
+
+### 生产者事务
+>开启事务后，当kafka producer故障重启后，仍然能继续处理未完成的事务。如果只commit没有完成消息，说明需要完成该事务。如果两者都有就不用管。
+>当producer重启后，根据事务id取trasaction topic中查询是否有未完成的事务，没有则直接继续处理后续的事务，否则需要恢复未提交的事务。
+>开启事务必须开启幂等性。
+
+```
+// 1 初始化事务
+void initTransactions(); 
+
+// 2 开启事务 
+void beginTransaction() throws ProducerFencedException;
+
+ // 3 在事务内提交已经消费的偏移量（主要用于消费者） 
+void sendOffsetsToTransaction(Map offsets, String consumerGroupId) throws  ProducerFencedException; 
+
+// 4 提交事务 
+void commitTransaction() throws ProducerFencedException; 
+
+// 5 放弃事务（类似于回滚事务的操作） 
+void abortTransaction() throws ProducerFencedException;
+
+```
+
+```
+// 设置事务 id（必须），事务 id 任意起名
+ properties.put(ProducerConfig.TRANSACTIONAL_ID_CONFIG, 
+"transaction_id_0");
+// 初始化事务
+ kafkaProducer.initTransactions();
+ // 开启事务
+ kafkaProducer.beginTransaction();
+ try{
+    kafkaProducer.send("","") 
+    kafkaProducer.commitTransaction();
+ }catch(Exception e){
+    kafkaProducer.abortTransaction();
+ }finally{
+    kafkaProducer.close();
+ }
+```
+
+
+## sqoop使用碰到的问题
+
+
+### sqoop map任务划分不均衡
+>当没有合理设置split-by字段和-m参数时，会导致任务划分不均衡。例如id时自增的但是删除了部分数据，导致给两个map任务分配的数量不同。通过查看页面的jobs，进入具体的job，然后点击Map，就可以查看所有的mapTask。
+>sqoop import工作步骤：1.首先向mysql请求元数据，比如表的结构信息 2.然后提交map-only job到hadoop，通过启动多个map任务，并行copy文件到hdfs。
+>在划分map-only字段时，使用split-by字段进行划分，-m参数用于指定生成多少个map任务，即按照split-by字段均匀划分到-m个map任务。具体执行时，map任务的sql通过where id>?取筛选。
+>以id作为split-by字段为例，id分布范围为 min(id) max(id) ，将该区间等分到m个分区。如果id在min和max范围内分布不均则会导致任务不均衡。split-by对int支持较好，对varhcar无法切分。
+
+```
+BigDecimal,Boolean,Date,Float,Integer
+
+BigDecimalSplitter.java
+
+BooleanSplitter.java
+
+DBSplitter.java
+
+DateSplitter.java
+
+FloatSplitter.java
+
+IntegerSplitter.java
+
+OracleDateSplitter.java
+
+```
+
+### 指定terminated-by、null-string、null-no-string
+>--fields-terminated-by '\t' \
+>--null-string '\\N' \
+>--null-non-string '\\N'
+
+### 驱动缺失
+>mysql-connector拷贝到lib目录下
+
+
+## kafka的作用
+>高吞吐量的分布式流处理平台
+>1：应用解耦：生产者不用等待消费者处理完并接受返回响应。
+>2：流量削峰：生产者可能在某个时间段突然流量加大，导致流量增加。
+>3：处理速度不一致：生产者和消费者处理速度不一致，可以通过kafka缓存数据。
+
+## flink实现精确一次
+>source(consumer)：内存状态保存了offset，每次checkpoint时也会持久化内存中的offset。source只需要实现至少一次消费的语义，只要提交offset在数据处理之前就可以实现此语义。
+>sink（producer）： 在至少一次消费的语义基础上，避免出现offset与已处理的数据不一致的情况，这时如果故障了，再次恢复就会导致外部存储已经有了检查点之后的数据，而offset恢复到了检查点。通过幂等性和事务，可以实现精确一次。幂等性使得重复消费的数据不会对外部存储发生影响，但是其需要程序执行到发生故障的地方，才能让offset和外部存储一直，因为外部存储有了checkpoint到发生故障那一段时间的数据。而事务通过绑定数据处理过程和offset，要么offset成功存储到checkpoint且数据成功处理，要么两者都没有。
+
+## spark实现精确一次消费
+>spark可以通过source段的手动提交，即offset提交在数据处理之后，那么就是至少一次语义。
+>再通过输出端外部存储幂等性，就实现了精确一次。
+>也可以通过事务实现严格的精确一次。
+>
+
+## spark，flink，kafka 精确一次实现对比
+>首先是sink和producer:两者都是存储数据到外部kafka，都是为了去重，避免offset和外部数据不一致，重复处理数据，当然kafka是例外，其直接实现了精确一次。
+>kafka：借助幂等性idempotence可以实现一定的精确一次，但是受producer session和分区的限制，并且故障恢复之初外部存储与producer认为的已发送数据不一致。借助事务可以实现跨域session和分区限制，并且通过trasaction topic存储commit信息和完成信息，让存储的数据和trasaction_id认为的一致。使用beginTransaction，commit，abort函数实现事务。
+>flink：通过外部存储幂等性和Flink支持的事务实现精确一次。Flink提供的kafkaconnector已经实现了事务。自定义事务需要继承TwoPhaseCommitSinkFunction，实现beginTransaction，precommit，commit函数，roolback函数。
+>>spark：借助支持幂等性的外部数据库，upsert。借助支持事务的数据库实现事务。
+
+
+>source和consumer：都是消费数据，实现了至少一次意义，为例避免丢失数据。kafka consumer直接借助事务实现了精确一次。
+>kafka：直接也通过事务实现offset和数据处理的一致性，相当于consumer直接实现了精确一次。
+>flink：通过算子内存状态存储offset，并定期checkpoint。
+>spark：自己编写手动提交offset的逻辑，先处理数据，后提交offset。
+## yarn的组件
+>ResourceManager NodeManager Container ApplicationMaster
+>ResourceManager-NodeManager：监控NodeManager，启动AM。
+>ResourceManager-Container：按照策略调度资源，并分区container。
+>ResourceManager-ApplicationMaster: 启动AM
+>NodeManager：管理该台机器的资源和任务
+>NodeManager-ResourceManager，AM:接受来自RM，AM的命令，启动job，杀死job等。
+>ApplicationMaster：向RM申请资源启动Task，分配任务到NM，启动NM任务。
+
+## java hashmap
+>可以存储元素，实现快速检索。主干使用数据实现，可以实现基于index的常数时间检索。index通过key值的hashcode%length来得到。
+插入结点
+
+```
+1根据查找树规则确定插入位置
+2 若key等于该节点，update值即可。否则，插入x，将x标记为红色。若其为根，标记为黑色。
+3插入后的再平衡
+  若x的父节点为黑色：直接插入
+  若x的父节点是红色：
+     若父节点的兄弟结点为红色，则将父节点和其兄弟结点标记为黑色，将祖父标记为红色。并让x与祖父颜色相同。
+     若父亲的兄弟结点为黑色，则进行rotation，recolor操作，具体操作方式参考下边的rotation操作。
+```
+
+rotation，recolor
+
+```
+rotation，recolor操作分为4种情景，分别为左左，左右，右右，右左。
+即x在祖父的左边，但在父亲的右边，即为左右。其他相同道理。
+左左：祖父右旋
+左右：父亲左旋，转换为左左情景，处理父亲
+右右：祖父左旋
+右左：父亲右旋，转换为右右情景，处理父亲。
+```
+
+## shell常用命令
+>权限管理：chmod chown 
+>文件文件夹： ls，cd，mv，cp，rm，mkdir，vim,cat,grep,head,tail，echo
+>网络：ping,netstat,ipconfig
+>操作系统：top,free,du-h,ps，which
+
+## 从数组中挑选n个元素
+ 对于从数组中挑选n个元素，构造的dfs树有两种方案：
+ 1.第i层表示取数组中某个数,最终得到取得数 
+ 2.第i层表示第i个数组元素取不取，最终得到0101的表示。 
+ 方法2称为子集树，方法1称为排列树，排列会关注顺序，所以同一子集不同顺序path也不同。
+
+## sql
+>(CASE WHEN score>60 THEN "及格" 
+>     WHEN score>80 THEN  "良"
+>     ELSE "差"
+>     END)
+
+## TCP三次握手，4次挥手
+>三次握手状态：SYN-SENT,ESTAB-LISHED.      SYN-RCVD
+>四次挥手：FIN-WAIT-1,FIN-WAIT-2,TIME-WAIT.        CLOSE-WAIT,LAST-ACK
+>为什么三次，不是两次：为了应对失效的链接请求迟到服务端，即客户端的SYN报文在失效时间后到达服务端，然后服务端直接回应同意，就以为建立链接了，等待客户端传输数据，浪费了资源。
+>如果第三次握手失败会增样：客户端以为建立链接了，开始发送数据。但是服务端没收到ack，所以在超时前会不断重发SYN-ACK请求，直到到了超时时间，会发送RST报文，关闭链接。
+
 # 日常八股文和刷题
 ## 理论知识0822
 ### Java八股
