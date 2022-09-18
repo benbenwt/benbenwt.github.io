@@ -1,183 +1,118 @@
 [TOC]
-# 0914 算法题
-## leetcode 179 最大数
->给定一个nums数组，请重新排列每个数的顺序，使得其排列组成一个最大的数
->主要熟悉冒泡排序、String的compareTo函数，它是从高位到低位逐位比较大小。
->还有处理00这种情况
+# 0915 理论知识
+## 哈夫曼树
+>每次挑选权重最小的两个结点作为左右结点，新生生成的根节点为两节点之和。然后重复此过程。
+>加权路径长度为：叶子权重乘以叶子路径长度，再将每个叶子的加权路径长度加起来。
+>总结点数=2*叶子结点数-1。
+## 操作系统死锁
+  -## 死锁的定义
+    当发生死锁时，这组死锁进程中的每一个进程，都在等待另一个死锁进程所占有的资源。
 
-```
-import java.util.*;
-import java.lang.*;
-class Solution {
-    public String largestNumber(int[] nums) {
-        // 冒泡
-        int left=0;
-        int temp=0;
-        for(int i=0;i<nums.length-1;i++)
-        {
-            for(int j=nums.length-1;j>left;j--)
-            {
-                // j 大于 j-1
-                if(((""+nums[j]+nums[j-1]).compareTo(""+nums[j-1]+nums[j]))>0)
-                {
-                    temp=nums[j];
-                    nums[j]=nums[j-1];
-                    nums[j-1]=temp;
-                }
-            }
-        }
-        StringBuilder result=new StringBuilder("");
-        for(int i=0;i<nums.length;i++)
-        {
-            result.append(nums[i]);
-        }
-        //00
-        if(result.substring(0,1).equals("0"))
-        {
-            return "0";
-        }
-        return result.toString();
-    }
-}
-```
+  ### 产生死锁的必要条件
+    1互斥：在一段时间内，某资源只能被一个进程占有
+    2请求和保持：进程持有一个资源，再去请求其他进程占有的资源。
+    3不可抢占：进程持有的资源在进程结束前不可分配给其他进程
+    4循环等待：发生死锁的进程之间互相等待其他人持有的资源。
 
-## leetcode nums数组两个数字和为target
->1遍历数组，向后查找是否有与当前下标数和为target的。为了加速查找，可以先排序，在进行查找。时间复杂度为O(nlogn)
->2使用hash表存储nums[i],每次遍历到一个元素，检索hash表中是否有target-nums[i]，如果有则返回该匹配的结果，否则将其放入hash表中。时间复杂度为O(n),空间复杂度为O(n)。
->判断某个值存不存在，一般都有空间换时间的替代解法，使用hashMap，set等。本题是判断target-num[i]是否存在。
+### 预防死锁
 
-## 排序复习
-### 冒泡
-```
-for(int i=0;i<nums.length;i++)
-{
-    int left=0;
-    int temp=0;
-    for(int j=nums.length-1;j>left;j--)
-    {
-        temp=nums[j];
-        nums[j]=nums[j-1];
-        nums[j-1]=temp;
-    }
-}
-```
-### 快速排序
-```
-#使用了nums[left]作为划分界限，并从nums[left+1]开始排序，最终再把nums[left]和nums[j]交换。
+  - 破坏请求和保持
+    1第一种协议
+    进程运行前一次性请求所有资源
+    2第二种协议
+    允许先申请初期所需的资源，使用完后一次全部释放，再申请所需资源。​
 
-void quicksort(int[] nums,int left,int right)
-{
-    <!-- 划分 -->
-    int i=left;
-    int j=right+1;
-    int temp=0;
-    while(true)
-    {
-        while(nums[++i]<nums[left] & i<right);
-        while(nums[--j]>nums[left]);
-        if(i>=j)
-        {
-            break;
-        }
-        temp=nums[i];
-        nums[i]=nums[j];
-        nums[j]=temp;
-    }
-    temp=nums[left];
-    nums[left]=nums[j];
-    nums[j]=temp;
+  - 破坏不可抢占
+    当进程不能获得所有需要的资源时便处于等待状态，等待期间它占用的资源被隐式的释放重新回到系统的资源列表。当重新获得需要的资源时，才重新启动。
+  - 破坏循环等待
+    给资源规定一个序号级，按照序号递增的顺序请求资源。若需要多个同类资源必须一起请求。若需要序号低的资源，必须放弃当前持有资源。
 
-    quicksort(nums,left,j);
-    quicksort(nums,j+1,right);
-}
-```
+### 避免死锁问题-银行家算法
+>系统对进程发出每一个系统能够满足的资源申请进行动态检查
+并根据检查结果决定是否分配资源
+如果分配后系统可能发生死锁,则不予分配,否则予以分配。
+这是一种保证系统不进入死锁状态的动态策略。
+### 系统安全
+  允许动态的申请资源，但是在进行资源分配时，先计算资源分配的安全性，防止系统进入不安全状态。所谓安全状态就是，系统可以按照某一顺序推进进程，分配资源，使每个进程都能顺利完成。若无法找到该顺序，则不分配该资源。
 
-### 堆排序
-```
-#java 用优先队列实现
-#默认是小根堆
-PriorityQueue<Integer> queue = new PriorityQueue<>();
+### 利用银行家算法避免死锁
 
-# 大根堆
-PriorityQueue<Integer> queue = new PriorityQueue<>(new Comparator<Integer>() {
-    @Override
-    public int compare(Integer o1, Integer o2) {
-        return o2.compareTo(o1);
-    }
-});
+  为了实现银行家算法，每个新进程进入系统时，它必须申明在运行过程中，可能需要的每种资源的最大单元数，其总数应不超过系统所拥有的资源总量。当进程请求资源时，系统先确定是否有足够的资源。若有，再进一步计算资源分配给进程后，系统是否会处于不安全状态。如果不会，再分配给他。
 
-#简化写法
-PriorityQueue<Integer> queue = new PriorityQueue<>((o1, o2)->o2.compareTo(o1));
-Queue<Integer> queue = new PriorityQueue<>(Collections.reverseOrder());
+#### 银行家算法数据结构
+    1可利用资源向量Available。这是一个含有m个元素的数组，如Available[j]=k,表示j类资源有k个。
+    2最大需求矩阵Max。这是一个n×m的矩阵，它定义了系统中n个进程的每一个进程对m类资源的最大需求量。如Max[i,j]=k,表示进程i需要j类资源的最大数目为k。​
+    3分配矩阵Allocation。这是一个n×m的矩阵，它定义了系统中每一类资源当前已分配给每一进程的资源数。如Allocation[i,j]=k,表示进程i分到了j类资源k个。
+    4需求矩阵need。Need[i,j]表示，进程i还需要j类资源k个才能完成其任务。​
+    Need[i,j]=Max[i,j]-Allocation[i,j]
 
-queue.offer(12);
-queue.poll();
-```
+#### 银行家算法
+    Requesti是进程Pi的请求向量，如果Requesti[j]=k,表示Pi需要K个j类资源,Pi发出请求后，系统按如下步骤：
+    1若Requesti[j]<=Need[i,j],转向2.否则认为出错。
+    2若Requesti[j]<=Available[j],转向3.否则认为尚无足够资源。
+    3若把资源分配给Pi，并分配数据结构的值。
+    Available[j]=Available[j]-Requesti[j];
+    Allocation[i,j]=Allocatin[i,j]+Requesti[j];
+    Need[i,j]=Need[i,j]-Requesti[j];
+    4检查是否处于安全状态，否则撤销分配。​​​（就是尝试把资源分配给进程，然后等待进程执行完成并释放资源，重复此过程直到全部分配完成。如果所有进程都可以分配，即finish数组全为true，那么就是安全状态，反之就是非安全状态）
 
-## 牛客 DP18 滑雪
->动态规划 极值类型，求出得到极值的path。这题关键点是确定起点和计算方向，起点是最低的点，计算方向是按照高度增加。
-```
-import java.util.*;
+### 安全性算法
+>（即把资源全部分出去，看看是否有进程没分到（为false），若有即不安全。）
 
-//     
-class HeightAxis{
-    public int height;
-    public int i;
-    public int j;
+- （1）设置两个向量
+  1工作向量Work，表示可提供的系统资源总数，执行安全算法开始时，他等于Available。
+  2Finish,他表示系统是否有足够的资源分配，开始时Finishi[i]=false.当有足够资源时，再令Finish[i]=true.
 
-    public  HeightAxis(int height,int i,int j){
-        this.height=height;
-        this.i=i;
-        this.j=j;
-    }
-}
+- （2）寻找进程
+  从进程集合中找到满足如下条件的进程
+  1Finish[i]=false
+  2Need[i,j]<=Work[j];
+  若找到执行（3），否则执行（4）.​​
 
-public class Main{
-//     选出最长的路径，状态值为当前的max长度，依赖为取决于三个方向。起始点为当一个点的四周没有比他低的（排除来路），其max=0。如何取到所有滑道。
-    public static void main(String[] args){
-        Scanner scanner=new Scanner(System.in);
-        int n=0;int m=0;
-        n=scanner.nextInt();
-        m=scanner.nextInt();
-        PriorityQueue<HeightAxis> heightQueue=heightQueue=new PriorityQueue<HeightAxis>((o1,o2)->(o1.height-o2.height));;
-        int [][] matrix=new int[n][m];
-        for(int i=0;i<n;i++)
-        {
-            for(int j=0;j<m;j++)
-            {
-                matrix[i][j]=scanner.nextInt();
-                HeightAxis h=new HeightAxis(matrix[i][j],i,j);
-                heightQueue.offer(h);
-            }
-        }
-        Main.answer(matrix,n,m,heightQueue);
-    }
+- （3）当进程获得资源后，可顺利执行完毕并释放资源，故：
+  Work[j]=Work[j]+Allocation[i,j];
+  Finish[i]=true;
+  go to  step 2;​
 
-    public static void answer(int [][] matrix,int n,int m,PriorityQueue<HeightAxis> heightQueue){
-        int [] [] dp=new int [n][m];
-        int maxResult=Integer.MIN_VALUE;
-        while(heightQueue.size()>0){    
-                HeightAxis h=heightQueue.poll();
-                int i=h.i;
-                int j=h.j;
-                int max=1;
-                if(i-1>=0 && matrix[i][j]>matrix[i-1][j]){
-                    max=(dp[i-1][j]+1)>max?(dp[i-1][j]+1):max;
-                }
-                 if(i+1<n && matrix[i][j]>matrix[i+1][j]){
-                    max=(dp[i+1][j]+1)>max?(dp[i+1][j]+1):max;
-                }
-                 if(j-1>=0 && matrix[i][j]>matrix[i][j-1]){
-                     max=(dp[i][j-1]+1)>max?(dp[i][j-1]+1):max;
-                }
-                 if(j+1<m && matrix[i][j]>matrix[i][j+1]){
-                     max=(dp[i][j+1]+1)>max?(dp[i][j+1]+1):max;
-                }
-                dp[i][j]=max;  
-                maxResult=max>maxResult?max:maxResult;
-        }
-        System.out.println(maxResult);
-//     max
-    }
-}
-```
+- (4)如果所有进程都满足Finish[i]=true,则表示系统处于安全状态。
+
+## http协议头部 accept-code
+>Accept-Encoding：浏览器发送给服务器，声明浏览器支持的编码类型。* ： 支持所有类型。compress，gzip: 压缩类型。q：表示指定的编码格式的优先级，当指定多个编码格式时按照q值由大到小分配。
+>referer：引荐网页，从何处跳转到当前网页。
+>origin：Origin 仅仅包含站点信息，不包含任何路径信息。GET请求不需要携带。
+
+## 数据库
+>索引不触发的情况：
+>1.使用or连接条件，但是只有部分条件是有索引。
+>2.联合索引不使用前列，后序列也无法使用。因为联合索引工作时，按照逐个列查找，先第一列，然后第二列....
+>3.like以 %开头
+>4.where 字句有数字运算
+## 高速缓存
+>缓存雪崩：当缓存的key数据同时过期，大量的请求直接打到数据库，压垮数据库。
+>缓存击穿：当缓存的某一个key时间到了，关于该key的请求都会到达数据库。
+>缓存穿透：当查询一个数据缓存为空，再查询数据库也为空，如果有大量这样的请求，也会压垮数据库。
+>解决：
+>缓存雪崩：1分散多个key的过期时间，减少峰值的请求量。2不设置过期时间，只进行缓存的覆盖，当有新数据需要进入，覆盖掉旧的数据。
+>缓存击穿：1不设置过期时间，只进行缓存的覆盖，当有新数据需要进入，覆盖掉旧的数据。
+>缓存穿透：1在缓存中创建key及对应的null值，避免穿透到数据库 2添加后端的过滤器，如果id符合某些规则，将非法的请求过滤掉。
+>
+>缓存一致性问题：在并发场景下，我们修改数据库和缓存时，可能发生读了脏数据的问题，导致数据不一致。
+>解决方法：1先删除缓存，然后修改数据库，这样缓存中不存在时，可以去数据库查询。
+>2更新时加锁，让修改的操作无法同时进行，只有前一个修改完成，才可以进行后续事务。
+
+## tcp 粘包
+>1,nagle算法：其会将多个小的分组合并到一起发送，导致接收端无法划分边界。
+>2，接收端没有及时处理缓存队列，导致多个分段累积到一起，无法划分终止边界。
+>解决方案：
+>1，定长协议，规定每个报文都是固定长度，方便解析。
+>2，特殊字符分隔符协议，通过添加\n,\r\n等进行解析。
+>物理层：bit
+>数据链路层：帧
+>网络层：数据包
+>运输层：段segment
+
+## namenode 源文件 怎么弄成xml
+>fsimage，edits文件在current
+>hdfs oiv -p XML -i fsimage_0000000000000000269 -o ./fsimage.xml
+>
+>hdfs oev -p XML -i edits_0000000000000000001-0000000000000000002 -o ./edits.xml
