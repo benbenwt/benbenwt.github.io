@@ -1,4 +1,259 @@
 [TOC] 
+
+# Flink推荐整理
+## 整个流程
+>日志数据在磁盘落盘后，通过flume采集到kafka。然后使用Flink connector读取日志数据，统计topn数据。并统计用户和商品的关系、用户的标签信息、商品的标签信息，将其存储到hbase中，使用Timer定时执行计算程序，计算用于协同推荐的相似度系数，然后存入mysql中。当需要使用时，直接使用后端读取mysql信息。
+## 指标计算
+### topN商品
+### 协同的计算
+
+# 0918 项目整理
+## 电商
+### dwd层设计
+#### 事务型事实表-增量
+>用于只有新增数据，不会对旧数据修改。涉及的表：订单明细表，退单表，评价表
+>关于订单明细表：当我们将购买物品时，需要选定好物品后点击“提交订单”，然后就会生成订单号、订单明细，后续还有支付、退款、退单等状态。订单一旦创建，后续的流程并不会修改订单明细表，而是修改订单表的状态，订单明细中存储的是商品id、商品数量、活动id、优惠券id。
+```
+insert overwrite table dwd_comment_info partition(dt='2020-06-15')
+select
+    id,
+    user_id,
+    sku_id,
+    spu_id,
+    order_id,
+    appraise,
+    create_time
+from ods_comment_info where dt='2020-06-15';
+```
+#### 周期型快照事实表-全量
+>数据量不大，有增加有修改旧数据的。涉及的表：收藏表，加购表，       商品一级品类、二级品类、三级品类，优惠券表，活动表
+
+#### 累积型快照事实表-增量及变化
+>数据量大，有增加有旧数据的修改。订单表，支付表，退款表，优惠券领用表。
+
+### 指标计算
+#### 用户统计
+>用户常规指标聚合：新增用户数、新增下单用户数、下单总金额、下单用户数、未下单用户数
+>原本在dwt中，1日，7日，30日粒度的数据在同一行，通过explode可以将array中的元素变为多行。然后再借助login_date_first、order_date_first、order_final_amount计算指标.
+```
+insert overwrite table ads_user_total
+select * from ads_user_total
+union
+select
+    '2020-06-14',
+    recent_days,
+    sum(if(login_date_first>=recent_days_ago,1,0)) new_user_count,
+    sum(if(order_date_first>=recent_days_ago,1,0)) new_order_user_count,
+    sum(order_final_amount) order_final_amount,
+    sum(if(order_final_amount>0,1,0)) order_user_count,
+    sum(if(login_date_last>=recent_days_ago and order_final_amount=0,1,0)) no_order_user_count
+from
+(
+    select
+        recent_days,
+        user_id,
+        login_date_first,
+        login_date_last,
+        order_date_first,
+        case when recent_days=0 then order_final_amount
+             when recent_days=1 then order_last_1d_final_amount
+             when recent_days=7 then order_last_7d_final_amount
+             when recent_days=30 then order_last_30d_final_amount
+        end order_final_amount,
+        if(recent_days=0,'1970-01-01',date_add('2020-06-14',-recent_days+1)) recent_days_ago
+    from dwt_user_topic lateral view explode(Array(0,1,7,30)) tmp as recent_days
+    where dt='2020-06-14'
+)t1
+group by recent_days;
+
+```
+#### 留存率
+>以2022-09-20的7日留存率为例,即第一次登录是7日前，并且最后一次登录是今天。统计时，一般统计多个，如从7日留存，6日一直到1日。sql语句如下：
+``` 
+# dwt 该日分区存储的是该日粗粒度的统计及部分属性信息。first_login表示该日进行注册。last_login表示最后一次活跃。
+#retention_day 表示留存多少天，6天就是6日留存。retention_count表示留存的人数.all_new_count表示n天前总新增人数。retention_rate表示留存率。
+select 
+  '2022-09-20' dt,
+  first_login create_date,
+  datediff('2022-09-20',first_login) retention_day,
+  sum(if(last_login='2022-09-20',1,0)) retention_count,
+  count(*) all_new_count,
+  cast(sum(if(last_login='2022-09-20',1,0))/count(*),decimal(16,2)) retention_rate
+from dwt_user_topic 
+    where dt='2022-09-20'  first_login>=date_add('2022-09-20',-7) and first_login<'2022-09-20'
+group by first_login;
+```
+#### 流失
+>就是last_login=七天前，最后登录时间为7天前，那么就计入今天的流失人数。
+```
+select
+  '2022-09-20'  dt,
+  count(*) churn_count,
+  from dwt_user_topic
+  where dt='2022-09-21'
+where last_login=date_add('2022-09-20','-7')
+```
+#### 回流
+>7日之内未活跃，那么称为流失了。那么回流的定义就是8日没有活跃，并且今天活跃了，称为回流。也就是说需要每个用户的倒数第二次登录时间为7日前，最后一次登录为今天。.
+```
+# dwt 该日分区存储的是该日1，7，30粒度的聚合信息。
+#那么这样取，得到的就是2022-09-19日的聚合信息，在19日及之前最后一次登录时间，也就是倒数第二次登录时间。倒数第一次登录时间就是2022-09-20，将两者相减得到相距时间，判断是否>=8天，是否为回流用户。
+select  
+  user_id,
+  count(*)
+  from
+  (
+    (select 
+        user_id,
+            login_date_last login_date_previous
+        from dwt_user_topic
+        where dt=date_add('2022-09-20')
+    )
+    join
+    (select
+        user_id,
+        login_date_last login_date_previous
+    from dwt_user_topic
+    where dt=date_add('2022-09-20',-1)
+    )
+    on t1.user_id=t2.user_id
+  )t3
+  where date_gap>=8;
+```
+#### 行为漏斗
+>进行每个行为的用户数各有多少，进入home页、进入详情页、下单。explode将一行扩充为3行，三组数据分别用于计算不同粒度的行为数。然后对count求和，得到进行不同行为的用户数。
+```
+    select
+        '2020-06-14' dt,
+        recent_days,
+        sum(if(cart_count>0,1,0)) cart_count,
+        sum(if(order_count>0,1,0)) order_count,
+        sum(if(payment_count>0,1,0)) payment_count
+    from
+    (
+        select
+            recent_days,
+            user_id,
+            case
+                when recent_days=1 then cart_last_1d_count
+                when recent_days=7 then cart_last_7d_count
+                when recent_days=30 then cart_last_30d_count
+            end cart_count,
+            case
+                when recent_days=1 then order_last_1d_count
+                when recent_days=7 then order_last_7d_count
+                when recent_days=30 then order_last_30d_count
+            end order_count,
+            case
+                when recent_days=1 then payment_last_1d_count
+                when recent_days=7 then payment_last_7d_count
+                when recent_days=30 then payment_last_30d_count
+            end payment_count
+        from dwt_user_topic lateral view explode(Array(1,7,30)) tmp as recent_days
+        where dt='2020-06-14'
+    )t1
+    group by recent_days
+```
+
+#### 访客统计
+>这里需要划分会话，判断那些记录属于同一个会话。
+>当按照ts排序后，每当出现一个last_page_id为空的，说明是新开了会话。所以会话id通过取最后一个last_page_id为空的的记录的时间戳计算，将mid_id和ts拼接起来表示一个会话。
+```
+ concat(mid_id,'-',last_value(if(last_page_id is null,ts,null),true) over (partition by recent_days,mid_id order by ts)) session_id
+```
+
+#### 路径分析
+>先通过开窗划分会话，然后通过开窗取下一行作为target， lead(page_id,1,null) over (partition by recent_days,session_id order by ts) target。并且取到step，row_number() over (partition by recent_days,session_id order by ts) step。
+```
+insert overwrite table ads_page_path
+select * from ads_page_path
+union
+select
+    '2020-06-14',
+    recent_days,
+    source,
+    target,
+    count(*)
+from
+(
+    select
+        recent_days,
+        concat('step-',step,':',source) source,
+        concat('step-',step+1,':',target) target
+    from
+    (
+        select
+            recent_days,
+            page_id source,
+            lead(page_id,1,null) over (partition by recent_days,session_id order by ts) target,
+            row_number() over (partition by recent_days,session_id order by ts) step
+        from
+        (
+            select
+                recent_days,
+                last_page_id,
+                page_id,
+                ts,
+                concat(mid_id,'-',last_value(if(last_page_id is null,ts,null),true) over (partition by mid_id,recent_days order by ts)) session_id
+            from dwd_page_log lateral view explode(Array(1,7,30)) tmp as recent_days
+            where dt>=date_add('2020-06-14',-30)
+            and dt>=date_add('2020-06-14',-recent_days+1)
+        )t2
+    )t3
+)t4
+group by recent_days,source,target;
+
+```
+
+#### 品牌复购率
+>用户购买多次某个商品/用户购买一次某个商品。
+>先统计每个用户购买了各种商品多少次，然后按照商品group by，通sum(if(order_count>=2,1,0))/sum(if(order_count>=1,1,0))
+```
+insert overwrite table ads_repeat_purchase
+select * from ads_repeat_purchase
+union
+select
+    '2020-06-14' dt,
+    recent_days,
+    tm_id,
+    tm_name,
+    cast(sum(if(order_count>=2,1,0))/sum(if(order_count>=1,1,0))*100 as decimal(16,2))
+from
+(
+    select
+        recent_days,
+        user_id,
+        tm_id,
+        tm_name,
+        sum(order_count) order_count
+    from
+    (
+        select
+            recent_days,
+            user_id,
+            sku_id,
+            count(*) order_count
+        from dwd_order_detail lateral view explode(Array(1,7,30)) tmp as recent_days
+        where dt>=date_add('2020-06-14',-29)
+        and dt>=date_add('2020-06-14',-recent_days+1)
+        group by recent_days, user_id,sku_id
+    )t1
+    left join
+    (
+        select
+            id,
+            tm_id,
+            tm_name
+        from dim_sku_info
+        where dt='2020-06-14'
+    )t2
+    on t1.sku_id=t2.id
+    group by recent_days,user_id,tm_id,tm_name
+)t3
+group by recent_days,tm_id,tm_name;
+```
+
+
 # 0918 框架理论知识
 ## mapreduce reduce
 >如果不设置reduce，系统会默认给定一个reduce，该reduce不进行任何数据处理，生成的文件数量等于MapTask的数量。如果不需要此默认reduce，可以将reduce数量设置为0.
@@ -6,38 +261,59 @@
 conf.setNumReduceTasks(0)
 ```
 ### mapreduce流程
->当将jar程序提交到hadoop集群后，会向yarn发送资源请求，yarn分配container资源后，在指定机器上启动AM，driver也运行在该台机器。然后对driver程序进行解析执行，先根据InputPath读取输入文件，然后根据文件大小，以及hdfs块大小、设定的最大、最小块大小确定划分，划分完成一块分片对应于一个MapTask。然后根据本地化原则，在最优的机器上启动对应的MapTask，MapTask根据分配的FileSplit信息，去hdfs读取对应于当前MapTask的数据。然后逐行调用map函数进行处理。map函数每处理完成一个数据，通过context收集结果。数据会先缓冲到kvbuffer中，当到达kvbuffer的设定比例时，开始触发溢写操作，先对kvbuffer进行分区、排序，都写入一个文件中，然后将同一分区放在连续的空间上，并使用一个单独的索引文件记录每个分区在文件中的起始和终止位置，方便在MapTask完成所有任务后进行多个spill溢写文件分区合并。当MapTask完成所有任务后，就会生成n个文件，n是触发溢写的次数，每个文件包含多个分区的数据，为了进行后续的reduce阶段，需要将这些文件的数据按照分区重新整理到对应的文件中，每个文件发往对应的结点，给reduce使用。由于分区内是有序的，只需要根据之前存储的索引文件查询对应分区，然后进行归并排序。
+>当将jar程序提交到hadoop集群后，会向yarn发送资源请求，yarn分配container资源后，在指定机器上启动AM，driver也运行在该台机器。然后对driver程序进行解析执行，先根据InputPath读取输入文件，然后根据文件大小，以及hdfs块大小、设定的最大、最小块大小确定划分，划分完成一块分片对应于一个MapTask。然后根据本地化原则，在最优的机器上启动对应的MapTask，MapTask根据分配的FileSplit信息，去hdfs读取对应于当前MapTask的数据。然后逐行调用map函数进行处理。
+>
+>map函数每处理完成一个数据，通过context收集结果。数据会先缓冲到kvbuffer中，当到达kvbuffer的设定比例时，开始触发溢写操作，先对kvbuffer进行分区、排序，都写入一个文件中，然后将同一分区放在连续的空间上，并使用一个单独的索引文件记录每个分区在文件中的起始和终止位置，方便在MapTask完成所有任务后进行多个spill溢写文件分区合并。当MapTask完成所有任务后，就会生成n个文件，n是触发溢写的次数，每个文件包含多个分区的数据，为了进行后续的reduce阶段，需要将这些文件的数据按照分区重新整理到对应的文件中，每个文件发往对应的结点，给reduce使用。由于分区内是有序的，只需要根据之前存储的索引文件查询对应分区，然后进行归并排序。
+>
 Reduce在某个MapTask完成计算后，就开始拉取其计算结果到对应结点，此过程就是Reduce Read。从多个MapTask上读取的数据需要合并到一起，再逐个传递给reduce函数进行处理，同一个key值的数据，会被同一个reduce函数进行处理，再通过context收集每个key处理的结果。
-#### MapTask Read
-#### Map Shuffle
-#### Reduce Read
-#### Reduce Shuffle
+
+#### 数据本地性
+>由于计算需要对应的数据和计算逻辑，可以通过移动计算的逻辑到对应结点，避免数据在节点之间的传输。
+>数据本地性有几个级别：
+>1当mapTask和数据在同一个结点时，称为本地级别的数据本地性，是最好的场景。
+>2机架内的数据本地性。由于本地级别并不是总能实现，数据迁移是不可避免的。在数据迁移时，尽量让数据和计算在同一个机架上。
+>3跨机架，是最差的情况。
+#### KvBuffer
+>内存缓冲区同时存储了键值对数据及其索引数据kvMeta，kvMeta是一个四元组，（key起始位置，value起始位置，value长度，partition），两者在圆形缓冲区内对向增长，当完成一次溢写。再取两者索引的终点为分割线，并掉头增长。partition、sort过程本质是对索引进行处理。
+#### Combine
+如果设置了Combine类，就会在spill之前进行combine操作，将同key值的数据提前进行规约，减少数据的条数。
+
 ## hdfs写入流程绘图
->1先请求NameNode得到应该写入哪个DN
->2NN返回DN地址
->3请求DN写入数据
->4DN返回写入成功
+>1先请求NameNode写入文件，NameNode检查写入权限等合法性，如果合法就将操作的元信息写入缓存，当触发刷盘时写入edit_log文件。
+>2NN返回同意请求及可用的DN地址列表，
+>3client按照block大小切分文件，将切分好的数据与DN地址列表一起发送给最近的DN，以packet=64kb发送给DN。由该DN与地址列表中的多个DN形成pipline管道，此后，client每向第一个DN写入一个packet，DN就会将这个packet传递个后续的DN，并逐级返回ack信息。
+>4写入完毕，关闭连接。发送完成信号给NN。
 ## spark hive 调优
->调优主要从优化shuffle，优化join方面。
+>调优主要从优化rdd 优化，内存优化方面，参数调优。
+>### 资源参数调优
+>--driver-mrmory
+>--num-executors
+>--executor-memory
+>--executor-cores
+### rdd 优化
+>1持久化策略达到性能最优：如果一个rdd的计算时间很长或很复杂，都将这个RDD保存到HDFS上，这样更加安全。
+>2使用shuffle时，尽量使用带combiner的算子，例如reduceByKey，aggregateByKey，combineByKey，减少map spill磁盘的数据量，以及reduce copy的数据量。
+>3优化小表join：使用map join。
+>4使用kryo序列化减少序列化对象空间
+>5数据本地化：合适的本地化等待时间，可能影响执行时间。
+### 内存优化
+>1.spark.memory.fraction,存储内存和运行内存的比例
+>2.堆外内存，spark底层shuffle使用netty，netty会使用堆外内存
+
+
+## 导致shuffle的算子
+>1.重分区 ： repartition ， coalesce
+>2.byKey： reduceByKey，aggregateByKey，combineByKey sortByKey
+>3.两表join、集合操作：intersection，subtract，join 
 ## hive join
 >left join,right join,inner join，full outer join，semi join，cross join
 ## 窗口函数
 > 聚合：sum，count()
-> 排序：row_number,rank(),dense_rank()
+> 排序：row_number,dense_rank(),rank()
 > 取行：lead(),lag()
 > over(partition by order by row between 2 rows precedding and 3 rows following) 
 ## cartesian product 和 full join
 >笛卡尔积不判断join条件，是左边任意一个与右边所有相乘。
-# 0918 项目整理
-## 指标计算
-### 留存率
->今天登陆的留存
-### 回流
->今天回流
-### 流失
-### 行为路径
-## 血缘关系
-## 数据来源
 
 # 0915 理论知识
 ## 哈夫曼树

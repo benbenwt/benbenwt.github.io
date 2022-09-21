@@ -1,118 +1,246 @@
 [TOC]
-# 0915 理论知识
-## 哈夫曼树
->每次挑选权重最小的两个结点作为左右结点，新生生成的根节点为两节点之和。然后重复此过程。
->加权路径长度为：叶子权重乘以叶子路径长度，再将每个叶子的加权路径长度加起来。
->总结点数=2*叶子结点数-1。
-## 操作系统死锁
-  -## 死锁的定义
-    当发生死锁时，这组死锁进程中的每一个进程，都在等待另一个死锁进程所占有的资源。
+# 0918 项目整理
+## 电商
+### dwd层设计
+#### 事务型事实表-增量
+>用于只有新增数据，不会对旧数据修改。涉及的表：订单明细表，退单表，评价表
+>关于订单明细表：当我们将购买物品时，需要选定好物品后点击“提交订单”，然后就会生成订单号、订单明细，后续还有支付、退款、退单等状态。订单一旦创建，后续的流程并不会修改订单明细表，而是修改订单表的状态，订单明细中存储的是商品id、商品数量、活动id、优惠券id。
+```
+insert overwrite table dwd_comment_info partition(dt='2020-06-15')
+select
+    id,
+    user_id,
+    sku_id,
+    spu_id,
+    order_id,
+    appraise,
+    create_time
+from ods_comment_info where dt='2020-06-15';
+```
+#### 周期型快照事实表-全量
+>数据量不大，有增加有修改旧数据的。涉及的表：收藏表，加购表，       商品一级品类、二级品类、三级品类，优惠券表，活动表
 
-  ### 产生死锁的必要条件
-    1互斥：在一段时间内，某资源只能被一个进程占有
-    2请求和保持：进程持有一个资源，再去请求其他进程占有的资源。
-    3不可抢占：进程持有的资源在进程结束前不可分配给其他进程
-    4循环等待：发生死锁的进程之间互相等待其他人持有的资源。
+#### 累积型快照事实表-增量及变化
+>数据量大，有增加有旧数据的修改。订单表，支付表，退款表，优惠券领用表。
 
-### 预防死锁
+### 指标计算
+#### 用户统计
+>用户常规指标聚合：新增用户数、新增下单用户数、下单总金额、下单用户数、未下单用户数
+>原本在dwt中，1日，7日，30日粒度的数据在同一行，通过explode可以将array中的元素变为多行。然后再借助login_date_first、order_date_first、order_final_amount计算指标.
+```
+insert overwrite table ads_user_total
+select * from ads_user_total
+union
+select
+    '2020-06-14',
+    recent_days,
+    sum(if(login_date_first>=recent_days_ago,1,0)) new_user_count,
+    sum(if(order_date_first>=recent_days_ago,1,0)) new_order_user_count,
+    sum(order_final_amount) order_final_amount,
+    sum(if(order_final_amount>0,1,0)) order_user_count,
+    sum(if(login_date_last>=recent_days_ago and order_final_amount=0,1,0)) no_order_user_count
+from
+(
+    select
+        recent_days,
+        user_id,
+        login_date_first,
+        login_date_last,
+        order_date_first,
+        case when recent_days=0 then order_final_amount
+             when recent_days=1 then order_last_1d_final_amount
+             when recent_days=7 then order_last_7d_final_amount
+             when recent_days=30 then order_last_30d_final_amount
+        end order_final_amount,
+        if(recent_days=0,'1970-01-01',date_add('2020-06-14',-recent_days+1)) recent_days_ago
+    from dwt_user_topic lateral view explode(Array(0,1,7,30)) tmp as recent_days
+    where dt='2020-06-14'
+)t1
+group by recent_days;
 
-  - 破坏请求和保持
-    1第一种协议
-    进程运行前一次性请求所有资源
-    2第二种协议
-    允许先申请初期所需的资源，使用完后一次全部释放，再申请所需资源。​
+```
+#### 留存率
+>以2022-09-20的7日留存率为例,即第一次登录是7日前，并且最后一次登录是今天。统计时，一般统计多个，如从7日留存，6日一直到1日。sql语句如下：
+``` 
+# dwt 该日分区存储的是该日粗粒度的统计及部分属性信息。first_login表示该日进行注册。last_login表示最后一次活跃。
+#retention_day 表示留存多少天，6天就是6日留存。retention_count表示留存的人数.all_new_count表示n天前总新增人数。retention_rate表示留存率。
+select 
+  '2022-09-20' dt,
+  first_login create_date,
+  datediff('2022-09-20',first_login) retention_day,
+  sum(if(last_login='2022-09-20',1,0)) retention_count,
+  count(*) all_new_count,
+  cast(sum(if(last_login='2022-09-20',1,0))/count(*),decimal(16,2)) retention_rate
+from dwt_user_topic 
+    where dt='2022-09-20'  first_login>=date_add('2022-09-20',-7) and first_login<'2022-09-20'
+group by first_login;
+```
+#### 流失
+>就是last_login=七天前，最后登录时间为7天前，那么就计入今天的流失人数。
+```
+select
+  '2022-09-20'  dt,
+  count(*) churn_count,
+  from dwt_user_topic
+  where dt='2022-09-21'
+where last_login=date_add('2022-09-20','-7')
+```
+#### 回流
+>7日之内未活跃，那么称为流失了。那么回流的定义就是8日没有活跃，并且今天活跃了，称为回流。也就是说需要每个用户的倒数第二次登录时间为7日前，最后一次登录为今天。.
+```
+# dwt 该日分区存储的是该日1，7，30粒度的聚合信息。
+#那么这样取，得到的就是2022-09-19日的聚合信息，在19日及之前最后一次登录时间，也就是倒数第二次登录时间。倒数第一次登录时间就是2022-09-20，将两者相减得到相距时间，判断是否>=8天，是否为回流用户。
+select  
+  user_id,
+  count(*)
+  from
+  (
+    (select 
+        user_id,
+            login_date_last login_date_previous
+        from dwt_user_topic
+        where dt=date_add('2022-09-20')
+    )
+    join
+    (select
+        user_id,
+        login_date_last login_date_previous
+    from dwt_user_topic
+    where dt=date_add('2022-09-20',-1)
+    )
+    on t1.user_id=t2.user_id
+  )t3
+  where date_gap>=8;
+```
+#### 行为漏斗
+>进行每个行为的用户数各有多少，进入home页、进入详情页、下单。explode将一行扩充为3行，三组数据分别用于计算不同粒度的行为数。然后对count求和，得到进行不同行为的用户数。
+```
+    select
+        '2020-06-14' dt,
+        recent_days,
+        sum(if(cart_count>0,1,0)) cart_count,
+        sum(if(order_count>0,1,0)) order_count,
+        sum(if(payment_count>0,1,0)) payment_count
+    from
+    (
+        select
+            recent_days,
+            user_id,
+            case
+                when recent_days=1 then cart_last_1d_count
+                when recent_days=7 then cart_last_7d_count
+                when recent_days=30 then cart_last_30d_count
+            end cart_count,
+            case
+                when recent_days=1 then order_last_1d_count
+                when recent_days=7 then order_last_7d_count
+                when recent_days=30 then order_last_30d_count
+            end order_count,
+            case
+                when recent_days=1 then payment_last_1d_count
+                when recent_days=7 then payment_last_7d_count
+                when recent_days=30 then payment_last_30d_count
+            end payment_count
+        from dwt_user_topic lateral view explode(Array(1,7,30)) tmp as recent_days
+        where dt='2020-06-14'
+    )t1
+    group by recent_days
+```
 
-  - 破坏不可抢占
-    当进程不能获得所有需要的资源时便处于等待状态，等待期间它占用的资源被隐式的释放重新回到系统的资源列表。当重新获得需要的资源时，才重新启动。
-  - 破坏循环等待
-    给资源规定一个序号级，按照序号递增的顺序请求资源。若需要多个同类资源必须一起请求。若需要序号低的资源，必须放弃当前持有资源。
+#### 访客统计
+>这里需要划分会话，判断那些记录属于同一个会话。
+>当按照ts排序后，每当出现一个last_page_id为空的，说明是新开了会话。所以会话id通过取最后一个last_page_id为空的的记录的时间戳计算，将mid_id和ts拼接起来表示一个会话。
+```
+ concat(mid_id,'-',last_value(if(last_page_id is null,ts,null),true) over (partition by recent_days,mid_id order by ts)) session_id
+```
 
-### 避免死锁问题-银行家算法
->系统对进程发出每一个系统能够满足的资源申请进行动态检查
-并根据检查结果决定是否分配资源
-如果分配后系统可能发生死锁,则不予分配,否则予以分配。
-这是一种保证系统不进入死锁状态的动态策略。
-### 系统安全
-  允许动态的申请资源，但是在进行资源分配时，先计算资源分配的安全性，防止系统进入不安全状态。所谓安全状态就是，系统可以按照某一顺序推进进程，分配资源，使每个进程都能顺利完成。若无法找到该顺序，则不分配该资源。
+#### 路径分析
+>先通过开窗划分会话，然后通过开窗取下一行作为target， lead(page_id,1,null) over (partition by recent_days,session_id order by ts) target。并且取到step，row_number() over (partition by recent_days,session_id order by ts) step。
+```
+insert overwrite table ads_page_path
+select * from ads_page_path
+union
+select
+    '2020-06-14',
+    recent_days,
+    source,
+    target,
+    count(*)
+from
+(
+    select
+        recent_days,
+        concat('step-',step,':',source) source,
+        concat('step-',step+1,':',target) target
+    from
+    (
+        select
+            recent_days,
+            page_id source,
+            lead(page_id,1,null) over (partition by recent_days,session_id order by ts) target,
+            row_number() over (partition by recent_days,session_id order by ts) step
+        from
+        (
+            select
+                recent_days,
+                last_page_id,
+                page_id,
+                ts,
+                concat(mid_id,'-',last_value(if(last_page_id is null,ts,null),true) over (partition by mid_id,recent_days order by ts)) session_id
+            from dwd_page_log lateral view explode(Array(1,7,30)) tmp as recent_days
+            where dt>=date_add('2020-06-14',-30)
+            and dt>=date_add('2020-06-14',-recent_days+1)
+        )t2
+    )t3
+)t4
+group by recent_days,source,target;
 
-### 利用银行家算法避免死锁
+```
 
-  为了实现银行家算法，每个新进程进入系统时，它必须申明在运行过程中，可能需要的每种资源的最大单元数，其总数应不超过系统所拥有的资源总量。当进程请求资源时，系统先确定是否有足够的资源。若有，再进一步计算资源分配给进程后，系统是否会处于不安全状态。如果不会，再分配给他。
-
-#### 银行家算法数据结构
-    1可利用资源向量Available。这是一个含有m个元素的数组，如Available[j]=k,表示j类资源有k个。
-    2最大需求矩阵Max。这是一个n×m的矩阵，它定义了系统中n个进程的每一个进程对m类资源的最大需求量。如Max[i,j]=k,表示进程i需要j类资源的最大数目为k。​
-    3分配矩阵Allocation。这是一个n×m的矩阵，它定义了系统中每一类资源当前已分配给每一进程的资源数。如Allocation[i,j]=k,表示进程i分到了j类资源k个。
-    4需求矩阵need。Need[i,j]表示，进程i还需要j类资源k个才能完成其任务。​
-    Need[i,j]=Max[i,j]-Allocation[i,j]
-
-#### 银行家算法
-    Requesti是进程Pi的请求向量，如果Requesti[j]=k,表示Pi需要K个j类资源,Pi发出请求后，系统按如下步骤：
-    1若Requesti[j]<=Need[i,j],转向2.否则认为出错。
-    2若Requesti[j]<=Available[j],转向3.否则认为尚无足够资源。
-    3若把资源分配给Pi，并分配数据结构的值。
-    Available[j]=Available[j]-Requesti[j];
-    Allocation[i,j]=Allocatin[i,j]+Requesti[j];
-    Need[i,j]=Need[i,j]-Requesti[j];
-    4检查是否处于安全状态，否则撤销分配。​​​（就是尝试把资源分配给进程，然后等待进程执行完成并释放资源，重复此过程直到全部分配完成。如果所有进程都可以分配，即finish数组全为true，那么就是安全状态，反之就是非安全状态）
-
-### 安全性算法
->（即把资源全部分出去，看看是否有进程没分到（为false），若有即不安全。）
-
-- （1）设置两个向量
-  1工作向量Work，表示可提供的系统资源总数，执行安全算法开始时，他等于Available。
-  2Finish,他表示系统是否有足够的资源分配，开始时Finishi[i]=false.当有足够资源时，再令Finish[i]=true.
-
-- （2）寻找进程
-  从进程集合中找到满足如下条件的进程
-  1Finish[i]=false
-  2Need[i,j]<=Work[j];
-  若找到执行（3），否则执行（4）.​​
-
-- （3）当进程获得资源后，可顺利执行完毕并释放资源，故：
-  Work[j]=Work[j]+Allocation[i,j];
-  Finish[i]=true;
-  go to  step 2;​
-
-- (4)如果所有进程都满足Finish[i]=true,则表示系统处于安全状态。
-
-## http协议头部 accept-code
->Accept-Encoding：浏览器发送给服务器，声明浏览器支持的编码类型。* ： 支持所有类型。compress，gzip: 压缩类型。q：表示指定的编码格式的优先级，当指定多个编码格式时按照q值由大到小分配。
->referer：引荐网页，从何处跳转到当前网页。
->origin：Origin 仅仅包含站点信息，不包含任何路径信息。GET请求不需要携带。
-
-## 数据库
->索引不触发的情况：
->1.使用or连接条件，但是只有部分条件是有索引。
->2.联合索引不使用前列，后序列也无法使用。因为联合索引工作时，按照逐个列查找，先第一列，然后第二列....
->3.like以 %开头
->4.where 字句有数字运算
-## 高速缓存
->缓存雪崩：当缓存的key数据同时过期，大量的请求直接打到数据库，压垮数据库。
->缓存击穿：当缓存的某一个key时间到了，关于该key的请求都会到达数据库。
->缓存穿透：当查询一个数据缓存为空，再查询数据库也为空，如果有大量这样的请求，也会压垮数据库。
->解决：
->缓存雪崩：1分散多个key的过期时间，减少峰值的请求量。2不设置过期时间，只进行缓存的覆盖，当有新数据需要进入，覆盖掉旧的数据。
->缓存击穿：1不设置过期时间，只进行缓存的覆盖，当有新数据需要进入，覆盖掉旧的数据。
->缓存穿透：1在缓存中创建key及对应的null值，避免穿透到数据库 2添加后端的过滤器，如果id符合某些规则，将非法的请求过滤掉。
->
->缓存一致性问题：在并发场景下，我们修改数据库和缓存时，可能发生读了脏数据的问题，导致数据不一致。
->解决方法：1先删除缓存，然后修改数据库，这样缓存中不存在时，可以去数据库查询。
->2更新时加锁，让修改的操作无法同时进行，只有前一个修改完成，才可以进行后续事务。
-
-## tcp 粘包
->1,nagle算法：其会将多个小的分组合并到一起发送，导致接收端无法划分边界。
->2，接收端没有及时处理缓存队列，导致多个分段累积到一起，无法划分终止边界。
->解决方案：
->1，定长协议，规定每个报文都是固定长度，方便解析。
->2，特殊字符分隔符协议，通过添加\n,\r\n等进行解析。
->物理层：bit
->数据链路层：帧
->网络层：数据包
->运输层：段segment
-
-## namenode 源文件 怎么弄成xml
->fsimage，edits文件在current
->hdfs oiv -p XML -i fsimage_0000000000000000269 -o ./fsimage.xml
->
->hdfs oev -p XML -i edits_0000000000000000001-0000000000000000002 -o ./edits.xml
+#### 品牌复购率
+>用户购买多次某个商品/用户购买一次某个商品。
+>先统计每个用户购买了各种商品多少次，然后按照商品group by，通sum(if(order_count>=2,1,0))/sum(if(order_count>=1,1,0))
+```
+insert overwrite table ads_repeat_purchase
+select * from ads_repeat_purchase
+union
+select
+    '2020-06-14' dt,
+    recent_days,
+    tm_id,
+    tm_name,
+    cast(sum(if(order_count>=2,1,0))/sum(if(order_count>=1,1,0))*100 as decimal(16,2))
+from
+(
+    select
+        recent_days,
+        user_id,
+        tm_id,
+        tm_name,
+        sum(order_count) order_count
+    from
+    (
+        select
+            recent_days,
+            user_id,
+            sku_id,
+            count(*) order_count
+        from dwd_order_detail lateral view explode(Array(1,7,30)) tmp as recent_days
+        where dt>=date_add('2020-06-14',-29)
+        and dt>=date_add('2020-06-14',-recent_days+1)
+        group by recent_days, user_id,sku_id
+    )t1
+    left join
+    (
+        select
+            id,
+            tm_id,
+            tm_name
+        from dim_sku_info
+        where dt='2020-06-14'
+    )t2
+    on t1.sku_id=t2.id
+    group by recent_days,user_id,tm_id,tm_name
+)t3
+group by recent_days,tm_id,tm_name;
+```
