@@ -642,6 +642,8 @@ Yarn client 粗略过程
 #### 统一内存管理
 
 >执行内存与存储内存共享同一块空间，两者动态占用对方的空闲区域。
+>spark.memory.fraction 默认60%，控制存储内存和执行内存共占总内存的多少，即统一内存。
+>spark.storage.storageFraction 默认50%，控制存储内存占统一内存的多少。
 
 ### 存储内存管理
 
@@ -1757,12 +1759,8 @@ config("spark.sql.warehouse.dir", "hdfs://linux1:8020/user/hive/warehouse")
 
 ```
 
-
-
 >core-site.xml   hdfs-site.xml  mapred-site.xml  yarn-site.xml
->
 >hadoop-env.sh,yarn-env.sh,mapred-env.sh
->
 >workers
 
 ## DStream创建
