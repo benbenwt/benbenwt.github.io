@@ -3,8 +3,41 @@
 >https://www.yuque.com/liujie7999/ufyaq4/agdqqs
 >https://xiaolincoding.com/
 
-
 [TOC] 
+# 端口
+9870 9000 18088  
+8088 
+8081
+# 配置文件
+core-site.xml hdfs-site.xml mapred-site.xml yarn-site.xml capacity-scheduler.xml fail-scheduler.xml 
+spark-default.conf spark-env.sh
+flink-conf.yml sql-cli-defaults.yaml
+workers
+
+# 0925 Flink安全信息整理
+## 爬虫及解析
+>网络报告爬虫，恶意软件爬虫，漏洞爬虫
+>网络报告从freebuff，安全客获取，再借助nlp技术完成抽取，并放入es数据库中
+>恶意软件从virushshare获取，借助沙箱动态行为分析，封装为json也存储到es中
+>漏洞从红后，绿盟，安全客获取，通过beautiful解析后，放入es中。
+
+### 碰到的问题
+>1,ip被封，使用西刺ip代理地址，从代理池中挑选ip进行代理访问。
+>2，accept-encoding:使用br压缩格式，request无法解析，去掉br，保留gzip,default等。
+>3，为p2p网络添加tracker，帮助找到更有效的peers节点，加快下载速度。
+## web
+### 分页信息
+### 提交接口
+### 导入接口
+### 导出接口
+### nginx
+### 碰到的的问题
+>1,spring boot maxfile-size限制multiplart file的上传大小
+>2，mysql将rewriteBatchedStatements设为true，减少网络交互次数，提升批量插入效果。
+>3，max request body。 错误码500 Internal server error。404 找不到。跨源请求
+## 实时指标
+>包括攻击者，软件架构，漏洞，软件类型，地区，ip等指标的聚合
+
 # 0922 理论知识
 ## hive overwrite 动静态分区
 ```
@@ -197,7 +230,7 @@ vim capacity-scheduler.xml
 >tcp的四次挥手时，客户端状态从ESTAB-LISHED->FIN-WAIT-1->FIN-WAIT-2->TIME-WAIT->CLOSED
 >服务端状态从ESTAB-LISHED->CLOSED-WAIT->LAST-ACK->CLOSED
 >
->为什么TIME_WAIT状态经过2MSL返回CLOSE：为了防止客户端的ACK报文丢失，导致服务端无法从LAST_ACK切换到CLOSED状态，这时服务端会不断发送FIN报文，客户端收到FIN报文后，
+>为什么TIME_WAIT状态经过2MSL返回CLOSE：为了防止客户端的ACK报文丢失，导致服务端无法从LAST_ACK切换到CLOSED状态，这时服务端会不断发送FIN报文，客户端收到FIN报文后，就意识到ACK报文丢失了，所以需要重发ACK。所以说需要等待2MSL时间，如果这段时间没有收到重发的FIN说明ACK已经抵达了服务端，可以关闭链接了。
 
 
 # 0922 Flink推荐整理

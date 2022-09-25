@@ -377,16 +377,12 @@ countAll = cur.fetchall()[0][0]
 print("订单数：",countAll)
 ```
 
-
-
 ## requests库
 
 ```
 requests.post(url,body)
 requests.get(url,param)
 ```
-
-
 
 ## python语法糖或常用函数
 

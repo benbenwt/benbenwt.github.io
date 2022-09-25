@@ -1902,10 +1902,7 @@ stateDescriptor.enableTimeToLive(ttlConfig);
 
 ```
 
-
-
 ### 算子状态
-
 >算子状态的实际应用场景不如 Keyed State 多，一般用在 Source 或 Sink 等与外部系统连接 的算子上，或者完全没有 key 定义的场景。比如 Flink 的 Kafka 连接器中，就用到了算子状态。
 >
 >算子状态也支持不同的结构类型，主要有三种：ListState、UnionListState 和 BroadcastState。

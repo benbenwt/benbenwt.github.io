@@ -1,246 +1,193 @@
-[TOC]
-# 0918 项目整理
-## 电商
-### dwd层设计
-#### 事务型事实表-增量
->用于只有新增数据，不会对旧数据修改。涉及的表：订单明细表，退单表，评价表
->关于订单明细表：当我们将购买物品时，需要选定好物品后点击“提交订单”，然后就会生成订单号、订单明细，后续还有支付、退款、退单等状态。订单一旦创建，后续的流程并不会修改订单明细表，而是修改订单表的状态，订单明细中存储的是商品id、商品数量、活动id、优惠券id。
+# 0922 理论知识
+## hive overwrite 动静态分区
 ```
-insert overwrite table dwd_comment_info partition(dt='2020-06-15')
-select
-    id,
-    user_id,
-    sku_id,
-    spu_id,
-    order_id,
-    appraise,
-    create_time
-from ods_comment_info where dt='2020-06-15';
-```
-#### 周期型快照事实表-全量
->数据量不大，有增加有修改旧数据的。涉及的表：收藏表，加购表，       商品一级品类、二级品类、三级品类，优惠券表，活动表
+#静态分区
+insert overwrite table dwt_test partition(dt='2022-09-22', part='2')
+select id,dt,part from dws_test
 
-#### 累积型快照事实表-增量及变化
->数据量大，有增加有旧数据的修改。订单表，支付表，退款表，优惠券领用表。
+#动态分区
+insert overwrite table dwt_test partition(dt=dt, part=part)
+select id,dt,part from dws_test
 
-### 指标计算
-#### 用户统计
->用户常规指标聚合：新增用户数、新增下单用户数、下单总金额、下单用户数、未下单用户数
->原本在dwt中，1日，7日，30日粒度的数据在同一行，通过explode可以将array中的元素变为多行。然后再借助login_date_first、order_date_first、order_final_amount计算指标.
+#动静结合
+insert overwrite table dwt_test partition(dt='2022-09-22', part=part)
+select id,dt,part from dws_test
 ```
-insert overwrite table ads_user_total
-select * from ads_user_total
-union
-select
-    '2020-06-14',
-    recent_days,
-    sum(if(login_date_first>=recent_days_ago,1,0)) new_user_count,
-    sum(if(order_date_first>=recent_days_ago,1,0)) new_order_user_count,
-    sum(order_final_amount) order_final_amount,
-    sum(if(order_final_amount>0,1,0)) order_user_count,
-    sum(if(login_date_last>=recent_days_ago and order_final_amount=0,1,0)) no_order_user_count
-from
-(
-    select
-        recent_days,
-        user_id,
-        login_date_first,
-        login_date_last,
-        order_date_first,
-        case when recent_days=0 then order_final_amount
-             when recent_days=1 then order_last_1d_final_amount
-             when recent_days=7 then order_last_7d_final_amount
-             when recent_days=30 then order_last_30d_final_amount
-        end order_final_amount,
-        if(recent_days=0,'1970-01-01',date_add('2020-06-14',-recent_days+1)) recent_days_ago
-    from dwt_user_topic lateral view explode(Array(0,1,7,30)) tmp as recent_days
-    where dt='2020-06-14'
-)t1
-group by recent_days;
+## java 顺序表
+```
+#优先队列
+PriorityQueue<Integer> pqueue=new PriorityQueue<>((o1, o2)->( o1.compareTo(o2)));
+#栈
+Stack<Integer> stack=new Stack<>();
+stack.push();stack.peek();stack.pop()
+#队列
+Queue<Integer> queue=new Queue<>();
+queue.offer();queue.peek();queue.poll();
+queue.add();queue.elelment();queue.remove();
+```
+## 排序算法 时间复杂度 稳定性
+![sort](../resources/images/sort.png)
+>10种常见排序
+
+>排序算法        平均时间复杂度   最好情况   最坏情况  空间复杂度   排序稳定性   排序方式
+
+>冒泡            O(n^2)          O(n)       O(n^2)   O(1)       稳定          In-place
+
+>快速排序        O(nlogn)        O(nlogn)    O(n^2)  O(logn)    不稳定         In-place
+>
+>归并            O(nlogn)        O(nlogn)   O(nlogn) O(n)       稳定          Out-place
+>
+>堆排序          O(nlongn)       O(nlongn)  O(nlongn) O(1)      不稳定        In-place
+>
+>选择排序        O（n^2)         O(n^2)     O(n^2)    O(1)      不稳定         In-place
+>
+>插入排序        O（n^2）        O(n)       O(n^2)    O(1)       稳定          In-place
+>
+>希尔排序        O(nlogn)    O(n(logn)^2) O(n(logn)^2) O(1)     不稳定         In-place
+>
+>计数排序        O(n+k)        O(n+k)        O(n+k)     O(k)    稳定          Out-place  
+>  
+>桶排序          O(n+k)        O(n+k)        O(n^2)     O(n+k)  稳定          Out-place 
+> 
+>基数排序        O（n*k)       O（n*k)        O（n*k)    O(n+k)   稳定          Out-place
+>
+>选择排序的不稳定性不来自挑选最大最小值的过程，而是由于要原地排序，所以要交换开头的值和查找到的最大最小值，导致改变了数组顺序。
+>
+>希尔在分组增量变小时，进行插入排序，但是无法区分两组原始数据相同值元素的顺序。比如1357时一组，他们组间是稳定的，但是当与2468合并时，可能1号值与6号值一样，并且1号值原本在6号值后边，插入排序后就乱序了。
+
+## 浮点数存储
+>使用正负号、尾数、指数来表示浮点数，即尾数乘以2的指数次方，再取符号位，就得到了具体值。
+>对于4字节浮点数，其符号位占据一位，指数占据8位，其余都是尾数位。
+>对于8字节浮点数，其符号位占据一位，指数占据11位，其余都是尾数位。
+>关于精度损失的问题：
+>由于浮点数无法精确表示十进制的数字，例如0.6，其表示为0.10011001......。因为2进制小数点后为：0.5、0.25、0.125、0.0625、0.03125。也就是说当创建一个浮点数为0.6，那么它存储的就是非精确的值了。
+
+## spark cache、persist、checkpoint
+>cache：直接将rdd算子的缓存到计算结点的堆内存种，其也是懒执行的，只有action算子触发后，才会将rdd缓存到内存中。
+>persist：可以指定缓存的位置，当指定MEMORY_ONLY时，就是cache一样的功能。还可以指定MEMORY_AND_DISK,DIS_ONLY,以及是否序列化和保存的副本数量。
+>checkpoint:将快照保存到外部存储，并切断血缘关系，建议使用checkpoint时也要使用cache，这样可以直接读取cache的数据进行checkpoint，否则checkpoint会从头计算一遍。checkpoint相比于cache：1checkpoint会切断血缘关系2checkcpoint一般使用hdfs等容错性高的存储3
+
+## hdfs组件、yarn组件
+>NameNode：管理hdfs目录和文件元信息，元信息包括目录名称、权限、副本等，这些原信息保存在内存中用于快速访问。为了容错，在内存中也有对应快照，使用fsimage和edits文件，两者都在namenode.dir的current目录下。通过定时的合并这两个文件获取最新的fsimage。
+>SecondarynameNode：负责帮助NameNode和合并fsimage和edits文件。
+>Datanode：存储具体的hdfs block，要保证数据块的完整性和正确性，会通过校验和、摘要算法等进行检测，并定时向NameNode汇报block信息。
+
+>ResourceManager：负责响应应用程序的资源请求，接受NodeManager汇报的结点信息，跟踪集群中活动结点和资源的数量。其主要分为调度器和应用程序管理器，调度器可以使用不同的调度策略分配资源和启动任务。
+>NodeManager：负责单台机器的资源管理、任务监视等。包括磁盘、内存、cpu等信息。
+>ApplicationMaster：用于请求资源创建task，监视任务执行情况，重启启动失败的任务。
+>Container：包括内存、cpu等。应用程序必须运行在container种。
+>JobHistoryServer：可以读取存储在hdfs上的日志数据，并提供给页面访问。
+
+## ResourceManager调度器
+### 先进先出调度器 FIFO
+>单队列，根据作业提交的先后顺序，先来先服务。
+>优点：逻辑简单
+>缺点：不支持多队列，生产环境使用少
+### 容量调度器 Capacity Scheduler
+>为不同容量预留资源，支持多队列，为每个队列分配资源，队列内部使用FIFO。
+>优点：保证了不同容量的资源都可以执行
+>缺点：但是浪费了部分资源，当其中一种资源没有人使用时，仍要占用
+
+### 公平调度器 Fair Scheduler
+>通过一个权重分配公平的分配资源，每当提交一个新资源时，之前的程序释放部分资源给新程序使用。当新来的执行完后，会返还资源给之前的应用，知道之前的应用执行完成。可以设置多个队列，并按照百分比分配资源给队列，队列再分配给具体的应用。队列内部，根据公平调度的方法分配资源。
+>优点：同队列共享资源，在时间尺度上获得公平的资源
+>缺点：多个应用共同执行，降低了执行的效率。
 
 ```
-#### 留存率
->以2022-09-20的7日留存率为例,即第一次登录是7日前，并且最后一次登录是今天。统计时，一般统计多个，如从7日留存，6日一直到1日。sql语句如下：
-``` 
-# dwt 该日分区存储的是该日粗粒度的统计及部分属性信息。first_login表示该日进行注册。last_login表示最后一次活跃。
-#retention_day 表示留存多少天，6天就是6日留存。retention_count表示留存的人数.all_new_count表示n天前总新增人数。retention_rate表示留存率。
-select 
-  '2022-09-20' dt,
-  first_login create_date,
-  datediff('2022-09-20',first_login) retention_day,
-  sum(if(last_login='2022-09-20',1,0)) retention_count,
-  count(*) all_new_count,
-  cast(sum(if(last_login='2022-09-20',1,0))/count(*),decimal(16,2)) retention_rate
-from dwt_user_topic 
-    where dt='2022-09-20'  first_login>=date_add('2022-09-20',-7) and first_login<'2022-09-20'
-group by first_login;
-```
-#### 流失
->就是last_login=七天前，最后登录时间为7天前，那么就计入今天的流失人数。
-```
-select
-  '2022-09-20'  dt,
-  count(*) churn_count,
-  from dwt_user_topic
-  where dt='2022-09-21'
-where last_login=date_add('2022-09-20','-7')
-```
-#### 回流
->7日之内未活跃，那么称为流失了。那么回流的定义就是8日没有活跃，并且今天活跃了，称为回流。也就是说需要每个用户的倒数第二次登录时间为7日前，最后一次登录为今天。.
-```
-# dwt 该日分区存储的是该日1，7，30粒度的聚合信息。
-#那么这样取，得到的就是2022-09-19日的聚合信息，在19日及之前最后一次登录时间，也就是倒数第二次登录时间。倒数第一次登录时间就是2022-09-20，将两者相减得到相距时间，判断是否>=8天，是否为回流用户。
-select  
-  user_id,
-  count(*)
-  from
-  (
-    (select 
-        user_id,
-            login_date_last login_date_previous
-        from dwt_user_topic
-        where dt=date_add('2022-09-20')
-    )
-    join
-    (select
-        user_id,
-        login_date_last login_date_previous
-    from dwt_user_topic
-    where dt=date_add('2022-09-20',-1)
-    )
-    on t1.user_id=t2.user_id
-  )t3
-  where date_gap>=8;
-```
-#### 行为漏斗
->进行每个行为的用户数各有多少，进入home页、进入详情页、下单。explode将一行扩充为3行，三组数据分别用于计算不同粒度的行为数。然后对count求和，得到进行不同行为的用户数。
-```
-    select
-        '2020-06-14' dt,
-        recent_days,
-        sum(if(cart_count>0,1,0)) cart_count,
-        sum(if(order_count>0,1,0)) order_count,
-        sum(if(payment_count>0,1,0)) payment_count
-    from
-    (
-        select
-            recent_days,
-            user_id,
-            case
-                when recent_days=1 then cart_last_1d_count
-                when recent_days=7 then cart_last_7d_count
-                when recent_days=30 then cart_last_30d_count
-            end cart_count,
-            case
-                when recent_days=1 then order_last_1d_count
-                when recent_days=7 then order_last_7d_count
-                when recent_days=30 then order_last_30d_count
-            end order_count,
-            case
-                when recent_days=1 then payment_last_1d_count
-                when recent_days=7 then payment_last_7d_count
-                when recent_days=30 then payment_last_30d_count
-            end payment_count
-        from dwt_user_topic lateral view explode(Array(1,7,30)) tmp as recent_days
-        where dt='2020-06-14'
-    )t1
-    group by recent_days
+#指定调度器
+vim yarn-defualt.xml
+<property>
+    <description>The class to use as the resource scheduler.</description>
+    <name>yarn.resourcemanager.scheduler.class</name>
+<value>org.apache.hadoop.yarn.server.resourcemanager.scheduler.capacity.CapacityScheduler</value>
+</property>
 ```
 
-#### 访客统计
->这里需要划分会话，判断那些记录属于同一个会话。
->当按照ts排序后，每当出现一个last_page_id为空的，说明是新开了会话。所以会话id通过取最后一个last_page_id为空的的记录的时间戳计算，将mid_id和ts拼接起来表示一个会话。
 ```
- concat(mid_id,'-',last_value(if(last_page_id is null,ts,null),true) over (partition by recent_days,mid_id order by ts)) session_id
-```
+#配置多队列的容量调度器
+#capacity-scheduler.xml中都是关于容量调度器的配置信息，相应地公平调度器也有自己的配置文件，fair-scheduler.xml.
+vim capacity-scheduler.xml
+<property>
+    <name>yarn.scheduler.capacity.root.queues</name>
+    <value>default,hive</value>
+    <description>
+      The queues at the this level (root is the root queue).
+    </description>
+</property>
 
-#### 路径分析
->先通过开窗划分会话，然后通过开窗取下一行作为target， lead(page_id,1,null) over (partition by recent_days,session_id order by ts) target。并且取到step，row_number() over (partition by recent_days,session_id order by ts) step。
-```
-insert overwrite table ads_page_path
-select * from ads_page_path
-union
-select
-    '2020-06-14',
-    recent_days,
-    source,
-    target,
-    count(*)
-from
-(
-    select
-        recent_days,
-        concat('step-',step,':',source) source,
-        concat('step-',step+1,':',target) target
-    from
-    (
-        select
-            recent_days,
-            page_id source,
-            lead(page_id,1,null) over (partition by recent_days,session_id order by ts) target,
-            row_number() over (partition by recent_days,session_id order by ts) step
-        from
-        (
-            select
-                recent_days,
-                last_page_id,
-                page_id,
-                ts,
-                concat(mid_id,'-',last_value(if(last_page_id is null,ts,null),true) over (partition by mid_id,recent_days order by ts)) session_id
-            from dwd_page_log lateral view explode(Array(1,7,30)) tmp as recent_days
-            where dt>=date_add('2020-06-14',-30)
-            and dt>=date_add('2020-06-14',-recent_days+1)
-        )t2
-    )t3
-)t4
-group by recent_days,source,target;
+
+<!-- 指定hive队列的资源额定容量 -->
+<property>
+    <name>yarn.scheduler.capacity.root.hive.capacity</name>
+    <value>60</value>
+</property>
+
+<!-- 用户最多可以使用队列多少资源，1表示 -->
+<property>
+    <name>yarn.scheduler.capacity.root.hive.user-limit-factor</name>
+    <value>1</value>
+</property>
+
+<!-- 指定hive队列的资源最大容量 -->
+<property>
+    <name>yarn.scheduler.capacity.root.hive.maximum-capacity</name>
+    <value>80</value>
+</property>
+
+<!-- 启动hive队列 -->
+<property>
+    <name>yarn.scheduler.capacity.root.hive.state</name>
+    <value>RUNNING</value>
+</property>
+
+<!-- 哪些用户有权向队列提交作业 -->
+<property>
+    <name>yarn.scheduler.capacity.root.hive.acl_submit_applications</name>
+    <value>*</value>
+</property>
+
+<!-- 哪些用户有权操作队列，管理员权限（查看/杀死） -->
+<property>
+    <name>yarn.scheduler.capacity.root.hive.acl_administer_queue</name>
+    <value>*</value>
+</property>
+
+<!-- 哪些用户有权配置提交任务优先级 -->
+<property>
+    <name>yarn.scheduler.capacity.root.hive.acl_application_max_priority</name>
+    <value>*</value>
+</property>
 
 ```
 
-#### 品牌复购率
->用户购买多次某个商品/用户购买一次某个商品。
->先统计每个用户购买了各种商品多少次，然后按照商品group by，通sum(if(order_count>=2,1,0))/sum(if(order_count>=1,1,0))
-```
-insert overwrite table ads_repeat_purchase
-select * from ads_repeat_purchase
-union
-select
-    '2020-06-14' dt,
-    recent_days,
-    tm_id,
-    tm_name,
-    cast(sum(if(order_count>=2,1,0))/sum(if(order_count>=1,1,0))*100 as decimal(16,2))
-from
-(
-    select
-        recent_days,
-        user_id,
-        tm_id,
-        tm_name,
-        sum(order_count) order_count
-    from
-    (
-        select
-            recent_days,
-            user_id,
-            sku_id,
-            count(*) order_count
-        from dwd_order_detail lateral view explode(Array(1,7,30)) tmp as recent_days
-        where dt>=date_add('2020-06-14',-29)
-        and dt>=date_add('2020-06-14',-recent_days+1)
-        group by recent_days, user_id,sku_id
-    )t1
-    left join
-    (
-        select
-            id,
-            tm_id,
-            tm_name
-        from dim_sku_info
-        where dt='2020-06-14'
-    )t2
-    on t1.sku_id=t2.id
-    group by recent_days,user_id,tm_id,tm_name
-)t3
-group by recent_days,tm_id,tm_name;
-```
+## assic，utf，unicode编码
+>ASCII使用7位或8位数表示128种或256种可能的字符，主要表示所有大小写字母，数字0到9、标点符号、美式英语中的特殊控制符号等。不支持中文
+>GBK编码：中国人定义了当字符小于127时，与ASSIC相同，但是大于127的字符连接在一起时，就表示一个汉字。第一个字节称为高字节，第二个字节称为低字节。
+>Unicode字符集：由于世界国家很多，为了统一编码，ISO组织使用统一的编码方案，它是一套字符集。其规定两个字节表示一个字符，从而表示所有的字符。，
+>UTF-8：由于unicode存在浪费空间的问题，定义了一种可以解码和编码的规则，降低了占用的空间和带宽。
+## jvm内存参数
+>1. -Xms 1024m　　//设置堆的最小值
+>2. -Xmx 2048m   //设置堆的最大值
+>3. -Xmn 512m    //设置新生代大小
+>4. -XX:MetaspaceSize=256m //设置初始Metaspace空间的大小
+>5. 永久带的初始值-XX:PermSize及最大值-XX:MaxPermSize
+>6. -Xss   每个线程的Stack大小，不熟悉最好保留默认值；
+>7. 堆中新生代与老年代的比率，该值可以通过参数 –XX:NewRatio 来指定
+>8.  新生代中eden与survivor比率，–XX:SurvivorRatio 
+
+## kafka参数
+>buffer.size  生产者缓存队列大小
+>linger.ms 生产者触发发送的时间间隔
+>batch.size 生产者发送的批次大小，凑满一个batch就发送数据。
+>maxRequestSize 请求最大大小
+
+## LCS
+>找到一个子序列，index单调递增。并不是前缀，不需要index连续。
+
+## tcp三次握手
+>为什么不是两次：如果客户端发起的syn请求，在网络延迟了很久才到达服务端，客户端这时很久没有收到服务端的响应报文，就会认为这个链接请求已过时。而服务端并不知道这是一个延迟的消息，它会直接发送ack报文，并认为建立链接，这就是两次握手的问题，三次握手就不会有这个问题。
+>tcp的三次握手时，客户端状态从CLOSED->SYN-SENT->ESTAB-LISHED,服务端从LISTEN->SYN-RCVD->ESTAB-LISHED
+>tcp的四次挥手时，客户端状态从ESTAB-LISHED->FIN-WAIT-1->FIN-WAIT-2->TIME-WAIT->CLOSED
+>服务端状态从ESTAB-LISHED->CLOSED-WAIT->LAST-ACK->CLOSED
+>
+>为什么TIME_WAIT状态经过2MSL返回CLOSE：为了防止客户端的ACK报文丢失，导致服务端无法从LAST_ACK切换到CLOSED状态，这时服务端会不断发送FIN报文，客户端收到FIN报文后，就意识到ACK报文丢失了，所以需要重发ACK。所以说需要等待2MSL时间，如果这段时间没有收到重发的FIN说明ACK已经抵达了服务端，可以关闭链接了。
