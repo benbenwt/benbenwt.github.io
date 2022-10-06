@@ -6,24 +6,15 @@
 异常页面，权限管理
 ```
 
-
-
-
-
 ```
-pageHelper使用后再在sql中使用LIMIT会报错，。
+pageHelper使用后再在sql中使用LIMIT会报错。
 ```
-
-
 
 ```
 空指针异常不指定谁为空指针，这种报错很麻烦。
 ```
 
-
-
 ### 常见WEB错误码
-
 ```
 404
 500
@@ -31,10 +22,7 @@ pageHelper使用后再在sql中使用LIMIT会报错，。
 400
 ```
 
-
-
 ### jar包外部配置文件
-
 ```
 通过此种方式来指定配置文件，可以覆盖jar包内的配置文件。
 java  -jar  app.jar  --spring.config.location=application.yml
@@ -42,7 +30,6 @@ java  -jar  app.jar  --spring.config.location=application.yml
 ```
 
 # spring boot
-
 >使用基本流程：
 >
 >1加入starter依赖
@@ -110,8 +97,6 @@ pom文件
     <version>1.2.17</version>
 </dependency>
 ```
-
-
 
 ##### 修改application.yml
 
@@ -200,8 +185,6 @@ logging.level.root=info
 ```
 private final static Logger logger = LoggerFactory.getLogger(LisaServiceImpl.class);
 ```
-
-
 
 ###### 为springboot配置log4j
 
@@ -684,5 +667,8 @@ ctrl左键点击依赖，查看spring-boot-dependeccies或spriing-cloud-dependen
 控制台搜索sessions.ser，找到该文件备份好并删除，此错误可能是由tomcat异常关闭导致的。
 ```
 
+# 常见逻辑
+## 登录
+>借助Intercepter实现，将需要登陆的页面添加拦截器。在拦截器中添加session中是否有登陆状态的判断。
 
 

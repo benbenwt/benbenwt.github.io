@@ -845,6 +845,31 @@ public char[] toCharArray() {
 }
 ```
 
+###### 创建
+>如下程序输出 false,true,true。因为str1.intern()返回地仍然是常量池中的数据。
+```
+String str1="hello";
+String str2="hello";
+String str3=new String("hello");
+String str4=new String("hello");
+System.out.println(str3==str4);
+System.out.println(str1==str2);
+System.out.println(str1.intern()==str1);
+```
+###### intern
+>返回String字面量，即在字符串常量池的变量。
+>如下程序的执行结果为true，false，true。intern当常量池中存在对应字符串直接返回该存在的值或引用，如果不存在则会将堆字符串实例的引用添加到常量池。因为第二次 “计算机软件”已经在常量池中，并且存储的是堆变量str5的地址，那么str5和str52自然不相等。第三个由于str53.intern()返回的仍然是str5的堆地址，所以为true。
+
+```
+        String str5=new StringBuilder("计算机").append("软件").toString();
+        System.out.println(str5.intern()==str5);
+
+        String str52=new StringBuilder("计算机").append("软件").toString();
+        System.out.println(str52.intern()==str52);
+
+        String str53=new StringBuilder("计算机").append("软件").toString();
+        System.out.println(str53.intern()==str5);
+```
 ##### StringBuilder类
 
 >继承AbstractStringBuilder,定义了value,count等属性，和append,容量相关,delete,deleteCharAt,insert,reverse等属性.
@@ -892,7 +917,6 @@ $：匹配字符串的结束
 [0-9],[a-z0-9A-Z]
 
 ##### 分枝条件（对限定符扩展）
-
 |
 
 ##### 分组（元字符和限定符连接）
@@ -1144,6 +1168,13 @@ Connection提供了事务处理的方法，通过调用setAutoCommit(false)可�
   new一个类对象，类中各部分执行顺序：静态代码块—非静态代码块—构造函数—一般方法。
   子类继承父类各部分执行顺序为：父静态代码块--子静态代码块--父非静态代码块--父无参构造函数--子非静态代码块--子构造函数--方法。
   如果没有写super()，则默认调用父类的无参构造方法。
+  >并且static代码块只会在第一次创建该类的对象时调用，因为static是属于类的，当该类第一次加载就会调用static代码块。我们可以使用Class.forName("com.test.Parent");进行验证。所以static较为特殊，直接先完成static的调用。在依次调用父类（非静态代码块，构造方法）->子类(非静态代码块，构造方法)
+
+- super用法
+>调用父类的属性和方法、构造方法等。
+>属性：super.name;super.gender;
+>方法：super.getName();super.setGender("male");
+>构造方法：super("jack");super();
 
 
 # JNI
@@ -1969,7 +2000,10 @@ sufficientFunds.singnalAll()
 
 #### **线程的实现**
 
-继承Thread,实现Runnable,重写run方法。
+继承Thread,实现Runnable,实现重写run方法。
+```
+
+```
 
 #### 线程的状态
 
@@ -2302,6 +2336,8 @@ public boolean equals(Object obj) {
 # 动态代理
 >https://www.jianshu.com/p/9bcac608c714
 >
+# 拦截器
+
 # Annotation
 >注解是java5开始的，可以用于包，类，方法，变量等，比如常见的@Override
 ## 元数据
@@ -2405,9 +2441,15 @@ public class User {
 }
 
 ```
+
+
 ```
 #我们期望通过注解实现为对象注入属性值id，name，age
 #isAnnotationPresent 判断是否存在某类注解。getAnnotation取出该注解。
+getDeclaredConstructors
+isAnnotationPresent
+getAnnotation
+
 public class AnnotationProcessor {
 
     public static void init(Object object) {

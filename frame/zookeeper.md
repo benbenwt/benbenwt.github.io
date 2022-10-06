@@ -1,3 +1,4 @@
+[TOC]
 ### 安装
 
 ```
@@ -213,3 +214,11 @@ remove方法移除一个元素
 >https://www.jianshu.com/p/3fec1f8bfc5f
 
 # 用法
+
+## shell
+## Java API
+###
+```
+#增加Znode
+
+```

@@ -295,8 +295,16 @@ lsof -i:8080
 >*PS:centos7默认没有 netstat 命令，需要安装 net-tools 工具，yum install -y net-tools*
 
 ```
-#检查端口被哪个进程占用,其中l代表展示listen的端口，p代表展示对应的process，t代表tcp（使用u就只查看udp），n代表not resolve names，不懂什么意思。
+#检查端口和进程信息
+其中l代表展示listen的端口，.
+p代表展示对应的process，
+t代表tcp（使用u就只查看udp），使用a表示查看所有
+n代表not resolve names，如果添加了会将域名解析为ip。
+这几个参数可以自由组合，查看需要的信息。
 netstat -lnpt |grep 5672
+netstat -alp
+netstat -tlp
+netstat -ulp
 #查看进程的详细信息
 ps 6832
 #中止进程
