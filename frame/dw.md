@@ -3,21 +3,41 @@
 >https://www.yuque.com/liujie7999/ufyaq4/agdqqs
 >https://xiaolincoding.com/
 
-# 求职网站
+# 求职
 >https://www.yingjiesheng.com/zhuanye/jisuanji/wuhan/
+>51job:https://xym.51job.com/hyhd/PC/#/home
 # 数仓项目
 >https://developer.aliyun.com/article/782868
+
 [TOC] 
+
+
 # 端口
 9870 9000 18088  
 8088 
-8081
+8081 
 # 配置文件
 core-site.xml hdfs-site.xml mapred-site.xml yarn-site.xml capacity-scheduler.xml fail-scheduler.xml 
 spark-default.conf spark-env.sh
 flink-conf.yml sql-cli-defaults.yaml
 workers
 
+# es
+>match：分词查询
+>term：精确查询
+>fuzzy：模糊查询：基于编辑距离
+>wildcard：通配符查询
+>bool：使用must、should、must_not、filter连接简单查询的逻辑
+
+# 面试杂项
+## 关注工作的方面
+>感兴趣的方面：
+>1,数据量，数据量更大的业务场景较为复杂，在处理的过程中会碰到各种问题，解决问题的过程中，提升自己数据处理的能力。
+>2，数据仓库建模，数据仓库建模就是确定如何构建表，如何确认更新策略，如何划分事实表和维度表，为了达到更好的性能，并完成业务指标的统计。
+>3，（）是很有挑战性的，在处理（）的过程中，可以加深对什么的了解。技术和业务的进步，加深对业务的理解，才能编写出符合业务需求的系统。技术的进步，才能通过技术优化系统的性能，提升系统的健壮性。
+## 公司了解
+>1，公司的产品和业务，主要做什么的以及使用到什么技术。
+>2，领域的前景问题
 # 0929 springboot整理
 
 ## 后缀表达式

@@ -677,7 +677,7 @@ final V putVal(int hash, K key, V value, boolean onlyIfAbsent,
 
 >红黑数定义如下：
 >
->每个结点为红色或黑色，根和叶子总是为黑色。
+>每个结点为红色或黑色，根和叶子总是为黑色，叶子是NULL结点。
 >
 >相邻结点不可以都为红色
 >
@@ -911,7 +911,6 @@ $：匹配字符串的结束
 {n}：重复n次
 {n，}：重复n次和更多次
 {n，m}：重复n，m次​​
-
 ##### 字符类(对元字符扩展)
 
 [0-9],[a-z0-9A-Z]
@@ -950,7 +949,6 @@ exp2(?!exp1)​    匹配exp2后面不是exp1的位置
 当使用*,+,.等时，尽可能匹配多的，称为贪婪。
 在限定符后边加？可转换为懒惰模式。
 如:*?,.?,+?​,{n,m}?
-
 ##### 处理选项
 
 ##### 平衡组/递归匹配
@@ -2335,7 +2333,35 @@ public boolean equals(Object obj) {
 
 # 动态代理
 >https://www.jianshu.com/p/9bcac608c714
->
+>利用反射机制，在运行时创建代理类。
+
+```
+public class ProxyHandler implements InvocationHandler{
+    private Object object;
+    public ProxyHandler(Object object){
+        this.object = object;
+    }
+    @Override
+    public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+        System.out.println("Before invoke "  + method.getName());
+        method.invoke(object, args);
+        System.out.println("After invoke " + method.getName());
+        return null;
+    }
+}
+
+public static void main(String[] args) {
+        System.getProperties().setProperty("sun.misc.ProxyGenerator.saveGeneratedFiles", "true");
+
+        HelloInterface hello = new Hello();
+        
+        InvocationHandler handler = new ProxyHandler(hello);
+
+        HelloInterface proxyHello = (HelloInterface) Proxy.newProxyInstance(hello.getClass().getClassLoader(), hello.getClass().getInterfaces(), handler);
+
+        proxyHello.sayHello();
+    }
+```
 # 拦截器
 
 # Annotation
@@ -2405,7 +2431,7 @@ public @interface UserMeta {
 #### 运行时注解处理器
 >运行时注解处理器主要靠反射实现。
 >可以通过读取运行时的注解，可以通过获取到某个类的AnnotatedElement对象，然后获取Annotation信息。
-### 使用@UserMeta自定义注解
+### 自定义注解-运行时注解处理器
 ```
 #常用函数
 getAnnotations
@@ -2486,3 +2512,7 @@ public class Main {
 
 
 ```
+
+### 自定义注解-编译时注解处理器
+>https://blog.csdn.net/a724888/article/details/121931029
+>知乎：关于注解你所需要知道的一切

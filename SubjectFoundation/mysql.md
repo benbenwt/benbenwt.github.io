@@ -316,7 +316,7 @@ like以%开头or左右均为索引才生效varchar未加单引号is null ,is not
 ##### explain（8+7）
 
 select_type
-simplepirmarysubquery​unionderived​
+simple pirmary subquery​ union derived​
 
 id
 id若相同，由上向下顺序。若不同，大的先执行。

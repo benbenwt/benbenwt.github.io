@@ -15,7 +15,7 @@ lspci | grep -i vga
 >https://mirrors.bfsu.edu.cn/centos/7/isos/x86_64/
 
 >https://blog.csdn.net/frank1998819/article/details/84774176
->
+
 >minimal是精简版本，dvd是最完整的，体积达到了4G。
 
 # cpu
@@ -102,7 +102,7 @@ source /etc/profile
 #如下例子表示每隔24小时执行一次
 * */24 * * * /test.sh
 
-#如下例子表示没小时的第1分钟执行一次
+#如下例子表示每小时的第1分钟执行一次
 1 * * * * /test.sh
 ```
 # 用户管理

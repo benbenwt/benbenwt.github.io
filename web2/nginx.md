@@ -1,3 +1,4 @@
+[TOC]
 # nginx基础
 
 >前后端的分工误区：js是由浏览器进行解析的，nginx是服务端容器，不负责这个。它返回html和js代码，浏览器进行解析和响应。而jsp就是将java代码解析后，生成html页面返回给浏览器。ajax是通过接受数据使用js变更页面。前后端分离，将ajax这部分请求抽离出来，由分布式后端完成。而页面的请求，由nginx负责返回html和js代码，浏览器再解析。
@@ -178,21 +179,21 @@ location @app {
 ```
 
 # nginx用法
-
-### 常见错误码
+## 负载均衡
+## 常见错误码
 
 >502 bad gateway
 
-### shell常用命令
+## shell常用命令
 
 ```nginx
 nginx -s reload/stop
 ngix -c 绝对路径/nginx.conf
 ```
 
-### 配置文件常用语法
+## 配置文件常用语法
 
-##### root
+### root
 
 >root用于配置静态资源的目录，index用来配置默认的web主页。
 
@@ -203,7 +204,7 @@ location /{
 }  
 ```
 
-##### proxy_pass
+### proxy_pass
 
 >将后缀为test开头的所有请求发送到 172.18.66.66机器10000的端口上的后端服务
 
@@ -213,7 +214,7 @@ location /test{
 }
 ```
 
-##### rewrite
+### rewrite
 
 >rewrite用于改写转发的后缀，此例子将testtest替换为cvelistnew，使用正则取值。
 

@@ -1,5 +1,10 @@
 [TOC]
 # 安装使用
+## kafka为什么快
+>https://baijiahao.baidu.com/s?id=1710624455165799096
+>磁盘：零拷贝，顺序写入
+>网络：批量发送，consumer主动pull
+
 ## 安装
 
 ```
