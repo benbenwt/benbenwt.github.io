@@ -1,4 +1,3 @@
-
 # 八股文面试资源
 >https://www.yuque.com/liujie7999/ufyaq4/agdqqs
 >https://xiaolincoding.com/
@@ -10,12 +9,11 @@
 >https://developer.aliyun.com/article/782868
 
 [TOC] 
-
-
 # 端口
 9870 9000 18088  
 8088 
 8081 
+
 # 配置文件
 core-site.xml hdfs-site.xml mapred-site.xml yarn-site.xml capacity-scheduler.xml fail-scheduler.xml 
 spark-default.conf spark-env.sh
@@ -29,6 +27,40 @@ workers
 >wildcard：通配符查询
 >bool：使用must、should、must_not、filter连接简单查询的逻辑
 
+# 1012理论知识
+## mysql存储的数据量过大
+>当单表的数据量几千万时，就会影响sql执行的效率。当单表达到百万级别时，性能就会一定程度的下降。可以通过横向拆分、竖向拆分减少每个表中的数据量，从而提升单个表的查询性能，这些表可以被拆分到同一个数据库、也可以放到不同的数据库中，甚至不同的数据库实例中。
+>分库不是一个单独的操作，当数据库实例达到了并发上限，并发上限受到机器磁盘、网络和mysql配置的影响。这时就需要创建多个数据库实例，分担并发的读写请求。
+## 读写分离，主从复制
+>通过开启多台数据库实例，一台作为master，其他作为salve，主数据库负责写请求，从数据库负责读请求。通过开启数据库的binlog功能，主数据库会针对数据的修改生成日志，并开启binlog进程，等待从数据库拉取binlog日志，并同步主数据库的数据。
+>适用场景：
+>1数据库性能无法满足要求，通过主从复制分担主数据库的读请求的压力。
+>2容灾备份，通过在从数据库备份数据，并放置到不同地理位置的机房，实现数据容灾。
+>3基于第一条，可以在从数据库上通过读请求进行数据分析，不对主服务造成压力。
+### 主从同步时延问题
+>当主库并发较高，产生大量binlog，查过了slave单线程的处理能力，机会导致出现延迟。
+>1：通过开启多线程，加快处理速度。
+>2：通过ack机制，让从库ack后主库才写入成功。
+>可以使用show slave status排查主从复制故障
+## 慢查询
+
+## 峰值数据写入mysql
+## redis的淘汰策略
+## git tag
+## 索引优化
+## kafka为什么快
+## flink水位线及对齐
+## regionserver如何划分数据
+## flink的sql解析原理
+## interval join
+## 树的度和结点数
+## 图的度和结点数
+## 数据仓库建模设计
+## mysql事务redo，undo，mvcc
+## 分布式主键
+## 并发访问数据库
+## 秒杀
+
 # 面试杂项
 ## 关注工作的方面
 >感兴趣的方面：
@@ -39,7 +71,6 @@ workers
 >1，公司的产品和业务，主要做什么的以及使用到什么技术。
 >2，领域的前景问题
 # 0929 springboot整理
-
 ## 后缀表达式
 https://www.cnblogs.com/dolphin0520/p/3708602.html
 ## 分页

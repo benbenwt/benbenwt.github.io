@@ -298,7 +298,7 @@ b树和b+树![img](https://api2.mubu.com/v3/document_image/3b048d78-9fe6-4498-85
 #### 索引失效
 
 索引失效情况：
-
+s
 #### 索引的创建删除
 
 CREATE INDEX name ON table(col1,col2....)DROP INDEX name;
