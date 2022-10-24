@@ -25,19 +25,20 @@ sc.setLogLevel("INFO")
 ```
 
 ### 配置使用环境
-
 ```
-下载spark压缩包解压到本地，配置spark的环境变量。
+#下载spark压缩包解压到本地，配置spark的环境变量。如果没加py4j这个路径，会报py4j的socket错误。
+SPARK_HOME  =>  /opt/spark-3.0.0-bin-hadoop2.7
+PYTHONPATH  =>  %SPARK_HOME%/python;%SPARK_HOME%/python/lib/py4j-0.10.9-src.zip;%PYTHONPATH%
+PATH  => %SPARK_HOME%/bin;%SPARK_HOME%/python;%PATH%
+
 pip安装pyspark的依赖，测试是否安装成功。
 ```
 
 ### 变量广播
-
 >哪些变量需要手动广播？哪些会自动传递过去，在任意节点都可以使用？
 >这由rdd的闭包进行处理，对于rdd算子内的操作，是需要在多个并行结点执行的，必须要广播到各个结点。
 >rdd算子外的变量在driver端执行。
 >自定义函数，变量，数据
->
 
 ### 提交
 

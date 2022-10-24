@@ -118,7 +118,6 @@ git add <filename>提交到暂存区
 ```
 
 ##### git commit
-
 ```
 git commit -m “message”提交到head，应用改动。
 ```
@@ -131,8 +130,8 @@ git commit -m “message”提交到head，应用改动。
 
 ```
 git push origin master 将head种文件提交到master
- git push -u -f origin main，覆盖远程分支。
- git push --set-upstream origin main，设定默认上传分支。
+git push -u -f origin main，覆盖远程分支。
+git push --set-upstream origin main，设定默认上传分支。
 ```
 
 ##### git fetch
