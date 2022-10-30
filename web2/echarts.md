@@ -1,5 +1,9 @@
 # 入门示例
-
+## 关系图
+```
+https://echarts.apache.org/examples/zh/index.html#chart-type-heatmap
+https://echarts.apache.org/examples/zh/editor.html?c=graph-force
+```
 ### index.html内容
 
 ```html
