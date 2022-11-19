@@ -13,7 +13,14 @@ pageHelper使用后再在sql中使用LIMIT会报错。
 ```
 空指针异常不指定谁为空指针，这种报错很麻烦。
 ```
-
+### springcloud 集成grpc
+>https://www.jianshu.com/p/cb96d03279a1
+>
+### ali短信
+>https://developer.aliyun.com/article/828179
+### 测试方法
+@Springboot
+@Test
 ### 常见WEB错误码
 ```
 404
@@ -666,6 +673,9 @@ ctrl左键点击依赖，查看spring-boot-dependeccies或spriing-cloud-dependen
 ```
 控制台搜索sessions.ser，找到该文件备份好并删除，此错误可能是由tomcat异常关闭导致的。
 ```
+
+##### @Value失败
+>通过@Value读取yml的属性配置，然后在构造方法中获取这些属性并创建客户端，发现这些属性是null，这是由于@Value本质是通过实例对象的set方法设置的，所处的顺序在构造方法之后，所以构造方法无法读取。
 
 # 常见逻辑
 ## 登录

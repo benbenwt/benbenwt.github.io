@@ -219,7 +219,6 @@ FLUSH PRIVILEGES;
 >1不提供事务支持
 >2只提供表锁，innodb提供行锁，以及与Oracle类型一致的不加锁读取。当然，在无法确认slq访问扫描的范围时，也会执行锁全表。
 ## mysql事务和锁
-
 >
 
 ## mysq数据安全管理
@@ -406,6 +405,13 @@ using filesort :索引排序不可用using temporary:临时表using join buffer:
 
 ## 事务隔离级别（事务隔离性）
   1READ_UNCOMMITTED
-  2READ_COMMITTED （解决 脏读）
-  3REPEATABLE​_READ (解决 脏读，不可重复读)
-  4SERIALIZABLE (解决 脏读，不可重复读，幻读)
+  2READ_COMMITTED （解决 脏读）使得只能读取已经提交的事务
+  3REPEATABLE​_READ (解决 脏读，不可重复读)  通过行锁避免其他事务的修改（悲观锁）
+  4SERIALIZABLE (解决 脏读，不可重复读，幻读) 通过表锁避免数据数目的变更
+
+>并发为什么会引发问题：
+>1原子性：在一个并发操作必须当做整体，否则会发生数据的覆盖 
+>2可见性：没有及时读取主内存数据，或者没有及时将数据从工作内存写回主内存。 
+>3有序性： 重排序在多线程环境下可能导致不可预知的情况，通过sychronized或者volatile可以解决。时间先后不一定符合happens-before，符合happens-before一不一定符合时间先后，两者没有直接关系。
+>
+>事务为什么会引发问题：1读未提交的数据回滚 2同一个事务内的多个时间点，读取到了修改后的数据，或者插入后的数据。

@@ -1,6 +1,10 @@
 [TOC]
+## 关于写入日志
+>是为了应对内存在断电后丢失数据信息的问题所设计的，或是为了进行实时备份，为了提高数据的稳定性，在断电后进行数据恢复，从log磁盘中恢复到内存。例如hdfs的editlog，hbase的wal，elasticsearch的translog。
+
 # 安装使用.
 >分布式全文检索引擎
+>document 原理：https://www.elastic.co/guide/en/elasticsearch/reference/current/docs-replication.html
 api document:https://www.elastic.co/guide/en/elasticsearch/reference/current/indices-get-mapping.html
 
 

@@ -1,5 +1,6 @@
 [TOC]
-
+# 八股资源
+>https://javaguide.cn/
 # 数据结构
 >Collection为顶级的接口，List接口继承自Collection，AbstractCollection实现自Collection。
 
@@ -1363,6 +1364,8 @@ private
 
 
 # JVM理论知识
+## 常用工具命令
+>实战使用：https://cloud.tencent.com/developer/article/1985765
 
 ## 自动内存管理
 
@@ -1380,13 +1383,15 @@ private
 >8.  新生代中eden与survivor比率，–XX:SurvivorRatio 
 
 >jvm将内存区域划分为若干个不同的数据区域，这些区域有各自的用途，以及创建和销毁的时间。有些随着虚拟机进程的启动一致存在，有些区域则是依赖用户线程的启动和结束而建立和销毁。
->
+
+>在Java8中，永久代已经被移除，被一个称为“元数据区”（元空间）的区域所取代。 元空间的本质和永久代类似，都是对JVM规范中方法区的实现。 不过元空间与永久代之间最大的区别在于： 元空间并不在虚拟机中，而是使用本地内存。 因此默认情况下元空间的大小仅仅受本地内存的大小限制。 类的元数据放入 native memory, 字符串池和类的静态变量放入java堆中。
+
 >包括以下几个运行时数据区域：VM Stack、Native Method Stack、Program Counter Register、Method Area、Heap。
 
 ##### Program Counter Register
 
 >程序计数器可看作当前线程所执行的字节码的行号指示器，通过程序计数器选择下一条需要执行的字节码指令，程序的分支、循环、跳转、异常处理、线程恢复等基础功能都需要依赖这个计数器完成。
->
+
 >线程恢复：由于一个cpu核心同时只会执行一条线程中的指令，因此为了线程切换后能回到正确的位置，每条线程都需要一个独立的程序计数器，各条线程之间计数器互不影响。
 
 ##### Java Virtual Machine Stack
@@ -1976,6 +1981,7 @@ sufficientFunds.singnalAll()
 ```
 
 ## volatile字段
+>
 
 >有时如果只是为了读写一两个实例字段而使用同步，所带来的开销过大，可以使用volatile可以确保读取的值是最新的值。例如, return done，如果使用volatile修饰，则可以保证done得到的值是正确的a值。但是，注意其无法确保原子性。如done=！done就无法保证读取、反转、写入时不被中断。
 
@@ -2091,7 +2097,7 @@ CachedThreadPool和ScheduledThreadPool：允许的创建线程数量为Integer.M
 >
 >FixedThreadPool:固定数量线程池（newFixedThreadPool）,适用于为了满足资源管理的需求，而需要限制当前线程数量的应用场景，它适用于负载比较重的服务器。使用LinkedBlockingQueue
 >
->newCachedThreadPool:创建一个会根据需要创建新线程的，适用于执行很多的短期异步任务的小程序，或者是负载较轻的服务器。它填写的corePoolsize为0，使用的队列为SynchronousQueue。
+>CachedThreadPool:创建一个会根据需要创建新线程的，适用于执行很多的短期异步任务的小程序，或者是负载较轻的服务器。它填写的corePoolsize为0，使用的队列为SynchronousQueue。
 
 #### 线程池状态
 

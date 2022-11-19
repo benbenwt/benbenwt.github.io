@@ -1,4 +1,7 @@
 [TOC]
+# hbase预分区
+>https://cloud.tencent.com/developer/article/1936200
+
 # 安装与启动
 
 >修改hbase默认ssh端口
