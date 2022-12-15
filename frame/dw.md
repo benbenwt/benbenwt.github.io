@@ -1,6 +1,9 @@
 # 八股文面试资源
 >https://www.yuque.com/liujie7999/ufyaq4/agdqqs
 >https://xiaolincoding.com/
+>大数据八股：https://blog.csdn.net/qq_43061290/article/details/124822293
+
+>是什么、组成模块、工作原理（理论八股）？什么功能、场景？怎么使用？（api）
 
 # 求职
 >https://www.yingjiesheng.com/zhuanye/jisuanji/wuhan/

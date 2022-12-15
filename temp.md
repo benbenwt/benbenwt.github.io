@@ -9,6 +9,11 @@ select id,dt,part from dws_test
 insert overwrite table dwt_test partition(dt=dt, part=part)
 select id,dt,part from dws_test
 
+```
+```
+覆盖健全可度量的理论，测试，总结情况。
+```
+```
 #动静结合
 insert overwrite table dwt_test partition(dt='2022-09-22', part=part)
 select id,dt,part from dws_test

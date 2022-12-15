@@ -7,7 +7,6 @@
 >document 原理：https://www.elastic.co/guide/en/elasticsearch/reference/current/docs-replication.html
 api document:https://www.elastic.co/guide/en/elasticsearch/reference/current/indices-get-mapping.html
 
-
 ```
 #docker安装
 https://www.elastic.co/guide/en/elasticsearch/reference/7.5/docker.html
@@ -1268,25 +1267,59 @@ bin/logstash  -f  es2es.conf
 
 ```
 
-### es-head插件使用
-
->es-head是一个前端插件，解压就能使用，它使用web前端请求es数据库并进行展示。
-
 ```
 将压缩包解压到新的机器，修改配置文件添加对应host，拷贝es/data的数据到新的机器
-#注意要禁用rebalance，不然会花费很久时间
+#通过禁用rebalance，可以避免花费很久时间
 PUT /_cluster/settings
 {
     "transient" : {
         "cluster.routing.allocation.enable" : "none"      //取消分片权衡
     }
 }
-#指定inde想到特定机器
+#使用此命令引入新的机器ip，会将分片迁移到对应机器
 PUT index_name/_settings
 {
   "index.routing.allocation.include._ip": "10.124.105.5,10.124.105.6,10.124.105.7"
 }
+
+#手动强制迁移,需要先关闭自动分配。
+PUT /_cluster/settings
+{
+    "transient" : {
+        "cluster.routing.allocation.enable" : "none"      //取消分片权衡
+    }
+}
+#然后手动迁移
+# node-3分片1迁移到node-2
+POST /_cluster/reroute
+{
+    "commands" : [
+        {
+            "move" : {
+                "index" : "top_n_database_statement-20200519", "shard" : 1,
+                "from_node" : "node-3", "to_node" : "node-1"
+            }
+        }
+    ]
+}
+# node-3分片2迁移到node-1
+POST /_cluster/reroute
+{
+    "commands" : [
+        {
+            "move" : {
+                "index" : "top_n_database_statement-20200519", "shard" : 2,
+                "from_node" : "node-3", "to_node" : "node-1"
+            }
+        }
+    ]
+}
+
 ```
+### es-head插件使用
+
+>es-head是一个前端插件，解压就能使用，它使用web前端请求es数据库并进行展示。
+
 
 ### es-kibana使用
 

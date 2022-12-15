@@ -1,13 +1,13 @@
 [TOC]
-
+>https://www.redis.com.cn/commands/setnx.html
 # 应用场景
 >高性能key value数据库。
->
-1内存持久化
-2效率高，高速缓存
-3发布订阅系统
-4地图信息分析
-5计数器
+
+1缓存
+2计数器
+3分布式锁
+4分布式会话
+5排行榜
 
 ## NoSQL
 
