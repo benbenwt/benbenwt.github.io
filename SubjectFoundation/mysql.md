@@ -1,12 +1,11 @@
-```
-mysql有快照嘛
-```
-
-
+[TOC]
 
 ### DDL
-
 constraint用于防止非法信息进入
+#### 索引
+>CREATE INDEX index_name ON table_name (column_list) 
+>
+#### 表结构
 
 ##### 指定外键
 
@@ -19,13 +18,25 @@ Id_P int FOREIGN KEY REFERENCES Persons(Id_P)
 )
 ```
 
-
-
 ### DML
+插入
+#### 常用函数
+##### 日期函数
+```sql
+date_format(date_var,"%Y-%m-%d %H:%m:%s")
+str_to_date("2022-02-02","%Y-%m-%d %H:%m:%s")
+```
+##### 数学运算
+##### 逻辑运算
 
+```
+isnull
+```
 ### DCL
-
-
+>Data Control Language
+>如定义用户账户对数据表、数据库等的控制权，GRANT、REVOKE。
+>GRANT ALL PRIVILEGES ON "*" TO user@localhost
+>
 
 ### platform相关sql
 
@@ -78,8 +89,8 @@ delete from celery_taskmeta where id in
 
 
 
-
-### shell命令
+### 用法
+#### shell命令
 
 ```
 #连接mysql,-p与密码之间不要加空格，加空格后无法识别正确的密码。
@@ -92,8 +103,24 @@ update user set host="%" where user="root";
 #执行mysql文件
 source create_table.sql
 ```
+##### 创建数据库
 
-### 批量PrepareStatement插入
+CREATE DATABASE `cloud_db_one` CHARACTER SET utf8 COLLATE utf8_bin;
+
+##### 创建数据表
+
+CREATE TABLE `dept`(
+`dept_no` int(11) NOT NULL AUTO_INCREMENT,
+`dept_name` varchar(500) DEFAULT NULL,
+`db_source` varchar(500) DEFAULT NULL,
+PRIMARY KEY(`dept_no`)
+)ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+
+
+
+### problem
+#### 批量PrepareStatement插入
 
 >时间花费=网络传输时间（传输的数据量，建立的连接次数）+数据库向应时间（索引结构、存储原理）
 
@@ -110,7 +137,7 @@ conn = DriverManager.getConnection("jdbc:mysql://hbase2:3306/platform?useUnicode
 #使用这两个参数后，只传递一条预编译语句，一次请求将数据放在一起传递过去。减少了传递的预编译语句数量，以及创建连接的次数。
 ```
 
-### 重设自增id
+#### 重设自增id
 
 ```
 清空自增id
@@ -164,29 +191,34 @@ FLUSH PRIVILEGES;
 
 
 
-### problem
-
-多个sql不可以公用statement
-
-### 数据表
-
-##### 创建数据库
-
-CREATE DATABASE `cloud_db_one` CHARACTER SET utf8 COLLATE utf8_bin;
-
-##### 创建数据表
-
-CREATE TABLE `dept`(
-`dept_no` int(11) NOT NULL AUTO_INCREMENT,
-`dept_name` varchar(500) DEFAULT NULL,
-`db_source` varchar(500) DEFAULT NULL,
-PRIMARY KEY(`dept_no`)
-)ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
 # 理论部分
 
-## mysql事务和锁
+## 存储引擎
 
+### InnoDB
+
+>InnoDB支持B+树索引、全文索引、哈希索引
+>
+>哈希索引是自适应的，不能人为干预，InnoDB会根据这张表的使用情况自动生成。每张表只能有一个全文检索的索引。B+树索引是传统意义上的索引，它不能根据键值找到具体的行数据，而是找到行数据所在的页，然后把页读取到内存查找行数据。
+
+#### B+树
+
+>B+树是一种平衡查找树
+>
+>优势：
+>
+>1单一节点存储多个元素，减少IO
+>
+>2所有查询都要找到叶子结点，查询效率稳定。
+>
+>3所有叶子结点形成有序链表，方便范围查询。
+>
+>一般b+树的层数维持在2-4层。
+
+### MyISAM
+>1不提供事务支持
+>2只提供表锁，innodb提供行锁，以及与Oracle类型一致的不加锁读取。当然，在无法确认slq访问扫描的范围时，也会执行锁全表。
+## mysql事务和锁
 >
 
 ## mysq数据安全管理
@@ -248,7 +280,7 @@ b树和b+树![img](https://api2.mubu.com/v3/document_image/3b048d78-9fe6-4498-85
 
 #### 聚集索引，非聚集索引
 
-定义1：数据库表的物理顺序与聚集索引的顺序一样，一个表只有一个聚集索引。若有PK,PK就是聚集索引。聚集索引的索引树叶子结点直接存储行记录。而非聚集索引叶子节点存储主键值即聚集索引。
+定义1：数据库表的物理顺序与聚集索引的顺序一样，一个表只有一个聚集索引。若有PK,PK一般就是聚集索引，也可以在创建时指定为非聚集索引。聚集索引的索引树叶子结点直接存储行记录。而非聚集索引叶子节点存储主键值即聚集索引，也就是回表查询。
 
 #### 联合索引，单个索引
 
@@ -265,7 +297,7 @@ b树和b+树![img](https://api2.mubu.com/v3/document_image/3b048d78-9fe6-4498-85
 #### 索引失效
 
 索引失效情况：
-
+s
 #### 索引的创建删除
 
 CREATE INDEX name ON table(col1,col2....)DROP INDEX name;
@@ -280,10 +312,10 @@ CREATE INDEX name ON table(col1,col2....)DROP INDEX name;
 
 like以%开头or左右均为索引才生效varchar未加单引号is null ,is not nullnot ，<>,!= 可以优化为range字段上使用函数全表更快​就不使用索引​
 
-explain（8+7）
+##### explain（8+7）
 
 select_type
-simplepirmarysubquery​unionderived​
+simple pirmary subquery​ union derived​
 
 id
 id若相同，由上向下顺序。若不同，大的先执行。
@@ -334,13 +366,13 @@ using filesort :索引排序不可用using temporary:临时表using join buffer:
 >2. 为所有叶子结点增加了一个链指针
 
 >**页是计算机管理存储器的逻辑块，硬件及操作系统往往将主存和磁盘存储区分割为连续的大小相等的块，每个存储块称为一页（在许多操作系统中，页得大小通常为4k）**，主存和磁盘以页为单位交换数据。当程序要读取的数据不在主存中时，会触发一个缺页异常，此时系统会向磁盘发出读盘信号，磁盘会找到数据的起始位置并向后连续读取一页或几页载入内存中，然后异常返回，程序继续运行。
->
+
 >**所以IO一次就是读一页的大小**
->
+
 >b+树一次io能读取出更多的节点信息，因为其data存储在叶子节点中。
->
+
 >一般来说，索引本身也很大，不可能全部存储在内存中，因此索引往往以索引文件的形式存储的磁盘上。这样的话，索引查找过程中就要产生磁盘I/O消耗，相对于内存存取，I/O存取的消耗要高几个数量级，所以评价一个数据结构作为索引的优劣最重要的指标就是在查找过程中磁盘I/O操作次数的渐进复杂度。换句话说，索引的结构组织要尽量减少查找过程中磁盘I/O的存取次数。下面先介绍内存和磁盘存取原理，然后再结合这些原理分析B-/+Tree作为索引的效率。
->
+
 >1.**B+树内节点不存储数据，所有 data 存储在叶节点导致查询时间复杂度固定为 log n。而B-树查询时间复杂度不固定，与 key 在树中的位置有关，最好为O(1)。**
 >
 >**2.B+树叶节点两两相连可大大增加区间访问性，可使用在范围查询等，而B-树每个节点 key 和 data 在一起，则无法区间查找。**
@@ -350,3 +382,36 @@ using filesort :索引排序不可用using temporary:临时表using join buffer:
 ### 引擎
 
 >了解数据库的什么引擎（myisam、innodb、kylin、doris）
+
+# 事务
+## 事务四个特性
+  原子性：事务要么做完，要么不做。若某一步操作异常，通过回滚到达事务开始或保存点。
+  一致性：数据库只能从一种一致的状态转移到另一种一致的状态。不能操作一半。
+  隔离性：事务与事务之间独立
+  持久性：事务提交后，对数据库中数据的改变是永久性的。
+
+## 三大数据问题
+
+### 脏读
+    事务a读取了b未提交的数据，并做了其他操作，但是后来b事务失败进行了回滚，此时a数据读取的就是脏数据。
+
+### 不可重复读
+    a多次读取数据库，读取b已提交的更改数据，两次不一样。
+    隔离后REPEATABLE​_READ，不允许其他事务进行update数据。
+
+### 幻读
+    a进行多次count操作，读取b提交的新增数据，两次count发生了变化。
+    隔离后SERIALIZABLE串行执行。
+
+## 事务隔离级别（事务隔离性）
+  1READ_UNCOMMITTED
+  2READ_COMMITTED （解决 脏读）使得只能读取已经提交的事务
+  3REPEATABLE​_READ (解决 脏读，不可重复读)  通过行锁避免其他事务的修改（悲观锁）
+  4SERIALIZABLE (解决 脏读，不可重复读，幻读) 通过表锁避免数据数目的变更
+
+>并发为什么会引发问题：
+>1原子性：在一个并发操作必须当做整体，否则会发生数据的覆盖 
+>2可见性：没有及时读取主内存数据，或者没有及时将数据从工作内存写回主内存。 
+>3有序性： 重排序在多线程环境下可能导致不可预知的情况，通过sychronized或者volatile可以解决。时间先后不一定符合happens-before，符合happens-before一不一定符合时间先后，两者没有直接关系。
+>
+>事务为什么会引发问题：1读未提交的数据回滚 2同一个事务内的多个时间点，读取到了修改后的数据，或者插入后的数据。

@@ -1,3 +1,58 @@
+### 日志
+
+```
+import logging,sys
+log = logging.getLogger()
+fmt1 = logging.Formatter(fmt="%(asctime)s - %(levelname)-9s - %(filename)-8s : %(lineno)s line - %(message)s")
+sh=logging.StreamHandler(sys.stdout)
+sh.setFormatter(fmt1)
+log.addHandler(sh)
+log.setLevel(logging.INFO)
+```
+
+
+
+### 字节与字符串转换
+
+>https://blog.csdn.net/zengNLP/article/details/95385390
+
+```
+import pickle
+import base64
+import json
+
+a = [[1, ['a']], [2, ['a', 'c']], [3, ['d']], [4, ['b']]] #可以是图像cv2的image的对象，或者组合的更复杂的数据结构
+
+#复杂结构/对象转json字符串（序列化）
+c = pickle.dumps(a) #序列化，转为byte
+print(type(c))
+print(type(base64.b64encode(c)))
+d = base64.b64encode(c).decode() #使用base64转换byte为str
+print(type(d))
+
+json_res = {"a": d}
+json_str = json.dumps(json_res)# 再转化为json的字符串形式
+print(json_str)
+print(type(json_str))
+
+#json字符串转回原始结构（反序列化）
+json_res = json.loads(json_str) #json字符串转为json结构
+e = base64.b64decode(json_res["a"]) #字符串转为byte
+t = pickle.loads(e) #byte反序列化转为‘复杂结构/对象’
+print(t)
+print(type(t))
+```
+
+
+
+### import包
+
+>常用的两种方式
+>
+>1： import test      result=test.func1() #test是文件名称，func1是文件内函数名
+>
+>2:from test import func1    result=func1()
+
 ### np和scipy matrix
 
 ```
@@ -322,16 +377,12 @@ countAll = cur.fetchall()[0][0]
 print("订单数：",countAll)
 ```
 
-
-
 ## requests库
 
 ```
 requests.post(url,body)
 requests.get(url,param)
 ```
-
-
 
 ## python语法糖或常用函数
 

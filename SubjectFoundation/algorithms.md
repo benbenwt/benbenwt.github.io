@@ -1,8 +1,9 @@
+[TOC]
 # 数据结构
 
 ## 队列
 
-### 双指针题型
+## 双指针题型
 
 ## 栈
 
@@ -16,7 +17,7 @@
 >
 >mark：用于处理重复情况，剪枝掉无用的分支。
 >
->resultt：每当找到符合条件的节点路径，讲路径存入ret，ret就是最终的结果。
+>result：每当找到符合条件的节点路径，讲路径存入ret，ret就是最终的结果。
 
 ```
 dfs{
@@ -26,7 +27,6 @@ for循环遍历该层可用的节点{
 //判断是否进入下一层遍历  dfs
 
 }
-
 }
 ```
 
@@ -113,11 +113,12 @@ void dfs(int depth,int *nums,int numsSize,int **ret,int *retSize,int *mark,int *
 
 ## 动态规划
 
->确认计算的方向，以哪为起始点，初始值多少。
+>确认状态计算的方向，以哪为起始点，初始状态多少。
 
->改题中，从左向右计算，一行计算完下一行。第一行为初始值，就是第一行每一列的值。
+>该题中，从左向右计算，一行计算完下一行。第一行为初始值，就是第一行每一列的值。
 
 ```
+#
 for(int i=0;i<*AColSize;i++)
     {
         dp[0][i]=A[0][i];
@@ -151,7 +152,7 @@ for(int i=0;i<*AColSize;i++)
     }
 ```
 
-## TSP
+### TSP
 
 ```
 for（State¬ from 0 to（1<<n）-1） 必须经过的结点集合
@@ -173,5 +174,100 @@ n位二进制的取值范围是0到2^n-1,所以我们的第一层循环就是如
 for state ->  form 0 to 2^n-1
 2^n在论文中，他写成了位运算模式，也就是2^n=(1<<n)
 最终就是：for（State¬ from 0 to（1<<n）-1）
+```
+
+# 练习
+
+>https://www.nowcoder.com/exam/oj 牛客网笔试top101
+
+## 220714
+
+```
+#BM1反转链表
+方法1：
+
+```
+
+```
+#BM2链表内指定区间反转
+import java.util.*;
+
+/*
+ * public class ListNode {
+ *   int val;
+ *   ListNode next = null;
+ * }
+ */
+
+public class Solution {
+    /**
+     * 
+     * @param head ListNode类 
+     * @param m int整型 
+     * @param n int整型 
+     * @return ListNode类
+     */
+    private ListNode begin;
+    private ListNode end;
+    public ListNode ReverseList(ListNode head,int m,int n) {
+        if(head==null){
+            return null;
+        }
+        ListNode pre=null;
+        ListNode cur=head;
+        ListNode nextNode=cur.next;
+        
+        int count=1;
+        while(cur!=null && count<=(n-m+1)){
+            cur.next=pre;
+            pre=cur;
+            cur=nextNode;
+            if(cur!=null){
+                 nextNode=cur.next;     
+            }
+            
+            count=count+1;
+        }
+        this.end=cur;
+        return pre;
+    }
+    public ListNode getReversePart(ListNode head,int m,int n){
+        if(m==1){
+            this.begin=null;
+        }
+        ListNode cur=head;
+        while(cur!=null)
+        {
+            m=m-1;
+            if(m==1){
+                this.begin=cur;
+            }
+            if(m==0){
+                return cur;
+            }
+            cur=cur.next;
+        }
+        return null;
+    }
+    
+    public ListNode getTail(ListNode reversePartHead){
+        while(reversePartHead.next!=null){
+            reversePartHead=reversePartHead.next;
+        }
+        return reversePartHead;
+    }
+    public ListNode reverseBetween (ListNode head, int m, int n) {
+        // write code here
+        ListNode reversePartHead=getReversePart(head,m,n);
+        
+        reversePartHead=ReverseList(reversePartHead,m,n);
+        ListNode reversePartTail=getTail(reversePartHead);
+        if(m!=1){
+               begin.next=reversePartHead;
+        }
+        reversePartTail.next=end;
+        return head;
+    }
+}
 ```
 

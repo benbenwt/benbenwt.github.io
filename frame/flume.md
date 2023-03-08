@@ -1,5 +1,6 @@
+[TOC]
 ### 安装
-
+ 
 ```
 #解压缩安装包
 #进入conf文件夹
@@ -7,7 +8,7 @@ mv flume-env.sh.template flume-env.sh
 vi flume-env.sh
 export JAVA_HOME=/opt/module/jdk1.8.0_212
 ```
-
+ 
 ### 使用
 
 ##### 启动flume
@@ -177,6 +178,8 @@ a1.sinks.k1.channel= c1
 ### sink
 
 # flume用法
+### windows 命令
+>>flume-ng.cmd agent --conf ..\conf -conf-file ..\conf\flume_file_kafka.conf --name agent1 -property flume.root.logger=INFO,console
 
 ### ExecSource
 
@@ -276,7 +279,7 @@ a1.sources.src-1.fileHeader = true
 
 ##### Taildir Source
 
->note:此功能无法在windwos工作
+>note:此功能无法在windows工作
 >
 >监控特定的文本文件，并不断读取追加的内容，以行为单位封装为Event，发送到channels。
 >
@@ -319,6 +322,7 @@ tier1.sources.source1.type = org.apache.flume.source.kafka.KafkaSource
 tier1.sources.source1.channels = channel1
 tier1.sources.source1.kafka.bootstrap.servers = localhost:9092
 tier1.sources.source1.kafka.topics = test1, test2
+tier1.sources.source1.kafka.consumer.group.id = custom.g.id
 ```
 
 ```

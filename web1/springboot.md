@@ -1,29 +1,27 @@
 
-
+[TOC]
 
 
 ```
 异常页面，权限管理
 ```
 
-
-
-
-
 ```
-pageHelper使用后再在sql中使用LIMIT会报错，。
+pageHelper使用后再在sql中使用LIMIT会报错。
 ```
-
-
 
 ```
 空指针异常不指定谁为空指针，这种报错很麻烦。
 ```
-
-
-
+### springcloud 集成grpc
+>https://www.jianshu.com/p/cb96d03279a1
+>
+### ali短信
+>https://developer.aliyun.com/article/828179
+### 测试方法
+@Springboot
+@Test
 ### 常见WEB错误码
-
 ```
 404
 500
@@ -31,10 +29,7 @@ pageHelper使用后再在sql中使用LIMIT会报错，。
 400
 ```
 
-
-
 ### jar包外部配置文件
-
 ```
 通过此种方式来指定配置文件，可以覆盖jar包内的配置文件。
 java  -jar  app.jar  --spring.config.location=application.yml
@@ -42,7 +37,6 @@ java  -jar  app.jar  --spring.config.location=application.yml
 ```
 
 # spring boot
-
 >使用基本流程：
 >
 >1加入starter依赖
@@ -110,8 +104,6 @@ pom文件
     <version>1.2.17</version>
 </dependency>
 ```
-
-
 
 ##### 修改application.yml
 
@@ -201,8 +193,6 @@ logging.level.root=info
 private final static Logger logger = LoggerFactory.getLogger(LisaServiceImpl.class);
 ```
 
-
-
 ###### 为springboot配置log4j
 
 >https://cloud.tencent.com/developer/article/1782929
@@ -254,7 +244,7 @@ logging:
 
 相当于@Configuration注解的重新定义
 
-##### @Configuration 
+##### @Configuration
 
 声明一个Spring配置类
 
@@ -276,17 +266,17 @@ logging:
 
 springboot默认会扫描与启动类同级的文件夹。
 
-##### SpringBootApplication  
+##### SpringBootApplication
 
 启动类
 
 [SpringApplication.run](http://springapplication.run/)(HelloWorldMainApp.class,args); 运行启动类
 
-##### @Component  
+##### @Component
 
 ##### 组件类
 
-##### @EnableAutoConfiguration 
+##### @EnableAutoConfiguration
 
 ##### 自动配置，即导入元数据的所有命名包。只扫描主配置类所在包下面的组件。
 
@@ -684,5 +674,11 @@ ctrl左键点击依赖，查看spring-boot-dependeccies或spriing-cloud-dependen
 控制台搜索sessions.ser，找到该文件备份好并删除，此错误可能是由tomcat异常关闭导致的。
 ```
 
+##### @Value失败
+>通过@Value读取yml的属性配置，然后在构造方法中获取这些属性并创建客户端，发现这些属性是null，这是由于@Value本质是通过实例对象的set方法设置的，所处的顺序在构造方法之后，所以构造方法无法读取。
+
+# 常见逻辑
+## 登录
+>借助Intercepter实现，将需要登陆的页面添加拦截器。在拦截器中添加session中是否有登陆状态的判断。
 
 

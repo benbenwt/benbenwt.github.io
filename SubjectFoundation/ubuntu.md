@@ -1,3 +1,7 @@
+[TOC]
+### 图形界面
+>ctrl+alt+F1 切换至命令行
+>alt+F7 切换至图形界面
 ### 系统哈希命令简表
 
 ```
@@ -446,17 +450,17 @@ sudo ufw allow 5901
 sudo ufw allow 5902
 将22端口改为50022
 
-##### sudo   vi /etc/ssh/sshd_config   
+##### sudo   vi /etc/ssh/sshd_config
 
 注意配置远程客户端修改sshd_config即可。找到port所在行取消注释，修改端口号即可。
 
 ##### 重启ssh服务
 
-##### service sshd restart   
+##### service sshd restart
 
 ##### 查看更改是否生效
 
-##### netstat -tlnp  
+##### netstat -tlnp
 
 防火墙生效并开机启动
 ufw enable     

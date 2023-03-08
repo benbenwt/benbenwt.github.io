@@ -1,16 +1,27 @@
+[TOC]
 # HIVE用法
-
+> 关键字(distinct)   函数（isnull，nvl，coalesce,窗口函数窗口字句） 运算符号（逻辑，数字，比较）
 >hive(hdfs)+hive sql(mr)
 >
 >hive本质是hdfs文件，对于文件变动和查询性能很差，增删改。它唯一的作用就是存储，它的存储作用是由hdfs分布式文件体现的，与它无关。另一个作用就是将sql翻译为执行引擎的语言，所以说它不能称为存储组件，而是辅助分析插件，因为其没有添加存储架构，没有修改文件的增删改查性能，其性能与hdfs文件完全相同。
+
+###### lateral view
+
+>默认的explode函数是处理map结构的。
+>
+>lateral view首先为原始表的每行调用UDTF，UTDF会把一行拆分成一或者多行，lateral view再把结果组合，产生一个支持别名表的虚拟表。
+>
+>如下语句表示将displays拆成多行，并组成一个名为tmp的表，列名为display。
+
+```
+lateral view explode_json_array(get_json_object(line,'$.displays')) tmp as display
+```
 
 ### DDL数据定义语言
 
 ```
 show databases；
 ```
-
-
 
 ##### 创建数据库
 
@@ -150,7 +161,7 @@ update
 
 ### JAVA API
 
-#hive java api:https://cwiki.apache.org/confluence/display/Hive/HiveServer2+Clients
+hive java api:https://cwiki.apache.org/confluence/display/Hive/HiveServer2+Clients
 
 ### 
 
@@ -232,15 +243,13 @@ public class MyStringLength extends GenericUDF {
 UDFArgumentException {
  // 判断输入参数的个数
  if(arguments.length !=1){
- throw new UDFArgumentLengthException("Input Args Length 
-Error!!!");
+ throw new UDFArgumentLengthException("Input Args Length Error!!!");
  }
  // 判断输入参数的类型
  
 if(!arguments[0].getCategory().equals(ObjectInspector.Category.PRIMITIVE)
 ){
- throw new UDFArgumentTypeException(0,"Input Args Type 
-Error!!!");
+ throw new UDFArgumentTypeException(0,"Input Args Type Error!!!");
  }
  //函数本身返回值为 int，需要返回 int 类型的鉴别器对象
  return PrimitiveObjectInspectorFactory.javaIntObjectInspector;
@@ -292,504 +301,172 @@ drop [temporary] function [if exists] [dbname.]function_name;
 
 
 
-# 数仓4.0 SQL 练习
+# 数仓 SQL 练习
 
 >https://www.gairuo.com/p/hive-sql-tutorial
 >
 >更多练习：https://www.gairuo.com/p/hive-sql-case
 
-### gmall项目
+## 日常练习
 
-##### ads_order_spu_status 商品主题详细流程
+### 220714
 
->已知所有表如下所示，编写脚本实现从ods层至ads的数据流动。具体表结构查看datagrip。ods层数据为原始数据，对应一条订单，最小粒度。dwd也为一条订单的粒度，但是其关联了支付、退款等信息。dws为一天的粒度，dwt为1，7，30等不同粒度的统计，ads为最终数据聚合。
->
->     ods_order_detail，ods_order_info，ods_order_detail_activity，ods_order_detail_coupon
->     dwd_order_detail，dwd_order_refund_info，dwd_payment_info，dwd_refund_payment
->             dws_sku_action_daycount，dim_sku_info   
->                   dwt_sku_topic，dim_sku_info
->                      ads_order_spu_stats
->#订单，订单明细，订单活动关联，订单优惠券关联         
->#交易的订单信息，退款订单信息，支付信息，退款顺序
->dwd层的工作量很大，需要聚合很多表，整合成单条记录形式，最小粒度。后边的dws，dwt基本基于dwd处理，不会连接太多表。
->#sku行为以天为粒度，列和DWS一样的。sku维度表
->#sku主题表，下单次数（是否参与活动，是否使用优惠券），下单件数（是否参与活动，是否使用优惠券），下单原始金额（活动优惠金额，优惠券优惠金额），下单最终金额，退款，评价（好评，差评，中评），购物车，收藏，以及1，7，30粒度的统计。sku维度表
->dwt这一层太宽了吧，这么多列。
->#spu的订单聚合信息，对于指定spu商品，其订单金额，订单数目，最近天数（1，7，30）
-
-######  dwd_order_detail
+>非技术快速入门板块
 
 ```
-#首先确定一下每一列来自那个ods表
-id
-order_id:四个表的连接列
-user_id:来自ods_order_info表
-sku_id:来自ods_order_detail
-province_id:ods_order_info
-activitity_id:ods_order_detail_activity
-activity_rule_id:ods_order_detail_activity
-coupon_id:ods_order_detail_coupon
-create_time:ods_order_info
-source_type:ods_order_detail
-source_id:ods_order_detail
-sku_num:ods_order_detail
-
-original_amount:ods_order_detail
-split_final_amount:ods_order_detail
-split_activity_amount:ods_order_detail
-split_coupon_amount:ods_order_detail
-dt:日期，来自ods_order_detail
+#数据去重
+#方法1
+select  distinct university from user_profile;
+select  university from user_profile group by university;
 ```
 
-###### dwd_order_detail 清洗sql
+```
+#分组后字段使用having过滤，且挑选字段时需要聚合函数，比如下边的max函数，除非该字段是唯一分组字段。
+select max(gender),max(university),count(gender) user_num,avg(active_days_within_30) avg_active_days_within_30,avg(question_cnt) avg_question_cnt from user_profile group by gender,university;
+```
 
->注意dwd_order_detail聚合的行粒度是一个订单明细，不是一个订单，所以left join用order_detail_id进行连接。一个订单包含多个订单明细。
+### 220715
+
+>非技术快速入门板块
+
+```
+#查找去重后个数，使用count(distinct device_id)
+select university,count(*)/count(distinct device_id)  from (select  question_practice_detail.device_id,question_practice_detail.question_id,question_practice_detail.result,university from question_practice_detail  
+left join  (select device_id,university from user_profile) t2  on question_practice_detail.device_id=t2.device_id) t3 group by university;
+```
+
+```
+```
+### 220716
+```
+SQL23：多表联查，注意要将表名.字段的格式重命名，方便groupby，例如： max(t4.university) university
+select max(t4.university) university,max(t3.difficult_level) difficult_level,count(t3.device_id)/count(distinct t3.device_id)  device_id from 
+   (select device_id,t1.question_id,result,difficult_level from  
+        question_practice_detail t1 
+    left join (select question_id,difficult_level from question_detail) t2 on t1.question_id=t2.question_id) t3   
+left join  user_profile t4 on t3.device_id=t4.device_id group by university,difficult_level
+```
+
+```
+SQL24:多表联查，确定表的链接字段和需要聚合的字段。inner join确保不出现None。
+select max(t3.university) university,max(t4.difficult_level) difficult_level,count(*)/count(distinct t3.device_id) avg_answer_cnt from (select t1.device_id device_id,t1.question_id question_id,t2.university university from question_practice_detail t1 inner join 
+    (select device_id,university from user_profile where university="山东大学")t2  on t1.device_id=t2.device_id)t3
+left join (select question_id,difficult_level from question_detail)t4 on  t3.question_id=t4.question_id group by university,difficult_level
+    ;
+```
+
+### 220717
 
 ```sql
-INSERT OVERWRITE TABLE dwd_order_detail_my_practice
-SELECT od.id,od.order_id,oi.user_id,od.sku_id,oi.province_id,oda.activity_id,oda.activity_rule_id,odc.coupon_id,oi.create_time,od.source_type,od.source_id,od.sku_num,od.order_price,od.split_final_amount,od.split_activity_amount,od.split_coupon_amount, date_format(create_time,'yyyy-MM-dd')
-FROM
-(SELECT id,order_id,sku_id,sku_num,source_type,source_id,order_price,split_final_amount,split_activity_amount,split_coupon_amount FROM ods_order_detail)od
-LEFT JOIN
-(SELECT id,user_id,province_id,create_time FROM ods_order_info )oi
- ON od.order_id=oi.id
-LEFT JOIN
-(SELECT order_detail_id,activity_id,activity_rule_id FROM ods_order_detail_activity)oda
-ON od.id=oda.order_detail_id
-LEFT JOIN
-(SELECT order_detail_id,coupon_id FROM ods_order_detail_coupon)odc
-ON od.id=odc.order_detail_id
+sql27
+case when then end as 语法
+select device_id,gender,case  
+            when age<20  then "20岁以下"
+            when age<=24 then "20-24岁"
+            when age>=25 then "25岁及以上"
+            else "其他"
+            end   as  age_cnt
+from user_profile;
 ```
-
-###### dwd_order_refund_info清洗sql
+```sql
+sql28
+https://zhuanlan.zhihu.com/p/257002408 日期函数，字符串、时间戳、日期的转换，日期的运算比较等
+select day(`date`) `day`,count(*) from question_practice_detail where `date`>=str_to_date("2021-08-01","%Y-%m-%d") group by `day`;
+```
 
 ```sql
-#查看有哪些列，使用哪些表，哪些需要聚合。查两个表就行了，无聚合操作。主要是多表join。
-INSERT OVERWRITE TABLE dwd_order_refund_info_my_pratice
-SELECT ori.id,oi.user_id,ori.order_id,sku_id,oi.province_id,ori.refund_type,ori.refund_num,ori.refund_amount,ori.refund_reason_type,ori.create_time, date_format(ori.create_time,'yyyy-MM-dd')
-FROM
-    (SELECT id,order_id,sku_id,refund_type,refund_amount,refund_num,refund_reason_type,create_time FROM ods_order_refund_info)ori
-     LEFT JOIN
-     (SELECT id,user_id,province_id FROM ods_order_info)oi
-    ON ori.order_id=oi.id
+sql29 注意使用distinct去重，保证用户和日期的唯一性
+select avg((if(datediff(next_date,date)=1,1,0))) from(select device_id,`date`,lead(date,1,0) over(partition by device_id order by date) next_date  from (select distinct device_id,date from question_practice_detail)t)t1;
 ```
-
-###### dwd_payment_info清洗sql
 
 ```sql
-SELECT pi.id,order_id,pi.user_id,oi.province_id,pi.trade_no,pi.out_trade_no,pi.payment_type,pi.payment_amount,pi.payment_status,pi.create_time,pi.callback_time,nvl(date_format(pi.callback_time,"yyyy-MM-dd"),"9999-99-99") FROM
-(SELECT * FROM ods_payment_info)pi
-LEFT JOIN
-(SELECT * FROM ods_order_info)oi
-ON pi.order_id=oi.id
+sql30 字符串切分函数
+select substring_index(profile,",",-1) gender,count(*) from user_submit group by gender;
 ```
-
-##### 商品ads 主题
-
-###### dws_sku_action_daycount
-
->dwd进行了多表join，dws需要进行聚合统计。
->
->这张表是对sku的信息进行统计，粒度为一天，包括下单、支付、退单、退款、评价与收藏这几个板块。在下单板块内包括下单件数、下单次数、下单金额，以及参与活动和使用优惠券的情况下，这次数、件数指标的计算，还有活动优惠金额、优惠券优惠金额，被下单原始金额，被下单最终金额。在支付板块，有支付件数、支付次数、支付金额。在退单板块有退单次数、件数、金额。退款板块有退款次数、件数、金额。评价好、中、查次数、默认评价数，收藏次数，购物车次数。
-
-拆开逐个看吧
-
->count代表次数，num代表该sku的件数，amount代表该sku的金额
-
-```
-#被下单次数，被下单件数，参与活动被下单件数，参与活动被下单件数，使用优惠券被下单次数，使用优惠券被下单件数，优惠金额（活动），优惠金额（优惠券）
-select
-        date_format(create_time,'yyyy-MM-dd') dt,
-        sku_id,
-        count(*) order_count,
-        sum(sku_num) order_num,
-        sum(if(split_activity_amount>0,1,0)) order_activity_count,
-        sum(if(split_coupon_amount>0,1,0)) order_coupon_count,
-        sum(split_activity_amount) order_activity_reduce_amount,
-        sum(split_coupon_amount) order_coupon_reduce_amount,
-        sum(original_amount) order_original_amount,
-        sum(split_final_amount) order_final_amount
-    from dwd_order_detail
-    group by date_format(create_time,'yyyy-MM-dd'),sku_id
-
-```
-
-```
-被支付金额，被支付件数，被支付件数
- select
-        date_format(callback_time,'yyyy-MM-dd') dt,
-        sku_id,
-        count(*) payment_count,
-        sum(sku_num) payment_num,
-        sum(split_final_amount) payment_amount
-    from dwd_order_detail od
-    join
-    (
-        select
-            order_id,
-            callback_time
-        from dwd_payment_info
-        where callback_time is not null
-    )pi on pi.order_id=od.order_id
-    group by date_format(callback_time,'yyyy-MM-dd'),sku_id
-```
-
-```
-#退单次数，退单金额
-select
-        date_format(create_time,'yyyy-MM-dd') dt,
-        sku_id,
-        count(*) refund_order_count,
-        sum(refund_num) refund_order_num,
-        sum(refund_amount) refund_order_amount
-    from dwd_order_refund_info
-    group by date_format(create_time,'yyyy-MM-dd'),sku_id
-#
-```
-
-```
-#退款次数，退款金额
-select
-        date_format(callback_time,'yyyy-MM-dd') dt,
-        rp.sku_id,
-        count(*) refund_payment_count,
-        sum(ri.refund_num) refund_payment_num,
-        sum(refund_amount) refund_payment_amount
-    from
-    (
-        select
-            order_id,
-            sku_id,
-            refund_amount,
-            callback_time
-        from dwd_refund_payment
-    )rp
-    left join
-    (
-        select
-            order_id,
-            sku_id,
-            refund_num
-        from dwd_order_refund_info
-    )ri
-    on rp.order_id=ri.order_id
-    and rp.sku_id=ri.sku_id
-    group by date_format(callback_time,'yyyy-MM-dd'),rp.sku_id
-```
-
-```
-# 购物车，收藏
-select
-        dt,
-        item sku_id,
-        sum(if(action_id='cart_add',1,0)) cart_count,
-        sum(if(action_id='favor_add',1,0)) favor_count
-    from dwd_action_log
-    where action_id in ('cart_add','favor_add')
-    group by dt,item
-),
-
-```
-
-```
-#评价次数
-select
-        date_format(create_time,'yyyy-MM-dd') dt,
-        sku_id,
-        sum(if(appraise='1201',1,0)) appraise_good_count,
-        sum(if(appraise='1202',1,0)) appraise_mid_count,
-        sum(if(appraise='1203',1,0)) appraise_bad_count,
-        sum(if(appraise='1204',1,0)) appraise_default_count
-    from dwd_comment_info
-    group by date_format(create_time,'yyyy-MM-dd'),sku_id
-
-```
-
-```
-将5大板块通过dt加sku_id分组查询出来后，没有使用join，而是使用union all合并，不存在的字段使用0，方便后续的sum求和。union的优势
-```
-
-###### dwt_sku_topic
-
->确定列来源的表，连接粒度，分块。分块基本按照业务流程划分，如下单、支付、退单、退款，然后这些块内部的属性，如金额、次数、联系上优惠券、活动属性。另外，DWT表还要负责更高粒度的统计，如1粒度、7粒度、30粒度。维度组合多了，看的很混乱，脑袋疼。总结以下固定顺序吧，按照如下顺序逐个处理: 选择业务过程(确认维度)→声明粒度→确认事实,与dws相似，但是dwt的一个表的维度可以是多个业务，比如包括下单、退款等等。选中业务后，确认此业务关注的列，以下单为例子，其维度可以通过组合确认，即（金额、次数）（原始金额、使用优惠券优惠的、活动优惠的）（时间跨度），。粒度一般为主题的最小单位，如sku、user_id、coupon_id、activity_id。确认事实这一步多余，因为有多个事实，如前边提到的金额、次数。以此表为例，业务分为下单、支付、退款、退单，组合维度如上所示
 
 ```sql
-#将四块业务用全是一个表的即dws_sku_aciton_daycount，再用nvl处理。可以发现下单件数、下单件数的sql基本一样，只用切换列名即可，其他的查询也是这样，全是重复类似操作。
-#下单 次数  1、7、30天
-select sku_id,sum(if(dt="2020-06-14",order_num,0)) order_last_1day_count ,sum(if(dt>date_add("2020-06-14",-6),order_num,0)) order_last_7day_count,sum(if(dt>date_add("2020-06-14",-29),order_num,0)) order_last_30day_count
-from dws_sku_action_daycount
- group by sku_id
-#下单 件数  1、7、30天
-select sku_id,sum(if(dt="2020-06-14",order_count,0)) order_last_1day_count ,sum(if(dt>date_add("2020-06-14",-6),order_count,0)) order_last_7day_count,sum(if(dt>date_add("2020-06-14",-29),order_count,0)) order_last_30day_count
-from dws_sku_action_daycount
- group by sku_id
- 下边的业务维度也是一样的，只用替换列名
-#下单 参与活动的件数  1、7、30天
-#下单 参与优惠券的件数  1、7、30天
-#下单 活动优惠的金额  1、7、30天
-#下单 优惠券优惠的金额  1、7、30天
-#下单  原始金额   1、7、30天
-#下单  最终的金额  1、7、30天
-
-#支付
-#退款
-#退单
+sql33 in可以用于查找复合元素的列表
+select device_id,university,gpa from user_profile where (university,gpa) in (select university,min(gpa) from user_profile group by university) order by university;
 ```
-
-###### ads_order_spu_stats
-
->确定有哪些业务、维度列，行的单位还是sku，多个事实列
->
->（下单） （次数、金额）  （最近1、7、30天）
 
 ```sql
-#下边是核心语句，查出来后与事实表拼接，然后用行粒度分组并聚合统计即可。
-select
-        recent_days,
-        sku_id,
-        case
-            when recent_days=1 then order_last_1d_count
-            when recent_days=7 then order_last_7d_count
-            when recent_days=30 then order_last_30d_count
-        end order_count,
-        case
-            when recent_days=1 then order_last_1d_final_amount
-            when recent_days=7 then order_last_7d_final_amount
-            when recent_days=30 then order_last_30d_final_amount
-        end order_amount
-    from dwt_sku_topic lateral view explode(Array(1,7,30)) tmp as recent_days
-    where dt='2020-06-14'
-
+sql34 注意限制条件，比如未出现的用户也要处理，ISNULL函数用法。
+select t2.device_id device_id,t2.university university,sum(if(ISNULL(`date`),0,1)),sum(if(result="right",1,0)) right_question_cnt from 
+    question_practice_detail as t1 right join user_profile as  t2 on t1.device_id=t2.device_id 
+    where university="复旦大学" and (date>=str_to_date("2021-08-01","%Y-%m-%d") or ISNULL(`date`))
+    group by device_id;
 ```
-
-
-
-###### ads_repeat_purchase
-
->品牌复购率计算，业务维度如下，每行的粒度是由唯一的user_id sku_id recent_days确定的，事实是回购率，中间的临时表事实是购买次数。
->
->（购买）（品牌复购率）  （最近1、7、30天）
->
->复购率的含义，至少买过2次及以上的人所占的比列，即（买两次的用户数）/(买两次的用户数+买一次的用户数)
->
 
 ```sql
-#利用explode将dwd_order_detail表的数据复制三份，分别用于1、7、30的recent_days的select，然后借助date_add(now_date,-recent_days+1)对三组数据进行筛选。
-select
-            recent_days,
-            user_id,
-            sku_id,
-            count(*) order_count
-        from dwd_order_detail lateral view explode(Array(1,7,30)) tmp as recent_days
-        where dt>=date_add('2020-06-14',-29)
-        and dt>=date_add('2020-06-14',-recent_days+1)
-        group by recent_days, user_id,sku_id
+sql35 join多表并过滤，然后分组聚合求正确率
+select t4.difficult_level difficult_level,avg(if(t3.result="right",1,0)) correct_rate from
+    (select t1.device_id device_id,t1.result result,t1.question_id question_id from question_practice_detail t1 left join user_profile t2 on t1.device_id=t2.device_id where university="浙江大学")t3
+    left join 
+    question_detail t4 on t3.question_id=t4.question_id
+    group by difficult_level order by correct_rate;
 ```
 
-```
-#查出来后，再与dim_sku_info使用join，拼接获得sku的品牌名称和id。
-#然后计算大于1的，以及大于2的，再相除。
-cast(sum(if(order_count>=2,1,0))/sum(if(order_count>=1,1,0))*100 as decimal(16,2))
-```
-
-
-
-##### 订单主题
-
-###### ads_order_total
-
->业务维度，每行粒度，事实列
->
->（下单） （订单数、人数、金额） （统计日期，最近1、7、30） ， 单个订单  ，  人数、金额
+>sql必知必会板块
+```sql
 
 ```
-#核心语句，查出1、7、30天，这个when recent_days=0个人认为是无意义的，可能写错了，因为recent_days是自己创建的，明明只有1、7、30几个数。
- select
-        recent_days,
-        user_id,
-        case when recent_days=0 then order_count
-             when recent_days=1 then order_last_1d_count
-             when recent_days=7 then order_last_7d_count
-             when recent_days=30 then order_last_30d_count
-        end order_count,
-        case when recent_days=0 then order_final_amount
-             when recent_days=1 then order_last_1d_final_amount
-             when recent_days=7 then order_last_7d_final_amount
-             when recent_days=30 then order_last_30d_final_amount
-        end order_final_amount
-    from dwt_user_topic lateral view explode(Array(1,7,30)) tmp as recent_days
-    where dt='2020-06-14'
 
-#行粒度分组统计
+### 220718
 ```
-
-###### ads_order_by_province
-
->（下单）  （订单数、订单金额）  （1、7、30）      单个地区       订单数、订单金额
+#limit 给delete 用,按照顺序删除前边的指定条数，unix_timestamp获取日期的时间戳秒数。
+delete from exam_record where unix_timestamp(submit_time)-unix_timestamp(start_time)<300 or isnull(submit_time) order by start_time asc limit 3;
+```
 
 ```sql
-#太明显了，就是dwt查出来，然后进行分组聚合订单数、订单金额，然后与dim事实表拼接。最后，union ads_order_by_province表中原始的数据
-insert overwrite table ads_order_by_province
-select * from ads_order_by_province
-union
-select
-    dt,
-    recent_days,
-    province_id,
-    province_name,
-    area_code,
-    iso_code,
-    iso_3166_2,
-    order_count,
-    order_amount
-from
-(
-    select
-        '2020-06-14' dt,
-        recent_days,
-        province_id,
-        sum(order_count) order_count,
-        sum(order_amount) order_amount
-    from
-    (
-        select
-            recent_days,
-            province_id,
-            case
-                when recent_days=1 then order_last_1d_count
-                when recent_days=7 then order_last_7d_count
-                when recent_days=30 then order_last_30d_count
-            end order_count,
-            case
-                when recent_days=1 then order_last_1d_final_amount
-                when recent_days=7 then order_last_7d_final_amount
-                when recent_days=30 then order_last_30d_final_amount
-            end order_amount
-        from dwt_area_topic lateral view explode(Array(1,7,30)) tmp as recent_days
-        where dt='2020-06-14'
-    )t1
-    group by recent_days,province_id
-)t2
-join dim_base_province t3
-on t2.province_id=t3.id;
-
+建表语句
+CREATE TABLE 
+user_info_vip(
+id int(11) not null primary key auto_increment comment "自增ID",
+uid int(11) not null unique comment "用户ID",
+nick_name varchar(64) comment "昵称",
+achievement int(11) default 0 comment "成就值",
+level int(11) comment "用户等级",
+job varchar(32) comment "职业方向",
+register_time datetime default CURRENT_TIMESTAMP comment"注册时间"
+)
 ```
-
-##### 访客统计
-
-##### 用户统计
-
-###### ads_user_total
-
->（下单、新增）  （金额数、用户数） （1、7、30天）    中间表是单个用户user_id和recent_days，最终是     recent_days   用户数、金额数
->
->这个几个关键变量：login_date_first,表示该用户第一次登录，即新增的日期。login_date_last，最后登陆日期。order_date_first，表示第一次下单的用户，即新增下单用户。order_date_last，最后一次购物。order_final_mount代表周期内的下单金额。
 
 ```sql
-#所有用户的下单金额
-sum(order_final_amount) order_final_amount,
-#所有用户的下单次数
-sum(if(order_final_amount>0,1,0)) order_user_count,
-#最近周期内第一次登陆
-sum(if(login_date_first>=recent_days_ago,1,0)) new_user_count,
-#最近周期内第一次购物
-sum(if(order_date_first>=recent_days_ago,1,0)) new_order_user_count,
-#最近活跃，但是就是不购物，白嫖怪。
-sum(if(login_date_last>=recent_days_ago and order_final_amount=0,1,0)) no_order_user_count
-
-#通过如下语句组装需要的几个关键变量
-(select user_id,recent_days,login_date_first,login_date_last,order_date_first,
-       case when recent_days=0 then order_final_amount
-            when recent_days=1 then order_last_1d_final_amount
-            when recent_days=7 then order_last_7d_final_amount
-            when recent_days=30 then order_last_30d_final_amount
-        end order_final_mount,
-        if(recent_days=0,"1997-01-01",date_add('2020-06-14',-recent_days+1)) recent_days_ago
-from dwt_user_topic lateral view explode(Array(0,1,7,30)) tmp as recent_days
-where dt='2020-06-14')t1
+#数据操作语言，修改表结构
+drop table if exists exam_record_2011,exam_record_2012,exam_record_2013,exam_record_2014;
 ```
-
-###### ads_user_change
-
->统计流失用户、回流用户
->
->（登录  ）  （用户数）统计日期                中间表是
->
->流失：最后活跃时间是7日前这一天，即为流失。
->
->回流：今日登录，且7日内没有登录
 
 ```sql
-#回流筛选
- where datediff(login_date_last,login_date_previous)>=8
- #流失筛选
- where dt='2020-06-14'
-    and login_date_last=date_add('2020-06-14',-7)
+数据定义语言，操作表索引
+create index idx_duration on examination_info(duration);
+create unique index uniq_idx_exam_id on examination_info(exam_id);
+create fulltext index full_idx_tag on examination_info(tag);
 ```
-
-###### ads_user_retention
-
->（新增用户 ）   （留存天数，留存用户数量，留存率）   行粒度：7天内的每个单个日期（create_date），中间表是单个user_id，通过第一次登录日期聚合即可    事实列：用户数量、天数  
->
->留存天数：7天内注册，今天减去第一次登录日期，就是留存日期
->
->留存用户数：7天内注册，最后登陆日期是今天，记为留存
->
->留存率：留存用户数/留存用户数+今天未登录
->
->中间表的列为：留存天数、用户id、新增日期
->
->结果表：group by dt
 
 ```sql
-select
-    '2020-06-14',
-    login_date_first create_date,
-    datediff('2020-06-14',login_date_first) retention_day,
-    sum(if(login_date_last='2020-06-14',1,0)) retention_count,
-    count(*) new_user_count,
-    cast(sum(if(login_date_last='2020-06-14',1,0))/count(*)*100 as decimal(16,2)) retention_rate
-from dwt_user_topic
-where dt='2020-06-14'
-and login_date_first>=date_add('2020-06-14',-7)
-and login_date_first<'2020-06-14'
-group by login_date_first;
+注意有的score这一列有的行为null，如果使用count(*)会将为null的行也统计，使用coutn(score)只会统计score存在的行。
+select tag,difficulty,(sum(score)-max(score)-min(score))/(count(score)-2) clip_avg_score from 
+examination_info t1  join exam_record t2  on t1.exam_id=t2.exam_id 
+where tag="SQL" and difficulty="hard"  
 ```
-
-##### 优惠券主题
-
-###### ads_coupon_stats
-
->（领取、下单、过期）    （次数，原始金额，优惠金额，补贴率）               粒度是优惠券id
 
 ```sql
-select coupon_id,order_original_amount,order_final_amount,order_reduce_amount,
-        cast(order_reduce_amount/order_original_amount as decimal(16,2)) reduce_rate
-       from dwt_coupon_topic
+sql125 不知道为什么这样写，有一个样例过不了
+select min(t3.score) as min_score_over_avg 
+from (select score,avg(if(isnull(score),0,score)) over() avg_score  from exam_record t1 join  examination_info t2 on t1.exam_id=t2.exam_id 
+where tag="SQL" and score is not null) t3 
+where t3.score>avg_score and t3.score is not null
+
 ```
-
-##### 活动主题
-
-###### ads_activity_stats
-
->（下单）  （下单原始金额，最终金额，优惠金额，补贴率）  活动id  
 
 ```sql
- select
-        activity_id,
-        sum(order_count) order_count,
-        sum(order_original_amount) order_original_amount,
-        sum(order_final_amount) order_final_amount,
-        sum(order_reduce_amount) reduce_amount,
-        cast(sum(order_reduce_amount)/sum(order_original_amount)*100 as decimal(16,2)) reduce_rate
-    from dwt_activity_topic
-    where dt='2020-06-14'
-    group by activity_id
+对一个活跃天数的定义是distinct uid,date，不同用户同一天活跃也计算多次，另外，对于submit_time为空的记录不计入活跃天数。
+select date_format(start_time,"%Y%m") month,round(count(distinct date_format(start_time,"%Y-%m-%d"),uid)/count(distinct uid),2) avg_active_days,count(distinct uid) mau 
+from exam_record 
+where start_time>="2021-01-01" and submit_time is not null group by month
 ```
 
-
-
-### 聚合查询
+## 聚合查询
 
 ##### 指定商品带来的复购
 
@@ -816,7 +493,7 @@ sku_id：商品 ID，其中 1111 是拉新的活动商品
 数据表是一个以订单-商品为粒度的流水表。
 ```
 
-### sql优化
+## sql优化
 
 # 仓库规范
 
@@ -832,7 +509,27 @@ sku_id：商品 ID，其中 1111 是拉新的活动商品
 >
 >ADS Application Data Store
 
+### ods层表设计
+>表的同步策略可以分为全量同步，增量同步，新增及变化
+>全量就是，每天一个分区，该分区拥有全量数据。适用于数据量不大，每天既有新数据插入，也有旧数据的修改的场景。例如，活动，优惠券，品牌表等。
+>增量就是，每天一个分区，该分区拥有该天新增的数据。适用于数据量大，只有新增。例如，评论表，退单，支付流水，订单详情。
+>新增及变化就是，每天一个分区，该分区拥有该天新增的数据及该天变化的数据。适用于数据量大，有新增有修改。例如，用户表，订单表，优惠券领用。
+### 数据埋点
 
+#### 主流埋点方式
+>目前主流的埋点方式，有代码埋点（前端/后端）、可视化埋点、全埋点三种。
+代码埋点是通过调用埋点SDK函数，在需要埋点的业务逻辑功能位置调用接口，上报埋点数据。例如，我们对页面中的某个按钮埋点后，当这个按钮被点击时，可以在这个按钮对应的 OnClick 函数里面调用SDK提供的数据发送接口，来发送数据。
+可视化埋点只需要研发人员集成采集 SDK，不需要写埋点代码，业务人员就可以通过访问分析平台的“圈选”功能，来“圈”出需要对用户行为进行捕捉的控件，并对该事件进行命名。圈选完毕后，这些配置会同步到各个用户的终端上，由采集 SDK 按照圈选的配置自动进行用户行为数据的采集和发送。
+全埋点是通过在产品中嵌入SDK，前端自动采集页面上的全部用户行为事件，上报埋点数据，相当于做了一个统一的埋点。然后再通过界面配置哪些数据需要在系统里面进行分析。
+
+#### 埋点数据上报时机
+>埋点数据上报时机包括两种方式。
+方式一，在离开该页面时，上传在这个页面产生的所有数据（页面、事件、曝光、错误等）。优点，批处理，减少了服务器接收数据压力。缺点，不是特别及时。
+方式二，每个事件、动作、错误等，产生后，立即发送。优点，响应及时。缺点，对服务器接收数据压力比较大。
+本次项目采用方式一埋点。
+
+#### 埋点数据日志结构
+>为了收集行为信息，要采集包括页面，事件，曝光，错误，启动等信息。
 
 ### 范式理论
 
@@ -1010,7 +707,7 @@ hadoop.hive.hbase.HBbaseStorageHandler
 CREATE TABLE cctable (key int, value string) STORED BY 'org.apache.hadoop.hive.hbase.HBaseStorageHandler' WITH SERDEPROPERTIES ("hbase.columns.mapping" = ":key,cf:val") TBLPROPERTIES ("hbase.table.name" = "cc");
 ```
 
-# HIVE SQL用法
+# HIVE 基本类型，运算符，关键字，函数
 
 ### 基本类型
 
@@ -1113,6 +810,14 @@ select chinese+math from students
 | A RLIKE B                | strings                          | NULL if A or B is NULL, TRUE if any (possibly empty) substring of A matches the Java regular expression B, otherwise FALSE. For example, 'foobar' RLIKE 'foo' evaluates to TRUE and so does 'foobar' RLIKE '^f.*r$'. |
 | A REGEXP B               | strings                          | Same as RLIKE.                                               |
 
+
+###### LIKE运算符号
+```
+select * from table where name like "_[^c]%";
+_表示匹配任意一个字符。
+%表示匹配任意多个字符。
+[^c]表示该位不能为字符c。
+```
 ##### 逻辑运算符
 
 以下运算符为创建逻辑表达式提供支持。 它们都根据操作数的布尔值返回布尔值TRUE，FALSE或NULL。 NULL表现为“未知”标志，因此，如果结果取决于未知状态，则结果本身是未知的。
@@ -1143,6 +848,49 @@ select chinese+math from students
 | named_struct         | (name1, val1, name2, val2, ...)   | Creates a struct with the given field names and values. (As of Hive [0.8.0](https://issues.apache.org/jira/browse/HIVE-1360).) |
 | array                | (val1, val2, ...)                 | Creates an array with the given elements.                    |
 | create_union         | (tag, val1, val2, ...)            | Creates a union type with the value that is being pointed to by the tag parameter. |
+
+
+###### date_format
+
+```
+date_format('2020-06-14','yyyy-MM')
+```
+
+###### date_add
+
+```
+date_add('2020-06-14',-1)
+```
+
+###### next_day
+
+```
+#取下一个周一
+next_day('2020-06-14','MO')
+#取当前周的周一
+date_add(next_day('2020-06-14','MO'),-7)
+```
+
+###### last_day
+
+```
+#当月最后一天
+select last_day('2020-06-14')
+```
+
+###### 复杂数据类型
+
+```
+#map结构数据定义
+map<string,string>
+#array结构数据定义
+array<string>
+#struct结构数据定义
+struct<id:int,name:string,age:int>
+#struct和array嵌套定义
+array<struct<id:int,name:string,age:int>>
+```
+
 
 ##### 复杂类型的运算符
 
@@ -1206,7 +954,7 @@ FROM tab
 ORDER BY 1;
 ```
 
-#####  sort by
+##### sort by
 
 >hive支持,reduce局部排序，比order by性能消耗少。
 
@@ -2081,7 +1829,7 @@ cluster by 可以看做是一个特殊的distribute by+sort by，它具备二者
 
 >使用hive自带的Derby数据库存储元数据
 
-#####  本地模式
+##### 本地模式
 
 >配置了mysql，但是依赖于hive的服务无法远程访问metastore
 
@@ -2956,7 +2704,7 @@ show tables;
 
 >使用hive自带的Derby数据库存储元数据
 
-#####  本地模式
+##### 本地模式
 
 >配置了mysql，但是依赖于hive的服务无法远程访问metastore
 
@@ -3434,3 +3182,253 @@ select id,dt,last_value(dt) over(order by dt) prev_dt from test_table;
 >
 >ROW_NUMBER()，不会并列，即直接编号。
 
+# 数据质量监控
+>数据质量监控用于检测数据仓库的数据量，数据范围等是否在正常范围内，是否出现了异常的数据，如果出现异常的数据需要告警，并提醒开发人员。主要目标是产生可靠的数据，提升数据在使用中的价值。
+
+## 数据质量评价指标
+
+>数据质量的目标是改善，如何评估改善的结果呢，通常包括以下内容。
+
+| 评价标准 | 描述                                         | 监控项                                            |
+| -------- | -------------------------------------------- | ------------------------------------------------- |
+| 唯一性   | 指主键保持唯一                               | 字段唯一性检查                                    |
+| 完整性   | 主要包括记录缺失和字段值缺失等方面           | 字段枚举值检查     字段记录数检查                 |
+| 精确性   | 数据生成的正确性，数据在整个链路流转的正确性 | 波动阈值检查                                      |
+| 合法性   | 主要包括格式、类型、阈值的合法性             | 字段日期格式检查      字段长度检查   字段值域检查 |
+| 时效性   | 主要包括数据处理的时效性                     | 批处理是否按时完成                                |
+
+>上边的描述不直观，如下记忆常用的5个评价标准。
+>id列：重复值、空值，其他相关列：值域检查，行：数据总量同比、环比增长。
+
+## 功能分块
+
+>数据统计模块：使用shell脚本，统计数据仓库中的指标，然后插入mysql数据库
+>
+>可视化模块：使用superset读取myslq数据库，可视化告警结果。
+>
+>告警模块：使用python读取mysql的数据，判断是否需要告警，并发送邮件。
+>
+>调度模块：使用azkaban监控数仓清洗任务状态，如果有新的清洗任务，就执行 数据统计模块  和 告警模块，检测数据质量。
+>
+## 数据统计模块
+>列一个表，确定要统计那些表的那些评价指标，例如统计order表的id是否空值，id是否重复等。
+
+### 参数解析
+```
+# 在每个脚本头部加入，便于解析参数
+while getopts "t:d:c:s:x:l:" arg; do
+  case $arg in
+  # 要处理的表名
+  t)
+    TABLE=$OPTARG
+    ;;
+  # 日期
+  d)
+    DT=$OPTARG
+    ;;
+  # 要计算空值的列名
+  c)
+    COL=$OPTARG
+    ;;
+  # 空值指标下限
+  s)
+    MIN=$OPTARG
+    ;;
+  # 空值指标上限
+  x)
+    MAX=$OPTARG
+    ;;
+  # 告警级别
+  l)
+    LEVEL=$OPTARG
+    ;;
+  ?)
+    echo "unkonw argument"
+    exit 1
+    ;;
+  esac
+done
+```
+### 空值检查
+
+```
+vim null_id.sh
+# 空值个数
+RESULT=$($HIVE_ENGINE -e "set hive.cli.print.header=false;select count(1) from $HIVE_DB.$TABLE where dt='$DT' and $COL is null;")
+
+#结果插入MySQL
+mysql -h"$mysql_host" -u"$mysql_user" -p"$mysql_passwd" \
+  -e"INSERT INTO $mysql_DB.$mysql_tbl VALUES('$DT', '$TABLE', '$COL', $RESULT, $MIN, $MAX, $LEVEL)
+ON DUPLICATE KEY UPDATE \`value\`=$RESULT, value_min=$MIN, value_max=$MAX, notification_level=$LEVEL;"
+```
+### 重复值检查
+
+```
+vim duplicate.sh
+
+#重复id检查脚本,使用hive -e执行sql语句查询有多少值发生了重复，先使用having过滤出所有发生重复的行记录，再统计共有多少重复记录。
+RESULT=$($HIVE_ENGINE -e "set hive.cli.print.header=false;select count(1) from (select $COL from $HIVE_DB.$TABLE where dt='$DT' group by $COL having count($COL)>1) t1;")
+
+# 然后使用mysql -e 执行mysql语句，插入统计结果到mysql。
+# 包括监控的database，table，col，日期，统计结果，最小值，最大值，警告等级。
+mysql -h"$mysql_host" -u"$mysql_user" -p"$mysql_passwd" \
+  -e"INSERT INTO $mysql_DB.$mysql_tbl VALUES('$DT', '$TABLE', '$COL', $RESULT, $MIN, $MAX, $LEVEL)
+ON DUPLICATE KEY UPDATE \`value\`=$RESULT, value_min=$MIN, value_max=$MAX, notification_level=$LEVEL;"
+```
+
+### 值域检查
+```
+vim range.sh 
+# 查询不在规定值域的值的个数
+RESULT=$($HIVE_ENGINE -e "set hive.cli.print.header=false;select count(1) from $HIVE_DB.$TABLE where dt='$DT' and $COL not between $RANGE_MIN and $RANGE_MAX;")
+
+# 将结果写入MySQL
+mysql -h"$mysql_host" -u"$mysql_user" -p"$mysql_passwd" \
+  -e"INSERT INTO $mysql_DB.$mysql_tbl VALUES('$DT', '$TABLE', '$COL', $RESULT, $RANGE_MIN, $RANGE_MAX, $MIN, $MAX, $LEVEL)
+ON DUPLICATE KEY UPDATE \`value\`=$RESULT, range_min=$RANGE_MIN, range_max=$RANGE_MAX, value_min=$MIN, value_max=$MAX, notification_level=$LEVEL;"
+```
+
+### 数据量环比检查脚本
+
+```
+vim day_on_day.sh
+# 昨日数据量
+YESTERDAY=$($HIVE_ENGINE -e "set hive.cli.print.header=false; select count(1) from $HIVE_DB.$TABLE where dt=date_add('$DT',-1);")
+
+# 今日数据量
+TODAY=$($HIVE_ENGINE -e "set hive.cli.print.header=false;select count(1) from $HIVE_DB.$TABLE where dt='$DT';")
+
+# 计算环比增长值
+if [ "$YESTERDAY" -ne 0 ]; then
+  RESULT=$(awk "BEGIN{print ($TODAY-$YESTERDAY)/$YESTERDAY*100}")
+else
+  RESULT=10000
+fi
+
+# 将结果写入MySQL表格
+mysql -h"$mysql_host" -u"$mysql_user" -p"$mysql_passwd" \
+  -e"INSERT INTO $mysql_DB.$mysql_tbl VALUES('$DT', '$TABLE', $RESULT, $MIN, $MAX, $LEVEL)
+ON DUPLICATE KEY UPDATE \`value\`=$RESULT, value_min=$MIN, value_max=$MAX, notification_level=$LEVEL;"
+
+```
+
+### 数据量同比检查脚本
+>同比是指当前日期，与上一周期的这一天相比变化了多少。环比是指当前周期内，今天比昨天变化了多少。
+
+```
+vim week_on_week.sh
+# 上周数据量
+LASTWEEK=$($HIVE_ENGINE -e "set hive.cli.print.header=false;select count(1) from $HIVE_DB.$TABLE where dt=date_add('$DT',-7);")
+
+# 本周数据量
+THISWEEK=$($HIVE_ENGINE -e "set hive.cli.print.header=false;select count(1) from $HIVE_DB.$TABLE where dt='$DT';")
+
+# 计算增长
+if [ $LASTWEEK -ne 0 ]; then
+  RESULT=$(awk "BEGIN{print ($THISWEEK-$LASTWEEK)/$LASTWEEK*100}")
+else
+  RESULT=10000
+fi
+
+# 将结果写入MySQL
+mysql -h"$mysql_host" -u"$mysql_user" -p"$mysql_passwd" \
+  -e"INSERT INTO $mysql_DB.$mysql_tbl VALUES('$DT', '$TABLE', $RESULT, $MIN, $MAX, $LEVEL)
+ON DUPLICATE KEY UPDATE \`value\`=$RESULT, value_min=$MIN, value_max=$MAX, notification_level=$LEVEL;"
+
+```
+
+>编写好检查shell脚本后，对需要的表执行shell即可，如下表示检查表ods_order_info的环比数据
+>一般来说，ods层是源数据，需要检查环比数据量，同比数据量，值域范围等。dwd和dim层是经过清洗的数据，需要保证某些列值的唯一性和非空。
+```
+#检查表 ods_order_info 数据量日环比增长
+#参数： -t 表名
+#      -d 日期
+#      -s 环比增长下限
+#      -x 环比增长上限
+#      -l 告警级别
+
+bash day_on_day.sh -t ods_order_info -d "$DT" -s -10 -x 10 -l 1
+```
+
+## 告警模块
+### 读取mysql并判断是否发送
+>读取mysql数据如果大于告警级别，则调用邮件发送警告信息。
+### 告警邮件发送
+>首先需要注册一个126邮箱，然后在设置中开启smtp服务。
+>编写代码，调用smtp发送邮件。
+```
+def mail_alert(line):
+    """
+    使用电子邮件的方式发送告警信息
+    :param line: 一个等待通知的异常记录，{'notification_level': 1, 'value_min': 0, 'value': 7, 'col': u'id', 'tbl': u'dim_user_info', 'dt': datetime.date(2021, 7, 16), 'value_max': 5}
+    """
+
+    # smtp协议发送邮件的必要设置
+    mail_host = "smtp.126.com"
+    mail_user = "********@126.com"
+    mail_pass = "********"
+
+    # 告警内容
+    message = ["".join(["表格", str(line["tbl"]), "数据异常."]),
+               "".join(
+                          [
+                          "指标", str(line["norm"]), "值为", str(line["value"]),
+                                ", 应为", str(line["value_min"]), "-", str(line["value_max"]),
+                                ", 参考信息：" + str(line["col"]) if line.get("col") else ""
+                          ]
+                      )
+               ]
+    # 告警邮件，发件人
+    sender = mail_user
+
+    # 告警邮件，收件人
+    receivers = [mail_user]
+
+    # 将邮件内容转为html格式
+    mail_content = MIMEText("".join(["<html>", "<br>".join(message), "</html>"]), "html", "utf-8")
+    mail_content["from"] = sender
+    mail_content["to"] = receivers[0]
+    mail_content["Subject"] = Header(message[0], "utf-8")
+
+    # 使用smtplib发送邮件
+
+    smtp = smtplib.SMTP_SSL(mail_host)
+    smtp.connect(mail_host, port=465)
+    smtp.login(mail_user, mail_pass)
+    content_as_string = mail_content.as_string()
+    smtp.sendmail(sender, receivers, content_as_string)
+
+
+```
+## 可视化模块
+>由于统计数据已经存入了mysql，所以可以借助superset可视化数据质量监控的结果，查看统计数据,如饼状图，柱状图等。
+
+## 整体调度
+>流程为 统计模块(数仓各层)，告警模块
+```
+nodes:
+  - name: check_ods
+    type: command
+    config:
+      command: /usr/bin/bash check_ods.py $(dt)
+
+  - name: check_dwd
+    type: command
+    config:
+      command: /usr/bin/bash check_dwd.py $(dt)
+
+  - name: check_dim
+    type: command
+    config:
+      command: /usr/bin/bash check_dim.py $(dt)
+
+  - name: check_notification
+    type: command
+    dependsOn:
+      - check_ods
+      - check_dwd
+      - check_dim
+    config:
+      command: /usr/bin/python3 check_notification.py $(dt)
+
+```

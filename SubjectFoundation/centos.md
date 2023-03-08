@@ -1,3 +1,5 @@
+[TOC]
+
 ```
 free -h
 ```
@@ -13,7 +15,7 @@ lspci | grep -i vga
 >https://mirrors.bfsu.edu.cn/centos/7/isos/x86_64/
 
 >https://blog.csdn.net/frank1998819/article/details/84774176
->
+
 >minimal是精简版本，dvd是最完整的，体积达到了4G。
 
 # cpu
@@ -79,15 +81,30 @@ cat /var/log/secure
 df -h 查看磁盘容量
 ```
 
-# 开机启动
-
+# centos shell功能
+## 开机启动
 ```
+# /etc/rc.d/rc.local负责管理开机自启的程序，该程序需要赋予可执行权限。
 vim /etc/rc.d/rc.local
 在其中追加shell命令，达到自启的目的。
+
+#该命令用于引入环境变量
+source /etc/profile
 ```
 
+## 定时任务
+```
+#centos 的定时任务需要借助crontab命令。
+#可以通过修改/etc/crontab 添加定时任务，然后systemctl restart crond重启crontab服务让配置生效
+ * * * * * /home/test.sh
+ 从左向右五个*单位分别是，分钟，小时，日期，月份，星期
 
+#如下例子表示每隔24小时执行一次
+* */24 * * * /test.sh
 
+#如下例子表示每小时的第1分钟执行一次
+1 * * * * /test.sh
+```
 # 用户管理
 
 ```
@@ -278,8 +295,16 @@ lsof -i:8080
 >*PS:centos7默认没有 netstat 命令，需要安装 net-tools 工具，yum install -y net-tools*
 
 ```
-#检查端口被哪个进程占用,其中l代表展示listen的端口，p代表展示对应的process，t代表tcp（使用u就只查看udp），n代表not resolve names，不懂什么意思。
+#检查端口和进程信息
+其中l代表展示listen的端口，.
+p代表展示对应的process，
+t代表tcp（使用u就只查看udp），使用a表示查看所有
+n代表not resolve names，如果添加了会将域名解析为ip。
+这几个参数可以自由组合，查看需要的信息。
 netstat -lnpt |grep 5672
+netstat -alp
+netstat -tlp
+netstat -ulp
 #查看进程的详细信息
 ps 6832
 #中止进程

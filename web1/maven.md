@@ -1,17 +1,6 @@
-### 中心仓库
+[TOC]
 
-```
-https://search.maven.org/search?q=springboot
-```
-
-### 国内仓库地址
-
-```
-#aliyun respository
-http://maven.aliyun.com/nexus/content/groups/public
-```
-
-### 安装
+# 安装
 
 ```
 将压缩包解压
@@ -19,8 +8,63 @@ http://maven.aliyun.com/nexus/content/groups/public
 在idea->maven 选中解压文件夹路径，repository，setting.xml即可。
 ```
 
+# 使用
+
+## setting.xml 配置
+```
+#指定本地仓库的存储路径
+<localRepository></localRepository>
+#指定远程仓库的地址
+#
+```
+
+## 仓库源
+### 仓库地址
+
+```
+中心仓库：https://search.maven.org/search?q=springboot
+```
+
+```
+#aliyun respository
+国内仓库地址：http://maven.aliyun.com/nexus/content/groups/public
+```
+
+### 更改maven源
+
+```
+https://blog.csdn.net/qq_21190847/article/details/105240049
+<mirror>
+    <id>nexus-aliyun</id>
+    <mirrorOf>central</mirrorOf>
+    <name>Nexus aliyun</name>
+    <url>http://maven.aliyun.com/nexus/content/groups/public</url>
+</mirror>
+```
+
+### 临时指定仓库
+
+```
+<repositories>
+        <repository>
+            <id>es-snapshots</id>
+            <name>elasticsearch snapshot repo</name>
+            <url>https://snapshots.elastic.co/maven/</url>
+        </repository>
+   </repositories>
+```
 
 
+
+
+## 依赖管理
+
+> 指定子级模块所用版本，子模块只需要写依赖，不用写版本号。
+>
+> 注意父级只是指定版本号，子级使用仍然需要在dependencies中导入。
+> 
+
+## 打包
 ### 打包指定模块
 
 ```
@@ -36,6 +80,7 @@ mvn clean install -pl test-common -amd -rf test-module1
 ##### 模块依赖
 
 ```
+若向让a使用b的功能，如b的entity。在项目结构中，选中a模块，点击dependencies，点击+号，点击Module dependence，选择想要的模块。若提示某些模块已包含，在sources中将其删除。
 如service依赖dao，web依赖service。正确的打包顺序为，先install整个项目，然后install dao,再install service ,再install web。
 ```
 
@@ -48,7 +93,135 @@ mvn clean install -e -U
 ```
 
 
+### jar包管理
 
+idea自带的maven在idea安装目录的plugins->maven3目录下
+
+仓库查看idea的setting，一般在电脑用户目录下的.m2文件夹。
+
+在repository内，以目录结构形式组织jar包。在jar包所在位置，有jar包及验证哈希码用以确认jar包完整性。
+
+powershell自带sha1工具，命令：certutil -hashfile 路径
+##### 打包java项目
+
+```
+ <build>
+        <finalName>dump_mysql_jar</finalName>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.8.1</version>
+                <configuration>
+                    <source>8</source>
+                    <target>8</target>
+                    <encoding>UTF-8</encoding>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-shade-plugin</artifactId>
+                <version>3.2.0</version>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>shade</goal>
+                        </goals>
+                        <configuration>
+                            <transformers>
+                                <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+                                    <mainClass>com.ti.dump_mysql.hive.QueryHive</mainClass>
+                                </transformer>
+                            </transformers>
+                            <filters>
+                                <filter>
+                                    <artifact>*:*</artifact>
+                                    <excludes>
+                                        <exclude>META-INF/*.SF</exclude>
+                                        <exclude>META-INF/*.DSA</exclude>
+                                        <exclude>META-INF/*.RSA</exclude>
+                                    </excludes>
+                                </filter>
+                            </filters>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+```
+
+## 常用命令
+```
+#查看版本
+mvn -version
+#查看依赖
+mvn dependency:tree
+#然后使用exclusion排除依赖或删除依赖。
+
+#
+mvn clean
+mvn package
+mvn install
+mvn deploy
+```
+
+
+### maven单元测试
+
+>为项目编写测试类，可以在程序进行迭代时，使用maven帮助进行单元测试，在上线之前检测出错误，避免一些低级的错误，通过测试后才能进行部署。
+
+```
+#执行所有单元测试
+mvn test
+#执行指定单元测试
+mvn -Dtest=TestMessageBuilder
+```
+
+
+
+
+
+## problem
+
+##### 依赖一直有波浪线
+
+解决：把其删掉再粘上，等重新导入。
+
+全部删除，点击Invalidate caches/restart,然后一个一个的添加依赖。
+
+##### 已删除依赖还在右侧栏
+
+点击File->Invalidate caches/restart
+
+##### 引用module修改了项目结构和pom仍无效
+
+点击execute maven goal，执行mvn idea:idea，mvn -U idea:idea
+
+http://maven.apache.org/plugins/maven-idea-plugin/usage.html
+
+**could not found artifactid**
+
+pom.xml -> maven ->Generate Source And Updete folds
+
+或将父工程先打包
+
+# maven理论知识
+
+>maven是一个项目管理工具，它对项目进行依赖管理、单元测试、构建等
+
+##### 依赖管理
+
+>下载依赖，在pom中配置groupid，artifactid、version，maven可以帮助开发者从指定的仓库下载对应jar包到本地的仓库文件夹，并提供给项目使用。管理整个项目的依赖，当依赖冲突时，通过排除冲突的jar包解决问题。
+
+##### 单元测试
+
+>mvn 
+
+##### 构建
+
+# 样例setting.xml
 setting.xml
 
 ```
@@ -199,10 +372,10 @@ under the License.
    |-->
   <mirrors>
        <mirror>
-	<id>nexus-aliyun</id>
-	<mirrorOf>central</mirrorOf>
-	<name>Nexus aliyun</name>
-	<url>http://maven.aliyun.com/nexus/content/groups/public</url>
+  <id>nexus-aliyun</id>
+  <mirrorOf>central</mirrorOf>
+  <name>Nexus aliyun</name>
+  <url>http://maven.aliyun.com/nexus/content/groups/public</url>
        </mirror> 
     <!-- mirror
      | Specifies a repository mirror site to use instead of a given repository. The repository that
@@ -318,482 +491,3 @@ under the License.
 </settings>
 
 ```
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-### 更改maven源
-
-```
-https://blog.csdn.net/qq_21190847/article/details/105240049
-<mirror>
-    <id>nexus-aliyun</id>
-    <mirrorOf>central</mirrorOf>
-    <name>Nexus aliyun</name>
-    <url>http://maven.aliyun.com/nexus/content/groups/public</url>
-</mirror>
-```
-
-### 临时指定仓库
-
-```
-<repositories>
-        <repository>
-            <id>es-snapshots</id>
-            <name>elasticsearch snapshot repo</name>
-            <url>https://snapshots.elastic.co/maven/</url>
-        </repository>
-   </repositories>
-```
-
-### jar包管理
-
-idea自带的maven在idea安装目录的plugins->maven3目录下
-
-仓库查看idea的setting，一般在电脑用户目录下的.m2文件夹。
-
-在repository内，以目录结构形式组织jar包。在jar包所在位置，有jar包及验证哈希码用以确认jar包完整性。
-
-powershell自带sha1工具，命令：certutil -hashfile 路径
-
-##### Dependencymanagement
-
-> 指定子级模块所用版本，子模块只需要写依赖，不用写版本号。
->
-> 注意只是指定版本号，自己或子级使用仍然需要在dependencies中导入。
-
-##### 打包java项目
-
-```
- <build>
-        <finalName>dump_mysql_jar</finalName>
-        <plugins>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.8.1</version>
-                <configuration>
-                    <source>8</source>
-                    <target>8</target>
-                    <encoding>UTF-8</encoding>
-                </configuration>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-shade-plugin</artifactId>
-                <version>3.2.0</version>
-                <executions>
-                    <execution>
-                        <phase>package</phase>
-                        <goals>
-                            <goal>shade</goal>
-                        </goals>
-                        <configuration>
-                            <transformers>
-                                <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-                                    <mainClass>com.ti.dump_mysql.hive.QueryHive</mainClass>
-                                </transformer>
-                            </transformers>
-                            <filters>
-                                <filter>
-                                    <artifact>*:*</artifact>
-                                    <excludes>
-                                        <exclude>META-INF/*.SF</exclude>
-                                        <exclude>META-INF/*.DSA</exclude>
-                                        <exclude>META-INF/*.RSA</exclude>
-                                    </excludes>
-                                </filter>
-                            </filters>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-        </plugins>
-    </build>
-```
-
-##### springboot项目见springboot
-
-### 命令
-
-mvn -version
-
-### 模块依赖
-
-若向让a使用b的功能，如b的entity。在项目结构中，选中a模块，点击dependencies，点击+号，点击Module dependence，选择想要的模块。若提示某些模块已包含，在sources中将其删除。
-
-### maven理论知识
-
->maven是一个项目管理工具，它对项目进行依赖管理、单元测试、构建等
-
-##### 依赖管理
-
->下载依赖，在pom中配置groupid，artifactid、version，maven可以帮助开发者从指定的仓库下载对应jar包到本地的仓库文件夹，并提供给项目使用。管理整个项目的依赖，当依赖冲突时，通过排除冲突的jar包解决问题。
-
-##### 单元测试
-
->mvn 
-
-##### 构建
-
-### maven用法
-
-##### maven单元测试
-
->为项目编写测试类，可以在程序进行迭代时，使用maven帮助进行单元测试，在上线之前检测出错误，避免一些低级的错误，通过测试后才能进行部署。
-
-```
-#执行所有单元测试
-mvn test
-#执行指定单元测试
-mvn -Dtest=TestMessageBuilder
-```
-
-
-
-##### 查看项目依赖
-
-```
-#查看依赖
-mvn dependency:tree
-#然后使用exclusion排除依赖或删除依赖。
-```
-
-
-
-### problem
-
-##### 依赖一直有波浪线
-
-解决：把其删掉再粘上，等重新导入。
-
-全部删除，点击Invalidate caches/restart,然后一个一个的添加依赖。
-
-##### 已删除依赖还在右侧栏
-
-点击File->Invalidate caches/restart
-
-##### 引用module修改了项目结构和pom仍无效
-
-点击execute maven goal，执行mvn idea:idea，mvn -U idea:idea
-
-http://maven.apache.org/plugins/maven-idea-plugin/usage.html
-
-**could not found artifactid**
-
-pom.xml -> maven ->Generate Source And Updete folds
-
-或将父工程先打包

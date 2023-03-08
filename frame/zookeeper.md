@@ -1,3 +1,5 @@
+[TOC]
+>zookeeper详细八股文：https://www.imooc.com/wiki/Zookeeper/zookeeperconfig.html
 ### 安装
 
 ```
@@ -188,7 +190,20 @@ https://www.cnblogs.com/tkzL/p/12916116.html
 保证数据一致性的核心协议是ZAB(ZooKeeper Atomic Broadcast)协议
 写请求发送到follower，follower发送请求到leader，leader发起Proposal，广播给所有follower，半数follower同意后，再提交写请求，follower执行成功并返回给客户端。
 ```
-
+## zab协议
+>zookeeper atomic broadcast，zookeeper原子广播. 
+>
+>Zab 协议的特性：    
+>1）Zab 协议需要确保那些已经在 Leader 
+>服务器上提交（Commit）的事务最终被所有的服务器提交。      
+>2）Zab 协议需要确保丢弃那些只在 Leader 上被提出而没有被提交的事务。
+### 基本概念
+#### 集群周期好 Epoch
+#### ZAB协议的事务编号 Zxid
+### 实现过程
+>崩溃恢复,消息广播
+#### 选举过程
+####
 ## 分布式独享锁
 
 ```
@@ -213,3 +228,11 @@ remove方法移除一个元素
 >https://www.jianshu.com/p/3fec1f8bfc5f
 
 # 用法
+
+## shell
+## Java API
+###
+```
+#增加Znode
+
+```

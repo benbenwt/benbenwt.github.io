@@ -9,8 +9,6 @@ https://www.cnblogs.com/xkfeng/p/7835055.html
 target/,忽略targe文件夹
 ```
 
-
-
 ##### 基础示例
 
 ```
@@ -49,21 +47,15 @@ build/
 
 ```
 
-
-
-
-
-
-
 ### git工作暂存区reset
 
 ```
 https://www.liaoxuefeng.com/wiki/896043488029600/897889638509536
 ```
 
-
-
 # GIT用法
+
+>github可以管理程序的版本，在程序的开发过程中，必定有某些关键节点，之后添加了新功能，在这种节点我们使用新的分支进行保存。或者说一个程序的多个有差别的平行版本，也可以创建分支。平时使用时，在不同设备完成代码后，都要与main合并，更行仓库里的代码。如果冲突，就检查本地版本是否还有必要保留，如果无必要直接pull仓库的覆盖掉本地。如果需要，那要手动解决。
 
 ### 克隆子模块
 
@@ -73,8 +65,6 @@ git submodule init
 git submodule update
 git submodule update --init --recursive
 ```
-
-
 
 ### 添加代理
 
@@ -128,22 +118,25 @@ git add <filename>提交到暂存区
 ```
 
 ##### git commit
-
 ```
 git commit -m “message”提交到head，应用改动。
+```
+
+```
+通过revert commit可以撤销commit到本地仓库的信息
 ```
 
 ##### git push
 
 ```
 git push origin master 将head种文件提交到master
- git push -u -f origin main，覆盖远程分支。
- git push --set-upstream origin main，设定默认上传分支。
+git push -u -f origin main，覆盖远程分支。
+git push --set-upstream origin main，设定默认上传分支。
 ```
 
 ##### git fetch
 
->git fetch本质是拉取到本地的head仓库，然后需要使用checkout将工作区切换为此分支，pull是一步到位，直接将远程仓库的内容拉取到工作区，并尝试合并，未改变head区域。
+>git fetch本质是拉取到本地的head仓库，然后需要使用checkout将工作区切换为此分支，或者执行merge命令将远程的最新版本与本地仓库合并。而pull是一步到位，直接将远程仓库的内容拉取到本地仓库，并尝试合并，隐藏了实现细节。
 
 ##### git remote
 

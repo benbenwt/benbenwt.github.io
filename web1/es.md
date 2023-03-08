@@ -1,164 +1,105 @@
+[TOC]
+## 关于写入日志
+>是为了应对内存在断电后丢失数据信息的问题所设计的，或是为了进行实时备份，为了提高数据的稳定性，在断电后进行数据恢复，从log磁盘中恢复到内存。例如hdfs的editlog，hbase的wal，elasticsearch的translog。
 
-
-
-```
-使用bulk批量api可以一次请求提交多个，缩短花费时间。
-
-关于readtimeout，在规定timeout时间内，无法发送完所有数据，es无法处理完发送给他的数据并返回正确信息，客户端直接抛出超时异常。
-花费时间有：1发送数据到服务端的花费，当数据很大时，占比也很大2服务器解析json，当json解析占用了很多内存，资源不足就会connection refused。
-对于大量数据可能会readtimeout，措施如下：
-1控制客户端发送批次的大小，每个批次指定文件数量或批次文件总大小。如100个文件或50M发送一次。实际上按照大小分批后就不会报错了，分批次保证了每次请求50M，在timeout时间内能传送完。
-2扩充服务端内存，网络带宽等。
-3针对可connection refused只能失败重传,分批次提交，并进行失败重传，注意重传覆盖数据是否影响功能。
-
-```
-
+# 安装使用.
+>分布式全文检索引擎
+>document 原理：https://www.elastic.co/guide/en/elasticsearch/reference/current/docs-replication.html
 api document:https://www.elastic.co/guide/en/elasticsearch/reference/current/indices-get-mapping.html
 
-# python client
-
-##### 查询所有id
-
 ```
-body = {
-        "_source":"false",
-        "query": {
-            "match_all": {}
-        }
-    }
-hits = es.search(index="cti", body=body, size=10000)['hits']['hits']
-```
-
-##### 删除
-
-```
-   # es.get(index="myindex", id=1)['_source']
-es.delete(index='indexName', doc_type='typeName', id='idValue')
-```
-
-
-
-##### problem
-
-###### 超时
-
-```
-  es.index(index="cti", id=md5, body=data, request_timeout=60)加上request_timeout
-```
-
-
-
-# curl指令
-
-```
-https://www.cnblogs.com/shanhua-fu/p/10429417.html
-```
-
-##### 插入数据
-
-```
-curl -XPOST ‘http://localhost:9200/{index}/{type}/{id}’ -d'{“a”:”avalue”,”b”:”bvalue”}’
-```
-
-##### curl GET
-
-```
-#_doc类型字段不影响查询结果
-GET /customer/_doc/1
-
-curl -X GET "hbase2:9200/customer/_doc/1?pretty"
-
-curl -X PUT "localhost:9200/customer/_doc/1?pretty" -H 'Content-Type: application/json' -d'
-{
-  "name": "John Doe"
-}
-
-curl -X GET 10.44.99.102:9200/situation-event/_refresh
-
-
+#docker安装
+https://www.elastic.co/guide/en/elasticsearch/reference/7.5/docker.html
+在宿主机上执行sysctl -w vm.max_map_count=262144命令，避免虚拟内存报错。
 ```
 
 ```
-curl -X POST "localhost:9200/_bulk?pretty" -H "Content-Type: application/json;charset=UTF-8" --data-binary @5eb920947209f2ced78b15a4.json 
+#修改系统配置，如系统内存限制、打开文件数量限制。
+vim config/elasticsearch.yml
+http.cors.enabled: true 
+http.cors.allow-origin："*"
+network.host: 0.0.0.0
+discovery.seed_hosts: ["hbase2"]
+
+vim config/jvm.options
+-Xms8g
+-Xmx8g
+
+vim /etc/sysctl.conf
+vm.max_map_count=655360
+sysctl -p
+
+vim /etc/security/limits.conf
+* soft nofile 65536
+* hard nofile 131072
+* soft nproc 2048
+* hard nproc 4096
+ulimit -Sn/-Hn
+
+vim /etc/security/limits.d/90-nproc.cnf
+* soft nproc 4096
 ```
 
-##### curl PUT
+
+### 配置使用环境
+
+>es对内存等要求较高，默认的linux系统配置无法满足，一般都会报错，需要进行如下更改才能使用。
 
 ```
-PUT /customer/_doc/1
-{
-  "name": "John Doe"
-}
-curl -X PUT "localhost:9200/customer/_doc/1?pretty" -H 'Content-Type: application/json' -d'
-{
-  "name": "John Doe"
-}
-'
+#vim /etc/security/limits.conf，修改对打开文件数量的限制
+* soft nofile 65536
+* hard nofile 65536
+* soft nproc 4096
+* hard nproc 4096
+es soft memlock unlimited
+es hard memlock unlimited
+#查看
+ulimit -a
+#修改虚拟内存大小
+vim /etc/sysctl.conf
+vm.max_map_count=262144
 ```
 
-插入数据
+es 7.11
+
+9200
+
+/etc/sysconfig/network-scripts/ifcfg-exxx，
+
+ip addr查看网卡
+
+单节点配置文件
+
+elasticsearch.yml
 
 ```
-/cti/_mapping
+http.cors.enabled: true
+http.cors.allow-origin: "*"
+network.host: 0.0.0.0
+discovery.seed_hosts: ["hbase2"]
 ```
 
-
+java.options
 
 ```
-curl -X GET "172.18.65.185:9200/cti/_count"
-搜索id
-curl -X GET "172.18.65.185:9200/cti/_search/232daf111111111111"
+-Xms8g
+-Xmx8g
+```
+
+# es-head插件
+
+```
+vim config/elasticsearch.yml
+http.cors.enabled: true 
+http.cors.allow-origin："*"
+network.host: 0.0.0.0
+discovery.seed_hosts: ["hbase2"]
 ```
 
 
 
-##### es bulk 错误
-
-```
-bulk通过换行符分割传输的多个数据，如果json数据中带有换行符就会导致报错，干扰正确的分割。
-```
-
-```
-可能问题，result_window,sysctl_max_heap
-```
-
-```
-#search_after
-https://blog.csdn.net/zzh920625/article/details/84593590
-https://www.elastic.co/guide/en/elasticsearch/reference/6.7/search-request-search-after.html
-GET twitter/_search
-{
-    "size": 10,
-    "query": {
-        "match" : {
-            "title" : "elasticsearch"
-        }
-    },
-    "search_after": [1000],
-    "sort": [
-        {"date": "asc"},
-        {"tie_breaker_id": "asc"}
-    ]
-}
-```
-
-
-
-```
-分页,临时解决如下：完全解决使用scroll和scroll-scan
-PUT cti/_settings
-{
-  "index":{
-    "max_result_window":1000000
-  }
-}
-```
-
-
-
-
-
-# es
+# Kibana
+## Kibana 用法例子 TI
 
 >es的确是非主键检索，全文检索，但是检索出来后呢，并不是所有数据都放在es中，因为es不支持复杂聚合操作、多表联查，所以不适合业务数据的关系建模方法，以及复杂聚合统计的维度建模方法，那么很多数据其实是放在其他数据库中的，如业务数据、聚合统计数据等。当全文搜索后，需要拼接其他数据时，再使用主键在其他数据库进行检索。
 
@@ -256,8 +197,8 @@ GET /myindex/_search
 
 ```
 searchRequest
-	sourceBuilder:from,size
-		queryBuilders
+  sourceBuilder:from,size
+    queryBuilders
 ```
 
 ```
@@ -477,15 +418,15 @@ GET /myindex/_search?size=5&from=10000
 POST /myindex/_search
 {
 "query": {
-	"bool": {
-		"must": [
-			{
-				"match": {
-					"objects.type": "malware"
-							}
-				}
-					]
-	        }
+  "bool": {
+    "must": [
+      {
+        "match": {
+          "objects.type": "malware"
+              }
+        }
+          ]
+          }
         }
 }
 #统计type各种类型的个数
@@ -524,82 +465,6 @@ POST /_aliases
 }
 ```
 
-## 安装
-
-```
-#docker安装
-https://www.elastic.co/guide/en/elasticsearch/reference/7.5/docker.html
-在宿主机上执行sysctl -w vm.max_map_count=262144命令，避免虚拟内存报错。
-```
-
-```
-#修改系统配置，如系统内存限制、打开文件数量限制。
-vim config/elasticsearch.yml
-http.cors.enabled: true 
-http.cors.allow-origin："*"
-network.host: 0.0.0.0
-discovery.seed_hosts: ["hbase2"]
-
-vim config/jvm.options
--Xms8g
--Xmx8g
-
-vim /etc/sysctl.conf
-vm.max_map_count=655360
-sysctl -p
-
-vim /etc/security/limits.conf
-* soft nofile 65536
-* hard nofile 131072
-* soft nproc 2048
-* hard nproc 4096
-ulimit -Sn/-Hn
-
-vim /etc/security/limits.d/90-nproc.cnf
-* soft nproc 4096
-```
-
-
-
-es 7.11
-
-9200
-
-/etc/sysconfig/network-scripts/ifcfg-exxx，
-
-ip addr查看网卡
-
-单节点配置文件
-
-elasticsearch.yml
-
-```
-http.cors.enabled: true
-http.cors.allow-origin: "*"
-network.host: 0.0.0.0
-discovery.seed_hosts: ["hbase2"]
-```
-
-java.options
-
-```
--Xms8g
--Xmx8g
-```
-
-# es-head插件
-
-```
-vim config/elasticsearch.yml
-http.cors.enabled: true 
-http.cors.allow-origin："*"
-network.host: 0.0.0.0
-discovery.seed_hosts: ["hbase2"]
-```
-
-
-
-# Kibana
 
 ## 安装配置kibana
 
@@ -929,6 +794,36 @@ https://kb.objectrocket.com/elasticsearch/elasticsearch-and-scroll-in-python-953
 
 # 理论知识
 
+## 设计mapping
+
+### 数据类型的选择
+
+
+
+### 配置分词引擎
+
+>不同领域对分词有不同的需求，需要结合专业领域的知识提升分词效果，因为分词效果关系到倒排索引的构建，最终影响到搜索性能。es自有的分词器有standard分词器，对中文效果不好。
+
+>将需要的分词引擎拷贝到plugins下，
+
+```
+#为es配置IK分词器，先到github下载IK分词器代码，然后使用maven编译获得一个zip包
+#将zip包解压到es的plugins目录下，查询时使用如下语法即可
+curl -XGET 'http://localhost:9200/_analyze?pretty&analyzer=ik_max_word' -d '联想是全球最大的笔记本厂商'
+#使用IK分词器创建索引，通过setting analyzer指定分词器，ik分为ik_max_word和ik_smart,ik_max_word拆分的粒度最细，smart拆分的粒度最粗。
+"settings" : {
+        "analysis" : {
+            "analyzer" : {
+                "ik" : {
+                    "tokenizer" : "ik_max_word"
+                }
+            }
+        }
+    },
+```
+
+
+
 ## 基本架构
 
 ##### shard
@@ -1181,57 +1076,6 @@ GET /_analyze
 }
 ```
 
-
-
-# Elasticsearch用法
-
-### 配置使用环境
-
->es对内存等要求较高，默认的linux系统配置无法满足，一般都会报错，需要进行如下更改才能使用。
-
-```
-#vim /etc/security/limits.conf，修改对打开文件数量的限制
-* soft nofile 65536
-* hard nofile 65536
-* soft nproc 4096
-* hard nproc 4096
-es soft memlock unlimited
-es hard memlock unlimited
-#查看
-ulimit -a
-#修改虚拟内存大小
-vim /etc/sysctl.conf
-vm.max_map_count=262144
-```
-
-### 设计mapping
-
-##### 数据类型的选择
-
-
-
-### 配置分词引擎
-
->不同领域对分词有不同的需求，需要结合专业领域的知识提升分词效果，因为分词效果关系到倒排索引的构建，最终影响到搜索性能。es自有的分词器有standard分词器，对中文效果不好。
-
->将需要的分词引擎拷贝到plugins下，
-
-```
-#为es配置IK分词器，先到github下载IK分词器代码，然后使用maven编译获得一个zip包
-#将zip包解压到es的plugins目录下，查询时使用如下语法即可
-curl -XGET 'http://localhost:9200/_analyze?pretty&analyzer=ik_max_word' -d '联想是全球最大的笔记本厂商'
-#使用IK分词器创建索引，通过setting analyzer指定分词器，ik分为ik_max_word和ik_smart,ik_max_word拆分的粒度最细，smart拆分的粒度最粗。
-"settings" : {
-        "analysis" : {
-            "analyzer" : {
-                "ik" : {
-                    "tokenizer" : "ik_max_word"
-                }
-            }
-        }
-    },
-```
-
 ### 基础语法
 
 >包括叶子查询字句、复合查询字句、
@@ -1255,21 +1099,7 @@ curl -XGET 'http://localhost:9200/_analyze?pretty&analyzer=ik_max_word' -d '联�
 >ids：根据id返回
 >
 >range：表示范围，用于数值型数据。gte：大于，lte：小于
-
-```
-SearchSourceBuilder ssb1=new SearchSourceBuilder();
-        ssb1.from((pageNum-1)*5);
-        ssb1.size(5);
-        QueryBuilder queryBuilder=QueryBuilders.boolQuery()
-                .should(QueryBuilders.wildcardQuery("objects.malware_types",value))
-                .should(QueryBuilders.wildcardQuery("objects.pattern",value))
-                .should(QueryBuilders.wildcardQuery("objects.architecture_execution_envs",value))
-                .should(QueryBuilders.wildcardQuery("objects.value",value))     .should(QueryBuilders.wildcardQuery("objects.external_references.external_id.keyword",value));
-        ssb1.query(queryBuilder);
-        SearchRequest searchRequest=new SearchRequest("myindex").source(ssb1);
-        return searchRequest;
-```
-
+>
 ##### 复合查询字句
 
 >bool query、constant_score query、dis_max query
@@ -1284,18 +1114,85 @@ SearchSourceBuilder ssb1=new SearchSourceBuilder();
                 .should(QueryBuilders.wildcardQuery("objects.malware_types",value))
                 .should(QueryBuilders.wildcardQuery("objects.pattern",value))
                 .should(QueryBuilders.wildcardQuery("objects.architecture_execution_envs",value))
-                .should(QueryBuilders.wildcardQuery("objects.value",value))     	.should(QueryBuilders.wildcardQuery("objects.external_references.external_id.keyword",value));
+                .should(QueryBuilders.wildcardQuery("objects.value",value))       .should(QueryBuilders.wildcardQuery("objects.external_references.external_id.keyword",value));
 
+        ssb1.query(queryBuilder);
+        SearchRequest searchRequest=new SearchRequest("myindex").source(ssb1);
+        return searchRequest;
+```
+### 聚合查询
+
+>复杂的聚合查询需要使用painless脚本完成，可以使用类似mr的思想完成聚合统计，规避es的聚合统计弱点。
+
+# Elasticsearch用法
+
+## Java API
+```
+SearchSourceBuilder ssb1=new SearchSourceBuilder();
+        ssb1.from((pageNum-1)*5);
+        ssb1.size(5);
+        QueryBuilder queryBuilder=QueryBuilders.boolQuery()
+                .should(QueryBuilders.wildcardQuery("objects.malware_types",value))
+                .should(QueryBuilders.wildcardQuery("objects.pattern",value))
+                .should(QueryBuilders.wildcardQuery("objects.architecture_execution_envs",value))
+                .should(QueryBuilders.wildcardQuery("objects.value",value))     .should(QueryBuilders.wildcardQuery("objects.external_references.external_id.keyword",value));
         ssb1.query(queryBuilder);
         SearchRequest searchRequest=new SearchRequest("myindex").source(ssb1);
         return searchRequest;
 ```
 
 
+## Scala API
 
-### 聚合查询
+```
+import io.searchbox.client.{JestClient, JestClientFactory}
 
->复杂的聚合查询需要使用painless脚本完成，可以使用类似mr的思想完成聚合统计，规避es的聚合统计弱点。
+jestFactory = new JestClientFactory
+jestFactory.setHttpClientConfig(new HttpClientConfig
+    .Builder("http://172.18.65.187:9200")
+    .multiThreaded(true)
+    .maxTotalConnection(20)
+    .connTimeout(10000)
+    .readTimeout(1000).build())
+}
+
+#插入一个数据
+client=jestFactory.getObject
+var source:String =
+      """
+        |{
+        |  "id":200,
+        |  "name":"operation meigong river",
+        |  "doubanScore":8.0,
+        |  "actorList":[
+        |     {"id":3,"name":"zhang han yu"}
+        |   ]
+        |}
+      """.stripMargin
+
+val index:Index = new Index.Builder(source)
+      .index("movie_index_5")
+      .`type`("movie")
+      .id("1")
+      .build()
+//通过客户端对象操作ES     execute参数为Action类型，Index是Action接口的实现类
+jestClient.execute(index) 
+
+
+#样例类形式插入
+val movie: Movie = Movie(300,"天龙八部",9.0f,actorList)
+    //创建Action实现类 ===>Index
+    val index: Index = new Index.Builder(movie)
+      .index("movie_index_5")
+      .`type`("movie")
+      .id("2").build()
+    jestClient.execute(index)
+
+#查询
+val get: Get = new Get.Builder("movie_index_5","2").build()
+val res: DocumentResult = jestClient.execute(get)
+println(res.getJsonString)
+```
 
 ### 迁移数据
 
@@ -1370,31 +1267,221 @@ bin/logstash  -f  es2es.conf
 
 ```
 
-### es-head插件使用
-
->es-head是一个前端插件，解压就能使用，它使用web前端请求es数据库并进行展示。
-
 ```
 将压缩包解压到新的机器，修改配置文件添加对应host，拷贝es/data的数据到新的机器
-#注意要禁用rebalance，不然会花费很久时间
+#通过禁用rebalance，可以避免花费很久时间
 PUT /_cluster/settings
 {
     "transient" : {
         "cluster.routing.allocation.enable" : "none"      //取消分片权衡
     }
 }
-#指定inde想到特定机器
+#使用此命令引入新的机器ip，会将分片迁移到对应机器
 PUT index_name/_settings
 {
   "index.routing.allocation.include._ip": "10.124.105.5,10.124.105.6,10.124.105.7"
 }
+
+#手动强制迁移,需要先关闭自动分配。
+PUT /_cluster/settings
+{
+    "transient" : {
+        "cluster.routing.allocation.enable" : "none"      //取消分片权衡
+    }
+}
+#然后手动迁移
+# node-3分片1迁移到node-2
+POST /_cluster/reroute
+{
+    "commands" : [
+        {
+            "move" : {
+                "index" : "top_n_database_statement-20200519", "shard" : 1,
+                "from_node" : "node-3", "to_node" : "node-1"
+            }
+        }
+    ]
+}
+# node-3分片2迁移到node-1
+POST /_cluster/reroute
+{
+    "commands" : [
+        {
+            "move" : {
+                "index" : "top_n_database_statement-20200519", "shard" : 2,
+                "from_node" : "node-3", "to_node" : "node-1"
+            }
+        }
+    ]
+}
+
 ```
+### es-head插件使用
+
+>es-head是一个前端插件，解压就能使用，它使用web前端请求es数据库并进行展示。
+
 
 ### es-kibana使用
 
 ##### dashboard使用
 
 >创建dashboard，create panel,左侧拖拽需要的键值，底部栏选择需要的什么类型的图形，如饼状等，右侧选择聚合参数，如平均，最大，求和等。
+
+
+## python client
+
+##### 查询所有id
+
+```
+body = {
+        "_source":"false",
+        "query": {
+            "match_all": {}
+        }
+    }
+hits = es.search(index="cti", body=body, size=10000)['hits']['hits']
+```
+
+##### 删除
+
+```
+   # es.get(index="myindex", id=1)['_source']
+es.delete(index='indexName', doc_type='typeName', id='idValue')
+```
+
+
+
+##### problem
+
+###### 超时
+
+```
+  es.index(index="cti", id=md5, body=data, request_timeout=60)加上request_timeout
+```
+
+### 大批量插入
+
+```
+使用bulk批量api可以一次请求提交多个，缩短花费时间。
+
+关于readtimeout，在规定timeout时间内，无法发送完所有数据，es无法处理完发送给他的数据并返回正确信息，客户端直接抛出超时异常。
+花费时间有：1发送数据到服务端的花费，当数据很大时，占比也很大2服务器解析json，当json解析占用了很多内存，资源不足就会connection refused。
+对于大量数据可能会readtimeout，措施如下：
+1控制客户端发送批次的大小，每个批次指定文件数量或批次文件总大小。如100个文件或50M发送一次。实际上按照大小分批后就不会报错了，分批次保证了每次请求50M，在timeout时间内能传送完。
+2扩充服务端内存，网络带宽等。
+3针对可connection refused只能失败重传,分批次提交，并进行失败重传，注意重传覆盖数据是否影响功能。
+
+```
+
+
+## curl指令
+
+```
+https://www.cnblogs.com/shanhua-fu/p/10429417.html
+```
+
+##### 插入数据
+
+```
+curl -XPOST ‘http://localhost:9200/{index}/{type}/{id}’ -d'{“a”:”avalue”,”b”:”bvalue”}’
+```
+
+##### curl GET
+
+```
+#_doc类型字段不影响查询结果
+GET /customer/_doc/1
+
+curl -X GET "hbase2:9200/customer/_doc/1?pretty"
+
+curl -X PUT "localhost:9200/customer/_doc/1?pretty" -H 'Content-Type: application/json' -d'
+{
+  "name": "John Doe"
+}
+
+curl -X GET 10.44.99.102:9200/situation-event/_refresh
+
+
+```
+
+```
+curl -X POST "localhost:9200/_bulk?pretty" -H "Content-Type: application/json;charset=UTF-8" --data-binary @5eb920947209f2ced78b15a4.json 
+```
+
+##### curl PUT
+
+```
+PUT /customer/_doc/1
+{
+  "name": "John Doe"
+}
+curl -X PUT "localhost:9200/customer/_doc/1?pretty" -H 'Content-Type: application/json' -d'
+{
+  "name": "John Doe"
+}
+'
+```
+
+插入数据
+
+```
+/cti/_mapping
+```
+
+
+
+```
+curl -X GET "172.18.65.185:9200/cti/_count"
+搜索id
+curl -X GET "172.18.65.185:9200/cti/_search/232daf111111111111"
+```
+
+
+
+##### es bulk 错误
+
+```
+bulk通过换行符分割传输的多个数据，如果json数据中带有换行符就会导致报错，干扰正确的分割。
+```
+
+```
+可能问题，result_window,sysctl_max_heap
+```
+
+```
+#search_after
+https://blog.csdn.net/zzh920625/article/details/84593590
+https://www.elastic.co/guide/en/elasticsearch/reference/6.7/search-request-search-after.html
+GET twitter/_search
+{
+    "size": 10,
+    "query": {
+        "match" : {
+            "title" : "elasticsearch"
+        }
+    },
+    "search_after": [1000],
+    "sort": [
+        {"date": "asc"},
+        {"tie_breaker_id": "asc"}
+    ]
+}
+```
+
+
+
+```
+分页,临时解决如下：完全解决使用scroll和scroll-scan
+PUT cti/_settings
+{
+  "index":{
+    "max_result_window":1000000
+  }
+}
+```
+
+
+
 
 # 其他
 

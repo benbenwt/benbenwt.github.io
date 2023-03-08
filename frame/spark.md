@@ -1,3 +1,5 @@
+[TOC]
+
 ```
 可进行数据的划分，不可以控制分布到哪台机器。
 不可进行任务的划分，结点只能施加相同的操作。对于前后依赖的操作，必须等前一个完成，这和（同时施加不相同的操作）不同。yarn能否控制任务分配的机器，是可以的，比如你的某台机器坏了，他会分配给其他机器。但是，你只能向集群这个整体提交作业，无法让yarn只给某个机器单独分配任务。一个map任务到底分为多少个结点任务，是由rdd分区数目决定的。那可以不使用rdd进行map嘛？不行，本来就是用来处理数据的，你没有rdd处理什么数据。这么说，我提交一个任务，分区为1，然后yarn分配是不是就完成了单个机器的分配。那如果跟在它后边再提交一个不依赖于它的任务，是不是就实现了同时执行不相同的任务呢。这样做消耗了哪些资源，时间如何？需要yarn的调度，节点的分发，manager管理等。时间主要花费在爬取，用map爬取会一直维持一个map任务。
@@ -23,16 +25,19 @@ sc.setLogLevel("INFO")
 ```
 
 ### 配置使用环境
-
 ```
-下载spark压缩包解压到本地，配置spark的环境变量。
+#下载spark压缩包解压到本地，配置spark的环境变量。如果没加py4j这个路径，会报py4j的socket错误。
+SPARK_HOME  =>  /opt/spark-3.0.0-bin-hadoop2.7
+PYTHONPATH  =>  %SPARK_HOME%/python;%SPARK_HOME%/python/lib/py4j-0.10.9-src.zip;%PYTHONPATH%
+PATH  => %SPARK_HOME%/bin;%SPARK_HOME%/python;%PATH%
+
 pip安装pyspark的依赖，测试是否安装成功。
 ```
 
 ### 变量广播
-
 >哪些变量需要手动广播？哪些会自动传递过去，在任意节点都可以使用？
->
+>这由rdd的闭包进行处理，对于rdd算子内的操作，是需要在多个并行结点执行的，必须要广播到各个结点。
+>rdd算子外的变量在driver端执行。
 >自定义函数，变量，数据
 
 ### 提交
@@ -194,7 +199,7 @@ mapPartion为每个partion上的数据分别调用train函数，train函数定�
 
 ### problem
 
-#### Exception: Python in worker has different version 3.9 than that in driver 3.7, PySpark cannot run with different minor versions. Please check environment variables 
+#### Exception: Python in worker has different version 3.9 than that in driver 3.7, PySpark cannot run with different minor versions. Please check environment variables
 
 ```
 Exception: Python in worker has different version 3.9 than that in driver 3.7, PySpark cannot run with different minor versions. Please check environment variables PYSPARK_PYTHON and PYSPARK_DRIVER_PYTHON are correctly set.
@@ -447,6 +452,17 @@ Executor负责执行任务并返回给驱动进程，通过自身的Block Manage
 >
 >10dirver分配任务并监控任务的执行。
 
+Yarn Cluster 粗略过程
+>1在YARN Cluster模式下，任务提交后回合RM申请AM资源。
+>
+>2随后RM分配container，在合适的NM上启动AM，此时的AM就是Driver。
+>
+>3Driver启动后相RM申请Executor内存，RM收到后分配container，然后启动Executor。
+>
+>4Executor启动后相Driver反向注册，Executor全部注册后开始执行main函数。
+>
+>5之后执行到Action算子后，出发一个Job，并划分stage，生成TaskSset，将task发送到Executor执行。
+
 #### yarn client模式
 
 >AM  ->Driver->Executer
@@ -468,6 +484,21 @@ Executor负责执行任务并返回给驱动进程，通过自身的Block Manage
 >8.CoarseGrainedExecutorBackend进程会接收消息，
 >
 >9.Dirver分配任务并监控任务的执行
+
+Yarn client 粗略过程
+用于监控Driver模块在客户端执行，而不是在Yarn中，过程如下；
+>1Driver在提交的本地机器启动
+>
+>2Driver会与ResourceManager通讯申请启动ApplicationMaster
+>
+>3ResourceManager分配contaienr，在正确的NodeManager上启动ApplicationMaster，负责向RM申请Executor内存。
+>
+>4RM收到AM资源请求后，分配container，然后AM在分配的NM上启动Executor进程
+>
+>5Executor启动后再向Driver反向注册，注册完成后Driver开始执行。
+>
+>6到达Action算子时，出发job，并根据stage规则划分，每个stage生成TaskSet，将Task发送到各个Executor上。
+
 
 #### yarn cluster和yarn client的区别
 
@@ -612,6 +643,8 @@ Executor负责执行任务并返回给驱动进程，通过自身的Block Manage
 #### 统一内存管理
 
 >执行内存与存储内存共享同一块空间，两者动态占用对方的空闲区域。
+>spark.memory.fraction 默认60%，控制存储内存和执行内存共占总内存的多少，即统一内存。
+>spark.storage.storageFraction 默认50%，控制存储内存占统一内存的多少。
 
 ### 存储内存管理
 
@@ -947,7 +980,7 @@ def positions(length: Long, numSlices: Int): Iterator[(Int, Int)] = {
 ###### mapPartion
 
 >以分区上的所有数据为单位进行处理，传入传出参数都是一个迭代器。
-
+>rdd上为分配的任务，广播变量为使用的数据。rdd复用呢，广播变量复用。传输的输出能转为稀疏。
 ###### mapPartionWithIndex
 
 >与mapPartion相比，可以多传入一个参数index，可以在函数内获取分区编号。
@@ -1140,7 +1173,7 @@ def saveAsSequenceFile(
 
 >分布式遍历 RDD 中的每一个元素，调用指定函数
 
-## spark sql
+## spark SQL语法 与 DSL语法
 
 >无论是hadoop、spark、flink其都具备一些共性的功能，都试图不断完善自己的功能。
 >
@@ -1164,22 +1197,21 @@ def saveAsSequenceFile(
 >
 >共用几种方案：
 >
->1将hive的配置文件链接到spark的conf文件夹，还有mysql connector、hdfs的配置文件等。使用spark-shell或spark程序的sparkcontext，借助spark.sql执行sql语句。
+>1将hive的配置文件链接到spark的conf文件夹，还有mysql connector、hdfs的配置文件等。使用spark-shell执行sql语法。或在程序中使用spark程序的sparkcontext，借助spark.sql执行sql语句。
 >
 >2将hive的配置文件链接到spark的conf文件夹，还有mysql connector、hdfs的配置文件等。spark-sql执行sql语句。也可以开启thriftserver，使用beeline直接执行sql语句，和hiveserver2形式一样。
 
-### DataFrame
-
-#### 创建DataFrame
-
-```scala
-#从本地文件系统的json文件创建dataframe
-val df=spark.read.json("data/user.json")
-#从RDD创建dataframe
-#从hive table进行查询返回
+### SQL 与 DSL的转换
 ```
+#一个dataframe或dataset想要执行sql语句，需要创建View表，才能操作。
+val df=spark.read.json("data/user.json")
+df.createOrReplaceTempView("people")
 
-#### SQL语法
+#一个sql语句的查询结果就是dataframe，之后就可以执行DSL语法的语句。
+val sqlDF=spark.sql("SELECT * FROM people")
+sqlDF.show()
+```
+### SQL语法
 
 >sql语法风格是指查询数据时使用sql语句来查询，这种风格的查询必须要有临时试图或者全局视图来辅助
 
@@ -1199,6 +1231,18 @@ spark.sql("SELECT * FROM global_temp.people").show()
 spark.newSession().sql("SELECT * FROM global_temp.people").show()
 ```
 
+
+### DataFrame
+
+#### 创建DataFrame
+
+```scala
+#从本地文件系统的json文件创建dataframe
+val df=spark.read.json("data/user.json")
+#从RDD创建dataframe
+#从hive table进行查询返回
+```
+
 #### DSL语法
 
 >domain-specific language，DSL语法用于管理结构化数据，可以使用scala、java、python等编写DSL语法语句，无需创建临时视图使用sql了。
@@ -1214,6 +1258,11 @@ df.filter($"age">30).show
 df.groupBy("age").count.show
 ```
 
+#### DSL语法与sql差异
+```
+where 和 filter的差异，where是filter的别名
+$取列值是语法糖，本质是返回一个column对象
+```
 #### RDD与DataFrame互相转换
 
 >在IDEA开发程序时，如果需要将RDD于DF和DS之间互相操作，需要import spark.implicits._
@@ -1240,6 +1289,13 @@ case class User(name:String,age:Int)
 sc.makeRDD(List(("zhangsan",30),("lisi",40))).map(t=>User(t._1,t._2)).toDF.show
 ```
 
+```
+直接调用toDF实际上是借助隐式转换完成的，一般不使用，我们可以通过createDataFrame转换rdd到df或ds
+https://blog.csdn.net/sunyiyuan1213/article/details/91450379
+#其中spark是创建的sparkSession
+val classDF: DataFrame = spark.createDataFrame(usersRow)
+val structDf: DataFrame = spark.createDataFrame(structRow,structSchema)
+```
 
 
 ### Dataset
@@ -1257,6 +1313,13 @@ caseClassDS.show
 #使用基本类型的序列创建DataSet
 val ds=Seq(1,2,3,4,5).toDS
 ds.show
+
+#通过 SparkSession.createDataset() 直接创建
+val spark = SparkSession.builder().config(conf).getOrCreate();
+import spark.implicits._;
+val ds = spark.createDataset(List(Person("Jason",34,"DBA"),Person("Tom",20,"Dev")));
+ds.show();
+
 ```
 
 ##### Dataset与其他类型之间的转换
@@ -1290,6 +1353,7 @@ VAL df=ds.toDF
 >Dataframe相比于rdd，多了列名，可以方便进行sql。rdd无法直接查看每一列的值，必须通过解析。
 >
 >Dataframe时Dataset的特例，相当于指定类型为Row，类型可以为person、teacher等。
+>Row是无法知道每列字段的具体类型的，所以其是弱类型的，
 
 ### IDEA开发SparkSQL
 
@@ -1372,7 +1436,6 @@ class MyAveragUDAF extends UserDefinedAggregateFunction {
 StructType(Array(StructField("age",IntegerType)))
  // 聚合函数缓冲区中值的数据类型(age,count)
  def bufferSchema: StructType = {
- 
 StructType(Array(StructField("sum",LongType),StructField("count",LongType)))
  }
 // 函数返回值的数据类型
@@ -1697,12 +1760,8 @@ config("spark.sql.warehouse.dir", "hdfs://linux1:8020/user/hive/warehouse")
 
 ```
 
-
-
 >core-site.xml   hdfs-site.xml  mapred-site.xml  yarn-site.xml
->
 >hadoop-env.sh,yarn-env.sh,mapred-env.sh
->
 >workers
 
 ## DStream创建

@@ -1,7 +1,8 @@
+[TOC]
 # 安装
 
 ```
-sudo yum install -y gcc gcc-c++ libffi-devel python-devel python-pip python-wheel python-setuptools openssl-devel cyrus-sasl-devel openldap-devel
+sudo yum install -y gcc gcc-c++ libffi-devel python-devel python-pip python-wheel python-setuptools openssl-devel cyrus-sasl-devel openldap-devel MySQL-python mysql-devel
 ```
 
 ### 安装anaconda创建python环境
@@ -44,7 +45,6 @@ sqlalchemy==1.3.24
 ```
 
 ###### no module named socketserver
-
 >pip install -U werkzeug
 
 # superset用法
@@ -64,7 +64,9 @@ sqlalchemy==1.3.24
 ```
 superset export_dashboards -f dashboards.json
 superset import_dashboards -f dashboards.json
-```
+
+#如果此方法无效，可以尝试直接复制superset的sqlite数据库文件，
+```其在当前用户的.superset目录下，即~/.superset
 
 
 

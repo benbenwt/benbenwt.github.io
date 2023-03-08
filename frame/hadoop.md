@@ -1,3 +1,4 @@
+[TOC]
 # 相关组件版本
 
 ```
@@ -73,6 +74,7 @@ SUBCOMMAND may print help when invoked w/o parameters or with -h.
 ```
 
 ### 单机模式运行
+>standlone模式是指所有服务都运行在同一个java 进程中，包括NameNode，DataNode，ResourceManager，NodeManager，主要用于调试。
 
 官方文档：https://hadoop.apache.org/docs/r3.1.4/hadoop-project-dist/hadoop-common/SingleCluster.html
 
@@ -90,7 +92,7 @@ cat output/*
 然后用hadoop-mapreduce-examples-3.1.4.jar中的java程序统计input下的所有文件，再对结果进行'dfs[a-z.]+'正则匹配，将结果输出到output文件夹。
 
 ### 伪分布式
-
+>伪分布式是指都运行在同一台机器上，但是使用了不同的java进程。
 1vim    etc/hadoop/core-site.xml，修改为如下内容，指定默认文件系统路径。:
 
 ```
@@ -176,6 +178,7 @@ cat output/*
 ```
 
 ### 完全分布式搭建
+>服务独立运行在多台机器上
 
 >编写好scp分发脚本,快速同步etc配置文件到其他集群机器.
 >
@@ -477,7 +480,7 @@ System.out.println("上传完毕");
 
 https://github.com/ordinaryload/Hadoop-tools
 
-将hadoop.dll,winexe复制到hadoop-3.1.4/bin
+将winexe复制到hadoop-3.1.4/bin,将hadoop.dll复制到windows/system32目录下
 
 2编写程序，按照bili视频编写map,reduce,driver类。
 
@@ -489,7 +492,7 @@ https://www.cnblogs.com/xingluo/p/9512961.html
 
 参考此博客处理：https://blog.csdn.net/weixin_42229056/article/details/82686172
 
-4直接运行driver的main函数，直接将输入输出目录写死在程序中，不使用控制台输入参数。
+4直接运行driver的main函数。
 
 ##### 源码
 
@@ -1089,7 +1092,7 @@ Secondary NameNode用于解决fsimage过旧的问题，它定时拉取、合并N
 
 ### Yarn架构
 
-##### resourceManager
+#### resourceManager
 
 >RM是全局资源管理器，负责整个系统的资源管理和分配，主要包括两个组件。
 >
@@ -1097,14 +1100,14 @@ Secondary NameNode用于解决fsimage过旧的问题，它定时拉取、合并N
 >
 >2应用程序管理器：Applications Manager，ASM。
 
-##### 调度器
+###### 调度器
 
 ```
 调度器仅根据各个应用程序的资源需求进行资源分配，而资源分配单位用一个抽象概念 资源容器(Resource Container，也即 Container)，Container 是一个动态资源分配单位，它将内存、CPU、磁盘、网络等资源封装在一起，从而限定每个任务使用的资源量。
 此外，该调度器是一个可插拔的组件，用户可根据自己的需求设计新的调度器，YARN 提供了多种直接可用的调度器，比如 Fair Scheduler 和 Capacity Schedule 等。
 ```
 
-###### FIFO 
+###### FIFO
 
 ```
 队列式，先来后到，阻塞严重。
@@ -1134,11 +1137,11 @@ Secondary NameNode用于解决fsimage过旧的问题，它定时拉取、合并N
 
 
 
-##### NodeManager
+#### NodeManager
 
 NM是每个结点上运行的资源和任务管理器，负责向RM汇报本节点container资源情况和应用运行状况；另一方面，接受来自AM的启动/停止请求。
 
-##### ApplicationMaster（AM）
+#### ApplicationMaster（AM）
 
 ```
 每个提交的作业都有一个AM，在获得第一个container后，在对应节点创建启动AM，主要功能有：
@@ -1148,31 +1151,31 @@ NM是每个结点上运行的资源和任务管理器，负责向RM汇报本节�
 4，监控任务运行状态，失败时申请资源并重启。
 ```
 
-##### Container
+#### Container
 
 ```
 是资源的抽象，包括CPU、内存、磁盘、网络等，当 AM 向 RM 申请资源时，RM 为 AM 返回的资源便是用 Container 表示的。 YARN 会为每个任务分配一个 Container 且该任务只能使用该 Container 中描述的资源。
 ```
 
-##### Jobtracker
+#### Jobtracker
 
 ```
 每个提交的整个任务都有一个jobtracker，其也管理tasktracker
 ```
 
-##### TaskTracker
+#### TaskTracker
 
 ```
 每个task任务对应一个tasktracker,负责向jobtracker发送心跳信息、接受杀死任务的
 ```
 
-##### cgroup
+#### cgroup
 
 >cpu资源是弹性资源，不会影响到程序的死亡，因此cpu的资源隔离方案采用了Linux Kernel提供的轻量级资源隔离技术Cgroup。
 
 >cpu资源隔离，内存资源隔离
 
-### MapReduce架构及原理
+## MapReduce架构及原理
 
 >很详细：https://blog.csdn.net/u014374284/article/details/49205885
 >
@@ -1531,7 +1534,7 @@ yarn application -appID application_1611133087930_0009 -updatePriority 5
 
 ### map
 
->#时间=计算时间+网络时间+磁盘io时间，此处讨论计算时间，其包括Maptask初始化、销毁时间，和真实的计算时间，目的就是缩小两者之和，maptask越多，初始化时间越多，计算时间并行度越高，真实计算时间越少。
+>时间=计算时间+网络时间+磁盘io时间，此处讨论计算时间，其包括Maptask初始化、销毁时间，和真实的计算时间，目的就是缩小两者之和，maptask越多，初始化时间越多，计算时间并行度越高，真实计算时间越少。
 >计算出整个集群的插槽数，占用的越多，并行度越高，但是要留出部分资源给系统和集群自身使用。
 >MapTask数量在合理范围内越多，并行度越高。但是，对于每个Maptask，其执行时间不能过短，如果是极小的文件，只执行几秒，初始化和销毁却需要更多时间，那么更多的MapTask反而降低速度。那如果MapTask数量超过slot呢，这就是我之前ti的json文件的情况，每个文件都会初始化一个maptask，前边执行完了会销毁掉maptask，再为后边的json文件创建新的maptask，而不是一直利用同一个slot上的maptask调用map函数。
 
@@ -1870,6 +1873,84 @@ setup，cleanup每个mapper只执行一次。
 
 通过重写InputFormat类，实现自己的类。重写RecordReader中的NextKeyValue控制map一次读取的行数。
 
+# Hadoop-Streaming
+
+>hadoop-streaming并不是一个流式处理api，而是一个用于调用任意语言程序的api，我们可以借助这个jar包提交各种类型的程序，比如python、shell作为mapper、reducer，那这些语言如何交流呢，就是通过stdin和stdout传输数据，也就是说无法传输语言内部的数据结构，只能通过输入输出传输原生字符串。mapreduce和spark等分布式程序，本质就是在各个节点启动对应语言的程序执行，然后再将结果处理collect，如果提供了特定语言的api，那么数据的collect及序列化反序列化就已经实现了，只用直接编写程序。但是hadoop-streaming这种方式，就是没有实现序列化和反序列化，只能通过输入输出字符串传递需要的信息，自己进行数据的序列化和反序列化。
+>
+>知乎详细教程：https://zhuanlan.zhihu.com/p/34036056
+>
+>官方document:https://hadoop.apache.org/docs/stable/hadoop-streaming/HadoopStreaming.html
+>
+>https://blog.csdn.net/liang_biao/article/details/51909326
+
+## 搭建wordcount
+
+>#编写mapper.py
+
+```
+#! /root/miniconda3/envs/elephas1/bin/python
+#! coding=utf-8
+
+import sys,logging,re
+
+seperator_pattern=re.compile(r'[^a-zA-Z0-9]+')
+
+def main():
+    for line in sys.stdin:
+        for word in seperator_pattern.split(line):
+            if word:
+                print(f"{word.lower()}\t1")
+if __name__ == '__main__':
+    main()
+```
+
+>#编写reducer.py
+
+```
+#! /root/miniconda3/envs/elephas1/bin/python
+#! coding=utf-8
+
+import sys,logging,re
+
+def main():
+    last_key = None
+    last_sum = 0
+
+    for line in sys.stdin:
+        key,value=line.split("\t")
+        if last_key is None:
+            last_key=key
+            last_sum=int(value.strip())
+        elif last_key==key:
+            last_sum+=int(value)
+        else:
+            print(f"{last_key}\t{last_sum}")
+            last_sum=int(value)
+            last_key=key
+    if last_key:
+        print(f"{last_key}\t{last_sum}")
+if __name__ == '__main__':
+    main()
+```
+
+>提交程序，格式为 hadoop jar   /hadoop-3.1.4/share/hadoop/tools/lib/hadoop-streaming-3.1.4.jar  -参数
+>
+>必须的参数有：
+>
+>-files  提交上传需要使用的mapper.py,reducer.py
+>
+>-input -output 输入输出文件
+>
+>-mapper -reducer 指定mapper和reducer 
+
+```
+/root/module/hadoop-3.1.4/bin/hadoop jar /root/module/hadoop-3.1.4/share/hadoop/tools/lib/hadoop-streaming-3.1.4.jar  -files 'mapper.py,reducer.py'  -numReduceTasks 1  -input /user/root/wordcount/input/  -output /user/root/wordcount/output -mapper "/root/miniconda3/envs/elephas1/bin/python mapper.py" -reducer "/root/miniconda3/envs/elephas1/bin/python reducer.py"
+```
+
+
+
+
+
 # problem
 
 ##### There are 25866 missing blocks. The following files may be corrupted:
@@ -1988,7 +2069,7 @@ ip addr查看网卡
 
 单节点配置文件
 
-#####  is running 626469376B beyond the 'VIRTUAL' memory limit. Current usage: 208.7 MB of 1 GB physical memory used; 2.7 GB of 2.1 GB virtual memory used. Killing container.
+##### is running 626469376B beyond the 'VIRTUAL' memory limit. Current usage: 208.7 MB of 1 GB physical memory used; 2.7 GB of 2.1 GB virtual memory used. Killing container.
 
 mapreduce
 

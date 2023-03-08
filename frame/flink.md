@@ -1,3 +1,4 @@
+[TOC]
 # 安装
 
 >flink的最新 稳定版本 是1.14，后边的1.7等都是开发、更新中的版本。
@@ -404,7 +405,7 @@ parallelism.default: 1
 
 ### TaskManager
 
-## 集权配置文件
+## 集群配置文件
 
 #### flink-conf.yaml
 
@@ -433,7 +434,7 @@ parallelism.default: 1
 
 # Flink 用法
 
-## Flink Data Stream API 
+## Flink Data Stream API
 
 >基本流程
 >
@@ -1230,7 +1231,7 @@ stream.keyBy()
 >
 >**1.归约函数**
 >
->reduce操作会将keyedstream转换为datastream，调用reduce传入一个参数，此类需要实现reduceFunction接口。定义的方法有两个参数，是输入事件，将输入事件合并可以得到输出事件。
+>reduce操作会将keyedstream转换为datastream，调用reduce传入一个参数，此类需要实现reduceFunction接口。定义的方法有两个参数，是输入事件，将输入事件合并可以得到输出事件。其中，输入事件和输出事件必须是同一个类型的数据，如都是person。
 >
 >在流处理中，将两个输入事件合并后的状态进行保存，当到来一个新事件时，对其进行计算并更新状态。
 
@@ -1254,6 +1255,7 @@ stream.keyBy()
 
 ###### 全窗口函数
 
+>全窗口函数windowAll()是相比于window()来说的，全窗口函数不区分key，不在keyedStream上工作，所有key都在一起。且其是等窗口分配器的数据都到齐后，以批处理的思想进行处理的。
 >全窗口函数与增量聚合函数不同，全窗口函数需要先收集窗口中的所有数据，然后在计算全部数据。
 >
 >这种计算方式相比于流处理是低效的，但是有的时候必须获取到所有数据才能计算，或者需要获取窗口的起始时间等，那么就必须使用全窗口函数。这是典型的批处理思想。
@@ -1900,10 +1902,7 @@ stateDescriptor.enableTimeToLive(ttlConfig);
 
 ```
 
-
-
 ### 算子状态
-
 >算子状态的实际应用场景不如 Keyed State 多，一般用在 Source 或 Sink 等与外部系统连接 的算子上，或者完全没有 key 定义的场景。比如 Flink 的 Kafka 连接器中，就用到了算子状态。
 >
 >算子状态也支持不同的结构类型，主要有三种：ListState、UnionListState 和 BroadcastState。
@@ -2424,7 +2423,7 @@ tEnv.useDatabase("custom_database");
 >
 >上边将中间表注册到环境中，这样才能对其使用sql语句。虚拟表和视图非常相似。
 
-####  表的查询
+#### 表的查询
 
 ##### 执行SQL进行查询
 
@@ -3572,71 +3571,29 @@ https://repo.maven.apache.org/maven2/org/apache/flink/flink-shaded-hadoop-2-uber
 
 # Flink 实时项目
 
-## 流处理模块说明
+## 推荐模块
 
->在flink-2hbase中，主要分为6个flink任务
+>在flink-2hbase中，主要分为4个flink任务
 >
 >mysql中中主要存储用户信息，商品信息，相当于维表，主要用于拼接获得信息。
 >
 >hbase用于存储从flink处理完的数据结果。
+
+### 日志导入
+
+>从kafka接受的数据直接写入Hbase事实表，保存完整的日志log，日志中包含了用户id，用户操作的产品id，操作时间，行为（如购买，点击，推荐等）
+>
+>数据按时间窗口统计数据大屏需要的数据，返回前段显示
+>
+>数据存储在Hbase的con表
+
+>从kafka的con  topic读取数据，继承mapFunction编写map函数，将日志解析为LogEntity(userid,produceid,time,action)，然后根据用户id、产品id、时间戳拼接hbase的rowkey，最终将每一条记录插入hbase的con表中。
 
 ### 用户-产品浏览历史->实现基于协同过滤的推荐逻辑
 
 >通过flink记录用户浏览过这个类目下的哪些产品，为后面的基于Item的协同过滤做准备，实时的记录用户的评分到Hbase中，为后续离线处理做准备。
 
 >从kafka的con topic读取数据，继承mapFunction编写map函数，将用户id、产品id分别存入u_history表和p_history表的对应行，并增加计数。
-
-### 用户-兴趣->实现基于上下文的推荐逻辑
-
->根据用户对同一个产品的操作计算兴趣度，计算规则通过操作事件间隔（如购物-浏览 <100s）则判定为一次兴趣事件，通过flink的valueState实现如果用户的操作Aciton=3（购物），则清除这个产品的state，如果超过100s没有出现Action=3的事件，也清除这个state。
-
->从kafka的con topic读取数据，获取到日志后封装为Log对象，然后按照userid分组。最后调用map函数，继承RichMapFunction编写内容，实现记录用户兴趣。实际上就是在100s内进行了连续向后的操作，就记为一次兴趣事件，每触发一个兴趣事件，将u_interest表中以userid为rowkey的记录的，列族中列名为productid的数值加一。增加计数。
-
->RichMapFunction的内容如下。可以说对于连续性的操作才会定义为兴趣，如100s内浏览并分享，100s内浏览并购物。
-
-```
-#从getRuntimeContext中获取state，放入类的属性，供map函数使用
-@Override
-    public void open(Configuration parameters) throws Exception {
-        // 设置 state 的过期时间为100s
-        StateTtlConfig ttlConfig = StateTtlConfig
-                .newBuilder(Time.seconds(100L))
-                .setUpdateType(StateTtlConfig.UpdateType.OnCreateAndWrite)
-                .setStateVisibility(StateTtlConfig.StateVisibility.NeverReturnExpired)
-                .build();
-
-        ValueStateDescriptor<Action> desc = new ValueStateDescriptor<>("Action time", Action.class);
-        desc.enableTimeToLive(ttlConfig);
-        state = getRuntimeContext().getState(desc);
-    }
-    
-#map函数操作state，进行更新和计算
-@Override
-    public String map(LogEntity logEntity) throws Exception {
-    //flink状态中保存的值
-        Action actionLastTime = state.value();
-      //当前这个数据封装的Action对象（动作类型，动作时间）
-        Action actionThisTime = new Action(logEntity.getAction(), logEntity.getTime().toString());
-        int times = 1;
-        // 如果用户没有操作 则为state创建值
-        //如果flink状态中没有state，那么需要为其创建一个新的flink状态，此次状态当作flink的状态存入。同时，该条计数加一保存到hbase。
-        if (actionLastTime == null) {
-            actionLastTime = actionThisTime;
-            saveToHBase(logEntity, 1);
-            //另外，如果flink中已经有该state，那么根据规则计算后，也存入hbase计数加对应次数。
-        }else{
-            times = getTimesByRule(actionLastTime, actionThisTime);
-        }
-        saveToHBase(logEntity, times);
-
-        // 如果用户的操作为3(购物),则清除这个key的state
-        if (actionThisTime.getType().equals("3")){
-            state.clear();
-        }
-        return null;
-}
-```
-
 
 
 ### 用户画像计算->实现基于标签的推荐逻辑
@@ -3675,96 +3632,8 @@ aggregate：对数据进行统计聚合
 process:可以对流施加复杂的操作，包括设定定时器、触发定时器等。除了设定map函数，还可以设定其他如open、onTimer等函数，时较为底层的api，功能丰富。
 ```
 
-
-
-### 日志导入
-
->从kafka接受的数据直接写入Hbase事实表，保存完整的日志log，日志中包含了用户id，用户操作的产品id，操作时间，行为（如购买，点击，推荐等）
->
->数据按时间窗口统计数据大屏需要的数据，返回前段显示
->
->数据存储在Hbase的con表
-
->从kafka的con  topic读取数据，继承mapFunction编写map函数，将日志解析为LogEntity(userid,produceid,time,action)，然后根据用户id、产品id、时间戳拼接hbase的rowkey，最终将每一条记录插入hbase的con表中。
-
-### Elasticsearch Sink
-
-```
-PUT /topproduct
-{
-	"settings": { 
- 	"number_of_shards": 3
- },
-	"mappings": {
-		  "properties":{
-		     "productid":{
-		     	"type":"keyword"
-		     },
-		     "times":{
-		     	"type":"keyword"
-		     },
-		     "windowEnd":{
-		     	"type":"date"
-		     }
-		  }
-		}
-	
-}
-```
-
-## web模块
-
-### 前台功能
-
-#### 热榜
-
-##### 热榜推荐
-
->从redis查出热榜的所有信息，根据热榜中的产品id查询产品基本信息product表、产品详情表contact，这两个是mysql中的维度表。
-
-##### 热榜+协同过滤
-
->首先计算px表，对于一个produceid，为它启动一个单独的线程，执行协同过滤的计算，然后将结果写入px表。对于给定的两个productid，为了计算评分，从p_history表根据productid查出所有相关的列。然后比对两个product是否拥有相同的用户，每有一个相同的用户，sum就加一。然后使用sum除以total，total就是（product1有的用户数*product2有的用户数）再开根号。就相当于在计算，在所有用户中，两种产品有多少共同用户。数据写入px表，rowkey为产品id，列名为产品id。
-
->在正常情况下，是要计算每个商品的被用户打的分数，或者其他度量，如被用户的操作次数等，这比单纯的计数更有意义。
-
->从toplist中取出热榜商品的pid，然后从px表中取出pid对应的所有行记录，返回一个结果id的集合。然后根据结果id集合查询产品详情表、产品基本信息表。最后返回结果。
-
-##### 热榜+产品标签画像
-
->首先计算ps表，产品的画像计算产品的相似度。对于给定的两个产品。从prod用户画像表查出数据，统计共有的标签属性有那些，这些标签的总数sum起来，标签有性别、年龄等，然后除以sqrt（product1的属性累计数量*product2的属性累计数量），相当于在计算两个商品共有的标签属性有多少个，在总的属性中占有多少。这里实际上可以加以改进，加入具体标签的数值计算相关性。数据写入ps表，rowkey为产品id，列名为产品id。
-
->从toplist中取出热榜商品的pid，然后从ps表取出所有对应的id。最后拼接出结果并返回。
-
-#### 用户
-
-##### 用户协同顾虑
-
->先根据用户历史表u_history计算每个用户的相近的用户，并记录数据到hbase的表。
-
-##### 用户标签画像
-
->先根据用户画像表user计算每个用户的相近的用户，并记录数据到hbase的表。
->
->主要由商品的国家、风格、颜色组成。
-
-##### 用户兴趣
-
->这属于一个自定义的规则，可能不太有意义，可以忽略这个指标。
->
->先根据用户兴趣表u_interest计算每个用户的相近的用户，并记录数据到hbase的表。
-
->用户兴趣的定义，
-
-### 后台功能
-
->使用superset，es kibana查看效果
-
->该页面返回给管理员指标监控，主要包括热榜产品，日志接入量
-
-# Flink练习题
-
-## Flink尚硅谷案例
+## 实时统计指标.
+### 窗口处理
 
 >窗口处理的方法由以下元素：窗口函数、
 >
@@ -3774,19 +3643,15 @@ PUT /topproduct
 >
 >3使用keyBy函数，再window开窗，使用窗口处理函数（或全窗口函数）聚合key、窗口唯一对应的数据。
 >
->等同地位的几种窗口函数：1增量聚合函数（归约、聚合）2全窗口函数 3窗口处理函数
+>等同地位的几种函数：1增量聚合函数（归约、聚合）2窗口函数 3窗口处理函数
 
-### 日志结构设计
-
+### 日志结构
 ```
 登录日志
 登录失败日志
 
 #页面数据，事件数据，启动数据和错误数据
 ```
-
-#### 页面结构设计
-
 >对于事件、页面、曝光、错误、启动几个模块，在flink的项目中，我们需要事件（用于协同过滤），页面（用于UVPV分析）、曝光（用于曝光量计算）、启动日志（用于记录日活信息）
 >
 >除此之外还需要商品的交易信息业务日志，用于计算topn商品、用户首单信息
@@ -3866,7 +3731,32 @@ public class ProcessAllWindowTopN {
 }
 ```
 
-##### 实时处理速度
+#### Elasticsearch Sink
+
+```
+PUT /topproduct
+{
+    "settings": { 
+    "number_of_shards": 3
+ },
+    "mappings": {
+          "properties":{
+             "productid":{
+                "type":"keyword"
+             },
+             "times":{
+                "type":"keyword"
+             },
+             "windowEnd":{
+                "type":"date"
+             }
+          }
+        }
+    
+}
+```
+
+#### 实时处理速度
 
 >在window主机上运行，其占用了i7-9700 cpu 的60%,和16GB的内存，处理的数据量为每分钟704万*10=7000万条数据。使用自定义的sourceFunction定义的输出源，每分钟输出7000万条模拟日志数据，程序能够实时的统计出1分钟Top N热榜，而且滑动窗口每10s滑动一次进行计算。
 >
@@ -4308,12 +4198,6 @@ public class UVPV {
 
 >接下来我们考虑一个具体的需求：检测用户行为，如果连续三次登录失败，就输出报警信 息。很显然，这是一个复杂事件的检测处理，我们可以使用 Flink CEP 来实现。
 
-#### 检查点
-
->在CEP这个例子中使用了检查点
-
->1需要停止stream流处理任务的场景，完成检查点的保存      2完成检查点的恢复，确保故障恢复到正确的内存状态和外部存储系统状态。
-
 ```
 PUT /cepFailBehavior
 {
@@ -4338,7 +4222,6 @@ PUT /cepFailBehavior
 		}
 }
 ```
-
 
 
 ```
@@ -4466,6 +4349,12 @@ public class FailBehavior {
 }
 
 ```
+
+#### 检查点
+
+>在CEP这个例子中使用了检查点
+
+>1需要停止stream流处理任务的场景，完成检查点的保存      2完成检查点的恢复，确保故障恢复到正确的内存状态和外部存储系统状态。
 
 ### 广播状态过滤keyword
 
@@ -4642,8 +4531,8 @@ public class MysqlSource extends RichSourceFunction<String> {
 >
 >1版本管理归档
 >
->2更新flink版本
 >
+>2更新flink版本
 >3更新应用程序
 >
 >4调整并行度
@@ -4681,9 +4570,9 @@ bin/flink savepoint jobId  hdfs://hbase:9000/flink/savepoints
 bin/flink run -s hdfs://hbase:9000/flink/savepoints -c com.demo.task.practice.SavePoint /opt/software/jars/flink-2-hbase-1.0-SNAPSHOT.jar
 ```
 
-# 项目难点
+## 项目难点
 
-## 实时更改配置
+### 实时更改配置
 
 >自定义sourceFunciton，读取数据源并广播
 >
@@ -4695,7 +4584,10 @@ bin/flink run -s hdfs://hbase:9000/flink/savepoints -c com.demo.task.practice.Sa
 
 
 
-
+# 其他
+## Flink 的聚合调优
+>https://blog.csdn.net/xxscj/article/details/86575294
+>
 
 
 
