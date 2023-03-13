@@ -1,3 +1,50 @@
+[TOC]
+# 理论
+## 双向绑定
+>  其称为mvvm：即model，view，viewModel
+vue实现了model和view之间的双向数据流动，当model发生变化时view会变化，view页面发生变化后也会修改model，减少了数据绑定到视图，以及监听视图的工作量。
+从view到model的绑定很好实现，可以通过监听前段组件的事件，触发后修改model的值。
+从model到view的绑定，需要监听model object的属性变化，这是通过object的defineProperty实现的，简略的代码如下。
+
+```
+function objServer(obj){
+let keys = Object.keys(obj);
+keys.forEach((item)=>{
+definedActive(obj,item,obj[item])
+})
+return obj;
+}
+
+
+
+function definedActive(obj,item,val){
+Object.defineProperty(obj,item,{
+get(){
+console.log(`${item}获取了`)
+},
+
+set(newVlaue){
+val = newVlaue;
+console.log(`${item}修改了`)
+}
+})
+}
+
+let obj = objServer({
+a:1,
+b:2
+})
+
+obj.a
+obj.b
+obj.a = 2;
+obj.b = 3;
+```
+在实际的使用中，需要借助发布者-订阅者模式来管理数量庞大的关系。
+### 
+## 组件
+### 组件通信
+## 生命周期
 # vue
 
 # vue-cli
@@ -17,15 +64,13 @@ npm i -g @vue/cli-init
 vue init webpack runoob-vue3-test
 ```
 
-
-
 安装
 
 ```
 https://blog.csdn.net/qq_43201542/article/details/90138321
 -g表示放在定义的全局目录
 npm uninstall vue-cli -g
-npm install vue -g
+npm install vue -g 
 npm install vue-router -g
 npm install vue-cli -g
 vue --version
@@ -75,4 +120,3 @@ proxyTable: {
 ```
 创建：https://www.cnblogs.com/sese/p/11712275.html
 ```
-
