@@ -1,3 +1,8 @@
+### word
+mathtype公式漂浮，这是由于字体大小和word正文不匹配。
+五号对应10pt，小四对应12pt。
+点击大小，自定义一个样式。然后点击预置保存为文件。
+来到word的mathtype栏目，点击format equation导入刚刚的预置文件，等待自动更新整个文档。
 ### visio粘贴到word字体变化
 
 ```
