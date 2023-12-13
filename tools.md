@@ -1,3 +1,7 @@
+subline快捷键：
+ctrl shift p
+preferences 设置插件快捷键
+
 彩云：https://www.xn--nosa.com/user
 
 ```
