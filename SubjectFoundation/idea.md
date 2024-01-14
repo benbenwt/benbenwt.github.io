@@ -1,8 +1,18 @@
-### 快捷键
+## 快捷键
 
 ```
-ctrl+alt+L
+ctrl alt v   声明变量
+ctrl alt o   清除无效引入
+ctrl alt L   调整代码格式
+ctrl \       javaDoc
+ctrl shift - 折叠代码 
+ctrl shift u 大小写
 ```
+
+## 插件
+### alibaba java coding guideline
+### Easy JavDoc
+## 破解idea插件
 
 ### 破解插件
 

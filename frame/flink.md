@@ -1,4 +1,5 @@
 [TOC]
+https://nightlies.apache.org/flink/flink-docs-release-1.14/zh/docs/connectors
 # 安装
 
 >flink的最新 稳定版本 是1.14，后边的1.7等都是开发、更新中的版本。

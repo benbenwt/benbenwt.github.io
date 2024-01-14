@@ -1,0 +1,29 @@
+# api
+## Write Data
+> push、pull
+>### push mode
+>应用决定何时推送。支持prometheus api、json 等形式。push模式无需再服务端配置每个应用推送方地址
+```
+通过post请求写入数据
+curl -d "{"metric":{"__name__":"foo","job":"node_exporter},"values":{0,1,2},"timestamps":[166666,166666,166666]}" -X POST 'http://localhost:8428/api/v1/import'
+```
+>#### pull data
+>数据库控制何时获取数据，需要配置应用地址，可以感知到应用端存在，灵活控制负载。
+## Query Data
+### Instant Query
+>应用场景：获取最后一个记录的时间
+```curl
+GET | POST /api/v1/query?query=...&time=...&step=...
+curl "http://<victoria-metrics-addr>/api/v1/query?query=foo_bar&time=2022-02-10T10:03:02.000Z"
+```
+>对于某个时刻样本确实的情况，若查询该Instant，数据库会向时间轴左侧取最近的那个样本，作为Instant查询返回值。默认向时间轴左侧寻找5分钟，但是可以用step参数覆盖该值。
+## Range Query
+```
+GET | POST /api/v1/query?query=...&start=...&end=...&step=...
+curl "http://<victoria-metrics-addr>/api/v1/query_range?query=foo_bar&start=2022-02-10T10:03:02.000Z&end=2022-02-10T10:03:02.000Z"
+```
+>在range query中也会有确实时刻，需要返回的数据时刻为start到end，start+n*step。如果某时刻不存在，那么执行Instant query进行补全。当step比该数据序列上报的实际间隔小时，也会进行Instant查询补全操作。
+# Query Latency
+查询延迟，默认延迟30s
+# 理论
+> 处理时间序列数据

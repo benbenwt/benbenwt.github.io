@@ -1,3 +1,15 @@
+
+flink在编码层面与原本的区别，把核心数据和操作抽离出来了，
+包括keyBy，window，Aggregate，Process。
+对数据处理流程进行了概念的划分，方便理清逻辑。代码的核心逻辑表达和实现细节进行了划分，比如聚合的细节是在单独的函数，而keyBy,window,aggregate相当于语义层，可以清楚地看到计算了什么，不会与细节混在一起。当需要扩展、兼容时，可以快速确认要修改的对应该概念，找到修改位置，不用到繁杂大量代码中取寻找应该修改的那一行。
+
+编码分层，核心逻辑层-细节概念层(不涉及细节，直观控制和观察整体流程)，概念划分（清晰的将整个流程拆分成概念，由概念类operator控制细节，组成整体流程）
+
+main(source.KeyBy().process())
+
+ifpresent(consumer) ,consumer producer
+spring复习
+
 subline快捷键：
 ctrl shift p
 preferences 设置插件快捷键
